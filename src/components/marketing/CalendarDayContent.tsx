@@ -1,11 +1,11 @@
 
-import { MarketingEvent } from "@/types/marketing";
+import { MarketingEvent, MarketingTask } from "@/types/marketing";
 import { isSameDay } from "@/utils/dateUtils";
 
 interface DayContentProps {
   date: Date;
   events: MarketingEvent[];
-  tasks: any[];
+  tasks: MarketingTask[];
   notes: any[];
 }
 
@@ -35,7 +35,7 @@ export function renderDayContents({ date, events, tasks, notes }: DayContentProp
   );
 }
 
-export function DayContent(props: { date: Date; events: MarketingEvent[]; tasks: any[]; notes: any[] }) {
+export function DayContent(props: { date: Date; events: MarketingEvent[]; tasks: MarketingTask[]; notes: any[] }) {
   return (
     <div className="relative h-full w-full p-0">
       <div className="relative h-full w-full flex items-center justify-center">

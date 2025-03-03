@@ -7,91 +7,54 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
 import { ListTodoIcon, FacebookIcon, InstagramIcon, YoutubeIcon, PlusIcon, X as XIcon, PencilIcon, CheckIcon } from "lucide-react";
-
-type TaskType = "general" | "facebook" | "instagram" | "tiktok";
-
-interface Task {
-  id: number;
-  title: string;
-  dueDate: string;
-  completed: boolean;
-  type: TaskType;
-}
-
-// Sample data for tasks
-const sampleTasks: Task[] = [
-  {
-    id: 1,
-    title: "Create Facebook ad for new product launch",
-    dueDate: "2023-07-15",
-    completed: false,
-    type: "facebook",
-  },
-  {
-    id: 2,
-    title: "Post weekly Instagram update",
-    dueDate: "2023-07-12",
-    completed: true,
-    type: "instagram",
-  },
-  {
-    id: 3,
-    title: "Record TikTok product demo",
-    dueDate: "2023-07-14",
-    completed: false,
-    type: "tiktok",
-  },
-  {
-    id: 4,
-    title: "Review marketing analytics",
-    dueDate: "2023-07-13",
-    completed: false,
-    type: "general",
-  },
-];
+import { useMarketingTasks } from "@/hooks/useMarketingTasks";
+import { MarketingTask } from "@/types/marketing";
 
 export function MarketingTasks() {
-  const [tasks, setTasks] = useState<Task[]>(sampleTasks);
+  const { 
+    tasks, 
+    isLoading, 
+    addTask, 
+    updateTask, 
+    deleteTask, 
+    toggleTaskCompletion 
+  } = useMarketingTasks();
+  
   const [newTaskTitle, setNewTaskTitle] = useState("");
   const [newTaskDueDate, setNewTaskDueDate] = useState("");
-  const [newTaskType, setNewTaskType] = useState<TaskType>("general");
+  const [newTaskType, setNewTaskType] = useState<MarketingTask["type"]>("general");
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
-  const [typeFilter, setTypeFilter] = useState<TaskType | "all">("all");
+  const [typeFilter, setTypeFilter] = useState<MarketingTask["type"] | "all">("all");
   const [editingTask, setEditingTask] = useState<number | null>(null);
   const [editTaskTitle, setEditTaskTitle] = useState("");
   const [editTaskDueDate, setEditTaskDueDate] = useState("");
-  const [editTaskType, setEditTaskType] = useState<TaskType>("general");
+  const [editTaskType, setEditTaskType] = useState<MarketingTask["type"]>("general");
 
-  const addTask = () => {
+  const handleAddTask = () => {
     if (newTaskTitle.trim() === "") return;
 
-    const newTask: Task = {
-      id: Date.now(),
+    const newTask: Omit<MarketingTask, "id"> = {
       title: newTaskTitle,
       dueDate: newTaskDueDate || new Date().toISOString().split("T")[0],
       completed: false,
       type: newTaskType,
     };
 
-    setTasks([...tasks, newTask]);
+    addTask(newTask);
     setNewTaskTitle("");
     setNewTaskDueDate("");
     setNewTaskType("general");
   };
 
-  const toggleTaskCompletion = (id: number) => {
-    setTasks(
-      tasks.map((task) =>
-        task.id === id ? { ...task, completed: !task.completed } : task
-      )
-    );
+  const handleToggleTaskCompletion = (id: number, completed: boolean) => {
+    toggleTaskCompletion(id, !completed);
   };
 
-  const deleteTask = (id: number) => {
-    setTasks(tasks.filter((task) => task.id !== id));
+  const handleDeleteTask = (id: number) => {
+    deleteTask(id);
   };
 
-  const startEditing = (task: Task) => {
+  const startEditing = (task: MarketingTask) => {
     setEditingTask(task.id);
     setEditTaskTitle(task.title);
     setEditTaskDueDate(task.dueDate);
@@ -99,20 +62,13 @@ export function MarketingTasks() {
   };
 
   const saveEdit = () => {
-    if (editTaskTitle.trim() === "") return;
+    if (editTaskTitle.trim() === "" || editingTask === null) return;
     
-    setTasks(
-      tasks.map((task) =>
-        task.id === editingTask
-          ? {
-              ...task,
-              title: editTaskTitle,
-              dueDate: editTaskDueDate,
-              type: editTaskType,
-            }
-          : task
-      )
-    );
+    updateTask(editingTask, {
+      title: editTaskTitle,
+      dueDate: editTaskDueDate,
+      type: editTaskType,
+    });
     
     setEditingTask(null);
   };
@@ -127,7 +83,7 @@ export function MarketingTasks() {
   });
 
   // Get the icon for the task type
-  const getTaskTypeIcon = (type: TaskType) => {
+  const getTaskTypeIcon = (type: MarketingTask["type"]) => {
     switch (type) {
       case "facebook":
         return <FacebookIcon className="h-4 w-4 text-blue-600" />;
@@ -163,7 +119,7 @@ export function MarketingTasks() {
           </Select>
           <Select
             value={typeFilter}
-            onValueChange={(value) => setTypeFilter(value as TaskType | "all")}
+            onValueChange={(value) => setTypeFilter(value as MarketingTask["type"] | "all")}
           >
             <SelectTrigger className="w-[130px]">
               <SelectValue placeholder="Type" />
@@ -192,7 +148,7 @@ export function MarketingTasks() {
             onChange={(e) => setNewTaskDueDate(e.target.value)}
             className="w-40"
           />
-          <Select value={newTaskType} onValueChange={(value) => setNewTaskType(value as TaskType)}>
+          <Select value={newTaskType} onValueChange={(value) => setNewTaskType(value as MarketingTask["type"])}>
             <SelectTrigger className="w-40">
               <SelectValue placeholder="Type" />
             </SelectTrigger>
@@ -203,13 +159,15 @@ export function MarketingTasks() {
               <SelectItem value="tiktok">TikTok</SelectItem>
             </SelectContent>
           </Select>
-          <Button onClick={addTask}>
+          <Button onClick={handleAddTask}>
             <PlusIcon className="h-4 w-4 mr-1" /> Add
           </Button>
         </div>
 
         <div className="space-y-2">
-          {filteredTasks.length === 0 ? (
+          {isLoading ? (
+            <p className="text-center text-muted-foreground py-4">Loading tasks...</p>
+          ) : filteredTasks.length === 0 ? (
             <p className="text-center text-muted-foreground py-4">No tasks match your filters</p>
           ) : (
             filteredTasks.map((task) => (
@@ -233,7 +191,7 @@ export function MarketingTasks() {
                         onChange={(e) => setEditTaskDueDate(e.target.value)}
                         className="w-full"
                       />
-                      <Select value={editTaskType} onValueChange={(value) => setEditTaskType(value as TaskType)}>
+                      <Select value={editTaskType} onValueChange={(value) => setEditTaskType(value as MarketingTask["type"])}>
                         <SelectTrigger className="w-full">
                           <SelectValue placeholder="Type" />
                         </SelectTrigger>
@@ -263,7 +221,7 @@ export function MarketingTasks() {
                     <div className="flex items-start gap-3 flex-1">
                       <Checkbox
                         checked={task.completed}
-                        onCheckedChange={() => toggleTaskCompletion(task.id)}
+                        onCheckedChange={() => handleToggleTaskCompletion(task.id, task.completed)}
                         className="mt-0.5"
                       />
                       <div className="flex-1">
@@ -294,7 +252,7 @@ export function MarketingTasks() {
                         variant="ghost"
                         size="icon"
                         className="h-8 w-8"
-                        onClick={() => deleteTask(task.id)}
+                        onClick={() => handleDeleteTask(task.id)}
                       >
                         <XIcon className="h-4 w-4" />
                       </Button>
