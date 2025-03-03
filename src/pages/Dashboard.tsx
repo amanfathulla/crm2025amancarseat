@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -104,25 +105,25 @@ export default function Dashboard() {
         
         if (monthError) throw monthError;
         
-        // Fetch order status counts
+        // Fetch order status counts from customers table (matching sidebar)
         const { data: processingOrders, error: processingError } = await supabase
-          .from('orders')
+          .from('customers')
           .select('id')
-          .eq('status', 'processing');
+          .eq('order_status', 'processing');
         
         if (processingError) throw processingError;
         
         const { data: completedOrders, error: completedError } = await supabase
-          .from('orders')
+          .from('customers')
           .select('id')
-          .eq('status', 'completed');
+          .eq('order_status', 'completed');
         
         if (completedError) throw completedError;
         
         const { data: cancelledOrders, error: cancelledError } = await supabase
-          .from('orders')
+          .from('customers')
           .select('id')
-          .eq('status', 'cancelled');
+          .eq('order_status', 'cancelled');
         
         if (cancelledError) throw cancelledError;
         
