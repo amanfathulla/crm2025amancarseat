@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -45,7 +44,6 @@ export default function Products() {
 
       if (error) throw error;
       
-      // Map the data to ensure it conforms to our Product interface
       const productsWithStatus = data.map(product => ({
         ...product,
         status: product.status || 'active'  // Default to 'active' if status is missing
