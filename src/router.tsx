@@ -8,7 +8,7 @@ import Products from "./pages/Products";
 import Sales from "./pages/Sales";
 import Customers from "./pages/Customers";
 import Marketing from "./pages/Marketing";
-import MainLayout from "./components/layout/MainLayout";
+import { MainLayout } from "./components/layout/MainLayout";
 
 export const router = createBrowserRouter([
   {
