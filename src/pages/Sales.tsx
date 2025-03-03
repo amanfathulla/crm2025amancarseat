@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -5,10 +6,10 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, Filter, Download, MoreHorizontal, PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
+import { SalesRecordForm } from "@/components/sales/SalesRecordForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { YearlySalesRecord, SalesAnalytics } from "@/types/sales";
+import { SalesRecord, SalesAnalytics } from "@/types/sales";
 import {
   BarChart,
   Bar,
@@ -19,76 +20,94 @@ import {
   Legend,
   ResponsiveContainer,
 } from "recharts";
+import { format } from "date-fns";
 
 export default function Sales() {
   const { toast } = useToast();
-  const [yearlySales, setYearlySales] = useState<YearlySalesRecord[]>([]);
+  const [salesRecords, setSalesRecords] = useState<SalesRecord[]>([]);
   const [analytics, setAnalytics] = useState<SalesAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [searchQuery, setSearchQuery] = useState("");
   
   const fetchSalesData = async () => {
     setIsLoading(true);
     try {
-      // Fetch yearly sales data
+      // Fetch sales records
       const { data, error } = await supabase
-        .from("yearly_sales")
+        .from("sales_records")
         .select("*")
-        .order("year", { ascending: false });
+        .order("date", { ascending: false });
 
       if (error) throw error;
 
       // Convert the database records to our app's type format
       const typedData = data?.map(record => ({
         id: record.id,
-        year: record.year,
-        total_revenue: record.total_revenue,
-        quarter_1: record.quarter_1,
-        quarter_2: record.quarter_2,
-        quarter_3: record.quarter_3,
-        quarter_4: record.quarter_4,
+        date: record.date,
+        amount: record.amount,
+        description: record.description,
+        category: record.category,
         created_at: record.created_at
       })) || [];
       
-      setYearlySales(typedData);
+      setSalesRecords(typedData);
       
-      // Generate analytics
+      // Generate analytics if we have data
       if (typedData.length >= 2) {
-        const sortedYears = [...typedData].sort((a, b) => b.year - a.year);
-        const currentYear = sortedYears[0];
-        const previousYear = sortedYears[1];
+        // Calculate total revenue for current and previous months
+        const now = new Date();
+        const currentMonth = now.getMonth();
+        const currentYear = now.getFullYear();
         
-        const percentageChange = previousYear.total_revenue > 0
-          ? ((currentYear.total_revenue - previousYear.total_revenue) / previousYear.total_revenue) * 100
+        const currentMonthData = typedData.filter(record => {
+          const recordDate = new Date(record.date);
+          return recordDate.getMonth() === currentMonth && 
+                 recordDate.getFullYear() === currentYear;
+        });
+        
+        const previousMonthData = typedData.filter(record => {
+          const recordDate = new Date(record.date);
+          const prevMonth = currentMonth === 0 ? 11 : currentMonth - 1;
+          const prevYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+          return recordDate.getMonth() === prevMonth && 
+                 recordDate.getFullYear() === prevYear;
+        });
+        
+        const currentMonthRevenue = currentMonthData.reduce((sum, record) => sum + record.amount, 0);
+        const previousMonthRevenue = previousMonthData.reduce((sum, record) => sum + record.amount, 0);
+        
+        const percentageChange = previousMonthRevenue > 0
+          ? ((currentMonthRevenue - previousMonthRevenue) / previousMonthRevenue) * 100
           : 100;
         
-        // Since we're no longer tracking quarterly data, we'll set equal values for visualization
+        // Create quarterly data for chart visualization
         const quarterlyData = [
           {
             quarter: "Q1",
-            currentYear: currentYear.total_revenue / 4,
-            previousYear: previousYear.total_revenue / 4,
+            currentYear: getQuarterRevenue(typedData, 0, currentYear),
+            previousYear: getQuarterRevenue(typedData, 0, currentYear - 1),
           },
           {
             quarter: "Q2",
-            currentYear: currentYear.total_revenue / 4,
-            previousYear: previousYear.total_revenue / 4,
+            currentYear: getQuarterRevenue(typedData, 3, currentYear),
+            previousYear: getQuarterRevenue(typedData, 3, currentYear - 1),
           },
           {
             quarter: "Q3",
-            currentYear: currentYear.total_revenue / 4,
-            previousYear: previousYear.total_revenue / 4,
+            currentYear: getQuarterRevenue(typedData, 6, currentYear),
+            previousYear: getQuarterRevenue(typedData, 6, currentYear - 1),
           },
           {
             quarter: "Q4",
-            currentYear: currentYear.total_revenue / 4,
-            previousYear: previousYear.total_revenue / 4,
+            currentYear: getQuarterRevenue(typedData, 9, currentYear),
+            previousYear: getQuarterRevenue(typedData, 9, currentYear - 1),
           },
         ];
         
         setAnalytics({
-          currentYearRevenue: currentYear.total_revenue,
-          previousYearRevenue: previousYear.total_revenue,
+          currentYearRevenue: currentMonthRevenue,
+          previousYearRevenue: previousMonthRevenue,
           percentageChange,
           quarterlyData,
         });
@@ -108,30 +127,52 @@ export default function Sales() {
     }
   };
 
+  // Helper function to get revenue for a specific quarter and year
+  const getQuarterRevenue = (records: SalesRecord[], startMonth: number, year: number) => {
+    return records.filter(record => {
+      const date = new Date(record.date);
+      const month = date.getMonth();
+      return date.getFullYear() === year && 
+             month >= startMonth && 
+             month < startMonth + 3;
+    }).reduce((sum, record) => sum + record.amount, 0);
+  };
+
   useEffect(() => {
     fetchSalesData();
   }, []);
   
   const formatCurrency = (amount: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('ms-MY', {
       style: 'currency',
-      currency: 'USD',
-      maximumFractionDigits: 0,
+      currency: 'MYR',
+      maximumFractionDigits: 2,
     }).format(amount);
   };
+
+  // Filter sales records based on search query
+  const filteredSalesRecords = salesRecords.filter(record => {
+    const searchLower = searchQuery.toLowerCase();
+    const descriptionMatch = record.description?.toLowerCase().includes(searchLower) || false;
+    const categoryMatch = record.category?.toLowerCase().includes(searchLower) || false;
+    const amountMatch = record.amount.toString().includes(searchQuery);
+    const dateMatch = record.date.includes(searchQuery);
+    
+    return descriptionMatch || categoryMatch || amountMatch || dateMatch;
+  });
 
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
         <h1 className="text-3xl font-semibold mb-2">Sales</h1>
-        <p className="text-muted-foreground">Manage orders and sales analytics</p>
+        <p className="text-muted-foreground">Manage sales records and analytics</p>
       </section>
       
       {/* Sales Analytics */}
       <Card className="mb-8 animate-fade-in">
         <CardHeader>
           <CardTitle>Sales Analytics</CardTitle>
-          <CardDescription>Performance overview for yearly sales</CardDescription>
+          <CardDescription>Performance overview for monthly sales</CardDescription>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -140,7 +181,7 @@ export default function Sales() {
             </div>
           ) : !analytics ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-muted-foreground">Not enough data to display analytics. Add at least two years of sales data.</p>
+              <p className="text-muted-foreground">Not enough data to display analytics. Add at least two sales records.</p>
             </div>
           ) : (
             <div className="space-y-8">
@@ -148,7 +189,7 @@ export default function Sales() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Current Year)</p>
+                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Current Month)</p>
                       <p className="text-3xl font-bold">{formatCurrency(analytics.currentYearRevenue)}</p>
                     </div>
                   </CardContent>
@@ -156,7 +197,7 @@ export default function Sales() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Previous Year)</p>
+                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Previous Month)</p>
                       <p className="text-3xl font-bold">{formatCurrency(analytics.previousYearRevenue)}</p>
                     </div>
                   </CardContent>
@@ -164,7 +205,7 @@ export default function Sales() {
                 <Card>
                   <CardContent className="pt-6">
                     <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Year-Over-Year Change</p>
+                      <p className="text-sm text-muted-foreground mb-2">Month-Over-Month Change</p>
                       <div className="flex items-center justify-center">
                         {analytics.percentageChange >= 0 ? (
                           <TrendingUp className="mr-2 h-5 w-5 text-emerald-500" />
@@ -208,46 +249,80 @@ export default function Sales() {
         </CardContent>
       </Card>
       
-      {/* Yearly Sales Records */}
+      {/* Sales Records */}
       <Card className="animate-fade-in delay-100">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <CardTitle>Yearly Sales Records</CardTitle>
-            <CardDescription>View and manage yearly sales data</CardDescription>
+            <CardTitle>Sales Records</CardTitle>
+            <CardDescription>View and manage individual sales transactions</CardDescription>
           </div>
           <Button size="sm" onClick={() => setIsAddFormOpen(true)}>
             <PlusCircle className="h-4 w-4 mr-2" />
-            Add Year
+            Add Sale
           </Button>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center gap-2 w-full mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search sales..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={(e) => setSearchQuery(e.target.value)}
+              />
+            </div>
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Filter className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Download className="h-4 w-4" />
+            </Button>
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
                 <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Year</th>
-                  <th className="text-right py-3 px-4 font-medium">Total Revenue</th>
+                  <th className="text-left py-3 px-4 font-medium">Date</th>
+                  <th className="text-left py-3 px-4 font-medium">Category</th>
+                  <th className="text-left py-3 px-4 font-medium">Description</th>
+                  <th className="text-right py-3 px-4 font-medium">Amount</th>
+                  <th className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={2} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
                       Loading sales data...
                     </td>
                   </tr>
-                ) : yearlySales.length === 0 ? (
+                ) : filteredSalesRecords.length === 0 ? (
                   <tr>
-                    <td colSpan={2} className="py-8 text-center text-muted-foreground">
-                      No sales data found. Add your first year record to get started.
+                    <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                      {searchQuery ? "No matching sales records found." : "No sales records found. Add your first sale to get started."}
                     </td>
                   </tr>
                 ) : (
-                  yearlySales.map((record) => (
+                  filteredSalesRecords.map((record) => (
                     <tr key={record.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="py-3 px-4 text-sm font-medium">{record.year}</td>
+                      <td className="py-3 px-4 text-sm font-medium">
+                        {format(new Date(record.date), 'dd MMM yyyy')}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        {record.category || "-"}
+                      </td>
+                      <td className="py-3 px-4 text-sm">
+                        {record.description || "-"}
+                      </td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
-                        {formatCurrency(record.total_revenue)}
+                        {formatCurrency(record.amount)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right">
+                        <Button variant="ghost" size="icon" className="h-8 w-8">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
                       </td>
                     </tr>
                   ))
@@ -258,181 +333,14 @@ export default function Sales() {
         </CardContent>
       </Card>
       
-      {/* Orders List */}
-      <Tabs defaultValue="all" className="animate-fade-in delay-200 mt-8">
-        <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
-          <TabsList>
-            <TabsTrigger value="all">All Orders</TabsTrigger>
-            <TabsTrigger value="pending">Pending</TabsTrigger>
-            <TabsTrigger value="processing">Processing</TabsTrigger>
-            <TabsTrigger value="completed">Completed</TabsTrigger>
-          </TabsList>
-          
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search orders..."
-                className="pl-9 w-full sm:w-[200px]"
-              />
-            </div>
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Filter className="h-4 w-4" />
-            </Button>
-            <Button variant="outline" size="icon" className="h-10 w-10">
-              <Download className="h-4 w-4" />
-            </Button>
-          </div>
-        </div>
-        
-        <TabsContent value="all" className="mt-0">
-          <Card>
-            <CardContent className="p-0">
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>
-                    <tr className="border-b">
-                      <th className="text-left py-3 px-4 font-medium">Order ID</th>
-                      <th className="text-left py-3 px-4 font-medium">Customer</th>
-                      <th className="text-left py-3 px-4 font-medium">Date</th>
-                      <th className="text-left py-3 px-4 font-medium">Status</th>
-                      <th className="text-left py-3 px-4 font-medium">Payment</th>
-                      <th className="text-right py-3 px-4 font-medium">Amount</th>
-                      <th className="text-right py-3 px-4 font-medium">Actions</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <OrderRow 
-                      id="ORD-7291" 
-                      customer="Sarah Johnson" 
-                      date="July 12, 2023" 
-                      status="Completed" 
-                      payment="Credit Card"
-                      amount="$129.99" 
-                    />
-                    <OrderRow 
-                      id="ORD-7290" 
-                      customer="Michael Chen" 
-                      date="July 11, 2023" 
-                      status="Processing" 
-                      payment="PayPal"
-                      amount="$59.49" 
-                    />
-                    <OrderRow 
-                      id="ORD-7289" 
-                      customer="Emma Watson" 
-                      date="July 10, 2023" 
-                      status="Completed" 
-                      payment="Credit Card"
-                      amount="$89.99" 
-                    />
-                    <OrderRow 
-                      id="ORD-7288" 
-                      customer="James Wilson" 
-                      date="July 9, 2023" 
-                      status="Completed" 
-                      payment="Credit Card"
-                      amount="$144.95" 
-                    />
-                    <OrderRow 
-                      id="ORD-7287" 
-                      customer="Olivia Martinez" 
-                      date="July 9, 2023" 
-                      status="Shipped" 
-                      payment="PayPal"
-                      amount="$249.99" 
-                    />
-                    <OrderRow 
-                      id="ORD-7286" 
-                      customer="Noah Garcia" 
-                      date="July 8, 2023" 
-                      status="Pending" 
-                      payment="Credit Card"
-                      amount="$74.95" 
-                    />
-                    <OrderRow 
-                      id="ORD-7285" 
-                      customer="Ava Miller" 
-                      date="July 8, 2023" 
-                      status="Processing" 
-                      payment="PayPal"
-                      amount="$129.99" 
-                    />
-                    <OrderRow 
-                      id="ORD-7284" 
-                      customer="William Brown" 
-                      date="July 7, 2023" 
-                      status="Shipped" 
-                      payment="Credit Card"
-                      amount="$189.95" 
-                    />
-                  </tbody>
-                </table>
-              </div>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="pending" className="mt-0">
-          <Card>
-            <CardContent className="p-4 text-center py-10">
-              <p className="text-muted-foreground">Showing filtered pending orders would appear here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="processing" className="mt-0">
-          <Card>
-            <CardContent className="p-4 text-center py-10">
-              <p className="text-muted-foreground">Showing filtered processing orders would appear here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="completed" className="mt-0">
-          <Card>
-            <CardContent className="p-4 text-center py-10">
-              <p className="text-muted-foreground">Showing filtered completed orders would appear here.</p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
-      
-      {/* Add Yearly Sales Form */}
+      {/* Add Sales Record Form */}
       {isAddFormOpen && (
-        <YearlySalesForm
+        <SalesRecordForm
           isOpen={isAddFormOpen}
           onClose={() => setIsAddFormOpen(false)}
           onSuccess={fetchSalesData}
         />
       )}
     </MainLayout>
-  );
-}
-
-function OrderRow({ id, customer, date, status, payment, amount }: { id: string; customer: string; date: string; status: string; payment: string; amount: string }) {
-  return (
-    <tr className="border-b hover:bg-muted/30 transition-colors">
-      <td className="py-3 px-4 text-sm font-medium">{id}</td>
-      <td className="py-3 px-4 text-sm">{customer}</td>
-      <td className="py-3 px-4 text-sm">{date}</td>
-      <td className="py-3 px-4 text-sm">
-        <span className={`py-1 px-2 rounded-full text-xs font-medium ${
-          status === "Completed" ? "bg-emerald-100 text-emerald-800" :
-          status === "Processing" ? "bg-blue-100 text-blue-800" :
-          status === "Shipped" ? "bg-amber-100 text-amber-800" :
-          "bg-gray-100 text-gray-800"
-        }`}>
-          {status}
-        </span>
-      </td>
-      <td className="py-3 px-4 text-sm">{payment}</td>
-      <td className="py-3 px-4 text-sm text-right font-medium">{amount}</td>
-      <td className="py-3 px-4 text-sm text-right">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </td>
-    </tr>
   );
 }

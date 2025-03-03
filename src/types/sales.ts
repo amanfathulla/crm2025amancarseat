@@ -41,3 +41,21 @@ export interface YearlySalesTable {
   quarter_4: number;
   created_at: string;
 }
+
+// New interface for sales_records table
+export interface SalesRecord {
+  id: string;
+  date: string;
+  amount: number;
+  description: string | null;
+  category: string | null;
+  created_at: string;
+}
+
+// Form data for creating/editing sales records
+export interface SalesRecordFormData {
+  date: string;
+  amount: number;
+  description?: string;
+  category?: string;
+}
