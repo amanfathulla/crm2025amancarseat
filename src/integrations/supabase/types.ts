@@ -16,11 +16,14 @@ export type Database = {
           city: string | null
           created_at: string | null
           email: string
+          gross_profit: number | null
           id: string
           name: string
           order_date: string | null
           phone: string | null
           product: string | null
+          product_variation: string | null
+          sales_amount: number | null
           state: string | null
           total_orders: number | null
           total_spent: number | null
@@ -33,11 +36,14 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           email: string
+          gross_profit?: number | null
           id?: string
           name: string
           order_date?: string | null
           phone?: string | null
           product?: string | null
+          product_variation?: string | null
+          sales_amount?: number | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
@@ -50,11 +56,14 @@ export type Database = {
           city?: string | null
           created_at?: string | null
           email?: string
+          gross_profit?: number | null
           id?: string
           name?: string
           order_date?: string | null
           phone?: string | null
           product?: string | null
+          product_variation?: string | null
+          sales_amount?: number | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
