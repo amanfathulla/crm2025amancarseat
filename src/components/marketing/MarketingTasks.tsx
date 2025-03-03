@@ -1,4 +1,3 @@
-
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ListTodoIcon, FacebookIcon, InstagramIcon, YoutubeIcon, PlusIcon } from "lucide-react";
+import { ListTodoIcon, FacebookIcon, InstagramIcon, YoutubeIcon, PlusIcon, X as XIcon } from "lucide-react";
 
 type TaskType = "general" | "facebook" | "instagram" | "tiktok";
 

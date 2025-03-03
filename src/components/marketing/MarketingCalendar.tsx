@@ -54,9 +54,9 @@ export function MarketingCalendar() {
                 DayContent: (props) => (
                   <div className="relative h-full w-full p-0">
                     <div className="relative h-full w-full flex items-center justify-center">
-                      {props.day.day}
+                      {props.date.getDate()}
                     </div>
-                    {renderDayContents(props.day.date)}
+                    {renderDayContents(props.date)}
                   </div>
                 ),
               }}
