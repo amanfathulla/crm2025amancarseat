@@ -68,7 +68,7 @@ export default function Customers() {
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
-        order_status: record.order_status || "processing", // Default to processing if not set
+        order_status: record.order_status || "processing", // Make sure to include this field
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
         created_at: record.created_at || "",
