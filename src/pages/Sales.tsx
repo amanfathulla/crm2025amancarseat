@@ -1,20 +1,260 @@
 
+import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Download, MoreHorizontal } from "lucide-react";
+import { Search, Filter, Download, MoreHorizontal, PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { YearlySalesRecord, SalesAnalytics } from "@/types/sales";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  Legend,
+  ResponsiveContainer,
+} from "recharts";
 
 export default function Sales() {
+  const { toast } = useToast();
+  const [yearlySales, setYearlySales] = useState<YearlySalesRecord[]>([]);
+  const [analytics, setAnalytics] = useState<SalesAnalytics | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  
+  const fetchSalesData = async () => {
+    setIsLoading(true);
+    try {
+      // Fetch yearly sales data
+      const { data, error } = await supabase
+        .from("yearly_sales")
+        .select("*")
+        .order("year", { ascending: false });
+
+      if (error) throw error;
+      setYearlySales(data || []);
+      
+      // Generate analytics
+      if (data && data.length >= 2) {
+        const sortedYears = [...data].sort((a, b) => b.year - a.year);
+        const currentYear = sortedYears[0];
+        const previousYear = sortedYears[1];
+        
+        const percentageChange = previousYear.total_revenue > 0
+          ? ((currentYear.total_revenue - previousYear.total_revenue) / previousYear.total_revenue) * 100
+          : 100;
+        
+        const quarterlyData = [
+          {
+            quarter: "Q1",
+            currentYear: currentYear.quarter_1,
+            previousYear: previousYear.quarter_1,
+          },
+          {
+            quarter: "Q2",
+            currentYear: currentYear.quarter_2,
+            previousYear: previousYear.quarter_2,
+          },
+          {
+            quarter: "Q3",
+            currentYear: currentYear.quarter_3,
+            previousYear: previousYear.quarter_3,
+          },
+          {
+            quarter: "Q4",
+            currentYear: currentYear.quarter_4,
+            previousYear: previousYear.quarter_4,
+          },
+        ];
+        
+        setAnalytics({
+          currentYearRevenue: currentYear.total_revenue,
+          previousYearRevenue: previousYear.total_revenue,
+          percentageChange,
+          quarterlyData,
+        });
+      } else {
+        setAnalytics(null);
+      }
+      
+    } catch (error: any) {
+      console.error("Error fetching sales data:", error);
+      toast({
+        title: "Error",
+        description: error.message || "Failed to load sales data.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchSalesData();
+  }, []);
+  
+  const formatCurrency = (amount: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+      maximumFractionDigits: 0,
+    }).format(amount);
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
         <h1 className="text-3xl font-semibold mb-2">Sales</h1>
-        <p className="text-muted-foreground">Manage orders and transactions</p>
+        <p className="text-muted-foreground">Manage orders and sales analytics</p>
       </section>
       
-      <Tabs defaultValue="all" className="animate-fade-in delay-100">
+      {/* Sales Analytics */}
+      <Card className="mb-8 animate-fade-in">
+        <CardHeader>
+          <CardTitle>Sales Analytics</CardTitle>
+          <CardDescription>Performance overview for yearly sales</CardDescription>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Loading analytics...</p>
+            </div>
+          ) : !analytics ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Not enough data to display analytics. Add at least two years of sales data.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Current Year)</p>
+                      <p className="text-3xl font-bold">{formatCurrency(analytics.currentYearRevenue)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-2">Total Revenue (Previous Year)</p>
+                      <p className="text-3xl font-bold">{formatCurrency(analytics.previousYearRevenue)}</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                <Card>
+                  <CardContent className="pt-6">
+                    <div className="text-center">
+                      <p className="text-sm text-muted-foreground mb-2">Year-Over-Year Change</p>
+                      <div className="flex items-center justify-center">
+                        {analytics.percentageChange >= 0 ? (
+                          <TrendingUp className="mr-2 h-5 w-5 text-emerald-500" />
+                        ) : (
+                          <TrendingDown className="mr-2 h-5 w-5 text-red-500" />
+                        )}
+                        <p 
+                          className={`text-3xl font-bold ${
+                            analytics.percentageChange >= 0 ? 'text-emerald-500' : 'text-red-500'
+                          }`}
+                        >
+                          {analytics.percentageChange >= 0 ? '+' : ''}
+                          {analytics.percentageChange.toFixed(1)}%
+                        </p>
+                      </div>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="h-80">
+                <ResponsiveContainer width="100%" height="100%">
+                  <BarChart
+                    data={analytics.quarterlyData}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
+                  >
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="quarter" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [`${formatCurrency(value as number)}`, 'Revenue']}
+                    />
+                    <Legend />
+                    <Bar dataKey="currentYear" name="Current Year" fill="#4f46e5" />
+                    <Bar dataKey="previousYear" name="Previous Year" fill="#94a3b8" />
+                  </BarChart>
+                </ResponsiveContainer>
+              </div>
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Yearly Sales Records */}
+      <Card className="animate-fade-in delay-100">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle>Yearly Sales Records</CardTitle>
+            <CardDescription>View and manage yearly sales data</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => setIsAddFormOpen(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Year
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="overflow-x-auto">
+            <table className="w-full">
+              <thead>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium">Year</th>
+                  <th className="text-left py-3 px-4 font-medium">Q1</th>
+                  <th className="text-left py-3 px-4 font-medium">Q2</th>
+                  <th className="text-left py-3 px-4 font-medium">Q3</th>
+                  <th className="text-left py-3 px-4 font-medium">Q4</th>
+                  <th className="text-right py-3 px-4 font-medium">Total Revenue</th>
+                </tr>
+              </thead>
+              <tbody>
+                {isLoading ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      Loading sales data...
+                    </td>
+                  </tr>
+                ) : yearlySales.length === 0 ? (
+                  <tr>
+                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      No sales data found. Add your first year record to get started.
+                    </td>
+                  </tr>
+                ) : (
+                  yearlySales.map((record) => (
+                    <tr key={record.id} className="border-b hover:bg-muted/30 transition-colors">
+                      <td className="py-3 px-4 text-sm font-medium">{record.year}</td>
+                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_1)}</td>
+                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_2)}</td>
+                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_3)}</td>
+                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_4)}</td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        {formatCurrency(record.total_revenue)}
+                      </td>
+                    </tr>
+                  ))
+                )}
+              </tbody>
+            </table>
+          </div>
+        </CardContent>
+      </Card>
+      
+      {/* Orders List */}
+      <Tabs defaultValue="all" className="animate-fade-in delay-200 mt-8">
         <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 mb-6">
           <TabsList>
             <TabsTrigger value="all">All Orders</TabsTrigger>
@@ -152,6 +392,15 @@ export default function Sales() {
           </Card>
         </TabsContent>
       </Tabs>
+      
+      {/* Add Yearly Sales Form */}
+      {isAddFormOpen && (
+        <YearlySalesForm
+          isOpen={isAddFormOpen}
+          onClose={() => setIsAddFormOpen(false)}
+          onSuccess={fetchSalesData}
+        />
+      )}
     </MainLayout>
   );
 }
