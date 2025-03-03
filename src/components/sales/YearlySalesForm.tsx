@@ -69,18 +69,18 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
           description: `Sales record for year ${formData.year} has been updated.`,
         });
       } else {
-        // Check if record for this year already exists
-        const { data: existingRecord, error: checkError } = await supabase
+        // Check if record for this year already exists - FIX HERE
+        const { data: existingRecords, error: checkError } = await supabase
           .from("yearly_sales")
           .select("*")
-          .eq("year", formData.year)
-          .single();
+          .eq("year", formData.year);
 
-        if (checkError && !checkError.message.includes('No rows found')) {
+        if (checkError) {
           throw checkError;
         }
 
-        if (existingRecord) {
+        // Now we check if there are any records in the array
+        if (existingRecords && existingRecords.length > 0) {
           toast({
             title: "Year already exists",
             description: `A sales record for ${formData.year} already exists.`,
