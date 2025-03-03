@@ -43,6 +43,10 @@ export default function Sales() {
         id: record.id,
         year: record.year,
         total_revenue: record.total_revenue,
+        quarter_1: record.quarter_1,
+        quarter_2: record.quarter_2,
+        quarter_3: record.quarter_3,
+        quarter_4: record.quarter_4,
         created_at: record.created_at
       })) || [];
       

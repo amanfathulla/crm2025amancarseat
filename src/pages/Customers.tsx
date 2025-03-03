@@ -45,8 +45,8 @@ export default function Customers() {
         email: record.email,
         phone: record.phone || "",
         location: record.city || record.address || "",
-        car_model: record.car_model || "",
-        product: record.product || "",
+        car_model: record.car_model || "",  // These fields don't exist in the database
+        product: record.product || "",      // so we set default empty strings
         order_date: record.order_date || "",
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
