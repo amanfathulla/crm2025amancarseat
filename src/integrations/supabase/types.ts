@@ -12,12 +12,15 @@ export type Database = {
       customers: {
         Row: {
           address: string | null
+          car_model: string | null
           city: string | null
           created_at: string | null
           email: string
           id: string
           name: string
+          order_date: string | null
           phone: string | null
+          product: string | null
           state: string | null
           total_orders: number | null
           total_spent: number | null
@@ -26,12 +29,15 @@ export type Database = {
         }
         Insert: {
           address?: string | null
+          car_model?: string | null
           city?: string | null
           created_at?: string | null
           email: string
           id?: string
           name: string
+          order_date?: string | null
           phone?: string | null
+          product?: string | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
@@ -40,12 +46,15 @@ export type Database = {
         }
         Update: {
           address?: string | null
+          car_model?: string | null
           city?: string | null
           created_at?: string | null
           email?: string
           id?: string
           name?: string
+          order_date?: string | null
           phone?: string | null
+          product?: string | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
