@@ -3,9 +3,100 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, MoreHorizontal } from "lucide-react";
+import { Search, PlusCircle, MoreHorizontal, Edit, Trash, Loader2 } from "lucide-react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { Product } from "@/types/product";
+import { useToast } from "@/hooks/use-toast";
+import ProductForm, { ProductFormValues } from "@/components/products/ProductForm";
+import DeleteProductDialog from "@/components/products/DeleteProductDialog";
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+} from "@/components/ui/dialog";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
 
 export default function Products() {
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [searchTerm, setSearchTerm] = useState("");
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const { toast } = useToast();
+
+  const fetchProducts = async () => {
+    try {
+      setLoading(true);
+      const { data, error } = await supabase
+        .from("products")
+        .select("*")
+        .order("name");
+
+      if (error) throw error;
+      setProducts(data as Product[]);
+    } catch (error) {
+      console.error("Error fetching products:", error);
+      toast({
+        title: "Error",
+        description: "There was a problem fetching the products",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchProducts();
+  }, []);
+
+  const filteredProducts = products.filter((product) =>
+    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
+  );
+
+  const handleEditClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteClick = (product: Product) => {
+    setSelectedProduct(product);
+    setIsDeleteDialogOpen(true);
+  };
+
+  const handleAddSuccess = () => {
+    fetchProducts();
+    setIsAddDialogOpen(false);
+  };
+
+  const handleEditSuccess = () => {
+    fetchProducts();
+    setIsEditDialogOpen(false);
+  };
+
+  const handleDeleteSuccess = () => {
+    fetchProducts();
+    setSelectedProduct(null);
+  };
+
+  const formatPrice = (price: number) => {
+    return new Intl.NumberFormat('en-US', {
+      style: 'currency',
+      currency: 'USD',
+    }).format(price);
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -25,9 +116,11 @@ export default function Products() {
               <Input
                 placeholder="Search products..."
                 className="pl-9 w-full sm:w-[260px]"
+                value={searchTerm}
+                onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
-            <Button size="sm" className="whitespace-nowrap">
+            <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddDialogOpen(true)}>
               <PlusCircle className="h-4 w-4 mr-2" />
               Add Product
             </Button>
@@ -35,96 +128,125 @@ export default function Products() {
         </CardHeader>
         <CardContent>
           <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Product</th>
-                  <th className="text-left py-3 px-4 font-medium">Category</th>
-                  <th className="text-left py-3 px-4 font-medium">Inventory</th>
-                  <th className="text-left py-3 px-4 font-medium">Sales</th>
-                  <th className="text-right py-3 px-4 font-medium">Price</th>
-                  <th className="text-right py-3 px-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
-                <ProductRow 
-                  name="Premium Bluetooth Headphones" 
-                  category="Electronics" 
-                  inventory={45} 
-                  sales={128} 
-                  price="$129.99" 
-                />
-                <ProductRow 
-                  name="Ergonomic Office Chair" 
-                  category="Furniture" 
-                  inventory={12} 
-                  sales={37} 
-                  price="$249.95" 
-                />
-                <ProductRow 
-                  name="Smart Watch Series 5" 
-                  category="Electronics" 
-                  inventory={78} 
-                  sales={214} 
-                  price="$199.99" 
-                />
-                <ProductRow 
-                  name="Leather Laptop Sleeve" 
-                  category="Accessories" 
-                  inventory={32} 
-                  sales={86} 
-                  price="$49.95" 
-                />
-                <ProductRow 
-                  name="Organic Cotton T-Shirt" 
-                  category="Clothing" 
-                  inventory={124} 
-                  sales={367} 
-                  price="$29.99" 
-                />
-                <ProductRow 
-                  name="Stainless Steel Water Bottle" 
-                  category="Kitchen" 
-                  inventory={98} 
-                  sales={215} 
-                  price="$24.95" 
-                />
-                <ProductRow 
-                  name="Wireless Charging Pad" 
-                  category="Electronics" 
-                  inventory={56} 
-                  sales={143} 
-                  price="$39.99" 
-                />
-                <ProductRow 
-                  name="Bamboo Cutting Board Set" 
-                  category="Kitchen" 
-                  inventory={27} 
-                  sales={74} 
-                  price="$34.95" 
-                />
-              </tbody>
-            </table>
+            {loading ? (
+              <div className="flex justify-center items-center py-8">
+                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <table className="w-full">
+                <thead>
+                  <tr className="border-b">
+                    <th className="text-left py-3 px-4 font-medium">Product</th>
+                    <th className="text-left py-3 px-4 font-medium">Category</th>
+                    <th className="text-left py-3 px-4 font-medium">Inventory</th>
+                    <th className="text-left py-3 px-4 font-medium">Sales</th>
+                    <th className="text-right py-3 px-4 font-medium">Price</th>
+                    <th className="text-right py-3 px-4 font-medium">Actions</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  {filteredProducts.length === 0 ? (
+                    <tr>
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                        {searchTerm ? "No products match your search" : "No products found"}
+                      </td>
+                    </tr>
+                  ) : (
+                    filteredProducts.map((product) => (
+                      <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
+                        <td className="py-3 px-4 text-sm font-medium">{product.name}</td>
+                        <td className="py-3 px-4 text-sm">{product.category || "-"}</td>
+                        <td className="py-3 px-4 text-sm">{product.inventory || 0}</td>
+                        <td className="py-3 px-4 text-sm">{product.sales || 0}</td>
+                        <td className="py-3 px-4 text-sm text-right font-medium">
+                          {formatPrice(product.price)}
+                        </td>
+                        <td className="py-3 px-4 text-sm text-right">
+                          <DropdownMenu>
+                            <DropdownMenuTrigger asChild>
+                              <Button variant="ghost" size="icon" className="h-8 w-8">
+                                <MoreHorizontal className="h-4 w-4" />
+                              </Button>
+                            </DropdownMenuTrigger>
+                            <DropdownMenuContent align="end">
+                              <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                                <Edit className="h-4 w-4 mr-2" />
+                                Edit
+                              </DropdownMenuItem>
+                              <DropdownMenuItem 
+                                onClick={() => handleDeleteClick(product)}
+                                className="text-destructive focus:text-destructive"
+                              >
+                                <Trash className="h-4 w-4 mr-2" />
+                                Delete
+                              </DropdownMenuItem>
+                            </DropdownMenuContent>
+                          </DropdownMenu>
+                        </td>
+                      </tr>
+                    ))
+                  )}
+                </tbody>
+              </table>
+            )}
           </div>
         </CardContent>
       </Card>
-    </MainLayout>
-  );
-}
 
-function ProductRow({ name, category, inventory, sales, price }: { name: string; category: string; inventory: number; sales: number; price: string }) {
-  return (
-    <tr className="border-b hover:bg-muted/30 transition-colors">
-      <td className="py-3 px-4 text-sm font-medium">{name}</td>
-      <td className="py-3 px-4 text-sm">{category}</td>
-      <td className="py-3 px-4 text-sm">{inventory}</td>
-      <td className="py-3 px-4 text-sm">{sales}</td>
-      <td className="py-3 px-4 text-sm text-right font-medium">{price}</td>
-      <td className="py-3 px-4 text-sm text-right">
-        <Button variant="ghost" size="icon" className="h-8 w-8">
-          <MoreHorizontal className="h-4 w-4" />
-        </Button>
-      </td>
-    </tr>
+      {/* Add Product Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[600px]">
+          <DialogHeader>
+            <DialogTitle>Add New Product</DialogTitle>
+            <DialogDescription>
+              Fill in the details to create a new product.
+            </DialogDescription>
+          </DialogHeader>
+          <ProductForm 
+            onSuccess={handleAddSuccess} 
+            onCancel={() => setIsAddDialogOpen(false)} 
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      {selectedProduct && (
+        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Edit Product</DialogTitle>
+              <DialogDescription>
+                Update the details of {selectedProduct.name}.
+              </DialogDescription>
+            </DialogHeader>
+            <ProductForm 
+              onSuccess={handleEditSuccess} 
+              onCancel={() => setIsEditDialogOpen(false)}
+              initialData={{
+                id: selectedProduct.id,
+                name: selectedProduct.name,
+                description: selectedProduct.description || "",
+                category: selectedProduct.category || "",
+                price: selectedProduct.price,
+                inventory: selectedProduct.inventory || 0,
+                sku: selectedProduct.sku || "",
+                cost: selectedProduct.cost || 0,
+              }}
+            />
+          </DialogContent>
+        </Dialog>
+      )}
+
+      {/* Delete Product Dialog */}
+      {selectedProduct && (
+        <DeleteProductDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          productId={selectedProduct.id}
+          productName={selectedProduct.name}
+          onSuccess={handleDeleteSuccess}
+        />
+      )}
+    </MainLayout>
   );
 }
