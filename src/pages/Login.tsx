@@ -5,19 +5,21 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoaderCircle } from "lucide-react";
+import { LoaderCircle, User, Mail } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Login() {
   // Login state
-  const [email, setEmail] = useState("");
+  const [identifier, setIdentifier] = useState("");
   const [password, setPassword] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [loginMode, setLoginMode] = useState<"username" | "email">("username");
   
   // Signup state
   const [signupEmail, setSignupEmail] = useState("");
+  const [signupUsername, setSignupUsername] = useState("");
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
@@ -30,7 +32,7 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      const success = await login(email, password);
+      const success = await login(identifier, password);
       if (success) {
         navigate("/dashboard");
       }
@@ -53,10 +55,22 @@ export default function Login() {
     setIsSubmitting(true);
     
     try {
-      const success = await signup(signupEmail, signupPassword);
+      const success = await signup(signupEmail, signupPassword, signupUsername);
       if (success) {
         // Redirect to login tab or dashboard depending on your flow
         // For now, we'll stay on the page as they might need to verify email
+      }
+    } finally {
+      setIsSubmitting(false);
+    }
+  };
+
+  const quickAdminLogin = async () => {
+    setIsSubmitting(true);
+    try {
+      const success = await login("admin", "admin");
+      if (success) {
+        navigate("/dashboard");
       }
     } finally {
       setIsSubmitting(false);
@@ -82,15 +96,55 @@ export default function Login() {
                 <p className="text-muted-foreground mt-2">Sign in to your account</p>
               </div>
               
+              <div className="flex justify-center mb-4">
+                <Button 
+                  onClick={quickAdminLogin} 
+                  variant="outline" 
+                  className="w-full"
+                  disabled={isSubmitting}
+                >
+                  Quick Login as Admin
+                </Button>
+              </div>
+              
+              <div className="text-center mb-4">
+                <span className="text-sm text-muted-foreground">or sign in with your details</span>
+              </div>
+              
+              <div className="flex justify-center mb-4">
+                <div className="flex">
+                  <Button 
+                    type="button" 
+                    variant={loginMode === "username" ? "default" : "outline"} 
+                    onClick={() => setLoginMode("username")}
+                    className="rounded-r-none"
+                    size="sm"
+                  >
+                    <User className="mr-2 h-4 w-4" />
+                    Username
+                  </Button>
+                  <Button 
+                    type="button" 
+                    variant={loginMode === "email" ? "default" : "outline"} 
+                    onClick={() => setLoginMode("email")}
+                    className="rounded-l-none"
+                    size="sm"
+                  >
+                    <Mail className="mr-2 h-4 w-4" />
+                    Email
+                  </Button>
+                </div>
+              </div>
+              
               <form onSubmit={handleLogin} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="email">Email</Label>
+                  <Label htmlFor="identifier">{loginMode === "email" ? "Email" : "Username"}</Label>
                   <Input
-                    id="email"
-                    type="email"
-                    placeholder="your@email.com"
-                    value={email}
-                    onChange={(e) => setEmail(e.target.value)}
+                    id="identifier"
+                    type={loginMode === "email" ? "email" : "text"}
+                    placeholder={loginMode === "email" ? "your@email.com" : "username"}
+                    value={identifier}
+                    onChange={(e) => setIdentifier(e.target.value)}
                     className="h-12"
                     required
                   />
@@ -139,7 +193,20 @@ export default function Login() {
               
               <form onSubmit={handleSignup} className="space-y-5">
                 <div className="space-y-2">
-                  <Label htmlFor="signup-email">Email</Label>
+                  <Label htmlFor="signup-username">Username</Label>
+                  <Input
+                    id="signup-username"
+                    type="text"
+                    placeholder="username"
+                    value={signupUsername}
+                    onChange={(e) => setSignupUsername(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email (Optional)</Label>
                   <Input
                     id="signup-email"
                     type="email"
@@ -147,7 +214,6 @@ export default function Login() {
                     value={signupEmail}
                     onChange={(e) => setSignupEmail(e.target.value)}
                     className="h-12"
-                    required
                   />
                 </div>
                 
