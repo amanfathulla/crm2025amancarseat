@@ -1,4 +1,3 @@
-
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -51,12 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       // Check if input is an email (contains @) or a username
       const isEmail = usernameOrEmail.includes('@');
       
-      // If it's a simple username demo flow, handle it with a simplified approach
-      if (!isEmail && usernameOrEmail === 'admin' && password === 'admin') {
+      // If it's a simple username demo flow for admin, handle it with a simplified approach
+      if (!isEmail && usernameOrEmail === 'admin' && password === 'Muhsin@920926') {
         // Create a demo user session
         const { data, error } = await supabase.auth.signInWithPassword({
           email: 'admin@example.com',
-          password: 'admin123'
+          password: 'Muhsin@920926'
         });
         
         if (error) {

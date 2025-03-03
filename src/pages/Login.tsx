@@ -68,7 +68,7 @@ export default function Login() {
   const quickAdminLogin = async () => {
     setIsSubmitting(true);
     try {
-      const success = await login("admin", "admin");
+      const success = await login("admin", "Muhsin@920926");
       if (success) {
         navigate("/dashboard");
       }
