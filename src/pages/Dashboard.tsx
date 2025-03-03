@@ -2,32 +2,19 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { ArrowUpRight, Calendar, ArrowLeft, ArrowRight, ShoppingBag, PackageCheck, PackageX, DollarSign, BarChart4, TrendingUp, TrendingDown, Package, ShoppingCart } from "lucide-react";
-import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
+import { Calendar, ShoppingBag, PackageCheck, PackageX, DollarSign, BarChart4, TrendingUp, Package, ShoppingCart } from "lucide-react";
+import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { useState } from "react";
 import { getSampleRevenueData, getSampleDailyRevenueData } from "@/utils/sampleData";
 
 export default function Dashboard() {
-  const [selectedYear, setSelectedYear] = useState(2024);
   const revenueData = getSampleRevenueData();
   const dailyRevenueData = getSampleDailyRevenueData();
-  
-  // Get current metrics based on selected year
-  const currentYearData = selectedYear === 2024 ? revenueData.currentYear : revenueData.previousYear;
   
   // Function to format currency
   const formatCurrency = (value: number) => {
     return `RM ${value.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
-  };
-  
-  // Handle year navigation
-  const nextYear = () => {
-    if (selectedYear < 2025) setSelectedYear(selectedYear + 1);
-  };
-  
-  const prevYear = () => {
-    if (selectedYear > 2023) setSelectedYear(selectedYear - 1);
   };
   
   return (
@@ -39,28 +26,31 @@ export default function Dashboard() {
       
       {/* Annual Revenue Overview */}
       <section className="mb-6 animate-slide-up delay-200">
-        <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
-          <CardContent className="pt-6">
-            <div className="flex flex-col items-center">
-              <h3 className="text-xl text-green-700 dark:text-green-400 font-medium">Jualan {currentYearData.year} : {formatCurrency(currentYearData.total)}</h3>
-              
-              <div className="w-full flex items-center justify-between my-4">
-                <button onClick={prevYear} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                  <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                </button>
-                
-                <div className="text-center">
-                  <h2 className="text-xl font-semibold mb-1">Jumlah Jualan {selectedYear}</h2>
-                  <p className="text-5xl font-bold my-2">{formatCurrency(currentYearData.total)}</p>
-                </div>
-                
-                <button onClick={nextYear} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
-                  <ArrowRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
-                </button>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium">Jualan {revenueData.currentYear.year}</h3>
               </div>
-            </div>
-          </CardContent>
-        </Card>
+              <p className="text-3xl font-bold">{formatCurrency(revenueData.currentYear.total)}</p>
+              <div className="flex items-center mt-2 text-xs text-gray-500">
+                <span>Tahun Semasa</span>
+              </div>
+            </CardContent>
+          </Card>
+          
+          <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+            <CardContent className="pt-6">
+              <div className="flex items-center justify-between mb-2">
+                <h3 className="text-lg font-medium">Jualan {revenueData.previousYear.year}</h3>
+              </div>
+              <p className="text-3xl font-bold">{formatCurrency(revenueData.previousYear.total)}</p>
+              <div className="flex items-center mt-2 text-xs text-gray-500">
+                <span>Tahun Lepas</span>
+              </div>
+            </CardContent>
+          </Card>
+        </div>
       </section>
       
       {/* Daily Revenue Stats */}
