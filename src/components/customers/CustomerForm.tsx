@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "@/types/customer";
-import { Product } from "@/types/product";
+import { Product, ProductVariation } from "@/types/product";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { 
   Select, 
@@ -15,6 +15,7 @@ import {
   SelectTrigger, 
   SelectValue 
 } from "@/components/ui/select";
+import { Card, CardContent } from "@/components/ui/card";
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -33,12 +34,18 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
       location: "",
       car_model: "",
       product: "",
+      product_variation: "",
       order_date: new Date().toISOString().split("T")[0],
+      sales_amount: 0,
+      gross_profit: 0,
     }
   );
   const [isLoading, setIsLoading] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(true);
+  const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [variations, setVariations] = useState<ProductVariation[]>([]);
+  const [loadingVariations, setLoadingVariations] = useState(false);
 
   // Fetch products for the dropdown
   useEffect(() => {
@@ -52,6 +59,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
 
         if (error) throw error;
         setProducts(data || []);
+        
+        // If editing and product already selected, find the product details
+        if (customer?.product) {
+          const foundProduct = data?.find(p => p.name === customer.product) || null;
+          setSelectedProduct(foundProduct);
+          if (foundProduct) {
+            fetchProductVariations(foundProduct.id);
+          }
+        }
       } catch (error: any) {
         console.error("Error fetching products:", error);
         toast({
@@ -65,7 +81,39 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
     };
 
     fetchProducts();
-  }, [toast]);
+  }, [toast, customer]);
+
+  // Fetch product variations when product changes
+  const fetchProductVariations = async (productId: string) => {
+    try {
+      setLoadingVariations(true);
+      const { data, error } = await supabase
+        .from("product_variations")
+        .select("*")
+        .eq("product_id", productId)
+        .order("name");
+
+      if (error) throw error;
+      setVariations(data || []);
+      
+      // If editing and variation already selected, find it in the fetched variations
+      if (customer?.product_variation && data) {
+        const foundVariation = data.find(v => v.name === customer.product_variation);
+        if (foundVariation) {
+          handleVariationChange(foundVariation.name, foundVariation.price, foundVariation.cost);
+        }
+      }
+    } catch (error: any) {
+      console.error("Error fetching product variations:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load product variations.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoadingVariations(false);
+    }
+  };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -74,6 +122,40 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
 
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
+    
+    // If selecting a product, fetch its variations
+    if (name === "product") {
+      // Reset variation selection when product changes
+      setFormData(prev => ({ 
+        ...prev, 
+        product_variation: "", 
+        sales_amount: 0,
+        gross_profit: 0 
+      }));
+      
+      // Find the selected product and fetch its variations
+      const product = products.find(p => p.name === value) || null;
+      setSelectedProduct(product);
+      
+      if (product) {
+        fetchProductVariations(product.id);
+      } else {
+        setVariations([]);
+      }
+    }
+  };
+  
+  const handleVariationChange = (variationName: string, price: number, cost: number) => {
+    // Calculate sales amount and gross profit
+    const salesAmount = price;
+    const grossProfit = price - cost;
+    
+    setFormData(prev => ({
+      ...prev,
+      product_variation: variationName,
+      sales_amount: salesAmount,
+      gross_profit: grossProfit
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -92,6 +174,9 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             city: formData.location, // Map location to city in the database
             car_model: formData.car_model,
             product: formData.product,
+            product_variation: formData.product_variation,
+            sales_amount: formData.sales_amount,
+            gross_profit: formData.gross_profit,
             order_date: formData.order_date,
           })
           .eq("email", customer.email);
@@ -111,6 +196,9 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             city: formData.location, // Map location to city in the database
             car_model: formData.car_model,
             product: formData.product,
+            product_variation: formData.product_variation,
+            sales_amount: formData.sales_amount,
+            gross_profit: formData.gross_profit,
             order_date: formData.order_date,
           },
         ]);
@@ -236,11 +324,61 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
               />
             </div>
           </div>
+          
+          {/* Product Variations */}
+          {formData.product && (
+            <div className="mt-4">
+              <Label>Product Variation</Label>
+              <div className="grid grid-cols-1 gap-2 mt-2">
+                {loadingVariations ? (
+                  <div className="text-sm text-muted-foreground py-2">Loading variations...</div>
+                ) : variations.length === 0 ? (
+                  <div className="text-sm text-muted-foreground py-2">No variations available for this product</div>
+                ) : (
+                  variations.map((variation) => (
+                    <Card 
+                      key={variation.id} 
+                      className={`cursor-pointer hover:bg-accent transition-colors ${formData.product_variation === variation.name ? 'border-primary' : ''}`}
+                      onClick={() => handleVariationChange(variation.name, variation.price, variation.cost)}
+                    >
+                      <CardContent className="p-3 flex justify-between items-center">
+                        <div>
+                          <div className="font-medium">{variation.name}</div>
+                          <div className="text-sm text-muted-foreground">Price: ${variation.price.toFixed(2)}</div>
+                        </div>
+                        <div className={`w-4 h-4 rounded-full border ${formData.product_variation === variation.name ? 'bg-primary border-primary' : 'border-muted'}`}></div>
+                      </CardContent>
+                    </Card>
+                  ))
+                )}
+              </div>
+            </div>
+          )}
+          
+          {/* Show sales amount and gross profit if a variation is selected */}
+          {formData.product_variation && (
+            <div className="mt-4 p-4 bg-muted rounded-md">
+              <div className="text-sm font-medium mb-2">Order Summary</div>
+              <div className="flex justify-between mb-1">
+                <span>Selected Variation:</span>
+                <span>{formData.product_variation}</span>
+              </div>
+              <div className="flex justify-between mb-1">
+                <span>Sales Amount:</span>
+                <span>${formData.sales_amount.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between font-medium">
+                <span>Gross Profit:</span>
+                <span>${formData.gross_profit.toFixed(2)}</span>
+              </div>
+            </div>
+          )}
+          
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel
             </Button>
-            <Button type="submit" disabled={isLoading}>
+            <Button type="submit" disabled={isLoading || (formData.product && !formData.product_variation)}>
               {isLoading ? "Saving..." : customer ? "Update" : "Add Customer"}
             </Button>
           </DialogFooter>

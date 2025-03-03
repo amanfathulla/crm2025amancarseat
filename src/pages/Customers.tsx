@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -47,6 +48,9 @@ export default function Customers() {
         location: record.city || record.address || "",
         car_model: record.car_model || "",  
         product: record.product || "",
+        product_variation: record.product_variation || "",
+        sales_amount: record.sales_amount || 0,
+        gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
@@ -82,7 +86,8 @@ export default function Customers() {
       customer.phone.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.car_model.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.product.toLowerCase().includes(searchQuery.toLowerCase())
+      customer.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      customer.product_variation.toLowerCase().includes(searchQuery.toLowerCase())
   );
 
   const handleEditCustomer = (customer: Customer) => {
@@ -93,6 +98,9 @@ export default function Customers() {
       location: customer.location,
       car_model: customer.car_model,
       product: customer.product,
+      product_variation: customer.product_variation,
+      sales_amount: customer.sales_amount,
+      gross_profit: customer.gross_profit,
       order_date: customer.order_date,
     });
     setIsEditFormOpen(true);
@@ -106,6 +114,9 @@ export default function Customers() {
       location: customer.location,
       car_model: customer.car_model,
       product: customer.product,
+      product_variation: customer.product_variation,
+      sales_amount: customer.sales_amount,
+      gross_profit: customer.gross_profit,
       order_date: customer.order_date,
     });
     setIsDeleteDialogOpen(true);
@@ -151,6 +162,9 @@ export default function Customers() {
                   <th className="text-left py-3 px-4 font-medium">Location</th>
                   <th className="text-left py-3 px-4 font-medium">Car Model</th>
                   <th className="text-left py-3 px-4 font-medium">Product</th>
+                  <th className="text-left py-3 px-4 font-medium">Variation</th>
+                  <th className="text-right py-3 px-4 font-medium">Sales Amount</th>
+                  <th className="text-right py-3 px-4 font-medium">Profit</th>
                   <th className="text-left py-3 px-4 font-medium">Order Date</th>
                   <th className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
@@ -158,13 +172,13 @@ export default function Customers() {
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="py-8 text-center text-muted-foreground">
                       Loading customers...
                     </td>
                   </tr>
                 ) : filteredCustomers.length === 0 ? (
                   <tr>
-                    <td colSpan={8} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={11} className="py-8 text-center text-muted-foreground">
                       {searchQuery
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
@@ -240,6 +254,10 @@ function CustomerRow({
     return date.toLocaleDateString();
   };
 
+  const formatCurrency = (amount: number) => {
+    return `$${amount.toFixed(2)}`;
+  };
+
   return (
     <tr className="border-b hover:bg-muted/30 transition-colors">
       <td className="py-3 px-4 text-sm font-medium">{customer.name}</td>
@@ -248,6 +266,9 @@ function CustomerRow({
       <td className="py-3 px-4 text-sm">{customer.location}</td>
       <td className="py-3 px-4 text-sm">{customer.car_model}</td>
       <td className="py-3 px-4 text-sm">{customer.product}</td>
+      <td className="py-3 px-4 text-sm">{customer.product_variation}</td>
+      <td className="py-3 px-4 text-sm text-right">{formatCurrency(customer.sales_amount)}</td>
+      <td className="py-3 px-4 text-sm text-right">{formatCurrency(customer.gross_profit)}</td>
       <td className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</td>
       <td className="py-3 px-4 text-sm text-right">
         <DropdownMenu>

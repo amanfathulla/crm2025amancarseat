@@ -7,6 +7,9 @@ export interface Customer {
   location: string; // This will map to city or address in the database
   car_model: string;
   product: string;
+  product_variation: string;
+  sales_amount: number;
+  gross_profit: number;
   order_date: string;
   total_orders: number;
   total_spent: number;
@@ -21,5 +24,8 @@ export interface CustomerFormData {
   location: string;
   car_model: string;
   product: string;
+  product_variation: string;
+  sales_amount: number;
+  gross_profit: number;
   order_date: string;
 }
