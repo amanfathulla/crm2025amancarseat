@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -264,7 +265,7 @@ export default function Dashboard() {
     <MainLayout>
       <section className="mb-6 animate-slide-up delay-100">
         <h1 className="text-3xl font-semibold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Ringkasan Prestasi (Overview)</p>
+        <p className="text-muted-foreground">"Kejayaan bermula dengan langkah berani. Terus maju tanpa ragu! – Aman, Founder AMAN CAR SEAT"</p>
       </section>
       
       {/* Annual Revenue Section - Now a grid with two cards */}
