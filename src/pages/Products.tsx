@@ -1,9 +1,8 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, MoreHorizontal, Edit, Trash, Loader2, Image } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Image, Save } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
@@ -62,8 +61,7 @@ export default function Products() {
   }, []);
 
   const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    (product.category && product.category.toLowerCase().includes(searchTerm.toLowerCase()))
+    product.name.toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const handleEditClick = (product: Product) => {
@@ -137,8 +135,8 @@ export default function Products() {
               />
             </div>
             <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddDialogOpen(true)}>
-              <PlusCircle className="h-4 w-4 mr-2" />
-              Add Product
+              <Save className="h-4 w-4 mr-2" />
+              Save Product
             </Button>
           </div>
         </CardHeader>
@@ -153,7 +151,6 @@ export default function Products() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-3 px-4 font-medium">Product</th>
-                    <th className="text-left py-3 px-4 font-medium">Category</th>
                     <th className="text-left py-3 px-4 font-medium">Status</th>
                     <th className="text-left py-3 px-4 font-medium">Inventory</th>
                     <th className="text-right py-3 px-4 font-medium">Price</th>
@@ -163,7 +160,7 @@ export default function Products() {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
                         {searchTerm ? "No products match your search" : "No products found"}
                       </td>
                     </tr>
@@ -189,7 +186,6 @@ export default function Products() {
                             <div className="font-medium">{product.name}</div>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-sm">{product.category || "-"}</td>
                         <td className="py-3 px-4 text-sm">
                           {getStatusBadge(product.status)}
                         </td>
@@ -261,11 +257,8 @@ export default function Products() {
               initialData={{
                 id: selectedProduct.id,
                 name: selectedProduct.name,
-                description: selectedProduct.description || "",
-                category: selectedProduct.category || "",
                 price: selectedProduct.price,
                 inventory: selectedProduct.inventory || 0,
-                sku: selectedProduct.sku || "",
                 cost: selectedProduct.cost || 0,
                 image_url: selectedProduct.image_url || "",
                 status: selectedProduct.status || "active",
