@@ -41,13 +41,6 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
     setFormData((prev) => ({
       ...prev,
       [name]: numValue,
-      // Set all quarters to 0 to maintain database structure
-      ...(name === "total_revenue" ? {
-        quarter_1: 0,
-        quarter_2: 0,
-        quarter_3: 0,
-        quarter_4: 0
-      } : {})
     }));
   };
 
@@ -63,7 +56,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
           .update({
             year: formData.year,
             total_revenue: formData.total_revenue,
-            quarter_1: 0,  // Set all quarters to 0
+            quarter_1: 0,  // Set all quarters to 0 since we're not using them
             quarter_2: 0,
             quarter_3: 0,
             quarter_4: 0,
@@ -104,7 +97,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
             {
               year: formData.year,
               total_revenue: formData.total_revenue,
-              quarter_1: 0,  // Set all quarters to 0
+              quarter_1: 0,  // Set all quarters to 0 since we're not using them
               quarter_2: 0,
               quarter_3: 0,
               quarter_4: 0,
@@ -155,7 +148,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="total_revenue">Total Revenue</Label>
+              <Label htmlFor="total_revenue">Total Revenue (RM)</Label>
               <Input
                 id="total_revenue"
                 name="total_revenue"

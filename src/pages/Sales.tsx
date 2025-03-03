@@ -77,30 +77,6 @@ export default function Sales() {
           totalRevenue: record.total_revenue,
         }));
         
-        // Create quarterly data for detailed breakdown
-        const quarterlyData = [
-          {
-            quarter: "Q1",
-            currentYear: currentYearData ? currentYearData.quarter_1 : 0,
-            previousYear: previousYearData ? previousYearData.quarter_1 : 0,
-          },
-          {
-            quarter: "Q2",
-            currentYear: currentYearData ? currentYearData.quarter_2 : 0,
-            previousYear: previousYearData ? previousYearData.quarter_2 : 0,
-          },
-          {
-            quarter: "Q3",
-            currentYear: currentYearData ? currentYearData.quarter_3 : 0,
-            previousYear: previousYearData ? previousYearData.quarter_3 : 0,
-          },
-          {
-            quarter: "Q4",
-            currentYear: currentYearData ? currentYearData.quarter_4 : 0,
-            previousYear: previousYearData ? previousYearData.quarter_4 : 0,
-          },
-        ];
-        
         setAnalytics({
           currentYearRevenue,
           previousYearRevenue,
@@ -222,7 +198,7 @@ export default function Sales() {
                       formatter={(value) => [`${formatCurrency(value as number)}`, 'Revenue']}
                     />
                     <Legend />
-                    <Bar dataKey="totalRevenue" name="Total Revenue" fill="#4f46e5" />
+                    <Bar dataKey="totalRevenue" name="Total Revenue (RM)" fill="#4f46e5" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -267,24 +243,20 @@ export default function Sales() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Year</th>
-                  <th className="text-right py-3 px-4 font-medium">Q1</th>
-                  <th className="text-right py-3 px-4 font-medium">Q2</th>
-                  <th className="text-right py-3 px-4 font-medium">Q3</th>
-                  <th className="text-right py-3 px-4 font-medium">Q4</th>
-                  <th className="text-right py-3 px-4 font-medium">Total Revenue</th>
+                  <th className="text-right py-3 px-4 font-medium">Total Revenue (RM)</th>
                   <th className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={3} className="py-8 text-center text-muted-foreground">
                       Loading yearly sales data...
                     </td>
                   </tr>
                 ) : filteredYearlySales.length === 0 ? (
                   <tr>
-                    <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={3} className="py-8 text-center text-muted-foreground">
                       {searchQuery ? "No matching yearly sales records found." : "No yearly sales records found. Add your first record to get started."}
                     </td>
                   </tr>
@@ -293,18 +265,6 @@ export default function Sales() {
                     <tr key={record.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-4 text-sm font-medium">
                         {record.year}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        {formatCurrency(record.quarter_1)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        {formatCurrency(record.quarter_2)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        {formatCurrency(record.quarter_3)}
-                      </td>
-                      <td className="py-3 px-4 text-sm text-right">
-                        {formatCurrency(record.quarter_4)}
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
                         {formatCurrency(record.total_revenue)}

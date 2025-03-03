@@ -1,3 +1,4 @@
+
 export interface YearlySalesRecord {
   id: string;
   year: number;
