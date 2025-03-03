@@ -4,8 +4,15 @@ import { Calendar } from "@/components/ui/calendar";
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { CalendarIcon, ListTodoIcon, NotebookIcon } from "lucide-react";
+import { CalendarIcon, ListTodoIcon, NotebookIcon, PlusIcon, Edit2Icon, TrashIcon } from "lucide-react";
 import { isSameDay } from "@/utils/dateUtils";
+import { useMarketingEvents } from "@/hooks/useMarketingEvents";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger, DialogFooter, DialogClose } from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { MarketingEvent } from "@/types/marketing";
 
 // Import sample data from other components
 import { MarketingTasks } from "./MarketingTasks";
@@ -63,24 +70,23 @@ const getSampleNotes = () => {
   ];
 };
 
-// Sample data for calendar events
-const sampleEvents = [
-  { date: new Date(2023, 6, 12), title: "Post Facebook Ad", type: "facebook" },
-  { date: new Date(2023, 6, 14), title: "Instagram Story", type: "instagram" },
-  { date: new Date(2023, 6, 18), title: "TikTok Video", type: "tiktok" },
-  { date: new Date(2023, 6, 20), title: "Email Campaign", type: "email" },
-];
-
 export function MarketingCalendar() {
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [activeTab, setActiveTab] = useState<string>("tasks");
+  const [isEventDialogOpen, setIsEventDialogOpen] = useState(false);
+  const [currentEvent, setCurrentEvent] = useState<MarketingEvent | null>(null);
+  const [newEventTitle, setNewEventTitle] = useState("");
+  const [newEventType, setNewEventType] = useState<string>("general");
+  const [newEventDescription, setNewEventDescription] = useState("");
+  
+  const { events, isLoading, addEvent, updateEvent, deleteEvent } = useMarketingEvents();
   
   const tasks = getSampleTasks();
   const notes = getSampleNotes();
   
   // Get events for the selected date
-  const selectedDateEvents = sampleEvents.filter(
-    (event) => date && isSameDay(event.date, date)
+  const selectedDateEvents = events.filter(
+    (event) => date && isSameDay(event.date instanceof Date ? event.date : new Date(event.date), date)
   );
 
   // Get tasks for the selected date
@@ -95,8 +101,8 @@ export function MarketingCalendar() {
 
   // Function to render day contents with event indicators
   const renderDayContents = (day: Date) => {
-    const eventsOnDay = sampleEvents.filter(
-      (event) => isSameDay(event.date, day)
+    const eventsOnDay = events.filter(
+      (event) => isSameDay(event.date instanceof Date ? event.date : new Date(event.date), day)
     );
 
     const tasksOnDay = tasks.filter(
@@ -120,13 +126,71 @@ export function MarketingCalendar() {
     );
   };
 
+  // Handle adding a new event
+  const handleAddEvent = async () => {
+    if (!date || !newEventTitle.trim()) return;
+
+    if (currentEvent) {
+      // Update existing event
+      await updateEvent(currentEvent.id, {
+        title: newEventTitle,
+        type: newEventType as any,
+        description: newEventDescription,
+      });
+    } else {
+      // Add new event
+      await addEvent({
+        title: newEventTitle,
+        date: date,
+        type: newEventType as any,
+        description: newEventDescription.trim() || undefined,
+      });
+    }
+
+    // Reset form
+    setNewEventTitle("");
+    setNewEventType("general");
+    setNewEventDescription("");
+    setCurrentEvent(null);
+    setIsEventDialogOpen(false);
+  };
+
+  // Handle editing an event
+  const handleEditEvent = (event: MarketingEvent) => {
+    setCurrentEvent(event);
+    setNewEventTitle(event.title);
+    setNewEventType(event.type);
+    setNewEventDescription(event.description || "");
+    setIsEventDialogOpen(true);
+  };
+
+  // Handle deleting an event
+  const handleDeleteEvent = async (id: string) => {
+    await deleteEvent(id);
+  };
+
+  // Open dialog for adding a new event
+  const openNewEventDialog = () => {
+    setCurrentEvent(null);
+    setNewEventTitle("");
+    setNewEventType("general");
+    setNewEventDescription("");
+    setIsEventDialogOpen(true);
+  };
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle className="flex items-center gap-2">
-          <CalendarIcon className="h-5 w-5" />
-          Marketing Calendar
-        </CardTitle>
+        <div className="flex justify-between items-center">
+          <CardTitle className="flex items-center gap-2">
+            <CalendarIcon className="h-5 w-5" />
+            Marketing Calendar
+          </CardTitle>
+          <Button size="sm" onClick={openNewEventDialog}>
+            <PlusIcon className="h-4 w-4 mr-2" />
+            Add Event
+          </Button>
+        </div>
         <CardDescription>
           Click on a date to view tasks and notes for that day
         </CardDescription>
@@ -155,6 +219,45 @@ export function MarketingCalendar() {
             <h3 className="font-medium mb-3">
               {date ? date.toLocaleDateString(undefined, { dateStyle: "long" }) : "Select a date"}
             </h3>
+            
+            {isLoading ? (
+              <div className="flex items-center justify-center py-4">
+                <div className="animate-spin rounded-full h-8 w-8 border-b-2 border-primary"></div>
+              </div>
+            ) : (
+              <>
+                {selectedDateEvents.length > 0 && (
+                  <div className="mb-4">
+                    <h4 className="text-sm font-medium mb-2">Events</h4>
+                    <div className="space-y-2">
+                      {selectedDateEvents.map((event) => (
+                        <div key={event.id} className="p-3 border rounded-md">
+                          <div className="flex justify-between items-start">
+                            <div>
+                              <h5 className="font-medium">{event.title}</h5>
+                              {event.description && (
+                                <p className="text-sm text-muted-foreground mt-1">{event.description}</p>
+                              )}
+                              <Badge variant="outline" className="mt-2">
+                                {event.type}
+                              </Badge>
+                            </div>
+                            <div className="flex gap-1">
+                              <Button variant="ghost" size="icon" onClick={() => handleEditEvent(event)}>
+                                <Edit2Icon className="h-4 w-4" />
+                              </Button>
+                              <Button variant="ghost" size="icon" onClick={() => handleDeleteEvent(event.id)}>
+                                <TrashIcon className="h-4 w-4" />
+                              </Button>
+                            </div>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+                )}
+              </>
+            )}
             
             <Tabs value={activeTab} onValueChange={setActiveTab} className="mt-4">
               <TabsList className="grid grid-cols-2 mb-4">
@@ -212,6 +315,59 @@ export function MarketingCalendar() {
           </div>
         </div>
       </CardContent>
+
+      {/* Dialog for adding/editing events */}
+      <Dialog open={isEventDialogOpen} onOpenChange={setIsEventDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>{currentEvent ? "Edit Event" : "Add New Event"}</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <label htmlFor="event-title" className="text-sm font-medium">Title</label>
+              <Input
+                id="event-title"
+                placeholder="Event title"
+                value={newEventTitle}
+                onChange={(e) => setNewEventTitle(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="event-type" className="text-sm font-medium">Type</label>
+              <Select value={newEventType} onValueChange={setNewEventType}>
+                <SelectTrigger id="event-type">
+                  <SelectValue placeholder="Select type" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="general">General</SelectItem>
+                  <SelectItem value="facebook">Facebook</SelectItem>
+                  <SelectItem value="instagram">Instagram</SelectItem>
+                  <SelectItem value="tiktok">TikTok</SelectItem>
+                  <SelectItem value="email">Email</SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2">
+              <label htmlFor="event-description" className="text-sm font-medium">Description (optional)</label>
+              <Textarea
+                id="event-description"
+                placeholder="Event description"
+                value={newEventDescription}
+                onChange={(e) => setNewEventDescription(e.target.value)}
+                rows={3}
+              />
+            </div>
+          </div>
+          <DialogFooter>
+            <DialogClose asChild>
+              <Button variant="outline">Cancel</Button>
+            </DialogClose>
+            <Button onClick={handleAddEvent}>
+              {currentEvent ? "Update" : "Add"} Event
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </Card>
   );
 }
