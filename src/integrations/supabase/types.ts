@@ -72,54 +72,6 @@ export type Database = {
         }
         Relationships: []
       }
-      marketing_campaigns: {
-        Row: {
-          budget: number | null
-          conversion_rate: number | null
-          created_at: string | null
-          description: string | null
-          end_date: string | null
-          id: string
-          name: string
-          reach: number | null
-          start_date: string | null
-          status: string | null
-          target_audience: string | null
-          type: string
-          updated_at: string | null
-        }
-        Insert: {
-          budget?: number | null
-          conversion_rate?: number | null
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          name: string
-          reach?: number | null
-          start_date?: string | null
-          status?: string | null
-          target_audience?: string | null
-          type: string
-          updated_at?: string | null
-        }
-        Update: {
-          budget?: number | null
-          conversion_rate?: number | null
-          created_at?: string | null
-          description?: string | null
-          end_date?: string | null
-          id?: string
-          name?: string
-          reach?: number | null
-          start_date?: string | null
-          status?: string | null
-          target_audience?: string | null
-          type?: string
-          updated_at?: string | null
-        }
-        Relationships: []
-      }
       marketing_content: {
         Row: {
           content_date: string

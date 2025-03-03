@@ -25,11 +25,13 @@ export function useMarketingEvents() {
         throw error;
       }
       
-      // Convert string dates to Date objects
+      // Convert string dates to Date objects and ensure type is valid
       const formattedEvents = data.map(event => ({
         ...event,
-        date: new Date(event.date)
-      }));
+        date: new Date(event.date),
+        // Ensure the type is one of the allowed values
+        type: isValidEventType(event.type) ? event.type : 'general'
+      })) as MarketingEvent[];
       
       setEvents(formattedEvents);
     } catch (err) {
@@ -43,6 +45,11 @@ export function useMarketingEvents() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  // Helper function to validate event type
+  const isValidEventType = (type: string): type is MarketingEvent['type'] => {
+    return ['facebook', 'instagram', 'tiktok', 'email', 'general'].includes(type);
   };
 
   // Add a new event
@@ -66,8 +73,14 @@ export function useMarketingEvents() {
         throw error;
       }
       
-      // Add the new event to the state
-      setEvents(prev => [...prev, { ...data, date: new Date(data.date) }]);
+      // Add the new event to the state with proper type validation
+      const newEvent: MarketingEvent = {
+        ...data,
+        date: new Date(data.date),
+        type: isValidEventType(data.type) ? data.type : 'general'
+      };
+      
+      setEvents(prev => [...prev, newEvent]);
       
       toast({
         title: 'Success',
@@ -112,9 +125,15 @@ export function useMarketingEvents() {
         throw error;
       }
       
-      // Update the event in the state
+      // Update the event in the state with proper type validation
+      const updatedEvent: MarketingEvent = {
+        ...data,
+        date: new Date(data.date),
+        type: isValidEventType(data.type) ? data.type : 'general'
+      };
+      
       setEvents(prev => prev.map(event => 
-        event.id === id ? { ...data, date: new Date(data.date) } : event
+        event.id === id ? updatedEvent : event
       ));
       
       toast({
