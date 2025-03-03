@@ -2,8 +2,7 @@
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
-import { format, addDays } from "date-fns";
+import { format, addDays, isSameDay, parseISO, startOfMonth, endOfMonth, getDay } from "date-fns";
 import { 
   CalendarIcon, 
   CheckCircle2, 
@@ -11,12 +10,28 @@ import {
   ListTodo, 
   ChevronLeft, 
   ChevronRight, 
-  Plus 
+  Plus, 
+  Pencil,
+  Trash2
 } from "lucide-react";
-import { useState } from "react";
+import { useState, useEffect } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/hooks/use-toast";
+import { MarketingContent } from "@/types/marketing";
+import { MarketingContentDialog } from "@/components/marketing/MarketingContentDialog";
+import { DeleteMarketingContentDialog } from "@/components/marketing/DeleteMarketingContentDialog";
 
 export default function Marketing() {
+  const { toast } = useToast();
   const [date, setDate] = useState<Date>(new Date());
+  const [marketingContents, setMarketingContents] = useState<MarketingContent[]>([]);
+  const [isLoading, setIsLoading] = useState(true);
+  const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
+  const [selectedContent, setSelectedContent] = useState<MarketingContent | null>(null);
+  const [selectedDate, setSelectedDate] = useState<Date | null>(null);
+  
   const today = new Date();
   const tomorrow = addDays(today, 1);
   
@@ -25,16 +40,49 @@ export default function Marketing() {
   const formattedTomorrow = format(tomorrow, "EEEE, MMMM d, yyyy");
   const currentMonth = format(date, "MMMM yyyy");
 
-  // Placeholder content for demonstration
-  const todayContent: MarketingContent[] = [];
-  const tomorrowContent: MarketingContent[] = [];
+  // Filter content for today and tomorrow
+  const todayContent = marketingContents.filter(content => 
+    isSameDay(parseISO(content.content_date), today)
+  );
+  
+  const tomorrowContent = marketingContents.filter(content => 
+    isSameDay(parseISO(content.content_date), tomorrow)
+  );
   
   // Stats for the cards
   const stats = {
-    totalTasks: 0,
-    completedTasks: 0,
-    pendingTasks: 0
+    totalTasks: marketingContents.length,
+    completedTasks: marketingContents.filter(content => content.status === 'completed').length,
+    pendingTasks: marketingContents.filter(content => content.status === 'pending').length
   };
+
+  // Fetch marketing content from Supabase
+  const fetchMarketingContent = async () => {
+    setIsLoading(true);
+    try {
+      const { data, error } = await supabase
+        .from("marketing_content")
+        .select("*")
+        .order("content_date", { ascending: true });
+      
+      if (error) throw error;
+      
+      setMarketingContents(data as MarketingContent[]);
+    } catch (error: any) {
+      console.error("Error fetching marketing content:", error);
+      toast({
+        title: "Error",
+        description: "Failed to load marketing content.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  useEffect(() => {
+    fetchMarketingContent();
+  }, []);
 
   // Navigation functions for month view
   const previousMonth = () => {
@@ -47,6 +95,60 @@ export default function Marketing() {
     const nextMonth = new Date(date);
     nextMonth.setMonth(nextMonth.getMonth() + 1);
     setDate(nextMonth);
+  };
+
+  // Handlers for dialog open/close
+  const handleAddContent = (date?: Date) => {
+    setSelectedDate(date || null);
+    setIsAddDialogOpen(true);
+  };
+
+  const handleEditContent = (content: MarketingContent) => {
+    setSelectedContent(content);
+    setIsEditDialogOpen(true);
+  };
+
+  const handleDeleteContent = (content: MarketingContent) => {
+    setSelectedContent(content);
+    setIsDeleteDialogOpen(true);
+  };
+
+  // Generate calendar days for the current month
+  const generateCalendarDays = () => {
+    const monthStart = startOfMonth(date);
+    const monthEnd = endOfMonth(date);
+    const startDay = getDay(monthStart);
+    const daysInMonth = parseInt(format(monthEnd, "d"));
+    
+    const days = [];
+    let day = 1;
+    
+    for (let i = 0; i < 42; i++) {
+      if (i >= startDay && day <= daysInMonth) {
+        const currentDate = new Date(date.getFullYear(), date.getMonth(), day);
+        const dayContents = marketingContents.filter(content => 
+          isSameDay(parseISO(content.content_date), currentDate)
+        );
+        
+        days.push({
+          day,
+          date: currentDate,
+          isCurrentMonth: true,
+          contents: dayContents
+        });
+        
+        day++;
+      } else {
+        days.push({ 
+          day: null, 
+          date: null, 
+          isCurrentMonth: false,
+          contents: []
+        });
+      }
+    }
+    
+    return days;
   };
 
   return (
@@ -83,7 +185,11 @@ export default function Marketing() {
         title="Today's Content" 
         date={formattedToday}
         content={todayContent}
-        taskCount={`${todayContent.length}/0 Tasks`}
+        taskCount={`${todayContent.length} Tasks`}
+        isLoading={isLoading}
+        onAdd={() => handleAddContent(today)}
+        onEdit={handleEditContent}
+        onDelete={handleDeleteContent}
       />
       
       {/* Tomorrow's Content */}
@@ -91,7 +197,11 @@ export default function Marketing() {
         title="Tomorrow's Content" 
         date={formattedTomorrow}
         content={tomorrowContent}
-        taskCount={`${tomorrowContent.length}/0 Tasks`}
+        taskCount={`${tomorrowContent.length} Tasks`}
+        isLoading={isLoading}
+        onAdd={() => handleAddContent(tomorrow)}
+        onEdit={handleEditContent}
+        onDelete={handleDeleteContent}
       />
       
       {/* Calendar View */}
@@ -117,7 +227,11 @@ export default function Marketing() {
                 <ChevronRight className="h-5 w-5" />
               </Button>
             </div>
-            <Button variant="default" className="flex items-center gap-2">
+            <Button 
+              variant="default" 
+              className="flex items-center gap-2"
+              onClick={() => handleAddContent()}
+            >
               <Plus className="h-4 w-4" />
               Add Content
             </Button>
@@ -131,37 +245,90 @@ export default function Marketing() {
               </div>
             ))}
             
-            {/* Calendar days - simplified example */}
-            {Array.from({ length: 35 }, (_, i) => {
-              const dayNum = i - new Date(date.getFullYear(), date.getMonth(), 1).getDay() + 1;
-              const isCurrentMonth = dayNum > 0 && dayNum <= new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
-              
-              return (
-                <div 
-                  key={i} 
-                  className={`min-h-24 p-2 bg-card border-t ${!isCurrentMonth ? 'text-muted-foreground bg-muted/20' : ''} 
-                              ${i % 7 === 0 ? 'border-l' : ''} hover:bg-accent/10 transition-colors`}
-                >
-                  {isCurrentMonth && (
-                    <div className="text-right font-medium">{dayNum}</div>
-                  )}
-                </div>
-              );
-            })}
+            {/* Calendar days */}
+            {generateCalendarDays().map((dayObj, i) => (
+              <div 
+                key={i} 
+                className={`min-h-24 p-2 bg-card border-t 
+                  ${!dayObj.isCurrentMonth ? 'text-muted-foreground bg-muted/20' : ''} 
+                  ${i % 7 === 0 ? 'border-l' : ''} 
+                  hover:bg-accent/10 transition-colors
+                  ${dayObj.isCurrentMonth ? 'cursor-pointer' : ''}`}
+                onClick={() => dayObj.isCurrentMonth && handleAddContent(dayObj.date)}
+              >
+                {dayObj.isCurrentMonth && (
+                  <>
+                    <div className="text-right font-medium">{dayObj.day}</div>
+                    <div className="mt-1 space-y-1">
+                      {dayObj.contents.length > 0 ? (
+                        dayObj.contents.slice(0, 2).map(content => (
+                          <div 
+                            key={content.id} 
+                            className={`text-xs p-1 rounded truncate ${
+                              content.status === 'completed' 
+                                ? 'bg-green-100 text-green-800' 
+                                : 'bg-blue-100 text-blue-800'
+                            }`}
+                            title={content.title}
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleEditContent(content);
+                            }}
+                          >
+                            {content.title}
+                          </div>
+                        ))
+                      ) : null}
+                      {dayObj.contents.length > 2 && (
+                        <div className="text-xs text-muted-foreground text-center">
+                          +{dayObj.contents.length - 2} more
+                        </div>
+                      )}
+                    </div>
+                  </>
+                )}
+              </div>
+            ))}
           </div>
         </CardContent>
       </Card>
+
+      {/* Dialogs */}
+      {isAddDialogOpen && (
+        <MarketingContentDialog 
+          open={isAddDialogOpen}
+          onClose={() => setIsAddDialogOpen(false)}
+          onSuccess={fetchMarketingContent}
+          selectedDate={selectedDate || undefined}
+        />
+      )}
+
+      {isEditDialogOpen && selectedContent && (
+        <MarketingContentDialog 
+          open={isEditDialogOpen}
+          onClose={() => {
+            setIsEditDialogOpen(false);
+            setSelectedContent(null);
+          }}
+          onSuccess={fetchMarketingContent}
+          initialData={selectedContent}
+        />
+      )}
+
+      {isDeleteDialogOpen && selectedContent && (
+        <DeleteMarketingContentDialog 
+          isOpen={isDeleteDialogOpen}
+          onClose={() => {
+            setIsDeleteDialogOpen(false);
+            setSelectedContent(null);
+          }}
+          contentId={selectedContent.id}
+          contentTitle={selectedContent.title}
+          onSuccess={fetchMarketingContent}
+        />
+      )}
     </MainLayout>
   );
-}
-
-// Types
-interface MarketingContent {
-  id: string;
-  title: string;
-  time?: string;
-  type: string;
-  status: 'completed' | 'pending';
 }
 
 // Component for stats cards
@@ -196,12 +363,20 @@ function ContentSection({
   title, 
   date, 
   content, 
-  taskCount 
+  taskCount,
+  isLoading,
+  onAdd,
+  onEdit,
+  onDelete
 }: { 
   title: string;
   date: string;
   content: MarketingContent[];
   taskCount: string;
+  isLoading: boolean;
+  onAdd: () => void;
+  onEdit: (content: MarketingContent) => void;
+  onDelete: (content: MarketingContent) => void;
 }) {
   return (
     <Card className="mb-6 animate-fade-in">
@@ -215,15 +390,42 @@ function ContentSection({
         </div>
       </CardHeader>
       <CardContent>
-        {content.length > 0 ? (
+        {isLoading ? (
+          <div className="py-8 text-center text-muted-foreground">
+            Loading content...
+          </div>
+        ) : content.length > 0 ? (
           <div className="space-y-3">
             {content.map(item => (
               <div key={item.id} className="p-3 border rounded-md">
-                <h4 className="font-medium">{item.title}</h4>
-                <div className="flex items-center mt-1 text-sm text-muted-foreground">
-                  {item.time && (
+                <div className="flex justify-between items-start">
+                  <h4 className="font-medium">{item.title}</h4>
+                  <div className="flex space-x-1">
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8" 
+                      onClick={() => onEdit(item)}
+                    >
+                      <Pencil className="h-4 w-4" />
+                    </Button>
+                    <Button 
+                      variant="ghost" 
+                      size="icon" 
+                      className="h-8 w-8 text-destructive" 
+                      onClick={() => onDelete(item)}
+                    >
+                      <Trash2 className="h-4 w-4" />
+                    </Button>
+                  </div>
+                </div>
+                {item.description && (
+                  <p className="text-sm text-muted-foreground mt-1">{item.description}</p>
+                )}
+                <div className="flex items-center mt-2 text-sm text-muted-foreground">
+                  {item.content_time && (
                     <span className="flex items-center mr-3">
-                      <Clock className="h-3 w-3 mr-1" /> {item.time}
+                      <Clock className="h-3 w-3 mr-1" /> {item.content_time}
                     </span>
                   )}
                   <span className="mr-3">{item.type}</span>
@@ -241,7 +443,7 @@ function ContentSection({
         )}
       </CardContent>
       <CardFooter className="pt-0 pb-4">
-        <Button variant="outline" className="w-full">
+        <Button variant="outline" className="w-full" onClick={onAdd}>
           <Plus className="h-4 w-4 mr-2" /> Add Content
         </Button>
       </CardFooter>

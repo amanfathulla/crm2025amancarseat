@@ -120,6 +120,42 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_content: {
+        Row: {
+          content_date: string
+          content_time: string | null
+          created_at: string | null
+          description: string | null
+          id: string
+          status: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          content_date: string
+          content_time?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          content_date?: string
+          content_time?: string | null
+          created_at?: string | null
+          description?: string | null
+          id?: string
+          status?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null
