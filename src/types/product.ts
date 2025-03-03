@@ -4,7 +4,6 @@ export interface ProductVariation {
   product_id: string;
   name: string; // e.g., "2 Seater", "5 Seater", "7 Seater"
   price: number;
-  inventory: number | null;
 }
 
 export interface Product {
@@ -12,8 +11,6 @@ export interface Product {
   name: string;
   price: number;
   cost: number | null;
-  inventory: number | null;
-  sales: number | null;
   image_url: string | null;
   created_at: string | null;
   updated_at: string | null;

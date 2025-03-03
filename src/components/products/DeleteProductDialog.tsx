@@ -32,20 +32,32 @@ const DeleteProductDialog = ({
 
   const handleDelete = async () => {
     try {
-      const { error } = await supabase.from("products").delete().eq("id", productId);
+      // First, delete the product variations
+      const { error: variationsError } = await supabase
+        .from("product_variations")
+        .delete()
+        .eq("product_id", productId);
+
+      if (variationsError) throw variationsError;
+
+      // Then delete the product
+      const { error } = await supabase
+        .from("products")
+        .delete()
+        .eq("id", productId);
 
       if (error) throw error;
 
       toast({
-        title: "Product deleted",
-        description: "Product has been deleted successfully",
+        title: "Produk dibuang",
+        description: "Produk telah berjaya dibuang",
       });
       onSuccess();
     } catch (error) {
       console.error("Error deleting product:", error);
       toast({
-        title: "Error",
-        description: "There was a problem deleting the product",
+        title: "Ralat",
+        description: "Terdapat masalah semasa membuang produk",
         variant: "destructive",
       });
     } finally {
@@ -57,16 +69,15 @@ const DeleteProductDialog = ({
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Delete Product</AlertDialogTitle>
+          <AlertDialogTitle>Buang Produk</AlertDialogTitle>
           <AlertDialogDescription>
-            Are you sure you want to delete <strong>{productName}</strong>? This action cannot be
-            undone.
+            Adakah anda pasti mahu membuang <strong>{productName}</strong>? Tindakan ini tidak boleh dibatalkan.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Batal</AlertDialogCancel>
           <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-            Delete
+            Buang
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>

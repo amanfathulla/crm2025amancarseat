@@ -1,8 +1,9 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Save } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
@@ -157,13 +158,14 @@ export default function Products() {
                     <th className="text-center py-3 px-4 font-medium">5 Seater</th>
                     <th className="text-center py-3 px-4 font-medium">7 Seater</th>
                     <th className="text-right py-3 px-4 font-medium">Kos</th>
+                    <th className="text-right py-3 px-4 font-medium">Imej</th>
                     <th className="text-right py-3 px-4 font-medium">Tindakan</th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
                         {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
                       </td>
                     </tr>
@@ -189,6 +191,15 @@ export default function Products() {
                           </td>
                           <td className="py-3 px-4 text-right">
                             {product.cost ? formatPrice(product.cost) : "-"}
+                          </td>
+                          <td className="py-3 px-4 text-center">
+                            {product.image_url ? (
+                              <div className="flex justify-center">
+                                <a href={product.image_url} target="_blank" rel="noopener noreferrer">
+                                  <Image className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                                </a>
+                              </div>
+                            ) : "-"}
                           </td>
                           <td className="py-3 px-4 text-right">
                             <DropdownMenu>
@@ -256,6 +267,7 @@ export default function Products() {
                 id: selectedProduct.id,
                 name: selectedProduct.name,
                 cost: selectedProduct.cost || 0,
+                image_url: selectedProduct.image_url || "",
                 variations: selectedProduct.variations || []
               }}
             />

@@ -13,12 +13,12 @@ import { Card, CardContent } from "@/components/ui/card";
 const productVariationSchema = z.object({
   name: z.string(),
   price: z.coerce.number().positive({ message: "Harga mesti positif" }),
-  inventory: z.coerce.number().nonnegative({ message: "Inventori mesti sifar atau positif" }),
 });
 
 const productSchema = z.object({
   name: z.string().min(2, { message: "Nama produk mesti sekurang-kurangnya 2 aksara" }),
   cost: z.coerce.number().nonnegative({ message: "Kos mesti sifar atau positif" }).optional(),
+  image_url: z.string().url({ message: "URL imej tidak sah" }).optional().or(z.literal('')),
   variations: z.array(productVariationSchema),
 });
 
@@ -32,9 +32,9 @@ type ProductFormProps = {
 };
 
 const defaultVariations = [
-  { name: "2 Seater", price: 0, inventory: 0 },
-  { name: "5 Seater", price: 0, inventory: 0 },
-  { name: "7 Seater", price: 0, inventory: 0 }
+  { name: "2 Seater", price: 0 },
+  { name: "5 Seater", price: 0 },
+  { name: "7 Seater", price: 0 }
 ];
 
 const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => {
@@ -49,6 +49,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     defaultValues: initialData || {
       name: "",
       cost: 0,
+      image_url: "",
       variations: defaultVariations,
     },
   });
@@ -80,6 +81,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
             name: data.name,
             price: basePrice,
             cost: data.cost || null,
+            image_url: data.image_url || null,
           })
           .eq("id", initialData.id);
 
@@ -101,7 +103,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
               product_id: initialData.id,
               name: v.name,
               price: v.price,
-              inventory: v.inventory
             }))
           );
 
@@ -119,6 +120,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
             name: data.name,
             price: basePrice,
             cost: data.cost || null,
+            image_url: data.image_url || null,
           })
           .select();
 
@@ -134,7 +136,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                 product_id: productId,
                 name: v.name,
                 price: v.price,
-                inventory: v.inventory
               }))
             );
 
@@ -176,6 +177,20 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
 
         <FormField
           control={form.control}
+          name="image_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>URL Imej</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/image.jpg" {...field} value={field.value || ""} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="cost"
           render={({ field }) => (
             <FormItem>
@@ -203,7 +218,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
             {variations.map((variation, index) => (
               <Card key={index} className="bg-muted/40">
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                     <div>
                       <FormLabel>Jenis</FormLabel>
                       <Input 
@@ -224,15 +239,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                       <div className="text-sm text-muted-foreground">
                         RM {parseFloat(variation.price.toString()).toFixed(2)}
                       </div>
-                    </div>
-                    
-                    <div>
-                      <FormLabel>Inventori</FormLabel>
-                      <Input 
-                        type="number" 
-                        value={variation.inventory} 
-                        onChange={(e) => handleVariationChange(index, 'inventory', e.target.value)}
-                      />
                     </div>
                   </div>
                 </CardContent>
