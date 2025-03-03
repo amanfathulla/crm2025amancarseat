@@ -13,7 +13,12 @@ import {
   Menu,
   X,
   LogOut,
+  ShoppingBag,
+  PackageCheck,
+  PackageX,
 } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { supabase } from "@/integrations/supabase/client";
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -23,6 +28,65 @@ export function Sidebar() {
   
   // Always collapse sidebar on mobile by default
   const [mobileOpen, setMobileOpen] = useState(false);
+  
+  // Order status counts
+  const [orderCounts, setOrderCounts] = useState({
+    processing: 0,
+    completed: 0,
+    cancelled: 0
+  });
+  
+  // Fetch order status counts
+  useEffect(() => {
+    const fetchOrderCounts = async () => {
+      try {
+        // Fetch processing orders
+        const { data: processingData, error: processingError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('order_status', 'processing');
+        
+        // Fetch completed orders
+        const { data: completedData, error: completedError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('order_status', 'completed');
+        
+        // Fetch cancelled orders
+        const { data: cancelledData, error: cancelledError } = await supabase
+          .from('customers')
+          .select('id')
+          .eq('order_status', 'cancelled');
+        
+        if (processingError || completedError || cancelledError) {
+          console.error("Error fetching order counts", processingError || completedError || cancelledError);
+          return;
+        }
+        
+        setOrderCounts({
+          processing: processingData?.length || 0,
+          completed: completedData?.length || 0,
+          cancelled: cancelledData?.length || 0
+        });
+      } catch (error) {
+        console.error("Error fetching order counts:", error);
+      }
+    };
+    
+    fetchOrderCounts();
+    
+    // Set up a subscription to refresh counts when data changes
+    const subscription = supabase
+      .channel('public:customers')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
+        fetchOrderCounts();
+      })
+      .subscribe();
+    
+    return () => {
+      supabase.removeChannel(subscription);
+    };
+  }, []);
   
   const toggleSidebar = () => {
     if (isMobile) {
@@ -35,7 +99,16 @@ export function Sidebar() {
   // Base sidebar items - simplified with no children/dropdowns
   const sidebarItems = [
     { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { title: "Customers", path: "/customers", icon: Users },
+    { 
+      title: "Customers", 
+      path: "/customers", 
+      icon: Users,
+      badges: [
+        { label: `${orderCounts.processing}`, variant: "secondary", tooltip: "Orders In Process" },
+        { label: `${orderCounts.completed}`, variant: "default", tooltip: "Completed Orders" },
+        { label: `${orderCounts.cancelled}`, variant: "destructive", tooltip: "Cancelled Orders" }
+      ]
+    },
     { title: "Sales", path: "/sales", icon: ShoppingCart },
     { title: "Products", path: "/products", icon: Package },
   ];
@@ -97,22 +170,57 @@ export function Sidebar() {
             const isActive = location.pathname === item.path;
             
             return (
-              <NavLink
-                key={item.path}
-                to={item.path}
-                className={({ isActive }) => cn(
-                  "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-                  "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                  isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground",
-                  !expanded && !isMobile && "justify-center px-2"
+              <div key={item.path} className="relative">
+                <NavLink
+                  to={item.path}
+                  className={({ isActive }) => cn(
+                    "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
+                    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground",
+                    !expanded && !isMobile && "justify-center px-2"
+                  )}
+                  onClick={() => isMobile && setMobileOpen(false)}
+                >
+                  <Icon size={20} />
+                  {(expanded || isMobile) && (
+                    <>
+                      <span className="animate-fade-in">{item.title}</span>
+                      
+                      {/* Order status badges */}
+                      {item.badges && (
+                        <div className="ml-auto flex items-center gap-1.5">
+                          {item.badges.map((badge, index) => (
+                            <Badge 
+                              key={index} 
+                              variant={badge.variant as any}
+                              className="h-5 min-w-5 flex justify-center items-center"
+                              title={badge.tooltip}
+                            >
+                              {badge.label}
+                            </Badge>
+                          ))}
+                        </div>
+                      )}
+                    </>
+                  )}
+                </NavLink>
+                
+                {/* Badges for collapsed state */}
+                {!expanded && !isMobile && item.badges && (
+                  <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
+                    {item.badges.map((badge, index) => (
+                      <Badge 
+                        key={index} 
+                        variant={badge.variant as any}
+                        className="h-5 min-w-5 flex justify-center items-center"
+                        title={badge.tooltip}
+                      >
+                        {badge.label}
+                      </Badge>
+                    ))}
+                  </div>
                 )}
-                onClick={() => isMobile && setMobileOpen(false)}
-              >
-                <Icon size={20} />
-                {(expanded || isMobile) && (
-                  <span className="animate-fade-in">{item.title}</span>
-                )}
-              </NavLink>
+              </div>
             );
           })}
         </nav>
