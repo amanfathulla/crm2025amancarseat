@@ -1,240 +1,250 @@
 
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
-import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
-import { MegaphoneIcon, MailIcon, TagIcon } from "lucide-react";
-
-// Sample data for charts
-const campaignData = [
-  { name: "Email", conversion: 3.2, reach: 12400 },
-  { name: "Social", conversion: 4.5, reach: 18600 },
-  { name: "Display", conversion: 1.8, reach: 24200 },
-  { name: "Referral", conversion: 5.7, reach: 8900 },
-  { name: "Direct", conversion: 2.9, reach: 14300 },
-];
-
-const monthlyData = [
-  { name: "Jan", visitors: 4000, conversion: 2.4 },
-  { name: "Feb", visitors: 4500, conversion: 2.7 },
-  { name: "Mar", visitors: 5200, conversion: 3.2 },
-  { name: "Apr", visitors: 4800, conversion: 3.0 },
-  { name: "May", visitors: 6000, conversion: 3.6 },
-  { name: "Jun", visitors: 7500, conversion: 4.2 },
-  { name: "Jul", visitors: 8200, conversion: 4.5 },
-];
+import { Calendar } from "@/components/ui/calendar";
+import { format, addDays } from "date-fns";
+import { 
+  CalendarIcon, 
+  CheckCircle2, 
+  Clock, 
+  ListTodo, 
+  ChevronLeft, 
+  ChevronRight, 
+  Plus 
+} from "lucide-react";
+import { useState } from "react";
 
 export default function Marketing() {
+  const [date, setDate] = useState<Date>(new Date());
+  const today = new Date();
+  const tomorrow = addDays(today, 1);
+  
+  // Format dates for display
+  const formattedToday = format(today, "EEEE, MMMM d, yyyy");
+  const formattedTomorrow = format(tomorrow, "EEEE, MMMM d, yyyy");
+  const currentMonth = format(date, "MMMM yyyy");
+
+  // Placeholder content for demonstration
+  const todayContent: MarketingContent[] = [];
+  const tomorrowContent: MarketingContent[] = [];
+  
+  // Stats for the cards
+  const stats = {
+    totalTasks: 0,
+    completedTasks: 0,
+    pendingTasks: 0
+  };
+
+  // Navigation functions for month view
+  const previousMonth = () => {
+    const prevMonth = new Date(date);
+    prevMonth.setMonth(prevMonth.getMonth() - 1);
+    setDate(prevMonth);
+  };
+
+  const nextMonth = () => {
+    const nextMonth = new Date(date);
+    nextMonth.setMonth(nextMonth.getMonth() + 1);
+    setDate(nextMonth);
+  };
+
   return (
     <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-semibold mb-2">Marketing</h1>
-        <p className="text-muted-foreground">Manage campaigns and promotions</p>
+      <section className="mb-6 animate-slide-up">
+        <h1 className="text-3xl font-semibold mb-2">Marketing Calendar</h1>
+        <p className="text-muted-foreground">Plan and manage your content schedule</p>
       </section>
       
+      {/* Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <MarketingCard 
-          title="Email Campaigns" 
-          value="12" 
-          description="Active campaigns" 
-          icon={MailIcon}
-          buttonText="Create Campaign"
-          delay="100"
+        <StatCard 
+          title="Total Tasks" 
+          value={stats.totalTasks} 
+          icon={<ListTodo className="h-6 w-6 text-blue-500" />}
+          iconBackground="bg-blue-50"
         />
-        <MarketingCard 
-          title="Promotions" 
-          value="8" 
-          description="Running promotions" 
-          icon={TagIcon}
-          buttonText="Create Promotion"
-          delay="200"
+        <StatCard 
+          title="Completed" 
+          value={stats.completedTasks} 
+          icon={<CheckCircle2 className="h-6 w-6 text-green-500" />}
+          iconBackground="bg-green-50"
         />
-        <MarketingCard 
-          title="Ad Campaigns" 
-          value="5" 
-          description="Active ad campaigns" 
-          icon={MegaphoneIcon}
-          buttonText="Create Ad"
-          delay="300"
+        <StatCard 
+          title="Pending" 
+          value={stats.pendingTasks} 
+          icon={<Clock className="h-6 w-6 text-orange-500" />}
+          iconBackground="bg-orange-50"
         />
       </div>
       
-      <Tabs defaultValue="performance" className="animate-fade-in delay-400">
-        <TabsList className="mb-6">
-          <TabsTrigger value="performance">Performance</TabsTrigger>
-          <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
-          <TabsTrigger value="audience">Audience</TabsTrigger>
-        </TabsList>
-        
-        <TabsContent value="performance" className="space-y-6">
-          <Card>
-            <CardHeader>
-              <CardTitle>Marketing Performance</CardTitle>
-              <CardDescription>Monthly visitor count and conversion rate</CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={monthlyData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    yAxisId="left"
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${value}`}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${value}%`}
-                    domain={[0, 6]}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      border: 'none'
-                    }}
-                  />
-                  <Line
-                    yAxisId="left"
-                    type="monotone"
-                    dataKey="visitors"
-                    strokeWidth={3}
-                    dot={{ strokeWidth: 0, r: 0 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                    stroke="hsl(var(--primary))"
-                    name="Visitors"
-                  />
-                  <Line
-                    yAxisId="right"
-                    type="monotone"
-                    dataKey="conversion"
-                    strokeWidth={3}
-                    dot={{ strokeWidth: 0, r: 0 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                    stroke="hsl(var(--secondary-foreground))"
-                    name="Conversion Rate (%)"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
+      {/* Today's Content */}
+      <ContentSection 
+        title="Today's Content" 
+        date={formattedToday}
+        content={todayContent}
+        taskCount={`${todayContent.length}/0 Tasks`}
+      />
+      
+      {/* Tomorrow's Content */}
+      <ContentSection 
+        title="Tomorrow's Content" 
+        date={formattedTomorrow}
+        content={tomorrowContent}
+        taskCount={`${tomorrowContent.length}/0 Tasks`}
+      />
+      
+      {/* Calendar View */}
+      <Card className="mb-6 animate-fade-in">
+        <CardContent className="p-6">
+          <div className="flex justify-between items-center mb-4">
+            <div className="flex items-center">
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={previousMonth}
+                className="mr-2"
+              >
+                <ChevronLeft className="h-5 w-5" />
+              </Button>
+              <h3 className="text-xl font-medium">{currentMonth}</h3>
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                onClick={nextMonth}
+                className="ml-2"
+              >
+                <ChevronRight className="h-5 w-5" />
+              </Button>
+            </div>
+            <Button variant="default" className="flex items-center gap-2">
+              <Plus className="h-4 w-4" />
+              Add Content
+            </Button>
+          </div>
           
-          <Card>
-            <CardHeader>
-              <CardTitle>Campaign Effectiveness</CardTitle>
-              <CardDescription>Conversion rates and reach by channel</CardDescription>
-            </CardHeader>
-            <CardContent className="h-80">
-              <ResponsiveContainer width="100%" height="100%">
-                <BarChart data={campaignData}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                  <YAxis 
-                    yAxisId="left"
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false} 
-                    tickFormatter={(value) => `${value}%`}
-                    domain={[0, 7]}
-                  />
-                  <YAxis 
-                    yAxisId="right"
-                    orientation="right"
-                    fontSize={12} 
-                    tickLine={false} 
-                    axisLine={false}
-                    domain={[0, 30000]}
-                  />
-                  <Tooltip 
-                    contentStyle={{ 
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      border: 'none'
-                    }}
-                    formatter={(value, name) => {
-                      if (name === "conversion") return [`${value}%`, "Conversion Rate"];
-                      if (name === "reach") return [value, "Reach"];
-                      return [value, name];
-                    }}
-                  />
-                  <Bar 
-                    yAxisId="left"
-                    dataKey="conversion" 
-                    fill="hsl(var(--primary))" 
-                    radius={[4, 4, 0, 0]} 
-                    barSize={30}
-                    name="conversion"
-                  />
-                  <Bar 
-                    yAxisId="right"
-                    dataKey="reach" 
-                    fill="hsl(var(--muted))" 
-                    radius={[4, 4, 0, 0]} 
-                    barSize={30}
-                    name="reach"
-                  />
-                </BarChart>
-              </ResponsiveContainer>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="campaigns">
-          <Card>
-            <CardContent className="p-4 text-center py-10">
-              <p className="text-muted-foreground">
-                Campaign management interface would be here, showing active and scheduled campaigns.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-        
-        <TabsContent value="audience">
-          <Card>
-            <CardContent className="p-4 text-center py-10">
-              <p className="text-muted-foreground">
-                Audience segmentation and analysis tools would be displayed here.
-              </p>
-            </CardContent>
-          </Card>
-        </TabsContent>
-      </Tabs>
+          <div className="grid grid-cols-7 gap-px bg-muted rounded-lg overflow-hidden border">
+            {/* Calendar header */}
+            {['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map((day) => (
+              <div key={day} className="p-3 text-center text-sm font-medium bg-card">
+                {day}
+              </div>
+            ))}
+            
+            {/* Calendar days - simplified example */}
+            {Array.from({ length: 35 }, (_, i) => {
+              const dayNum = i - new Date(date.getFullYear(), date.getMonth(), 1).getDay() + 1;
+              const isCurrentMonth = dayNum > 0 && dayNum <= new Date(date.getFullYear(), date.getMonth() + 1, 0).getDate();
+              
+              return (
+                <div 
+                  key={i} 
+                  className={`min-h-24 p-2 bg-card border-t ${!isCurrentMonth ? 'text-muted-foreground bg-muted/20' : ''} 
+                              ${i % 7 === 0 ? 'border-l' : ''} hover:bg-accent/10 transition-colors`}
+                >
+                  {isCurrentMonth && (
+                    <div className="text-right font-medium">{dayNum}</div>
+                  )}
+                </div>
+              );
+            })}
+          </div>
+        </CardContent>
+      </Card>
     </MainLayout>
   );
 }
 
-function MarketingCard({ title, value, description, icon: Icon, buttonText, delay = "0" }: { 
+// Types
+interface MarketingContent {
+  id: string;
   title: string;
-  value: string;
-  description: string;
-  icon: React.ElementType;
-  buttonText: string;
-  delay?: string;
+  time?: string;
+  type: string;
+  status: 'completed' | 'pending';
+}
+
+// Component for stats cards
+function StatCard({ 
+  title, 
+  value, 
+  icon, 
+  iconBackground 
+}: { 
+  title: string;
+  value: number;
+  icon: React.ReactNode;
+  iconBackground: string;
 }) {
   return (
-    <Card className={`animate-slide-up delay-${delay}`}>
-      <CardContent className="pt-6">
-        <div className="flex justify-between items-start mb-4">
-          <div className="space-y-1">
-            <p className="text-sm text-muted-foreground">{title}</p>
-            <p className="text-3xl font-semibold">{value}</p>
-            <p className="text-xs text-muted-foreground">{description}</p>
-          </div>
-          <div className="bg-primary/10 p-2.5 rounded-full">
-            <Icon className="h-5 w-5 text-primary" />
-          </div>
+    <Card className="animate-slide-up shadow-sm">
+      <CardContent className="p-6 flex items-center justify-between">
+        <div className="flex flex-col">
+          <span className="text-sm text-muted-foreground">{title}</span>
+          <span className="text-3xl font-bold mt-1">{value}</span>
         </div>
-        <Button variant="outline" size="sm" className="w-full mt-2">
-          {buttonText}
-        </Button>
+        <div className={`h-12 w-12 rounded-full ${iconBackground} flex items-center justify-center`}>
+          {icon}
+        </div>
       </CardContent>
+    </Card>
+  );
+}
+
+// Component for content sections (Today/Tomorrow)
+function ContentSection({ 
+  title, 
+  date, 
+  content, 
+  taskCount 
+}: { 
+  title: string;
+  date: string;
+  content: MarketingContent[];
+  taskCount: string;
+}) {
+  return (
+    <Card className="mb-6 animate-fade-in">
+      <CardHeader className="flex flex-row items-center justify-between pb-2">
+        <div>
+          <CardTitle>{title}</CardTitle>
+          <CardDescription className="mt-1">{date}</CardDescription>
+        </div>
+        <div className="text-sm text-muted-foreground">
+          {taskCount}
+        </div>
+      </CardHeader>
+      <CardContent>
+        {content.length > 0 ? (
+          <div className="space-y-3">
+            {content.map(item => (
+              <div key={item.id} className="p-3 border rounded-md">
+                <h4 className="font-medium">{item.title}</h4>
+                <div className="flex items-center mt-1 text-sm text-muted-foreground">
+                  {item.time && (
+                    <span className="flex items-center mr-3">
+                      <Clock className="h-3 w-3 mr-1" /> {item.time}
+                    </span>
+                  )}
+                  <span className="mr-3">{item.type}</span>
+                  <span className={item.status === 'completed' ? 'text-green-500' : 'text-amber-500'}>
+                    {item.status === 'completed' ? 'Completed' : 'Pending'}
+                  </span>
+                </div>
+              </div>
+            ))}
+          </div>
+        ) : (
+          <div className="py-8 text-center text-muted-foreground">
+            No content scheduled for this day
+          </div>
+        )}
+      </CardContent>
+      <CardFooter className="pt-0 pb-4">
+        <Button variant="outline" className="w-full">
+          <Plus className="h-4 w-4 mr-2" /> Add Content
+        </Button>
+      </CardFooter>
     </Card>
   );
 }
