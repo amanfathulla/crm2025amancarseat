@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { BarChart, Bar, LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { MegaphoneIcon, MailIcon, TagIcon } from "lucide-react";
+import { MarketingPlanner } from "@/components/marketing/MarketingPlanner";
 
 // Sample data for charts
 const campaignData = [
@@ -60,13 +61,18 @@ export default function Marketing() {
         />
       </div>
       
-      <Tabs defaultValue="performance" className="animate-fade-in delay-400">
+      <Tabs defaultValue="planner" className="animate-fade-in delay-400">
         <TabsList className="mb-6">
+          <TabsTrigger value="planner">Content Planner</TabsTrigger>
           <TabsTrigger value="performance">Performance</TabsTrigger>
           <TabsTrigger value="campaigns">Campaigns</TabsTrigger>
           <TabsTrigger value="audience">Audience</TabsTrigger>
         </TabsList>
         
+        <TabsContent value="planner" className="space-y-6">
+          <MarketingPlanner />
+        </TabsContent>
+
         <TabsContent value="performance" className="space-y-6">
           <Card>
             <CardHeader>
