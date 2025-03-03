@@ -4,12 +4,13 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Download, MoreHorizontal, PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
+import { DeleteYearlySalesDialog } from "@/components/sales/DeleteYearlySalesDialog";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { YearlySalesRecord, YearlyAnalytics } from "@/types/sales";
+import { YearlySalesRecord, YearlySalesFormData, YearlyAnalytics } from "@/types/sales";
 import {
   BarChart,
   Bar,
@@ -28,7 +29,11 @@ export default function Sales() {
   const [analytics, setAnalytics] = useState<YearlyAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
+  const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+  const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [searchQuery, setSearchQuery] = useState("");
+  const [selectedRecord, setSelectedRecord] = useState<YearlySalesFormData | null>(null);
+  const [selectedRecordId, setSelectedRecordId] = useState<string>("");
   
   const fetchYearlySalesData = async () => {
     setIsLoading(true);
@@ -109,6 +114,33 @@ export default function Sales() {
       currency: 'MYR',
       maximumFractionDigits: 2,
     }).format(amount);
+  };
+
+  // Handle edit record
+  const handleEditRecord = (record: YearlySalesRecord) => {
+    setSelectedRecord({
+      year: record.year,
+      total_revenue: record.total_revenue,
+      quarter_1: record.quarter_1,
+      quarter_2: record.quarter_2,
+      quarter_3: record.quarter_3,
+      quarter_4: record.quarter_4,
+    });
+    setIsEditFormOpen(true);
+  };
+
+  // Handle delete record
+  const handleDeleteRecord = (id: string, year: number) => {
+    setSelectedRecordId(id);
+    setSelectedRecord({ 
+      year: year,
+      total_revenue: 0,
+      quarter_1: 0,
+      quarter_2: 0,
+      quarter_3: 0,
+      quarter_4: 0
+    });
+    setIsDeleteDialogOpen(true);
   };
 
   // Filter yearly sales records based on search query
@@ -270,9 +302,24 @@ export default function Sales() {
                         {formatCurrency(record.total_revenue)}
                       </td>
                       <td className="py-3 px-4 text-sm text-right">
-                        <Button variant="ghost" size="icon" className="h-8 w-8">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleEditRecord(record)}
+                          >
+                            <Edit className="h-4 w-4" />
+                          </Button>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteRecord(record.id, record.year)}
+                          >
+                            <Trash className="h-4 w-4" />
+                          </Button>
+                        </div>
                       </td>
                     </tr>
                   ))
@@ -288,6 +335,27 @@ export default function Sales() {
         <YearlySalesForm
           isOpen={isAddFormOpen}
           onClose={() => setIsAddFormOpen(false)}
+          onSuccess={fetchYearlySalesData}
+        />
+      )}
+      
+      {/* Edit Yearly Sales Record Form */}
+      {isEditFormOpen && selectedRecord && (
+        <YearlySalesForm
+          isOpen={isEditFormOpen}
+          onClose={() => setIsEditFormOpen(false)}
+          salesRecord={selectedRecord}
+          onSuccess={fetchYearlySalesData}
+        />
+      )}
+      
+      {/* Delete Confirmation Dialog */}
+      {isDeleteDialogOpen && selectedRecord && (
+        <DeleteYearlySalesDialog
+          isOpen={isDeleteDialogOpen}
+          onClose={() => setIsDeleteDialogOpen(false)}
+          salesRecordId={selectedRecordId}
+          salesYear={selectedRecord.year}
           onSuccess={fetchYearlySalesData}
         />
       )}

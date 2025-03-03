@@ -1,12 +1,12 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { YearlySalesFormData } from "@/types/sales";
-import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 
 interface YearlySalesFormProps {
   isOpen: boolean;
@@ -69,7 +69,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
           description: `Sales record for year ${formData.year} has been updated.`,
         });
       } else {
-        // Check if record for this year already exists - FIX HERE
+        // Check if record for this year already exists
         const { data: existingRecords, error: checkError } = await supabase
           .from("yearly_sales")
           .select("*")
@@ -130,6 +130,9 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
           <DialogTitle>{salesRecord ? "Edit Sales Record" : "Add Yearly Sales Record"}</DialogTitle>
+          <DialogDescription>
+            {salesRecord ? "Update the yearly sales record." : "Add a new yearly sales record."}
+          </DialogDescription>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4 py-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
