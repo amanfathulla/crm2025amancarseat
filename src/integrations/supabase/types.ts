@@ -213,6 +213,7 @@ export type Database = {
           price: number
           sales: number | null
           sku: string | null
+          status: string | null
           updated_at: string | null
         }
         Insert: {
@@ -227,6 +228,7 @@ export type Database = {
           price: number
           sales?: number | null
           sku?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Update: {
@@ -241,6 +243,7 @@ export type Database = {
           price?: number
           sales?: number | null
           sku?: string | null
+          status?: string | null
           updated_at?: string | null
         }
         Relationships: []

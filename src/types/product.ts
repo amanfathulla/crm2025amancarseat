@@ -10,4 +10,7 @@ export interface Product {
   created_at: string | null;
   updated_at: string | null;
   status: string | null;
+  category: string | null;
+  description: string | null;
+  sku: string | null;
 }

@@ -121,135 +121,46 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div className="space-y-4">
-            <h3 className="font-medium">2 Seater</h3>
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selling Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cost Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      {...field} 
-                      value={field.value || ""} 
-                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="font-medium">5 Seater</h3>
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selling Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cost Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      {...field} 
-                      value={field.value || ""} 
-                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
-
-          <div className="space-y-4">
-            <h3 className="font-medium">7 Seater</h3>
-            <FormField
-              control={form.control}
-              name="price"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Selling Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input type="number" step="0.01" {...field} />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-            
-            <FormField
-              control={form.control}
-              name="cost"
-              render={({ field }) => (
-                <FormItem>
-                  <FormLabel>Cost Price (RM)</FormLabel>
-                  <FormControl>
-                    <Input 
-                      type="number" 
-                      step="0.01" 
-                      {...field} 
-                      value={field.value || ""} 
-                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                    />
-                  </FormControl>
-                  <div className="text-sm text-muted-foreground">
-                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
-                  </div>
-                  <FormMessage />
-                </FormItem>
-              )}
-            />
-          </div>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <FormField
+            control={form.control}
+            name="price"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Selling Price (RM)</FormLabel>
+                <FormControl>
+                  <Input type="number" step="0.01" {...field} />
+                </FormControl>
+                <div className="text-sm text-muted-foreground">
+                  RM {parseFloat(field.value.toString() || "0").toFixed(2)}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          
+          <FormField
+            control={form.control}
+            name="cost"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Cost Price (RM)</FormLabel>
+                <FormControl>
+                  <Input 
+                    type="number" 
+                    step="0.01" 
+                    {...field} 
+                    value={field.value || ""} 
+                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                  />
+                </FormControl>
+                <div className="text-sm text-muted-foreground">
+                  RM {parseFloat((field.value || 0).toString()).toFixed(2)}
+                </div>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
         </div>
 
         <FormField

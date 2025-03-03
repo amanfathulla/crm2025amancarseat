@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -44,9 +45,10 @@ export default function Products() {
 
       if (error) throw error;
       
+      // Type safety: ensure all products have status, defaulting to 'active' if missing
       const productsWithStatus = data.map(product => ({
         ...product,
-        status: product.status || 'active'  // Default to 'active' if status is missing
+        status: product.status || 'active'
       }));
       
       setProducts(productsWithStatus as Product[]);
