@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavLink, useLocation } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -10,7 +9,6 @@ import {
   Users,
   ShoppingCart,
   Package,
-  TrendingUp,
   Menu,
   X,
   LogOut,
@@ -39,7 +37,7 @@ export function Sidebar() {
     { title: "Customers", path: "/customers", icon: Users },
     { title: "Sales", path: "/sales", icon: ShoppingCart },
     { title: "Products", path: "/products", icon: Package },
-    { title: "Marketing", path: "/marketing", icon: TrendingUp },
+    // Marketing item temporarily removed to fix errors
   ];
 
   // Handle mobile sidebar visibility

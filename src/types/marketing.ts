@@ -15,7 +15,7 @@ export interface MarketingNote {
 }
 
 export interface MarketingTask {
-  id: number;
+  id: string;
   title: string;
   dueDate: string;
   completed: boolean;
