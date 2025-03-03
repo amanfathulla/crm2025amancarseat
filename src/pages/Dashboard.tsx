@@ -1,11 +1,9 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Calendar, ShoppingBag, PackageCheck, PackageX, DollarSign, BarChart4, TrendingUp, Package, ShoppingCart } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
-import { useState } from "react";
 import { getSampleRevenueData, getSampleDailyRevenueData } from "@/utils/sampleData";
 
 export default function Dashboard() {
@@ -26,31 +24,17 @@ export default function Dashboard() {
       
       {/* Annual Revenue Overview */}
       <section className="mb-6 animate-slide-up delay-200">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Jualan {revenueData.currentYear.year}</h3>
+        <Card className="bg-black text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
+            <h2 className="text-2xl md:text-3xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
+            <div className="flex flex-col items-center">
+              <div className="text-xl font-medium">RM</div>
+              <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mt-1">
+                {revenueData.currentYear.total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
-              <p className="text-3xl font-bold">{formatCurrency(revenueData.currentYear.total)}</p>
-              <div className="flex items-center mt-2 text-xs text-gray-500">
-                <span>Tahun Semasa</span>
-              </div>
-            </CardContent>
-          </Card>
-          
-          <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-            <CardContent className="pt-6">
-              <div className="flex items-center justify-between mb-2">
-                <h3 className="text-lg font-medium">Jualan {revenueData.previousYear.year}</h3>
-              </div>
-              <p className="text-3xl font-bold">{formatCurrency(revenueData.previousYear.total)}</p>
-              <div className="flex items-center mt-2 text-xs text-gray-500">
-                <span>Tahun Lepas</span>
-              </div>
-            </CardContent>
-          </Card>
-        </div>
+            </div>
+          </CardContent>
+        </Card>
       </section>
       
       {/* Daily Revenue Stats */}
