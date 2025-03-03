@@ -9,11 +9,12 @@ import Sales from "./pages/Sales";
 import Customers from "./pages/Customers";
 import Marketing from "./pages/Marketing";
 import { MainLayout } from "./components/layout/MainLayout";
+import { Outlet } from "react-router-dom";
 
 export const router = createBrowserRouter([
   {
     path: "/",
-    element: <MainLayout />,
+    element: <MainLayout><Outlet /></MainLayout>,
     children: [
       {
         index: true,
