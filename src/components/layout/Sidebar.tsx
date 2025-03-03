@@ -66,7 +66,7 @@ export function Sidebar() {
     });
   };
 
-  // Fetch recent customers
+  // Fetch recent customers - added throttling to prevent too many requests
   useEffect(() => {
     const fetchRecentCustomers = async () => {
       try {
@@ -91,8 +91,18 @@ export function Sidebar() {
       }
     };
 
+    // Initial fetch
     fetchRecentCustomers();
-  }, []);
+
+    // Set up a polling interval to check for new customers - if on the customers page
+    const interval = setInterval(() => {
+      if (location.pathname === '/customers') {
+        fetchRecentCustomers();
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [location.pathname]);
 
   // Fetch products
   useEffect(() => {
@@ -118,8 +128,18 @@ export function Sidebar() {
       }
     };
 
+    // Initial fetch
     fetchProducts();
-  }, []);
+
+    // Set up a polling interval to check for new products - if on the products page
+    const interval = setInterval(() => {
+      if (location.pathname === '/products') {
+        fetchProducts();
+      }
+    }, 5000); // Check every 5 seconds
+
+    return () => clearInterval(interval);
+  }, [location.pathname]);
 
   // Base sidebar items
   const sidebarItems: SidebarItem[] = [
