@@ -19,6 +19,8 @@ const productSchema = z.object({
   inventory: z.coerce.number().nonnegative({ message: "Inventory must be a non-negative number" }),
   sku: z.string().optional(),
   cost: z.coerce.number().nonnegative({ message: "Cost must be a non-negative number" }).optional(),
+  image_url: z.string().url().optional().or(z.literal('')),
+  status: z.string().optional(),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
@@ -43,6 +45,8 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       inventory: 0,
       sku: "",
       cost: 0,
+      image_url: "",
+      status: "active",
     },
   });
 
@@ -60,7 +64,8 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           description: "Product has been updated successfully",
         });
       } else {
-        const { error } = await supabase.from("products").insert([data]);
+        // Fix: Pass a single object instead of an array of objects
+        const { error } = await supabase.from("products").insert(data);
 
         if (error) throw error;
         toast({
@@ -98,6 +103,174 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
 
         <FormField
           control={form.control}
+          name="image_url"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Image URL</FormLabel>
+              <FormControl>
+                <Input placeholder="https://example.com/image.jpg" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+          <div className="space-y-4">
+            <h3 className="font-medium">2 Seater</h3>
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Selling Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="cost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cost Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      {...field} 
+                      value={field.value || ""} 
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">5 Seater</h3>
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Selling Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="cost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cost Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      {...field} 
+                      value={field.value || ""} 
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+
+          <div className="space-y-4">
+            <h3 className="font-medium">7 Seater</h3>
+            <FormField
+              control={form.control}
+              name="price"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Selling Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input type="number" step="0.01" {...field} />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat(field.value.toString() || "0").toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+            
+            <FormField
+              control={form.control}
+              name="cost"
+              render={({ field }) => (
+                <FormItem>
+                  <FormLabel>Cost Price (RM)</FormLabel>
+                  <FormControl>
+                    <Input 
+                      type="number" 
+                      step="0.01" 
+                      {...field} 
+                      value={field.value || ""} 
+                      onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                    />
+                  </FormControl>
+                  <div className="text-sm text-muted-foreground">
+                    RM {parseFloat((field.value || 0).toString()).toFixed(2)}
+                  </div>
+                  <FormMessage />
+                </FormItem>
+              )}
+            />
+          </div>
+        </div>
+
+        <FormField
+          control={form.control}
+          name="status"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Status</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Select status" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  <SelectItem value="active">Active</SelectItem>
+                  <SelectItem value="inactive">Inactive</SelectItem>
+                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
+                </SelectContent>
+              </Select>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
           name="description"
           render={({ field }) => (
             <FormItem>
@@ -123,11 +296,11 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value="Electronics">Electronics</SelectItem>
-                  <SelectItem value="Furniture">Furniture</SelectItem>
-                  <SelectItem value="Clothing">Clothing</SelectItem>
-                  <SelectItem value="Accessories">Accessories</SelectItem>
-                  <SelectItem value="Kitchen">Kitchen</SelectItem>
+                  <SelectItem value="Sofa">Sofa</SelectItem>
+                  <SelectItem value="Chair">Chair</SelectItem>
+                  <SelectItem value="Table">Table</SelectItem>
+                  <SelectItem value="Bed">Bed</SelectItem>
+                  <SelectItem value="Cabinet">Cabinet</SelectItem>
                   <SelectItem value="Other">Other</SelectItem>
                 </SelectContent>
               </Select>
@@ -136,65 +309,33 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           )}
         />
 
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Price</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
+        <FormField
+          control={form.control}
+          name="inventory"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Inventory</FormLabel>
+              <FormControl>
+                <Input type="number" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
-          <FormField
-            control={form.control}
-            name="cost"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cost (Optional)</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="inventory"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Inventory</FormLabel>
-                <FormControl>
-                  <Input type="number" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-
-          <FormField
-            control={form.control}
-            name="sku"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>SKU (Optional)</FormLabel>
-                <FormControl>
-                  <Input placeholder="Enter SKU" {...field} />
-                </FormControl>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
+        <FormField
+          control={form.control}
+          name="sku"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>SKU (Optional)</FormLabel>
+              <FormControl>
+                <Input placeholder="Enter SKU" {...field} />
+              </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>

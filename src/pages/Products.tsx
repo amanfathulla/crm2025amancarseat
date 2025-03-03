@@ -3,7 +3,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, PlusCircle, MoreHorizontal, Edit, Trash, Loader2 } from "lucide-react";
+import { Search, PlusCircle, MoreHorizontal, Edit, Trash, Loader2, Image } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product } from "@/types/product";
@@ -23,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { Badge } from "@/components/ui/badge";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -91,10 +92,25 @@ export default function Products() {
   };
 
   const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-US', {
+    return new Intl.NumberFormat('en-MY', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'MYR',
     }).format(price);
+  };
+
+  const getStatusBadge = (status: string | null) => {
+    if (!status) return null;
+    
+    switch (status.toLowerCase()) {
+      case 'active':
+        return <Badge className="bg-green-500">Active</Badge>;
+      case 'inactive':
+        return <Badge variant="outline">Inactive</Badge>;
+      case 'out_of_stock':
+        return <Badge variant="destructive">Out of Stock</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
   };
 
   return (
@@ -138,8 +154,8 @@ export default function Products() {
                   <tr className="border-b">
                     <th className="text-left py-3 px-4 font-medium">Product</th>
                     <th className="text-left py-3 px-4 font-medium">Category</th>
+                    <th className="text-left py-3 px-4 font-medium">Status</th>
                     <th className="text-left py-3 px-4 font-medium">Inventory</th>
-                    <th className="text-left py-3 px-4 font-medium">Sales</th>
                     <th className="text-right py-3 px-4 font-medium">Price</th>
                     <th className="text-right py-3 px-4 font-medium">Actions</th>
                   </tr>
@@ -154,10 +170,30 @@ export default function Products() {
                   ) : (
                     filteredProducts.map((product) => (
                       <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
-                        <td className="py-3 px-4 text-sm font-medium">{product.name}</td>
+                        <td className="py-3 px-4">
+                          <div className="flex items-center">
+                            <div className="h-10 w-10 rounded bg-muted flex items-center justify-center mr-3">
+                              {product.image_url ? (
+                                <img 
+                                  src={product.image_url} 
+                                  alt={product.name}
+                                  className="h-10 w-10 object-cover rounded"
+                                  onError={(e) => {
+                                    e.currentTarget.src = "public/placeholder.svg";
+                                  }}
+                                />
+                              ) : (
+                                <Image className="h-5 w-5 text-muted-foreground" />
+                              )}
+                            </div>
+                            <div className="font-medium">{product.name}</div>
+                          </div>
+                        </td>
                         <td className="py-3 px-4 text-sm">{product.category || "-"}</td>
+                        <td className="py-3 px-4 text-sm">
+                          {getStatusBadge(product.status)}
+                        </td>
                         <td className="py-3 px-4 text-sm">{product.inventory || 0}</td>
-                        <td className="py-3 px-4 text-sm">{product.sales || 0}</td>
                         <td className="py-3 px-4 text-sm text-right font-medium">
                           {formatPrice(product.price)}
                         </td>
@@ -231,6 +267,8 @@ export default function Products() {
                 inventory: selectedProduct.inventory || 0,
                 sku: selectedProduct.sku || "",
                 cost: selectedProduct.cost || 0,
+                image_url: selectedProduct.image_url || "",
+                status: selectedProduct.status || "active",
               }}
             />
           </DialogContent>
