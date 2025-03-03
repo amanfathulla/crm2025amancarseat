@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -43,7 +44,14 @@ export default function Products() {
         .order("name");
 
       if (error) throw error;
-      setProducts(data as Product[]);
+      
+      // Map the data to ensure it conforms to our Product interface
+      const productsWithStatus = data.map(product => ({
+        ...product,
+        status: product.status || 'active'  // Default to 'active' if status is missing
+      }));
+      
+      setProducts(productsWithStatus as Product[]);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
