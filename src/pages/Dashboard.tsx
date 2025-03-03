@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -284,7 +283,7 @@ export default function Dashboard() {
         {/* Total Yearly Sales Revenue */}
         <Card className="bg-indigo-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan Tahunan</h2>
+            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan Keseluruhan</h2>
             <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
               RM{revenueData.yearlySalesTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
