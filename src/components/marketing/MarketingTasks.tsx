@@ -1,3 +1,4 @@
+
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -5,7 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Checkbox } from "@/components/ui/checkbox";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Badge } from "@/components/ui/badge";
-import { ListTodoIcon, FacebookIcon, InstagramIcon, YoutubeIcon, PlusIcon, X as XIcon } from "lucide-react";
+import { ListTodoIcon, FacebookIcon, InstagramIcon, YoutubeIcon, PlusIcon, X as XIcon, PencilIcon, CheckIcon } from "lucide-react";
 
 type TaskType = "general" | "facebook" | "instagram" | "tiktok";
 
@@ -56,6 +57,10 @@ export function MarketingTasks() {
   const [newTaskType, setNewTaskType] = useState<TaskType>("general");
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [typeFilter, setTypeFilter] = useState<TaskType | "all">("all");
+  const [editingTask, setEditingTask] = useState<number | null>(null);
+  const [editTaskTitle, setEditTaskTitle] = useState("");
+  const [editTaskDueDate, setEditTaskDueDate] = useState("");
+  const [editTaskType, setEditTaskType] = useState<TaskType>("general");
 
   const addTask = () => {
     if (newTaskTitle.trim() === "") return;
@@ -84,6 +89,32 @@ export function MarketingTasks() {
 
   const deleteTask = (id: number) => {
     setTasks(tasks.filter((task) => task.id !== id));
+  };
+
+  const startEditing = (task: Task) => {
+    setEditingTask(task.id);
+    setEditTaskTitle(task.title);
+    setEditTaskDueDate(task.dueDate);
+    setEditTaskType(task.type);
+  };
+
+  const saveEdit = () => {
+    if (editTaskTitle.trim() === "") return;
+    
+    setTasks(
+      tasks.map((task) =>
+        task.id === editingTask
+          ? {
+              ...task,
+              title: editTaskTitle,
+              dueDate: editTaskDueDate,
+              type: editTaskType,
+            }
+          : task
+      )
+    );
+    
+    setEditingTask(null);
   };
 
   const filteredTasks = tasks.filter((task) => {
@@ -184,39 +215,92 @@ export function MarketingTasks() {
             filteredTasks.map((task) => (
               <div
                 key={task.id}
-                className={`flex items-center justify-between p-3 border rounded-md ${
+                className={`p-3 border rounded-md ${
                   task.completed ? "bg-muted/40" : ""
                 }`}
               >
-                <div className="flex items-start gap-3 flex-1">
-                  <Checkbox
-                    checked={task.completed}
-                    onCheckedChange={() => toggleTaskCompletion(task.id)}
-                    className="mt-0.5"
-                  />
-                  <div className="flex-1">
-                    <div className="flex items-center gap-2">
-                      <span className={task.completed ? "line-through text-muted-foreground" : ""}>
-                        {task.title}
-                      </span>
-                      <Badge variant="outline" className="flex items-center gap-1">
-                        {getTaskTypeIcon(task.type)}
-                        <span className="text-xs capitalize">{task.type}</span>
-                      </Badge>
+                {editingTask === task.id ? (
+                  <div className="space-y-3">
+                    <Input
+                      placeholder="Task title"
+                      value={editTaskTitle}
+                      onChange={(e) => setEditTaskTitle(e.target.value)}
+                    />
+                    <div className="flex space-x-2">
+                      <Input
+                        type="date"
+                        value={editTaskDueDate}
+                        onChange={(e) => setEditTaskDueDate(e.target.value)}
+                        className="w-full"
+                      />
+                      <Select value={editTaskType} onValueChange={(value) => setEditTaskType(value as TaskType)}>
+                        <SelectTrigger className="w-full">
+                          <SelectValue placeholder="Type" />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="general">General</SelectItem>
+                          <SelectItem value="facebook">Facebook</SelectItem>
+                          <SelectItem value="instagram">Instagram</SelectItem>
+                          <SelectItem value="tiktok">TikTok</SelectItem>
+                        </SelectContent>
+                      </Select>
                     </div>
-                    <div className="text-xs text-muted-foreground mt-1">
-                      Due: {new Date(task.dueDate).toLocaleDateString()}
+                    <div className="flex justify-end space-x-2">
+                      <Button
+                        size="sm"
+                        variant="ghost"
+                        onClick={() => setEditingTask(null)}
+                      >
+                        Cancel
+                      </Button>
+                      <Button size="sm" onClick={saveEdit}>
+                        <CheckIcon className="h-4 w-4 mr-1" /> Save
+                      </Button>
                     </div>
                   </div>
-                </div>
-                <Button
-                  variant="ghost"
-                  size="icon"
-                  className="h-8 w-8"
-                  onClick={() => deleteTask(task.id)}
-                >
-                  <XIcon className="h-4 w-4" />
-                </Button>
+                ) : (
+                  <div className="flex items-center justify-between">
+                    <div className="flex items-start gap-3 flex-1">
+                      <Checkbox
+                        checked={task.completed}
+                        onCheckedChange={() => toggleTaskCompletion(task.id)}
+                        className="mt-0.5"
+                      />
+                      <div className="flex-1">
+                        <div className="flex items-center gap-2">
+                          <span className={task.completed ? "line-through text-muted-foreground" : ""}>
+                            {task.title}
+                          </span>
+                          <Badge variant="outline" className="flex items-center gap-1">
+                            {getTaskTypeIcon(task.type)}
+                            <span className="text-xs capitalize">{task.type}</span>
+                          </Badge>
+                        </div>
+                        <div className="text-xs text-muted-foreground mt-1">
+                          Due: {new Date(task.dueDate).toLocaleDateString()}
+                        </div>
+                      </div>
+                    </div>
+                    <div className="flex gap-1">
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => startEditing(task)}
+                      >
+                        <PencilIcon className="h-4 w-4" />
+                      </Button>
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="h-8 w-8"
+                        onClick={() => deleteTask(task.id)}
+                      >
+                        <XIcon className="h-4 w-4" />
+                      </Button>
+                    </div>
+                  </div>
+                )}
               </div>
             ))
           )}
