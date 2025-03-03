@@ -9,7 +9,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { YearlySalesRecord, SalesAnalytics } from "@/types/sales";
+import { YearlySalesRecord, SalesAnalytics, YearlySalesTable } from "@/types/sales";
 import {
   BarChart,
   Bar,
@@ -38,11 +38,24 @@ export default function Sales() {
         .order("year", { ascending: false });
 
       if (error) throw error;
-      setYearlySales(data || []);
+
+      // Convert the database records to our app's type format
+      const typedData = data?.map(record => ({
+        id: record.id,
+        year: record.year,
+        total_revenue: record.total_revenue,
+        quarter_1: record.quarter_1,
+        quarter_2: record.quarter_2,
+        quarter_3: record.quarter_3,
+        quarter_4: record.quarter_4,
+        created_at: record.created_at
+      })) || [];
+      
+      setYearlySales(typedData);
       
       // Generate analytics
-      if (data && data.length >= 2) {
-        const sortedYears = [...data].sort((a, b) => b.year - a.year);
+      if (typedData.length >= 2) {
+        const sortedYears = [...typedData].sort((a, b) => b.year - a.year);
         const currentYear = sortedYears[0];
         const previousYear = sortedYears[1];
         

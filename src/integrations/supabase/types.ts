@@ -236,6 +236,39 @@ export type Database = {
         }
         Relationships: []
       }
+      yearly_sales: {
+        Row: {
+          created_at: string | null
+          id: string
+          quarter_1: number
+          quarter_2: number
+          quarter_3: number
+          quarter_4: number
+          total_revenue: number
+          year: number
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          quarter_1: number
+          quarter_2: number
+          quarter_3: number
+          quarter_4: number
+          total_revenue: number
+          year: number
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          quarter_1?: number
+          quarter_2?: number
+          quarter_3?: number
+          quarter_4?: number
+          total_revenue?: number
+          year?: number
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

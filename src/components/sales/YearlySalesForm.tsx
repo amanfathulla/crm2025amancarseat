@@ -76,11 +76,15 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         });
       } else {
         // Check if record for this year already exists
-        const { data: existingRecord } = await supabase
+        const { data: existingRecord, error: checkError } = await supabase
           .from("yearly_sales")
           .select("*")
           .eq("year", formData.year)
           .single();
+
+        if (checkError && !checkError.message.includes('No rows found')) {
+          throw checkError;
+        }
 
         if (existingRecord) {
           toast({
@@ -93,18 +97,20 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         }
 
         // Add new sales record
-        const { error } = await supabase.from("yearly_sales").insert([
-          {
-            year: formData.year,
-            total_revenue: formData.total_revenue,
-            quarter_1: formData.quarter_1,
-            quarter_2: formData.quarter_2,
-            quarter_3: formData.quarter_3,
-            quarter_4: formData.quarter_4,
-          },
-        ]);
+        const { error: insertError } = await supabase
+          .from("yearly_sales")
+          .insert([
+            {
+              year: formData.year,
+              total_revenue: formData.total_revenue,
+              quarter_1: formData.quarter_1,
+              quarter_2: formData.quarter_2,
+              quarter_3: formData.quarter_3,
+              quarter_4: formData.quarter_4,
+            },
+          ]);
 
-        if (error) throw error;
+        if (insertError) throw insertError;
         toast({
           title: "Sales record added",
           description: `New sales record for year ${formData.year} has been added.`,
