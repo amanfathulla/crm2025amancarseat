@@ -40,7 +40,8 @@ export default function Dashboard() {
       today: 0,
       thisMonth: 0,
       thisYear: 0
-    }
+    },
+    yearlySalesTotal: 0
   });
   const [dailyRevenueData, setDailyRevenueData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -127,6 +128,18 @@ export default function Dashboard() {
         
         if (cancelledError) throw cancelledError;
         
+        // Fetch yearly sales data for total revenue display
+        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+          .from('yearly_sales')
+          .select('total_revenue');
+        
+        if (yearlySalesError) throw yearlySalesError;
+        
+        // Calculate total revenue from yearly sales
+        const yearlySalesTotal = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0)
+          : 0;
+        
         // Calculate sums
         const yearlyRevenue = yearData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
         const yearlyProfit = yearData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
@@ -175,7 +188,8 @@ export default function Dashboard() {
             today: todayProfit,
             thisMonth: monthlyProfit,
             thisYear: yearlyProfit
-          }
+          },
+          yearlySalesTotal: yearlySalesTotal
         });
         
         setDailyRevenueData(dailyData);
@@ -254,14 +268,27 @@ export default function Dashboard() {
         <p className="text-muted-foreground">Ringkasan Prestasi (Overview)</p>
       </section>
       
-      {/* Annual Revenue Overview */}
-      <section className="mb-6 animate-slide-up delay-200">
+      {/* Annual Revenue Section - Now a grid with two cards */}
+      <section className="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6 animate-slide-up delay-200">
+        {/* Customer Orders Revenue */}
         <Card className="bg-black text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
           <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-2xl md:text-3xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
-            <div className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-bold mt-1">
+            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
+            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
               RM{revenueData.currentYear.total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
+            <p className="text-sm text-gray-400 mt-2">Jualan dari Pesanan Pelanggan</p>
+          </CardContent>
+        </Card>
+        
+        {/* Total Yearly Sales Revenue */}
+        <Card className="bg-indigo-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
+          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
+            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan Tahunan</h2>
+            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
+              RM{revenueData.yearlySalesTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+            </div>
+            <p className="text-sm text-gray-300 mt-2">Data dari Rekod Jualan Tahunan</p>
           </CardContent>
         </Card>
       </section>
