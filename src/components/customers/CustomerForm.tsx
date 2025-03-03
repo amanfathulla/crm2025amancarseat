@@ -1,12 +1,20 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "@/types/customer";
+import { Product } from "@/types/product";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { 
+  Select, 
+  SelectContent, 
+  SelectItem, 
+  SelectTrigger, 
+  SelectValue 
+} from "@/components/ui/select";
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -29,9 +37,42 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
     }
   );
   const [isLoading, setIsLoading] = useState(false);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loadingProducts, setLoadingProducts] = useState(true);
+
+  // Fetch products for the dropdown
+  useEffect(() => {
+    const fetchProducts = async () => {
+      try {
+        setLoadingProducts(true);
+        const { data, error } = await supabase
+          .from("products")
+          .select("*")
+          .order("name");
+
+        if (error) throw error;
+        setProducts(data || []);
+      } catch (error: any) {
+        console.error("Error fetching products:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load products list.",
+          variant: "destructive",
+        });
+      } finally {
+        setLoadingProducts(false);
+      }
+    };
+
+    fetchProducts();
+  }, [toast]);
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
+  };
+
+  const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
@@ -157,13 +198,31 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             </div>
             <div className="space-y-2">
               <Label htmlFor="product">Product</Label>
-              <Input
-                id="product"
-                name="product"
+              <Select
                 value={formData.product}
-                onChange={handleChange}
-                required
-              />
+                onValueChange={(value) => handleSelectChange("product", value)}
+              >
+                <SelectTrigger id="product" className="w-full">
+                  <SelectValue placeholder="Select a product" />
+                </SelectTrigger>
+                <SelectContent>
+                  {loadingProducts ? (
+                    <SelectItem value="loading" disabled>
+                      Loading products...
+                    </SelectItem>
+                  ) : products.length === 0 ? (
+                    <SelectItem value="none" disabled>
+                      No products available
+                    </SelectItem>
+                  ) : (
+                    products.map((product) => (
+                      <SelectItem key={product.id} value={product.name}>
+                        {product.name}
+                      </SelectItem>
+                    ))
+                  )}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="order_date">Order Date</Label>
