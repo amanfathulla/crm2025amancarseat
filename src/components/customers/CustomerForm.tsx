@@ -344,7 +344,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
                       <CardContent className="p-3 flex justify-between items-center">
                         <div>
                           <div className="font-medium">{variation.name}</div>
-                          <div className="text-sm text-muted-foreground">Price: ${variation.price.toFixed(2)}</div>
+                          <div className="text-sm text-muted-foreground">Price: RM {variation.price.toFixed(2)}</div>
                         </div>
                         <div className={`w-4 h-4 rounded-full border ${formData.product_variation === variation.name ? 'bg-primary border-primary' : 'border-muted'}`}></div>
                       </CardContent>
@@ -365,11 +365,11 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
               </div>
               <div className="flex justify-between mb-1">
                 <span>Sales Amount:</span>
-                <span>${formData.sales_amount.toFixed(2)}</span>
+                <span>RM {formData.sales_amount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>Gross Profit:</span>
-                <span>${formData.gross_profit.toFixed(2)}</span>
+                <span>RM {formData.gross_profit.toFixed(2)}</span>
               </div>
             </div>
           )}
