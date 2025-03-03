@@ -25,10 +25,12 @@ export function useMarketingTasks() {
         throw error;
       }
       
-      // Convert string dates to Date objects and ensure type is valid
+      // Convert and ensure type safety
       const formattedTasks = data.map(task => ({
-        ...task,
+        id: task.id,
+        title: task.title,
         dueDate: task.due_date,
+        completed: task.completed,
         // Ensure the type is one of the allowed values
         type: isValidTaskType(task.type) ? task.type : 'general'
       })) as MarketingTask[];
@@ -57,7 +59,7 @@ export function useMarketingTasks() {
     try {
       setIsLoading(true);
       
-      // Format the date before sending to Supabase
+      // Format the data for Supabase
       const formattedTask = {
         title: task.title,
         due_date: task.dueDate,
@@ -106,7 +108,7 @@ export function useMarketingTasks() {
   };
 
   // Update an existing task
-  const updateTask = async (id: number, updates: Partial<Omit<MarketingTask, 'id'>>) => {
+  const updateTask = async (id: string, updates: Partial<Omit<MarketingTask, 'id'>>) => {
     try {
       setIsLoading(true);
       
@@ -162,7 +164,7 @@ export function useMarketingTasks() {
   };
 
   // Delete a task
-  const deleteTask = async (id: number) => {
+  const deleteTask = async (id: string) => {
     try {
       setIsLoading(true);
       
@@ -198,7 +200,7 @@ export function useMarketingTasks() {
   };
 
   // Toggle task completion status
-  const toggleTaskCompletion = async (id: number, completed: boolean) => {
+  const toggleTaskCompletion = async (id: string, completed: boolean) => {
     return updateTask(id, { completed });
   };
 

@@ -3,28 +3,28 @@
 export const getSampleTasks = () => {
   return [
     {
-      id: 1,
+      id: "1",
       title: "Create Facebook ad for new product launch",
       dueDate: "2023-07-15",
       completed: false,
       type: "facebook",
     },
     {
-      id: 2,
+      id: "2",
       title: "Post weekly Instagram update",
       dueDate: "2023-07-12",
       completed: true,
       type: "instagram",
     },
     {
-      id: 3,
+      id: "3",
       title: "Record TikTok product demo",
       dueDate: "2023-07-14",
       completed: false,
       type: "tiktok",
     },
     {
-      id: 4,
+      id: "4",
       title: "Review marketing analytics",
       dueDate: "2023-07-13",
       completed: false,
@@ -55,28 +55,28 @@ export const getSampleNotes = () => {
 export const getSampleMarketingTasks = () => {
   return [
     {
-      id: 1,
+      id: "1",
       title: "Create Facebook ad for new product launch",
       dueDate: "2023-07-15",
       completed: false,
       type: "facebook",
     },
     {
-      id: 2,
+      id: "2",
       title: "Post weekly Instagram update",
       dueDate: "2023-07-12",
       completed: true,
       type: "instagram",
     },
     {
-      id: 3,
+      id: "3",
       title: "Record TikTok product demo",
       dueDate: "2023-07-14",
       completed: false,
       type: "tiktok",
     },
     {
-      id: 4,
+      id: "4",
       title: "Review marketing analytics",
       dueDate: "2023-07-13",
       completed: false,

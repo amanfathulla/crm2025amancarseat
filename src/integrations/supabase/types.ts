@@ -138,6 +138,36 @@ export type Database = {
         }
         Relationships: []
       }
+      marketing_tasks: {
+        Row: {
+          completed: boolean
+          created_at: string | null
+          due_date: string
+          id: string
+          title: string
+          type: string
+          updated_at: string | null
+        }
+        Insert: {
+          completed?: boolean
+          created_at?: string | null
+          due_date: string
+          id?: string
+          title: string
+          type: string
+          updated_at?: string | null
+        }
+        Update: {
+          completed?: boolean
+          created_at?: string | null
+          due_date?: string
+          id?: string
+          title?: string
+          type?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       order_items: {
         Row: {
           created_at: string | null

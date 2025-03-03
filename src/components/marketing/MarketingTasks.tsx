@@ -25,7 +25,7 @@ export function MarketingTasks() {
   const [newTaskType, setNewTaskType] = useState<MarketingTask["type"]>("general");
   const [filter, setFilter] = useState<"all" | "upcoming" | "completed">("all");
   const [typeFilter, setTypeFilter] = useState<MarketingTask["type"] | "all">("all");
-  const [editingTask, setEditingTask] = useState<number | null>(null);
+  const [editingTask, setEditingTask] = useState<string | null>(null);
   const [editTaskTitle, setEditTaskTitle] = useState("");
   const [editTaskDueDate, setEditTaskDueDate] = useState("");
   const [editTaskType, setEditTaskType] = useState<MarketingTask["type"]>("general");
@@ -46,11 +46,11 @@ export function MarketingTasks() {
     setNewTaskType("general");
   };
 
-  const handleToggleTaskCompletion = (id: number, completed: boolean) => {
+  const handleToggleTaskCompletion = (id: string, completed: boolean) => {
     toggleTaskCompletion(id, !completed);
   };
 
-  const handleDeleteTask = (id: number) => {
+  const handleDeleteTask = (id: string) => {
     deleteTask(id);
   };
 
