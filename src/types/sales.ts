@@ -1,4 +1,3 @@
-
 export interface YearlySalesRecord {
   id: string;
   year: number;
@@ -58,4 +57,15 @@ export interface SalesRecordFormData {
   amount: number;
   description?: string;
   category?: string;
+}
+
+// New interface for yearly analytics display
+export interface YearlyAnalytics {
+  currentYearRevenue: number;
+  previousYearRevenue: number;
+  percentageChange: number;
+  yearlyData: {
+    year: number;
+    totalRevenue: number;
+  }[];
 }
