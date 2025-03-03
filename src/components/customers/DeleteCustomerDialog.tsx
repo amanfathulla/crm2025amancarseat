@@ -43,15 +43,16 @@ export function DeleteCustomerDialog({
 
       toast({
         title: "Customer deleted",
-        description: "The customer has been removed successfully.",
+        description: `${customerName} has been removed from your customer list.`,
       });
+      
       onSuccess();
       onClose();
     } catch (error: any) {
       console.error("Error deleting customer:", error);
       toast({
         title: "Error",
-        description: error.message || "Failed to delete the customer.",
+        description: error.message || "Failed to delete customer.",
         variant: "destructive",
       });
     } finally {
@@ -63,23 +64,20 @@ export function DeleteCustomerDialog({
     <AlertDialog open={isOpen} onOpenChange={onClose}>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Are you sure?</AlertDialogTitle>
+          <AlertDialogTitle>Are you absolutely sure?</AlertDialogTitle>
           <AlertDialogDescription>
-            This will permanently delete the customer <strong>{customerName}</strong> and remove all
-            associated data. This action cannot be undone.
+            This will permanently delete {customerName}'s record and remove all their data from your customer list. 
+            This action cannot be undone.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
-          <AlertDialogCancel disabled={isLoading}>Cancel</AlertDialogCancel>
+          <AlertDialogCancel>Cancel</AlertDialogCancel>
           <AlertDialogAction
-            onClick={(e) => {
-              e.preventDefault();
-              handleDelete();
-            }}
-            disabled={isLoading}
             className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            onClick={handleDelete}
+            disabled={isLoading}
           >
-            {isLoading ? "Deleting..." : "Delete Customer"}
+            {isLoading ? "Deleting..." : "Delete"}
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
