@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -152,6 +151,18 @@ export default function Customers() {
           </div>
         </CardHeader>
         <CardContent>
+          <div className="flex items-center gap-2 w-full mb-4">
+            <div className="relative flex-1">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search customers..."
+                className="pl-9"
+                value={searchQuery}
+                onChange={handleSearch}
+              />
+            </div>
+          </div>
+          
           <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
@@ -255,7 +266,7 @@ function CustomerRow({
   };
 
   const formatCurrency = (amount: number) => {
-    return `$${amount.toFixed(2)}`;
+    return `RM ${amount.toFixed(2)}`;
   };
 
   return (
