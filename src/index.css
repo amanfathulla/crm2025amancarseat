@@ -1,10 +1,11 @@
+
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
 @layer base {
   :root {
-    --background: 0 0% 100%;
+    --background: 210 40% 98%;
     --foreground: 222.2 84% 4.9%;
 
     --card: 0 0% 100%;
@@ -13,16 +14,16 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
 
-    --primary: 222.2 47.4% 11.2%;
+    --primary: 222 47% 21%;
     --primary-foreground: 210 40% 98%;
 
-    --secondary: 210 40% 96.1%;
+    --secondary: 210 38% 95%;
     --secondary-foreground: 222.2 47.4% 11.2%;
 
     --muted: 210 40% 96.1%;
     --muted-foreground: 215.4 16.3% 46.9%;
 
-    --accent: 210 40% 96.1%;
+    --accent: 210 30% 92%;
     --accent-foreground: 222.2 47.4% 11.2%;
 
     --destructive: 0 84.2% 60.2%;
@@ -32,22 +33,15 @@
     --input: 214.3 31.8% 91.4%;
     --ring: 222.2 84% 4.9%;
 
-    --radius: 0.5rem;
+    --radius: 0.85rem;
 
-    --sidebar-background: 0 0% 98%;
-
-    --sidebar-foreground: 240 5.3% 26.1%;
-
-    --sidebar-primary: 240 5.9% 10%;
-
-    --sidebar-primary-foreground: 0 0% 98%;
-
-    --sidebar-accent: 240 4.8% 95.9%;
-
-    --sidebar-accent-foreground: 240 5.9% 10%;
-
+    --sidebar-background: 0 0% 100%;
+    --sidebar-foreground: 222 47% 21%;
+    --sidebar-primary: 222 47% 21%;
+    --sidebar-primary-foreground: 210 40% 98%;
+    --sidebar-accent: 210 40% 96.1%;
+    --sidebar-accent-foreground: 222 47% 21%;
     --sidebar-border: 220 13% 91%;
-
     --sidebar-ring: 217.2 91.2% 59.8%;
   }
 
@@ -79,14 +73,15 @@
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
     --ring: 212.7 26.8% 83.9%;
-    --sidebar-background: 240 5.9% 10%;
-    --sidebar-foreground: 240 4.8% 95.9%;
-    --sidebar-primary: 224.3 76.3% 48%;
-    --sidebar-primary-foreground: 0 0% 100%;
-    --sidebar-accent: 240 3.7% 15.9%;
-    --sidebar-accent-foreground: 240 4.8% 95.9%;
-    --sidebar-border: 240 3.7% 15.9%;
-    --sidebar-ring: 217.2 91.2% 59.8%;
+    
+    --sidebar-background: 222.2 47.4% 11.2%;
+    --sidebar-foreground: 210 40% 98%;
+    --sidebar-primary: 210 40% 98%;
+    --sidebar-primary-foreground: 222.2 47.4% 11.2%;
+    --sidebar-accent: 217.2 32.6% 17.5%;
+    --sidebar-accent-foreground: 210 40% 98%;
+    --sidebar-border: 217.2 32.6% 17.5%;
+    --sidebar-ring: 212.7 26.8% 83.9%;
   }
 }
 
@@ -96,6 +91,89 @@
   }
 
   body {
-    @apply bg-background text-foreground;
+    @apply bg-background text-foreground font-sans antialiased;
   }
+
+  .glass-card {
+    @apply bg-white/70 backdrop-blur-md border border-white/20 shadow-glass;
+  }
+  
+  .glass-card-dark {
+    @apply bg-gray-900/70 backdrop-blur-md border border-white/10 shadow-glass;
+  }
+  
+  .input-glass {
+    @apply bg-white/50 backdrop-blur-sm border border-white/30 focus:border-white/50 shadow-sm focus:ring-1 focus:ring-white/50;
+  }
+  
+  .input-glass-dark {
+    @apply bg-gray-800/50 backdrop-blur-sm border border-white/10 focus:border-white/20 shadow-sm focus:ring-1 focus:ring-white/20;
+  }
+}
+
+/* Smooth scrolling */
+html {
+  scroll-behavior: smooth;
+}
+
+/* Better button transitions */
+button {
+  transition: all 0.2s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+}
+
+/* Remove Safari input shadows */
+input,
+textarea {
+  -webkit-appearance: none;
+  -moz-appearance: none;
+  appearance: none;
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(0, 0, 0, 0.1);
+  border-radius: 3px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.dark ::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.1);
+}
+
+.dark ::-webkit-scrollbar-thumb:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+/* Loading animations */
+@keyframes shimmer {
+  0% {
+    background-position: -200% 0;
+  }
+  100% {
+    background-position: 200% 0;
+  }
+}
+
+.shimmer {
+  background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
+}
+
+.dark .shimmer {
+  background: linear-gradient(90deg, #292929 25%, #333333 50%, #292929 75%);
+  background-size: 200% 100%;
+  animation: shimmer 1.5s infinite;
 }
