@@ -19,11 +19,11 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
 const DEMO_USER = {
   id: "1",
-  username: "admin",
+  username: "amanmuhsin",
   role: "admin",
 };
 
-const DEMO_PASSWORD = "admin123";
+const DEMO_PASSWORD = "muhsin@920926";
 
 export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);

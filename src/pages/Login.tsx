@@ -47,7 +47,7 @@ export default function Login() {
               <Label htmlFor="username">Username</Label>
               <Input
                 id="username"
-                placeholder="admin"
+                placeholder="amanmuhsin"
                 value={username}
                 onChange={(e) => setUsername(e.target.value)}
                 className="h-12"
@@ -65,7 +65,7 @@ export default function Login() {
               <Input
                 id="password"
                 type="password"
-                placeholder="admin123"
+                placeholder="muhsin@920926"
                 value={password}
                 onChange={(e) => setPassword(e.target.value)}
                 className="h-12"
@@ -89,7 +89,7 @@ export default function Login() {
             </Button>
             
             <div className="mt-4 text-center text-sm text-muted-foreground">
-              <p>Demo credentials: admin / admin123</p>
+              <p>Demo credentials: amanmuhsin / muhsin@920926</p>
             </div>
           </form>
         </div>
