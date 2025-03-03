@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
@@ -9,7 +8,7 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
-import { YearlySalesRecord, SalesAnalytics, YearlySalesTable } from "@/types/sales";
+import { YearlySalesRecord, SalesAnalytics } from "@/types/sales";
 import {
   BarChart,
   Bar,
@@ -44,10 +43,6 @@ export default function Sales() {
         id: record.id,
         year: record.year,
         total_revenue: record.total_revenue,
-        quarter_1: record.quarter_1,
-        quarter_2: record.quarter_2,
-        quarter_3: record.quarter_3,
-        quarter_4: record.quarter_4,
         created_at: record.created_at
       })) || [];
       
@@ -63,26 +58,27 @@ export default function Sales() {
           ? ((currentYear.total_revenue - previousYear.total_revenue) / previousYear.total_revenue) * 100
           : 100;
         
+        // Since we're no longer tracking quarterly data, we'll set equal values for visualization
         const quarterlyData = [
           {
             quarter: "Q1",
-            currentYear: currentYear.quarter_1,
-            previousYear: previousYear.quarter_1,
+            currentYear: currentYear.total_revenue / 4,
+            previousYear: previousYear.total_revenue / 4,
           },
           {
             quarter: "Q2",
-            currentYear: currentYear.quarter_2,
-            previousYear: previousYear.quarter_2,
+            currentYear: currentYear.total_revenue / 4,
+            previousYear: previousYear.total_revenue / 4,
           },
           {
             quarter: "Q3",
-            currentYear: currentYear.quarter_3,
-            previousYear: previousYear.quarter_3,
+            currentYear: currentYear.total_revenue / 4,
+            previousYear: previousYear.total_revenue / 4,
           },
           {
             quarter: "Q4",
-            currentYear: currentYear.quarter_4,
-            previousYear: previousYear.quarter_4,
+            currentYear: currentYear.total_revenue / 4,
+            previousYear: previousYear.total_revenue / 4,
           },
         ];
         
@@ -226,23 +222,19 @@ export default function Sales() {
               <thead>
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Year</th>
-                  <th className="text-left py-3 px-4 font-medium">Q1</th>
-                  <th className="text-left py-3 px-4 font-medium">Q2</th>
-                  <th className="text-left py-3 px-4 font-medium">Q3</th>
-                  <th className="text-left py-3 px-4 font-medium">Q4</th>
                   <th className="text-right py-3 px-4 font-medium">Total Revenue</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={2} className="py-8 text-center text-muted-foreground">
                       Loading sales data...
                     </td>
                   </tr>
                 ) : yearlySales.length === 0 ? (
                   <tr>
-                    <td colSpan={6} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={2} className="py-8 text-center text-muted-foreground">
                       No sales data found. Add your first year record to get started.
                     </td>
                   </tr>
@@ -250,10 +242,6 @@ export default function Sales() {
                   yearlySales.map((record) => (
                     <tr key={record.id} className="border-b hover:bg-muted/30 transition-colors">
                       <td className="py-3 px-4 text-sm font-medium">{record.year}</td>
-                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_1)}</td>
-                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_2)}</td>
-                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_3)}</td>
-                      <td className="py-3 px-4 text-sm">{formatCurrency(record.quarter_4)}</td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
                         {formatCurrency(record.total_revenue)}
                       </td>

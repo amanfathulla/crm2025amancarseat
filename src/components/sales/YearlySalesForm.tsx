@@ -38,16 +38,17 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
     
     if (isNaN(numValue)) numValue = 0;
     
-    setFormData((prev) => {
-      const newData = { ...prev, [name]: numValue };
-      
-      // If updating individual quarters, recalculate total
-      if (name.startsWith("quarter_")) {
-        newData.total_revenue = newData.quarter_1 + newData.quarter_2 + newData.quarter_3 + newData.quarter_4;
-      }
-      
-      return newData;
-    });
+    setFormData((prev) => ({
+      ...prev,
+      [name]: numValue,
+      // Set all quarters to 0 to maintain database structure
+      ...(name === "total_revenue" ? {
+        quarter_1: 0,
+        quarter_2: 0,
+        quarter_3: 0,
+        quarter_4: 0
+      } : {})
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -62,10 +63,10 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
           .update({
             year: formData.year,
             total_revenue: formData.total_revenue,
-            quarter_1: formData.quarter_1,
-            quarter_2: formData.quarter_2,
-            quarter_3: formData.quarter_3,
-            quarter_4: formData.quarter_4,
+            quarter_1: 0,  // Set all quarters to 0
+            quarter_2: 0,
+            quarter_3: 0,
+            quarter_4: 0,
           })
           .eq("year", salesRecord.year);
 
@@ -103,10 +104,10 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
             {
               year: formData.year,
               total_revenue: formData.total_revenue,
-              quarter_1: formData.quarter_1,
-              quarter_2: formData.quarter_2,
-              quarter_3: formData.quarter_3,
-              quarter_4: formData.quarter_4,
+              quarter_1: 0,  // Set all quarters to 0
+              quarter_2: 0,
+              quarter_3: 0,
+              quarter_4: 0,
             },
           ]);
 
@@ -162,59 +163,6 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
                 min={0}
                 step="0.01"
                 value={formData.total_revenue}
-                onChange={handleChange}
-                required
-                readOnly
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quarter_1">Q1 Revenue</Label>
-              <Input
-                id="quarter_1"
-                name="quarter_1"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.quarter_1}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quarter_2">Q2 Revenue</Label>
-              <Input
-                id="quarter_2"
-                name="quarter_2"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.quarter_2}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quarter_3">Q3 Revenue</Label>
-              <Input
-                id="quarter_3"
-                name="quarter_3"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.quarter_3}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="quarter_4">Q4 Revenue</Label>
-              <Input
-                id="quarter_4"
-                name="quarter_4"
-                type="number"
-                min={0}
-                step="0.01"
-                value={formData.quarter_4}
                 onChange={handleChange}
                 required
               />
