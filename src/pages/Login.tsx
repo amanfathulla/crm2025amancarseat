@@ -9,6 +9,7 @@ import { LoaderCircle, User, Mail } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function Login() {
   // Login state
@@ -23,6 +24,11 @@ export default function Login() {
   const [signupPassword, setSignupPassword] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
   const [passwordError, setPasswordError] = useState("");
+
+  // Admin quick login dialog state
+  const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
+  const [adminPassword, setAdminPassword] = useState("");
+  const [adminPasswordError, setAdminPasswordError] = useState("");
   
   const { login, signup } = useAuth();
   const navigate = useNavigate();
@@ -65,8 +71,22 @@ export default function Login() {
     }
   };
 
-  const quickAdminLogin = async () => {
+  const openAdminLoginDialog = () => {
+    setAdminPassword("");
+    setAdminPasswordError("");
+    setShowAdminLoginDialog(true);
+  };
+
+  const handleAdminLogin = async () => {
+    // Check if password is correct
+    if (adminPassword !== "Muhsin@920926") {
+      setAdminPasswordError("Password is incorrect");
+      return;
+    }
+
     setIsSubmitting(true);
+    setShowAdminLoginDialog(false);
+    
     try {
       const success = await login("admin", "Muhsin@920926");
       if (success) {
@@ -98,7 +118,7 @@ export default function Login() {
               
               <div className="flex justify-center mb-4">
                 <Button 
-                  onClick={quickAdminLogin} 
+                  onClick={openAdminLoginDialog} 
                   variant="outline" 
                   className="w-full"
                   disabled={isSubmitting}
@@ -267,6 +287,53 @@ export default function Login() {
           </Tabs>
         </div>
       </div>
+
+      {/* Admin Login Dialog */}
+      <Dialog open={showAdminLoginDialog} onOpenChange={setShowAdminLoginDialog}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Admin Authentication</DialogTitle>
+          </DialogHeader>
+          <div className="space-y-4 py-4">
+            <div className="space-y-2">
+              <Label htmlFor="admin-password">Admin Password</Label>
+              <Input 
+                id="admin-password" 
+                type="password" 
+                placeholder="Enter admin password" 
+                value={adminPassword}
+                onChange={(e) => setAdminPassword(e.target.value)}
+              />
+              {adminPasswordError && (
+                <p className="text-sm text-destructive">{adminPasswordError}</p>
+              )}
+            </div>
+          </div>
+          <DialogFooter>
+            <Button
+              type="button"
+              variant="outline"
+              onClick={() => setShowAdminLoginDialog(false)}
+            >
+              Cancel
+            </Button>
+            <Button 
+              type="button" 
+              onClick={handleAdminLogin}
+              disabled={isSubmitting}
+            >
+              {isSubmitting ? (
+                <>
+                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                  Logging in...
+                </>
+              ) : (
+                "Login"
+              )}
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </MainLayout>
   );
 }
