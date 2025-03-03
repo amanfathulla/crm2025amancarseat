@@ -15,6 +15,14 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import {
+  Table,
+  TableHeader,
+  TableBody,
+  TableHead,
+  TableRow,
+  TableCell
+} from "@/components/ui/table";
 
 export default function Customers() {
   const { toast } = useToast();
@@ -128,10 +136,10 @@ export default function Customers() {
         <p className="text-muted-foreground">Manage your customer base</p>
       </section>
       
-      <Card className="animate-fade-in delay-100">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+      <Card className="animate-fade-in delay-100 shadow-soft">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
           <div>
-            <CardTitle>All Customers</CardTitle>
+            <CardTitle className="font-semibold tracking-tight">All Customers</CardTitle>
             <CardDescription>View and manage your customer list</CardDescription>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
@@ -150,51 +158,39 @@ export default function Customers() {
             </Button>
           </div>
         </CardHeader>
-        <CardContent>
-          <div className="flex items-center gap-2 w-full mb-4">
-            <div className="relative flex-1">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Search customers..."
-                className="pl-9"
-                value={searchQuery}
-                onChange={handleSearch}
-              />
-            </div>
-          </div>
-          
-          <div className="overflow-x-auto">
-            <table className="w-full">
-              <thead>
-                <tr className="border-b">
-                  <th className="text-left py-3 px-4 font-medium">Name</th>
-                  <th className="text-left py-3 px-4 font-medium">Email</th>
-                  <th className="text-left py-3 px-4 font-medium">Phone</th>
-                  <th className="text-left py-3 px-4 font-medium">Location</th>
-                  <th className="text-left py-3 px-4 font-medium">Car Model</th>
-                  <th className="text-left py-3 px-4 font-medium">Product</th>
-                  <th className="text-left py-3 px-4 font-medium">Variation</th>
-                  <th className="text-right py-3 px-4 font-medium">Sales Amount</th>
-                  <th className="text-right py-3 px-4 font-medium">Profit</th>
-                  <th className="text-left py-3 px-4 font-medium">Order Date</th>
-                  <th className="text-right py-3 px-4 font-medium">Actions</th>
-                </tr>
-              </thead>
-              <tbody>
+        <CardContent className="px-3 sm:px-6">
+          <div className="rounded-md border overflow-hidden">
+            <Table>
+              <TableHeader>
+                <TableRow className="bg-muted/50 hover:bg-muted/50">
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Name</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Email</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Phone</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Location</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Car Model</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Product</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Variation</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Sales Amount</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Profit</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Order Date</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
                 {isLoading ? (
-                  <tr>
-                    <td colSpan={11} className="py-8 text-center text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                       Loading customers...
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : filteredCustomers.length === 0 ? (
-                  <tr>
-                    <td colSpan={11} className="py-8 text-center text-muted-foreground">
+                  <TableRow>
+                    <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
                       {searchQuery
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
-                    </td>
-                  </tr>
+                    </TableCell>
+                  </TableRow>
                 ) : (
                   filteredCustomers.map((customer) => (
                     <CustomerRow
@@ -205,8 +201,8 @@ export default function Customers() {
                     />
                   ))
                 )}
-              </tbody>
-            </table>
+              </TableBody>
+            </Table>
           </div>
         </CardContent>
       </Card>
@@ -270,18 +266,18 @@ function CustomerRow({
   };
 
   return (
-    <tr className="border-b hover:bg-muted/30 transition-colors">
-      <td className="py-3 px-4 text-sm font-medium">{customer.name}</td>
-      <td className="py-3 px-4 text-sm">{customer.email}</td>
-      <td className="py-3 px-4 text-sm">{customer.phone}</td>
-      <td className="py-3 px-4 text-sm">{customer.location}</td>
-      <td className="py-3 px-4 text-sm">{customer.car_model}</td>
-      <td className="py-3 px-4 text-sm">{customer.product}</td>
-      <td className="py-3 px-4 text-sm">{customer.product_variation}</td>
-      <td className="py-3 px-4 text-sm text-right">{formatCurrency(customer.sales_amount)}</td>
-      <td className="py-3 px-4 text-sm text-right">{formatCurrency(customer.gross_profit)}</td>
-      <td className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</td>
-      <td className="py-3 px-4 text-sm text-right">
+    <TableRow className="border-b hover:bg-muted/30 transition-colors">
+      <TableCell className="py-3 px-4 text-sm font-medium">{customer.name}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.email}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.phone}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.location}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.car_model}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.product}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{customer.product_variation}</TableCell>
+      <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.sales_amount)}</TableCell>
+      <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.gross_profit)}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</TableCell>
+      <TableCell className="py-3 px-4 text-sm text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" size="icon" className="h-8 w-8">
@@ -299,7 +295,7 @@ function CustomerRow({
             </DropdownMenuItem>
           </DropdownMenuContent>
         </DropdownMenu>
-      </td>
-    </tr>
+      </TableCell>
+    </TableRow>
   );
 }
