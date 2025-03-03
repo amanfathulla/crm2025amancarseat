@@ -48,7 +48,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            location: formData.location,
+            city: formData.location, // Map location to city in the database
             car_model: formData.car_model,
             product: formData.product,
             order_date: formData.order_date,
@@ -67,7 +67,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            location: formData.location,
+            city: formData.location, // Map location to city in the database
             car_model: formData.car_model,
             product: formData.product,
             order_date: formData.order_date,

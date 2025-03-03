@@ -4,7 +4,7 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  location: string;
+  location: string; // This will map to city or address in the database
   car_model: string;
   product: string;
   order_date: string;

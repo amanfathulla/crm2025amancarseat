@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -38,7 +37,24 @@ export default function Customers() {
         .order("name", { ascending: true });
 
       if (error) throw error;
-      setCustomers(data || []);
+      
+      // Map database records to our Customer type
+      const mappedCustomers = data?.map(record => ({
+        id: record.id,
+        name: record.name,
+        email: record.email,
+        phone: record.phone || "",
+        location: record.city || record.address || "",
+        car_model: record.car_model || "",
+        product: record.product || "",
+        order_date: record.order_date || "",
+        total_orders: record.total_orders || 0,
+        total_spent: record.total_spent || 0,
+        created_at: record.created_at || "",
+        updated_at: record.updated_at || "",
+      })) || [];
+      
+      setCustomers(mappedCustomers);
     } catch (error: any) {
       console.error("Error fetching customers:", error);
       toast({
