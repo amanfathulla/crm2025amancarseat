@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialog";
 import { Customer, CustomerFormData } from "@/types/customer";
+import { Badge } from "@/components/ui/badge";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -33,7 +34,10 @@ export default function Customers() {
   const [customerStats, setCustomerStats] = useState({
     totalCustomers: 0,
     totalSales: 0,
-    grossProfit: 0
+    grossProfit: 0,
+    processingOrders: 0,
+    completedOrders: 0,
+    cancelledOrders: 0
   });
   
   // Form states
@@ -65,6 +69,7 @@ export default function Customers() {
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
+        order_status: record.order_status || "processing", // Default to processing if not set
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
         created_at: record.created_at || "",
@@ -93,10 +98,18 @@ export default function Customers() {
     const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
     const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
     
+    // Count orders by status
+    const processingOrders = customers.filter(c => c.order_status === "processing").length;
+    const completedOrders = customers.filter(c => c.order_status === "completed").length;
+    const cancelledOrders = customers.filter(c => c.order_status === "cancelled").length;
+    
     return {
       totalCustomers,
       totalSales,
-      grossProfit
+      grossProfit,
+      processingOrders,
+      completedOrders,
+      cancelledOrders
     };
   };
 
@@ -116,7 +129,8 @@ export default function Customers() {
       customer.location.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.car_model.toLowerCase().includes(searchQuery.toLowerCase()) ||
       customer.product.toLowerCase().includes(searchQuery.toLowerCase()) ||
-      customer.product_variation.toLowerCase().includes(searchQuery.toLowerCase())
+      customer.product_variation.toLowerCase().includes(searchQuery.toLowerCase()) ||
+      (customer.order_status && customer.order_status.toLowerCase().includes(searchQuery.toLowerCase()))
   );
 
   const handleEditCustomer = (customer: Customer) => {
@@ -131,6 +145,7 @@ export default function Customers() {
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
+      order_status: customer.order_status || "processing", // Default to processing if not set
     });
     setIsEditFormOpen(true);
   };
@@ -147,6 +162,7 @@ export default function Customers() {
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
+      order_status: customer.order_status || "processing", // Default to processing if not set
     });
     setIsDeleteDialogOpen(true);
   };
@@ -163,7 +179,7 @@ export default function Customers() {
       </section>
       
       {/* Customer Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
@@ -197,6 +213,36 @@ export default function Customers() {
             <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
               <TrendingUp className="h-6 w-6 text-purple-500" />
             </div>
+          </CardContent>
+        </Card>
+      </div>
+      
+      {/* Order Status Stats */}
+      <div className="flex flex-wrap gap-4 mb-8">
+        <Card className="flex-1 min-w-[180px]">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Badge variant="secondary" className="h-6 px-3">
+              {customerStats.processingOrders}
+            </Badge>
+            <span className="font-medium">Orders In Process</span>
+          </CardContent>
+        </Card>
+        
+        <Card className="flex-1 min-w-[180px]">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Badge variant="default" className="h-6 px-3">
+              {customerStats.completedOrders}
+            </Badge>
+            <span className="font-medium">Completed Orders</span>
+          </CardContent>
+        </Card>
+        
+        <Card className="flex-1 min-w-[180px]">
+          <CardContent className="p-4 flex items-center gap-3">
+            <Badge variant="destructive" className="h-6 px-3">
+              {customerStats.cancelledOrders}
+            </Badge>
+            <span className="font-medium">Cancelled Orders</span>
           </CardContent>
         </Card>
       </div>
@@ -238,19 +284,20 @@ export default function Customers() {
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Sales Amount</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Profit</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Order Date</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Status</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Actions</TableHead>
                 </TableRow>
               </TableHeader>
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                       Loading customers...
                     </TableCell>
                   </TableRow>
                 ) : filteredCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={11} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                       {searchQuery
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
@@ -330,6 +377,19 @@ function CustomerRow({
     return `RM ${amount.toFixed(2)}`;
   };
 
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case "processing":
+        return <Badge variant="secondary">In Process</Badge>;
+      case "completed":
+        return <Badge variant="default">Completed</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   return (
     <TableRow className="border-b hover:bg-muted/30 transition-colors">
       <TableCell className="py-3 px-4 text-sm font-medium">{customer.name}</TableCell>
@@ -342,6 +402,7 @@ function CustomerRow({
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.sales_amount)}</TableCell>
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.gross_profit)}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</TableCell>
+      <TableCell className="py-3 px-4 text-sm">{getStatusBadge(customer.order_status || "processing")}</TableCell>
       <TableCell className="py-3 px-4 text-sm text-right">
         <DropdownMenu>
           <DropdownMenuTrigger asChild>

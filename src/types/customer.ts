@@ -11,6 +11,7 @@ export interface Customer {
   sales_amount: number;
   gross_profit: number;
   order_date: string;
+  order_status: string; // Added for order status tracking
   total_orders: number;
   total_spent: number;
   created_at: string;
@@ -28,4 +29,5 @@ export interface CustomerFormData {
   sales_amount: number;
   gross_profit: number;
   order_date: string;
+  order_status: string; // Added for order status tracking
 }

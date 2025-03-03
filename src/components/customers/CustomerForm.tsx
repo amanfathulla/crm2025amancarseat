@@ -16,6 +16,7 @@ import {
   SelectValue 
 } from "@/components/ui/select";
 import { Card, CardContent } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
 
 interface CustomerFormProps {
   isOpen: boolean;
@@ -38,6 +39,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
       order_date: new Date().toISOString().split("T")[0],
       sales_amount: 0,
       gross_profit: 0,
+      order_status: "processing", // Default status
     }
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -158,6 +160,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
     }));
   };
 
+  const getStatusBadgeVariant = (status: string) => {
+    switch(status) {
+      case "processing": return "secondary";
+      case "completed": return "default";
+      case "cancelled": return "destructive";
+      default: return "secondary";
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -178,6 +189,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
             order_date: formData.order_date,
+            order_status: formData.order_status, // Save order status
           })
           .eq("email", customer.email);
 
@@ -200,6 +212,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
             order_date: formData.order_date,
+            order_status: formData.order_status, // Save order status
           },
         ]);
 
@@ -323,6 +336,37 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
                 required
               />
             </div>
+            <div className="space-y-2">
+              <Label htmlFor="order_status">Order Status</Label>
+              <Select
+                value={formData.order_status}
+                onValueChange={(value) => handleSelectChange("order_status", value)}
+              >
+                <SelectTrigger id="order_status" className="w-full">
+                  <SelectValue placeholder="Select status" />
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="processing">
+                    <div className="flex items-center">
+                      <Badge variant="secondary" className="mr-2">Processing</Badge>
+                      <span>Order In Process</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="completed">
+                    <div className="flex items-center">
+                      <Badge variant="default" className="mr-2">Completed</Badge>
+                      <span>Order Completed</span>
+                    </div>
+                  </SelectItem>
+                  <SelectItem value="cancelled">
+                    <div className="flex items-center">
+                      <Badge variant="destructive" className="mr-2">Cancelled</Badge>
+                      <span>Order Cancelled</span>
+                    </div>
+                  </SelectItem>
+                </SelectContent>
+              </Select>
+            </div>
           </div>
           
           {/* Product Variations */}
@@ -370,6 +414,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
               <div className="flex justify-between font-medium">
                 <span>Gross Profit:</span>
                 <span>RM {formData.gross_profit.toFixed(2)}</span>
+              </div>
+              <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
+                <span>Order Status:</span>
+                <Badge variant={getStatusBadgeVariant(formData.order_status)}>
+                  {formData.order_status === "processing" ? "In Process" : 
+                   formData.order_status === "completed" ? "Completed" : 
+                   formData.order_status === "cancelled" ? "Cancelled" : 
+                   formData.order_status}
+                </Badge>
               </div>
             </div>
           )}
