@@ -1,95 +1,201 @@
 
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { ArrowUpRight, Users, DollarSign, Package, ShoppingCart, TrendingUp, TrendingDown } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
+import { ArrowUpRight, Calendar, ArrowLeft, ArrowRight, ShoppingBag, PackageCheck, PackageX, DollarSign, BarChart4, TrendingUp, TrendingDown, Package, ShoppingCart } from "lucide-react";
 import { LineChart, Line, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
-
-// Sample data for charts
-const salesData = [
-  { name: "Jan", total: 1200 },
-  { name: "Feb", total: 1900 },
-  { name: "Mar", total: 1500 },
-  { name: "Apr", total: 2400 },
-  { name: "May", total: 2700 },
-  { name: "Jun", total: 3000 },
-  { name: "Jul", total: 2500 },
-];
-
-const customerData = [
-  { name: "Jan", new: 120, returning: 80 },
-  { name: "Feb", new: 130, returning: 100 },
-  { name: "Mar", new: 100, returning: 110 },
-  { name: "Apr", new: 150, returning: 120 },
-  { name: "May", new: 180, returning: 140 },
-  { name: "Jun", new: 190, returning: 160 },
-  { name: "Jul", new: 160, returning: 170 },
-];
+import { useState } from "react";
+import { getSampleRevenueData, getSampleDailyRevenueData } from "@/utils/sampleData";
 
 export default function Dashboard() {
+  const [selectedYear, setSelectedYear] = useState(2024);
+  const revenueData = getSampleRevenueData();
+  const dailyRevenueData = getSampleDailyRevenueData();
+  
+  // Get current metrics based on selected year
+  const currentYearData = selectedYear === 2024 ? revenueData.currentYear : revenueData.previousYear;
+  
+  // Function to format currency
+  const formatCurrency = (value: number) => {
+    return `RM ${value.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  };
+  
+  // Handle year navigation
+  const nextYear = () => {
+    if (selectedYear < 2025) setSelectedYear(selectedYear + 1);
+  };
+  
+  const prevYear = () => {
+    if (selectedYear > 2023) setSelectedYear(selectedYear - 1);
+  };
+  
   return (
     <MainLayout>
-      <section className="mb-8 animate-slide-up delay-100">
+      <section className="mb-6 animate-slide-up delay-100">
         <h1 className="text-3xl font-semibold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">Welcome to your admin dashboard</p>
+        <p className="text-muted-foreground">Ringkasan Prestasi (Overview)</p>
       </section>
       
-      {/* Stats cards */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+      {/* Annual Revenue Overview */}
+      <section className="mb-6 animate-slide-up delay-200">
+        <Card className="bg-gradient-to-r from-green-50 to-green-100 dark:from-green-900/20 dark:to-green-800/20 border-green-200 dark:border-green-800">
+          <CardContent className="pt-6">
+            <div className="flex flex-col items-center">
+              <h3 className="text-xl text-green-700 dark:text-green-400 font-medium">Jualan {currentYearData.year} : {formatCurrency(currentYearData.total)}</h3>
+              
+              <div className="w-full flex items-center justify-between my-4">
+                <button onClick={prevYear} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <ArrowLeft className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
+                
+                <div className="text-center">
+                  <h2 className="text-xl font-semibold mb-1">Jumlah Jualan {selectedYear}</h2>
+                  <p className="text-5xl font-bold my-2">{formatCurrency(currentYearData.total)}</p>
+                </div>
+                
+                <button onClick={nextYear} className="p-2 rounded-full bg-white dark:bg-gray-800 shadow-sm hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors">
+                  <ArrowRight className="h-5 w-5 text-gray-600 dark:text-gray-300" />
+                </button>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+      
+      {/* Daily Revenue Stats */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up delay-300">
+        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-medium">Semalam</h3>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-3">{formatCurrency(revenueData.yesterday.revenue)}</p>
+            <div className="flex items-center mt-2 text-xs text-gray-500">
+              <span>{revenueData.yesterday.orders} pesanan</span>
+              <span className="mx-2">•</span>
+              <span>{revenueData.yesterday.products} produk</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-medium">Hari Ini</h3>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-3">{formatCurrency(revenueData.today.revenue)}</p>
+            <div className="flex items-center mt-2 text-xs text-gray-500">
+              <span>{revenueData.today.orders} pesanan</span>
+              <span className="mx-2">•</span>
+              <span>{revenueData.today.products} produk</span>
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+          <CardContent className="pt-6">
+            <div className="flex items-center justify-between">
+              <div className="flex items-center space-x-2">
+                <Calendar className="h-5 w-5 text-gray-500" />
+                <h3 className="text-lg font-medium">Bulan Ini</h3>
+              </div>
+            </div>
+            <p className="text-3xl font-bold mt-3">{formatCurrency(revenueData.thisMonth.revenue)}</p>
+            <div className="flex items-center mt-2 text-xs text-gray-500">
+              <span>{revenueData.thisMonth.orders} pesanan</span>
+              <span className="mx-2">•</span>
+              <span>{revenueData.thisMonth.products} produk</span>
+            </div>
+          </CardContent>
+        </Card>
+      </section>
+      
+      {/* Order & Gross Profit Stats */}
+      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up delay-400">
         <StatCard 
-          title="Total Revenue" 
-          value="$24,563" 
-          change="+12.5%" 
-          trend="up"
-          icon={DollarSign}
-          delay="100"
+          title="Order Dalam Proses" 
+          value={revenueData.orders.processing.toString()} 
+          icon={ShoppingBag}
+          iconColor="text-blue-500"
+          iconBg="bg-blue-100 dark:bg-blue-900/20"
         />
         <StatCard 
-          title="New Customers" 
-          value="573" 
-          change="+8.2%" 
-          trend="up"
-          icon={Users}
-          delay="200"
+          title="Order Selesai" 
+          value={revenueData.orders.completed.toString()}
+          icon={PackageCheck}
+          iconColor="text-green-500" 
+          iconBg="bg-green-100 dark:bg-green-900/20"
         />
         <StatCard 
-          title="Total Products" 
-          value="294" 
-          change="+3.1%" 
-          trend="up"
-          icon={Package}
-          delay="300"
+          title="Order Dibatalkan" 
+          value={revenueData.orders.cancelled.toString()}
+          icon={PackageX}
+          iconColor="text-red-500"
+          iconBg="bg-red-100 dark:bg-red-900/20"
         />
         <StatCard 
-          title="Order Rate" 
-          value="6.4%" 
-          change="-1.2%" 
-          trend="down"
+          title="Pesanan Bulan Ini" 
+          value={revenueData.orders.thisMonth.toString()}
           icon={ShoppingCart}
-          delay="400"
+          iconColor="text-purple-500"
+          iconBg="bg-purple-100 dark:bg-purple-900/20"
         />
       </section>
       
-      {/* Charts */}
-      <section className="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
-        <Card className="animate-slide-up delay-500">
+      {/* Gross Profit Stats */}
+      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up delay-500">
+        <GrossProfitCard 
+          title="Untung Kasar Hari Ini" 
+          value={formatCurrency(revenueData.grossProfit.today)}
+          icon={DollarSign}
+        />
+        <GrossProfitCard 
+          title="Untung Kasar Bulan Ini" 
+          value={formatCurrency(revenueData.grossProfit.thisMonth)}
+          icon={BarChart4}
+        />
+        <GrossProfitCard 
+          title="Untung Kasar Tahun Ini" 
+          value={formatCurrency(revenueData.grossProfit.thisYear)}
+          icon={TrendingUp}
+        />
+      </section>
+      
+      {/* Revenue & Profit Chart */}
+      <section className="grid grid-cols-1 gap-6 mb-8 animate-slide-up delay-600">
+        <Card>
           <CardHeader>
-            <CardTitle>Revenue Overview</CardTitle>
-            <CardDescription>Monthly revenue for current year</CardDescription>
+            <CardTitle>Jumlah Jualan & Untung Kasar</CardTitle>
+            <CardDescription>Data harian untuk bulan ini</CardDescription>
           </CardHeader>
           <CardContent className="h-80">
             <ResponsiveContainer width="100%" height="100%">
-              <LineChart data={salesData}>
+              <LineChart data={dailyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
                 <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
+                <XAxis 
+                  dataKey="date" 
+                  fontSize={12} 
+                  tickLine={false} 
+                  axisLine={false} 
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                />
                 <YAxis 
                   fontSize={12} 
                   tickLine={false} 
                   axisLine={false} 
-                  tickFormatter={(value) => `$${value}`}
+                  tick={{ fill: 'var(--muted-foreground)' }}
+                  tickFormatter={(value) => `RM ${value}`}
                 />
                 <Tooltip 
-                  formatter={(value) => [`$${value}`, 'Revenue']}
+                  formatter={(value) => [`RM ${value}`, '']}
+                  labelFormatter={(label) => `Tarikh: ${label}`}
                   contentStyle={{ 
                     borderRadius: '8px',
                     boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
@@ -98,83 +204,24 @@ export default function Dashboard() {
                 />
                 <Line
                   type="monotone"
-                  dataKey="total"
+                  dataKey="revenue"
                   strokeWidth={3}
                   dot={{ strokeWidth: 0, r: 0 }}
                   activeDot={{ r: 6, strokeWidth: 0 }}
                   stroke="hsl(var(--primary))"
+                  name="Jumlah Jualan"
+                />
+                <Line
+                  type="monotone"
+                  dataKey="profit"
+                  strokeWidth={3}
+                  dot={{ strokeWidth: 0, r: 0 }}
+                  activeDot={{ r: 6, strokeWidth: 0 }}
+                  stroke="rgb(239, 68, 68)"
+                  name="Untung Kasar"
                 />
               </LineChart>
             </ResponsiveContainer>
-          </CardContent>
-        </Card>
-        
-        <Card className="animate-slide-up delay-600">
-          <CardHeader>
-            <CardTitle>Customer Acquisition</CardTitle>
-            <CardDescription>New vs returning customers</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={customerData}>
-                <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                <XAxis dataKey="name" fontSize={12} tickLine={false} axisLine={false} />
-                <YAxis fontSize={12} tickLine={false} axisLine={false} />
-                <Tooltip 
-                  contentStyle={{ 
-                    borderRadius: '8px',
-                    boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                    border: 'none'
-                  }}
-                />
-                <Bar 
-                  dataKey="new" 
-                  fill="hsl(var(--primary))" 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={30}
-                  name="New"
-                />
-                <Bar 
-                  dataKey="returning" 
-                  fill="hsl(var(--muted))" 
-                  radius={[4, 4, 0, 0]} 
-                  barSize={30}
-                  name="Returning"
-                />
-              </BarChart>
-            </ResponsiveContainer>
-          </CardContent>
-        </Card>
-      </section>
-      
-      {/* Recent orders */}
-      <section className="animate-slide-up delay-700">
-        <Card>
-          <CardHeader>
-            <CardTitle>Recent Orders</CardTitle>
-            <CardDescription>Your most recent customer orders</CardDescription>
-          </CardHeader>
-          <CardContent>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Order ID</th>
-                    <th className="text-left py-3 px-4 font-medium">Customer</th>
-                    <th className="text-left py-3 px-4 font-medium">Date</th>
-                    <th className="text-left py-3 px-4 font-medium">Status</th>
-                    <th className="text-right py-3 px-4 font-medium">Amount</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <OrderRow id="ORD-7291" customer="Sarah Johnson" date="July 12, 2023" status="Completed" amount="$129.99" />
-                  <OrderRow id="ORD-7290" customer="Michael Chen" date="July 11, 2023" status="Processing" amount="$59.49" />
-                  <OrderRow id="ORD-7289" customer="Emma Watson" date="July 10, 2023" status="Completed" amount="$89.99" />
-                  <OrderRow id="ORD-7288" customer="James Wilson" date="July 9, 2023" status="Completed" amount="$144.95" />
-                  <OrderRow id="ORD-7287" customer="Olivia Martinez" date="July 9, 2023" status="Shipped" amount="$249.99" />
-                </tbody>
-              </table>
-            </div>
           </CardContent>
         </Card>
       </section>
@@ -182,69 +229,58 @@ export default function Dashboard() {
   );
 }
 
+// Stat Card Component
 function StatCard({ 
   title, 
   value, 
-  change, 
-  trend, 
   icon: Icon,
-  delay = "0"
+  iconColor = "text-primary",
+  iconBg = "bg-primary/10",
 }: { 
   title: string;
   value: string;
-  change: string;
-  trend: "up" | "down";
   icon: React.ElementType;
-  delay?: string;
+  iconColor?: string;
+  iconBg?: string;
 }) {
   return (
-    <Card className={cn("animate-slide-up", `delay-${delay}`)}>
+    <Card>
       <CardContent className="pt-6">
         <div className="flex justify-between items-start">
           <div className="space-y-1">
             <p className="text-sm text-muted-foreground">{title}</p>
             <p className="text-2xl font-semibold">{value}</p>
           </div>
-          <div className="bg-primary/10 p-2.5 rounded-full">
-            <Icon className="h-5 w-5 text-primary" />
+          <div className={cn("p-2.5 rounded-full", iconBg)}>
+            <Icon className={cn("h-5 w-5", iconColor)} />
           </div>
-        </div>
-        <div className="flex items-center mt-4 text-xs font-medium">
-          {trend === "up" ? (
-            <TrendingUp className="h-3.5 w-3.5 mr-1 text-emerald-500" />
-          ) : (
-            <TrendingDown className="h-3.5 w-3.5 mr-1 text-red-500" />
-          )}
-          <span className={cn(
-            trend === "up" ? "text-emerald-500" : "text-red-500",
-            "mr-2"
-          )}>
-            {change}
-          </span>
-          <span className="text-muted-foreground">from last month</span>
         </div>
       </CardContent>
     </Card>
   );
 }
 
-function OrderRow({ id, customer, date, status, amount }: { id: string; customer: string; date: string; status: string; amount: string }) {
+// Gross Profit Card Component
+function GrossProfitCard({ 
+  title, 
+  value, 
+  icon: Icon,
+}: { 
+  title: string;
+  value: string;
+  icon: React.ElementType;
+}) {
   return (
-    <tr className="border-b">
-      <td className="py-3 px-4 text-sm">{id}</td>
-      <td className="py-3 px-4 text-sm">{customer}</td>
-      <td className="py-3 px-4 text-sm">{date}</td>
-      <td className="py-3 px-4 text-sm">
-        <span className={cn(
-          "py-1 px-2 rounded-full text-xs font-medium",
-          status === "Completed" && "bg-emerald-100 text-emerald-800",
-          status === "Processing" && "bg-blue-100 text-blue-800",
-          status === "Shipped" && "bg-amber-100 text-amber-800",
-        )}>
-          {status}
-        </span>
-      </td>
-      <td className="py-3 px-4 text-sm text-right font-medium">{amount}</td>
-    </tr>
+    <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
+      <CardContent className="pt-6">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center space-x-2">
+            <Icon className="h-5 w-5 text-gray-500" />
+            <h3 className="text-base font-medium">{title}</h3>
+          </div>
+        </div>
+        <p className="text-2xl font-bold">{value}</p>
+      </CardContent>
+    </Card>
   );
 }
