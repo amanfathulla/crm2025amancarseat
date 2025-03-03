@@ -9,42 +9,7 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      reviews: {
-        Row: {
-          car_model: string
-          created_at: string
-          id: string
-          images: string[]
-          name: string
-          rating: number
-          review: string
-          user_id: string | null
-          video: string | null
-        }
-        Insert: {
-          car_model: string
-          created_at?: string
-          id?: string
-          images: string[]
-          name: string
-          rating: number
-          review: string
-          user_id?: string | null
-          video?: string | null
-        }
-        Update: {
-          car_model?: string
-          created_at?: string
-          id?: string
-          images?: string[]
-          name?: string
-          rating?: number
-          review?: string
-          user_id?: string | null
-          video?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Views: {
       [_ in never]: never
