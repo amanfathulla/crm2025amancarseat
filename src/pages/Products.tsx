@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -60,9 +61,9 @@ export default function Products() {
       
       // Attach variations to their respective products
       const productsWithVariations = productsWithStatus.map(product => {
-        const productVariations = variationsData.filter(
+        const productVariations = variationsData ? variationsData.filter(
           variation => variation.product_id === product.id
-        );
+        ) : [];
         return {
           ...product,
           variations: productVariations.length > 0 ? productVariations : undefined

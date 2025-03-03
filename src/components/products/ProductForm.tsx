@@ -116,24 +116,28 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
         // If product has variations, update them
         if (hasVariations && variations.length > 0) {
           // First delete existing variations
-          await supabase
+          const { error: deleteError } = await supabase
             .from("product_variations")
             .delete()
             .eq("product_id", initialData.id);
 
-          // Then insert new variations
-          const { error: variationsError } = await supabase
-            .from("product_variations")
-            .insert(
-              variations.map(v => ({
-                product_id: initialData.id,
-                name: v.name,
-                price: v.price,
-                inventory: v.inventory
-              }))
-            );
+          if (deleteError) throw deleteError;
 
-          if (variationsError) throw variationsError;
+          // Then insert new variations
+          if (variations.length > 0) {
+            const { error: variationsError } = await supabase
+              .from("product_variations")
+              .insert(
+                variations.map(v => ({
+                  product_id: initialData.id,
+                  name: v.name,
+                  price: v.price,
+                  inventory: v.inventory
+                }))
+              );
+
+            if (variationsError) throw variationsError;
+          }
         }
 
         toast({
