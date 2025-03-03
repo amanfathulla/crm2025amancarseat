@@ -1,9 +1,10 @@
+
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { Search, UserPlus, MoreHorizontal, Pencil, Trash2, Users, DollarSign, TrendingUp } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerForm } from "@/components/customers/CustomerForm";
@@ -29,6 +30,11 @@ export default function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [customerStats, setCustomerStats] = useState({
+    totalCustomers: 0,
+    totalSales: 0,
+    grossProfit: 0
+  });
   
   // Form states
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
@@ -66,6 +72,10 @@ export default function Customers() {
       })) || [];
       
       setCustomers(mappedCustomers);
+      
+      // Calculate stats
+      const stats = calculateCustomerStats(mappedCustomers);
+      setCustomerStats(stats);
     } catch (error: any) {
       console.error("Error fetching customers:", error);
       toast({
@@ -76,6 +86,18 @@ export default function Customers() {
     } finally {
       setIsLoading(false);
     }
+  };
+
+  const calculateCustomerStats = (customers: Customer[]) => {
+    const totalCustomers = customers.length;
+    const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
+    const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
+    
+    return {
+      totalCustomers,
+      totalSales,
+      grossProfit
+    };
   };
 
   useEffect(() => {
@@ -129,12 +151,55 @@ export default function Customers() {
     setIsDeleteDialogOpen(true);
   };
 
+  const formatCurrency = (amount: number) => {
+    return `RM ${amount.toFixed(2)}`;
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
         <h1 className="text-3xl font-semibold mb-2">Customers</h1>
         <p className="text-muted-foreground">Manage your customer base</p>
       </section>
+      
+      {/* Customer Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8 animate-fade-in">
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Total Customers</span>
+              <span className="text-3xl font-bold mt-1">{customerStats.totalCustomers}</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
+              <Users className="h-6 w-6 text-blue-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Total Sales</span>
+              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+        
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Gross Profit</span>
+              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.grossProfit)}</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-purple-500" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
       
       <Card className="animate-fade-in delay-100 shadow-soft">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
