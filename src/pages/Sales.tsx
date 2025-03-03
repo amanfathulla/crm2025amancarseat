@@ -4,7 +4,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, TrendingDown } from "lucide-react";
+import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { DeleteYearlySalesDialog } from "@/components/sales/DeleteYearlySalesDialog";
@@ -34,6 +34,7 @@ export default function Sales() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<YearlySalesFormData | null>(null);
   const [selectedRecordId, setSelectedRecordId] = useState<string>("");
+  const [lastUpdated, setLastUpdated] = useState<string>("");
   
   const fetchYearlySalesData = async () => {
     setIsLoading(true);
@@ -60,8 +61,11 @@ export default function Sales() {
       
       setYearlySales(typedData);
       
+      // Set last updated time
+      setLastUpdated(format(new Date(), "d MMMM yyyy 'at' hh:mm a"));
+      
       // Generate analytics if we have data
-      if (typedData.length >= 2) {
+      if (typedData.length >= 1) {
         // Sort by year to ensure correct order
         const sortedData = [...typedData].sort((a, b) => b.year - a.year);
         
@@ -71,6 +75,9 @@ export default function Sales() {
         
         const currentYearRevenue = currentYearData ? currentYearData.total_revenue : 0;
         const previousYearRevenue = previousYearData ? previousYearData.total_revenue : 0;
+        
+        // Calculate total revenue across all years
+        const totalAllTimeRevenue = sortedData.reduce((total, record) => total + record.total_revenue, 0);
         
         const percentageChange = previousYearRevenue > 0
           ? ((currentYearRevenue - previousYearRevenue) / previousYearRevenue) * 100
@@ -87,6 +94,9 @@ export default function Sales() {
           previousYearRevenue,
           percentageChange,
           yearlyData,
+          totalAllTimeRevenue,
+          minYear: Math.min(...sortedData.map(record => record.year)),
+          maxYear: Math.max(...sortedData.map(record => record.year)),
         });
       } else {
         setAnalytics(null);
@@ -159,11 +169,24 @@ export default function Sales() {
         <p className="text-muted-foreground">Manage yearly sales records and analytics</p>
       </section>
       
-      {/* Sales Analytics */}
+      {/* Enhanced Sales Analytics */}
       <Card className="mb-8 animate-fade-in">
         <CardHeader>
-          <CardTitle>Sales Analytics</CardTitle>
-          <CardDescription>Yearly performance overview</CardDescription>
+          <div className="flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+              <CardTitle>Sales Analytics</CardTitle>
+              <CardDescription>
+                {analytics && (
+                  <>
+                    Yearly sales records ({analytics.minYear}-{analytics.maxYear})
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Last updated: {lastUpdated}
+                    </div>
+                  </>
+                )}
+              </CardDescription>
+            </div>
+          </div>
         </CardHeader>
         <CardContent>
           {isLoading ? (
@@ -172,46 +195,80 @@ export default function Sales() {
             </div>
           ) : !analytics ? (
             <div className="flex justify-center items-center h-64">
-              <p className="text-muted-foreground">Not enough data to display analytics. Add at least two yearly sales records.</p>
+              <p className="text-muted-foreground">Not enough data to display analytics. Add at least one yearly sales record.</p>
             </div>
           ) : (
             <div className="space-y-8">
-              <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Current Year Revenue</p>
-                      <p className="text-3xl font-bold">{formatCurrency(analytics.currentYearRevenue)}</p>
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Total Revenue Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <DollarSign className="h-5 w-5 text-blue-500" />
+                      <span className="text-sm text-muted-foreground">Total Revenue</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.totalAllTimeRevenue).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Previous Year Revenue</p>
-                      <p className="text-3xl font-bold">{formatCurrency(analytics.previousYearRevenue)}</p>
+                
+                {/* Year-over-Year Growth Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      {analytics.percentageChange >= 0 ? (
+                        <TrendingUp className="h-5 w-5 text-emerald-500" />
+                      ) : (
+                        <TrendingDown className="h-5 w-5 text-rose-500" />
+                      )}
+                      <span className="text-sm text-muted-foreground">Year-over-Year Growth</span>
+                    </div>
+                    <div>
+                      <p 
+                        className={`text-2xl font-bold ${
+                          analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {analytics.percentageChange >= 0 ? '+' : ''}
+                        {analytics.percentageChange.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Current year vs previous</p>
                     </div>
                   </CardContent>
                 </Card>
-                <Card>
-                  <CardContent className="pt-6">
-                    <div className="text-center">
-                      <p className="text-sm text-muted-foreground mb-2">Year-Over-Year Change</p>
-                      <div className="flex items-center justify-center">
-                        {analytics.percentageChange >= 0 ? (
-                          <TrendingUp className="mr-2 h-5 w-5 text-emerald-500" />
-                        ) : (
-                          <TrendingDown className="mr-2 h-5 w-5 text-red-500" />
-                        )}
-                        <p 
-                          className={`text-3xl font-bold ${
-                            analytics.percentageChange >= 0 ? 'text-emerald-500' : 'text-red-500'
-                          }`}
-                        >
-                          {analytics.percentageChange >= 0 ? '+' : ''}
-                          {analytics.percentageChange.toFixed(1)}%
-                        </p>
-                      </div>
+                
+                {/* Current Year Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <Calendar className="h-5 w-5 text-purple-500" />
+                      <span className="text-sm text-muted-foreground">Current Year ({new Date().getFullYear()})</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.currentYearRevenue).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Year to date</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Previous Year Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <Calendar className="h-5 w-5 text-orange-500" />
+                      <span className="text-sm text-muted-foreground">Previous Year ({new Date().getFullYear() - 1})</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.previousYearRevenue).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Full year total</p>
                     </div>
                   </CardContent>
                 </Card>

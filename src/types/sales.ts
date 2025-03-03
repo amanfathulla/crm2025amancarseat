@@ -60,7 +60,7 @@ export interface SalesRecordFormData {
   category?: string;
 }
 
-// New interface for yearly analytics display
+// Updated interface for yearly analytics display
 export interface YearlyAnalytics {
   currentYearRevenue: number;
   previousYearRevenue: number;
@@ -69,4 +69,7 @@ export interface YearlyAnalytics {
     year: number;
     totalRevenue: number;
   }[];
+  totalAllTimeRevenue: number;
+  minYear: number;
+  maxYear: number;
 }
