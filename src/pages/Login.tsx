@@ -8,25 +8,58 @@ import { Label } from "@/components/ui/label";
 import { LoaderCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 
 export default function Login() {
-  const [username, setUsername] = useState("");
+  // Login state
+  const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
-  const [isLoggingIn, setIsLoggingIn] = useState(false);
-  const { login } = useAuth();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  
+  // Signup state
+  const [signupEmail, setSignupEmail] = useState("");
+  const [signupPassword, setSignupPassword] = useState("");
+  const [confirmPassword, setConfirmPassword] = useState("");
+  const [passwordError, setPasswordError] = useState("");
+  
+  const { login, signup } = useAuth();
   const navigate = useNavigate();
 
-  const handleSubmit = async (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    setIsLoggingIn(true);
+    setIsSubmitting(true);
     
     try {
-      const success = await login(username, password);
+      const success = await login(email, password);
       if (success) {
         navigate("/dashboard");
       }
     } finally {
-      setIsLoggingIn(false);
+      setIsSubmitting(false);
+    }
+  };
+
+  const handleSignup = async (e: React.FormEvent) => {
+    e.preventDefault();
+    
+    // Validate passwords match
+    if (signupPassword !== confirmPassword) {
+      setPasswordError("Passwords do not match");
+      return;
+    }
+    
+    // Reset error
+    setPasswordError("");
+    setIsSubmitting(true);
+    
+    try {
+      const success = await signup(signupEmail, signupPassword);
+      if (success) {
+        // Redirect to login tab or dashboard depending on your flow
+        // For now, we'll stay on the page as they might need to verify email
+      }
+    } finally {
+      setIsSubmitting(false);
     }
   };
 
@@ -37,61 +70,135 @@ export default function Login() {
           "w-full max-w-md p-8 rounded-xl animate-scale-in",
           "bg-white/80 backdrop-blur-sm shadow-glass border border-black/5"
         )}>
-          <div className="text-center mb-6">
-            <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
-            <p className="text-muted-foreground mt-2">Sign in to your admin account</p>
-          </div>
-          
-          <form onSubmit={handleSubmit} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="username">Username</Label>
-              <Input
-                id="username"
-                placeholder="amanmuhsin"
-                value={username}
-                onChange={(e) => setUsername(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
+          <Tabs defaultValue="login" className="w-full">
+            <TabsList className="grid grid-cols-2 w-full mb-6">
+              <TabsTrigger value="login">Login</TabsTrigger>
+              <TabsTrigger value="signup">Sign Up</TabsTrigger>
+            </TabsList>
             
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Button type="button" variant="link" className="p-0 h-auto text-xs">
-                  Forgot password?
-                </Button>
+            <TabsContent value="login">
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
+                <p className="text-muted-foreground mt-2">Sign in to your account</p>
               </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="muhsin@920926"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
+              
+              <form onSubmit={handleLogin} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="email">Email</Label>
+                  <Input
+                    id="email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <div className="flex items-center justify-between">
+                    <Label htmlFor="password">Password</Label>
+                    <Button type="button" variant="link" className="p-0 h-auto text-xs">
+                      Forgot password?
+                    </Button>
+                  </div>
+                  <Input
+                    id="password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full h-12"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Signing in...
+                    </>
+                  ) : (
+                    "Sign in"
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
             
-            <Button
-              type="submit"
-              className="w-full h-12"
-              disabled={isLoggingIn}
-            >
-              {isLoggingIn ? (
-                <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
-                </>
-              ) : (
-                "Sign in"
-              )}
-            </Button>
-            
-            <div className="mt-4 text-center text-sm text-muted-foreground">
-              <p>Demo credentials: amanmuhsin / muhsin@920926</p>
-            </div>
-          </form>
+            <TabsContent value="signup">
+              <div className="text-center mb-6">
+                <h1 className="text-3xl font-semibold tracking-tight">Create Account</h1>
+                <p className="text-muted-foreground mt-2">Sign up for a new account</p>
+              </div>
+              
+              <form onSubmit={handleSignup} className="space-y-5">
+                <div className="space-y-2">
+                  <Label htmlFor="signup-email">Email</Label>
+                  <Input
+                    id="signup-email"
+                    type="email"
+                    placeholder="your@email.com"
+                    value={signupEmail}
+                    onChange={(e) => setSignupEmail(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="signup-password">Password</Label>
+                  <Input
+                    id="signup-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={signupPassword}
+                    onChange={(e) => setSignupPassword(e.target.value)}
+                    className="h-12"
+                    required
+                    // Minimum 6 characters for Supabase password requirement
+                    minLength={6}
+                  />
+                </div>
+                
+                <div className="space-y-2">
+                  <Label htmlFor="confirm-password">Confirm Password</Label>
+                  <Input
+                    id="confirm-password"
+                    type="password"
+                    placeholder="••••••••"
+                    value={confirmPassword}
+                    onChange={(e) => setConfirmPassword(e.target.value)}
+                    className="h-12"
+                    required
+                  />
+                  {passwordError && (
+                    <p className="text-sm text-destructive">{passwordError}</p>
+                  )}
+                </div>
+                
+                <Button
+                  type="submit"
+                  className="w-full h-12"
+                  disabled={isSubmitting}
+                >
+                  {isSubmitting ? (
+                    <>
+                      <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
+                      Creating account...
+                    </>
+                  ) : (
+                    "Create account"
+                  )}
+                </Button>
+              </form>
+            </TabsContent>
+          </Tabs>
         </div>
       </div>
     </MainLayout>
