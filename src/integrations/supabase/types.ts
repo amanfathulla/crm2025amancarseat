@@ -202,6 +202,7 @@ export type Database = {
       }
       product_variations: {
         Row: {
+          cost: number
           created_at: string | null
           id: string
           inventory: number | null
@@ -210,6 +211,7 @@ export type Database = {
           product_id: string
         }
         Insert: {
+          cost?: number
           created_at?: string | null
           id?: string
           inventory?: number | null
@@ -218,6 +220,7 @@ export type Database = {
           product_id: string
         }
         Update: {
+          cost?: number
           created_at?: string | null
           id?: string
           inventory?: number | null

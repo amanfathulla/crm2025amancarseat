@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Product } from "@/types/product";
+import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
 import ProductForm, { ProductFormValues } from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
@@ -50,17 +49,26 @@ export default function Products() {
 
       if (variationsError) throw variationsError;
       
-      const productsWithVariations = productsData.map(product => {
-        const productVariations = variationsData ? variationsData.filter(
-          variation => variation.product_id === product.id
-        ) : [];
+      const productsWithVariations: Product[] = productsData.map(product => {
+        const productVariations: ProductVariation[] = variationsData
+          ? variationsData
+              .filter(variation => variation.product_id === product.id)
+              .map(v => ({
+                id: v.id,
+                product_id: v.product_id,
+                name: v.name,
+                price: v.price,
+                cost: v.cost || 0
+              }))
+          : [];
+        
         return {
           ...product,
           variations: productVariations.length > 0 ? productVariations : undefined
         };
       });
       
-      setProducts(productsWithVariations as Product[]);
+      setProducts(productsWithVariations);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
