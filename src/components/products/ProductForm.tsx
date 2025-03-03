@@ -6,26 +6,20 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { X, Plus } from "lucide-react";
 import { Card, CardContent } from "@/components/ui/card";
 
 const productVariationSchema = z.object({
-  name: z.string().min(1, { message: "Variation name is required" }),
-  price: z.coerce.number().positive({ message: "Price must be a positive number" }),
-  inventory: z.coerce.number().nonnegative({ message: "Inventory must be a non-negative number" }),
+  name: z.string(),
+  price: z.coerce.number().positive({ message: "Harga mesti positif" }),
+  inventory: z.coerce.number().nonnegative({ message: "Inventori mesti sifar atau positif" }),
 });
 
 const productSchema = z.object({
-  name: z.string().min(2, { message: "Product name must be at least 2 characters" }),
-  price: z.coerce.number().positive({ message: "Price must be a positive number" }),
-  inventory: z.coerce.number().nonnegative({ message: "Inventory must be a non-negative number" }),
-  cost: z.coerce.number().nonnegative({ message: "Cost must be a non-negative number" }).optional(),
-  image_url: z.string().url().optional().or(z.literal('')),
-  status: z.string().optional(),
-  variations: z.array(productVariationSchema).optional(),
+  name: z.string().min(2, { message: "Nama produk mesti sekurang-kurangnya 2 aksara" }),
+  cost: z.coerce.number().nonnegative({ message: "Kos mesti sifar atau positif" }).optional(),
+  variations: z.array(productVariationSchema),
 });
 
 export type ProductFormValues = z.infer<typeof productSchema>;
@@ -47,42 +41,17 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
   const { toast } = useToast();
   const isEditing = !!initialData;
   const [variations, setVariations] = useState<ProductVariationFormValues[]>(
-    initialData?.variations || []
-  );
-  const [hasVariations, setHasVariations] = useState(
-    initialData?.variations ? initialData.variations.length > 0 : false
+    initialData?.variations || defaultVariations
   );
 
   const form = useForm<ProductFormValues>({
     resolver: zodResolver(productSchema),
     defaultValues: initialData || {
       name: "",
-      price: 0,
-      inventory: 0,
       cost: 0,
-      image_url: "",
-      status: "active",
-      variations: [],
+      variations: defaultVariations,
     },
   });
-
-  const addVariation = () => {
-    if (!hasVariations) {
-      setVariations(defaultVariations);
-      setHasVariations(true);
-    } else {
-      setVariations([...variations, { name: "", price: 0, inventory: 0 }]);
-    }
-  };
-
-  const removeVariation = (index: number) => {
-    const newVariations = [...variations];
-    newVariations.splice(index, 1);
-    setVariations(newVariations);
-    if (newVariations.length === 0) {
-      setHasVariations(false);
-    }
-  };
 
   const handleVariationChange = (index: number, field: keyof ProductVariationFormValues, value: string | number) => {
     const newVariations = [...variations];
@@ -96,53 +65,51 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
   const onSubmit = async (data: ProductFormValues) => {
     try {
       // Include variations in form data
-      data.variations = hasVariations ? variations : undefined;
+      data.variations = variations;
+
+      let basePrice = 0;
+      // Calculate base price from first variation's price
+      if (variations.length > 0) {
+        basePrice = variations[0].price;
+      }
 
       if (isEditing && initialData) {
         const { error } = await supabase
           .from("products")
           .update({
             name: data.name,
-            price: data.price,
-            inventory: data.inventory || 0,
+            price: basePrice,
             cost: data.cost || null,
-            image_url: data.image_url || null,
-            status: data.status || "active"
           })
           .eq("id", initialData.id);
 
         if (error) throw error;
 
-        // If product has variations, update them
-        if (hasVariations && variations.length > 0) {
-          // First delete existing variations
-          const { error: deleteError } = await supabase
-            .from("product_variations")
-            .delete()
-            .eq("product_id", initialData.id);
+        // Delete existing variations
+        const { error: deleteError } = await supabase
+          .from("product_variations")
+          .delete()
+          .eq("product_id", initialData.id);
 
-          if (deleteError) throw deleteError;
+        if (deleteError) throw deleteError;
 
-          // Then insert new variations
-          if (variations.length > 0) {
-            const { error: variationsError } = await supabase
-              .from("product_variations")
-              .insert(
-                variations.map(v => ({
-                  product_id: initialData.id,
-                  name: v.name,
-                  price: v.price,
-                  inventory: v.inventory
-                }))
-              );
+        // Insert new variations
+        const { error: variationsError } = await supabase
+          .from("product_variations")
+          .insert(
+            variations.map(v => ({
+              product_id: initialData.id,
+              name: v.name,
+              price: v.price,
+              inventory: v.inventory
+            }))
+          );
 
-            if (variationsError) throw variationsError;
-          }
-        }
+        if (variationsError) throw variationsError;
 
         toast({
-          title: "Product updated",
-          description: "Product has been updated successfully",
+          title: "Produk dikemaskini",
+          description: "Produk telah berjaya dikemaskini",
         });
       } else {
         // Insert new product
@@ -150,18 +117,14 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           .from("products")
           .insert({
             name: data.name,
-            price: data.price,
-            inventory: data.inventory || 0,
+            price: basePrice,
             cost: data.cost || null,
-            image_url: data.image_url || null,
-            status: data.status || "active"
           })
           .select();
 
         if (error) throw error;
 
-        // If product has variations, insert them
-        if (hasVariations && variations.length > 0 && newProduct && newProduct[0]) {
+        if (newProduct && newProduct[0]) {
           const productId = newProduct[0].id;
           
           const { error: variationsError } = await supabase
@@ -179,16 +142,16 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
         }
 
         toast({
-          title: "Product added",
-          description: "Product has been added successfully",
+          title: "Produk ditambah",
+          description: "Produk telah berjaya ditambah",
         });
       }
       onSuccess();
     } catch (error) {
-      console.error("Error saving product:", error);
+      console.error("Error menyimpan produk:", error);
       toast({
-        title: "Error",
-        description: "There was a problem saving the product",
+        title: "Ralat",
+        description: "Terdapat masalah semasa menyimpan produk",
         variant: "destructive",
       });
     }
@@ -202,9 +165,9 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           name="name"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Product Name</FormLabel>
+              <FormLabel>Nama Produk</FormLabel>
               <FormControl>
-                <Input placeholder="Enter product name" {...field} />
+                <Input placeholder="Masukkan nama produk" {...field} />
               </FormControl>
               <FormMessage />
             </FormItem>
@@ -213,140 +176,45 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
 
         <FormField
           control={form.control}
-          name="image_url"
+          name="cost"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Image URL</FormLabel>
+              <FormLabel>Kos Produk (RM)</FormLabel>
               <FormControl>
-                <Input placeholder="https://example.com/image.jpg" {...field} />
+                <Input 
+                  type="number" 
+                  step="0.01" 
+                  {...field} 
+                  value={field.value || ""} 
+                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
+                />
               </FormControl>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <FormField
-            control={form.control}
-            name="price"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Base Selling Price (RM)</FormLabel>
-                <FormControl>
-                  <Input type="number" step="0.01" {...field} />
-                </FormControl>
-                <div className="text-sm text-muted-foreground">
-                  RM {parseFloat(field.value.toString() || "0").toFixed(2)}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-          
-          <FormField
-            control={form.control}
-            name="cost"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Cost Price (RM)</FormLabel>
-                <FormControl>
-                  <Input 
-                    type="number" 
-                    step="0.01" 
-                    {...field} 
-                    value={field.value || ""} 
-                    onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                  />
-                </FormControl>
-                <div className="text-sm text-muted-foreground">
-                  RM {parseFloat((field.value || 0).toString()).toFixed(2)}
-                </div>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        </div>
-
-        <FormField
-          control={form.control}
-          name="status"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Status</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
-                <FormControl>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Select status" />
-                  </SelectTrigger>
-                </FormControl>
-                <SelectContent>
-                  <SelectItem value="active">Active</SelectItem>
-                  <SelectItem value="inactive">Inactive</SelectItem>
-                  <SelectItem value="out_of_stock">Out of Stock</SelectItem>
-                </SelectContent>
-              </Select>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
-        <FormField
-          control={form.control}
-          name="inventory"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Base Inventory</FormLabel>
-              <FormControl>
-                <Input type="number" {...field} />
-              </FormControl>
+              <div className="text-sm text-muted-foreground">
+                RM {parseFloat((field.value || 0).toString()).toFixed(2)}
+              </div>
               <FormMessage />
             </FormItem>
           )}
         />
 
         <div className="space-y-4 pt-4">
-          <div className="flex justify-between items-center">
-            <h3 className="text-lg font-medium">Product Variations</h3>
-            <Button 
-              type="button" 
-              variant="outline" 
-              size="sm" 
-              onClick={addVariation}
-            >
-              <Plus className="h-4 w-4 mr-2" />
-              {hasVariations ? "Add Variation" : "Add Seating Variations"}
-            </Button>
-          </div>
-
-          {hasVariations && variations.map((variation, index) => (
-            <Card key={index} className="bg-muted/40">
-              <CardContent className="pt-6">
-                <div className="flex justify-between items-start mb-4">
-                  <h4 className="font-medium">Variation {index + 1}</h4>
-                  <Button 
-                    type="button" 
-                    variant="ghost" 
-                    size="icon" 
-                    onClick={() => removeVariation(index)}
-                    className="h-8 w-8"
-                  >
-                    <X className="h-4 w-4" />
-                  </Button>
-                </div>
-                
-                <div className="space-y-4">
+          <h3 className="text-lg font-medium">Variasi Produk</h3>
+          <div className="space-y-4">
+            {variations.map((variation, index) => (
+              <Card key={index} className="bg-muted/40">
+                <CardContent className="pt-6">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
-                      <FormLabel>Variation Name</FormLabel>
+                      <FormLabel>Jenis</FormLabel>
                       <Input 
                         value={variation.name} 
                         onChange={(e) => handleVariationChange(index, 'name', e.target.value)} 
-                        placeholder="e.g. 2 Seater"
+                        readOnly
                       />
                     </div>
                     
                     <div>
-                      <FormLabel>Price (RM)</FormLabel>
+                      <FormLabel>Harga Jualan (RM)</FormLabel>
                       <Input 
                         type="number" 
                         step="0.01" 
@@ -359,7 +227,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                     </div>
                     
                     <div>
-                      <FormLabel>Inventory</FormLabel>
+                      <FormLabel>Inventori</FormLabel>
                       <Input 
                         type="number" 
                         value={variation.inventory} 
@@ -367,17 +235,17 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                       />
                     </div>
                   </div>
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+                </CardContent>
+              </Card>
+            ))}
+          </div>
         </div>
 
         <div className="flex justify-end gap-2 pt-2">
           <Button type="button" variant="outline" onClick={onCancel}>
-            Cancel
+            Batal
           </Button>
-          <Button type="submit">{isEditing ? "Save Changes" : "Save Product"}</Button>
+          <Button type="submit">{isEditing ? "Simpan" : "Simpan Produk"}</Button>
         </div>
       </form>
     </Form>
