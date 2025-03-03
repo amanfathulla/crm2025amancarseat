@@ -127,17 +127,17 @@ export default function Dashboard() {
         if (cancelledError) throw cancelledError;
         
         // Calculate sums
-        const yearlyRevenue = yearData.reduce((sum, item) => sum + (parseFloat(item.sales_amount as string) || 0), 0);
-        const yearlyProfit = yearData.reduce((sum, item) => sum + (parseFloat(item.gross_profit as string) || 0), 0);
+        const yearlyRevenue = yearData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
+        const yearlyProfit = yearData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
         
-        const todayRevenue = todayData.reduce((sum, item) => sum + (parseFloat(item.sales_amount as string) || 0), 0);
-        const todayProfit = todayData.reduce((sum, item) => sum + (parseFloat(item.gross_profit as string) || 0), 0);
+        const todayRevenue = todayData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
+        const todayProfit = todayData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
         
-        const yesterdayRevenue = yesterdayData.reduce((sum, item) => sum + (parseFloat(item.sales_amount as string) || 0), 0);
-        const yesterdayProfit = yesterdayData.reduce((sum, item) => sum + (parseFloat(item.gross_profit as string) || 0), 0);
+        const yesterdayRevenue = yesterdayData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
+        const yesterdayProfit = yesterdayData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
         
-        const monthlyRevenue = monthData.reduce((sum, item) => sum + (parseFloat(item.sales_amount as string) || 0), 0);
-        const monthlyProfit = monthData.reduce((sum, item) => sum + (parseFloat(item.gross_profit as string) || 0), 0);
+        const monthlyRevenue = monthData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
+        const monthlyProfit = monthData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
         
         // Generate daily data for chart
         const dailyData = await generateDailyData(currentMonth, currentYear);
@@ -208,8 +208,8 @@ export default function Dashboard() {
           if (error) throw error;
           
           // Calculate total revenue and profit for the day
-          const dayRevenue = data.reduce((sum, item) => sum + (parseFloat(item.sales_amount as string) || 0), 0);
-          const dayProfit = data.reduce((sum, item) => sum + (parseFloat(item.gross_profit as string) || 0), 0);
+          const dayRevenue = data.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
+          const dayProfit = data.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
           
           dailyData.push({
             date: `${i}/${month}/${year}`,
