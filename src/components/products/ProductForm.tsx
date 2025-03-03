@@ -1,4 +1,3 @@
-
 import React from "react";
 import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
@@ -55,7 +54,17 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       if (isEditing && initialData) {
         const { error } = await supabase
           .from("products")
-          .update(data)
+          .update({
+            name: data.name,
+            description: data.description || null,
+            category: data.category,
+            price: data.price,
+            inventory: data.inventory || 0,
+            sku: data.sku || null,
+            cost: data.cost || null,
+            image_url: data.image_url || null,
+            status: data.status || "active"
+          })
           .eq("id", initialData.id);
 
         if (error) throw error;
@@ -64,8 +73,17 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           description: "Product has been updated successfully",
         });
       } else {
-        // Fix: Pass a single object instead of an array of objects
-        const { error } = await supabase.from("products").insert(data);
+        const { error } = await supabase.from("products").insert({
+          name: data.name,
+          description: data.description || null,
+          category: data.category,
+          price: data.price,
+          inventory: data.inventory || 0,
+          sku: data.sku || null,
+          cost: data.cost || null,
+          image_url: data.image_url || null,
+          status: data.status || "active"
+        });
 
         if (error) throw error;
         toast({
