@@ -4,6 +4,7 @@ export interface ProductVariation {
   product_id: string;
   name: string; // e.g., "2 Seater", "5 Seater", "7 Seater"
   price: number;
+  cost: number; // Adding cost field to each variation
 }
 
 export interface Product {

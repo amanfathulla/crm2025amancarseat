@@ -23,7 +23,6 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { Badge } from "@/components/ui/badge";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -154,18 +153,28 @@ export default function Products() {
                 <thead>
                   <tr className="border-b">
                     <th className="text-left py-3 px-4 font-medium">Nama Produk</th>
-                    <th className="text-center py-3 px-4 font-medium">2 Seater</th>
-                    <th className="text-center py-3 px-4 font-medium">5 Seater</th>
-                    <th className="text-center py-3 px-4 font-medium">7 Seater</th>
-                    <th className="text-right py-3 px-4 font-medium">Kos</th>
+                    <th colSpan={2} className="text-center py-3 px-4 font-medium">2 Seater</th>
+                    <th colSpan={2} className="text-center py-3 px-4 font-medium">5 Seater</th>
+                    <th colSpan={2} className="text-center py-3 px-4 font-medium">7 Seater</th>
                     <th className="text-right py-3 px-4 font-medium">Imej</th>
                     <th className="text-right py-3 px-4 font-medium">Tindakan</th>
+                  </tr>
+                  <tr className="border-b bg-muted/30">
+                    <th className="text-left py-2 px-4"></th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                    <th className="text-right py-2 px-4"></th>
+                    <th className="text-right py-2 px-4"></th>
                   </tr>
                 </thead>
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={7} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={10} className="py-8 text-center text-muted-foreground">
                         {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
                       </td>
                     </tr>
@@ -180,18 +189,31 @@ export default function Products() {
                           <td className="py-3 px-4">
                             <div className="font-medium">{product.name}</div>
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          
+                          {/* 2 Seater */}
+                          <td className="py-3 px-2 text-center">
                             {twoSeater ? formatPrice(twoSeater.price) : "-"}
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td className="py-3 px-2 text-center text-muted-foreground">
+                            {twoSeater?.cost ? formatPrice(twoSeater.cost) : "-"}
+                          </td>
+                          
+                          {/* 5 Seater */}
+                          <td className="py-3 px-2 text-center">
                             {fiveSeater ? formatPrice(fiveSeater.price) : "-"}
                           </td>
-                          <td className="py-3 px-4 text-center">
+                          <td className="py-3 px-2 text-center text-muted-foreground">
+                            {fiveSeater?.cost ? formatPrice(fiveSeater.cost) : "-"}
+                          </td>
+                          
+                          {/* 7 Seater */}
+                          <td className="py-3 px-2 text-center">
                             {sevenSeater ? formatPrice(sevenSeater.price) : "-"}
                           </td>
-                          <td className="py-3 px-4 text-right">
-                            {product.cost ? formatPrice(product.cost) : "-"}
+                          <td className="py-3 px-2 text-center text-muted-foreground">
+                            {sevenSeater?.cost ? formatPrice(sevenSeater.cost) : "-"}
                           </td>
+                          
                           <td className="py-3 px-4 text-center">
                             {product.image_url ? (
                               <div className="flex justify-center">
@@ -266,7 +288,6 @@ export default function Products() {
               initialData={{
                 id: selectedProduct.id,
                 name: selectedProduct.name,
-                cost: selectedProduct.cost || 0,
                 image_url: selectedProduct.image_url || "",
                 variations: selectedProduct.variations || []
               }}

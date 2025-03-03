@@ -13,11 +13,11 @@ import { Card, CardContent } from "@/components/ui/card";
 const productVariationSchema = z.object({
   name: z.string(),
   price: z.coerce.number().positive({ message: "Harga mesti positif" }),
+  cost: z.coerce.number().nonnegative({ message: "Kos mesti sifar atau positif" }),
 });
 
 const productSchema = z.object({
   name: z.string().min(2, { message: "Nama produk mesti sekurang-kurangnya 2 aksara" }),
-  cost: z.coerce.number().nonnegative({ message: "Kos mesti sifar atau positif" }).optional(),
   image_url: z.string().url({ message: "URL imej tidak sah" }).optional().or(z.literal('')),
   variations: z.array(productVariationSchema),
 });
@@ -32,9 +32,9 @@ type ProductFormProps = {
 };
 
 const defaultVariations = [
-  { name: "2 Seater", price: 0 },
-  { name: "5 Seater", price: 0 },
-  { name: "7 Seater", price: 0 }
+  { name: "2 Seater", price: 0, cost: 0 },
+  { name: "5 Seater", price: 0, cost: 0 },
+  { name: "7 Seater", price: 0, cost: 0 }
 ];
 
 const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => {
@@ -48,7 +48,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     resolver: zodResolver(productSchema),
     defaultValues: initialData || {
       name: "",
-      cost: 0,
       image_url: "",
       variations: defaultVariations,
     },
@@ -61,6 +60,9 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       [field]: field === 'name' ? value : Number(value)
     };
     setVariations(newVariations);
+    
+    // This is important to update the form values with the latest variations
+    form.setValue('variations', newVariations);
   };
 
   const onSubmit = async (data: ProductFormValues) => {
@@ -80,7 +82,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           .update({
             name: data.name,
             price: basePrice,
-            cost: data.cost || null,
             image_url: data.image_url || null,
           })
           .eq("id", initialData.id);
@@ -103,6 +104,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
               product_id: initialData.id,
               name: v.name,
               price: v.price,
+              cost: v.cost
             }))
           );
 
@@ -119,7 +121,6 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           .insert({
             name: data.name,
             price: basePrice,
-            cost: data.cost || null,
             image_url: data.image_url || null,
           })
           .select();
@@ -136,6 +137,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                 product_id: productId,
                 name: v.name,
                 price: v.price,
+                cost: v.cost
               }))
             );
 
@@ -189,36 +191,13 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
           )}
         />
 
-        <FormField
-          control={form.control}
-          name="cost"
-          render={({ field }) => (
-            <FormItem>
-              <FormLabel>Kos Produk (RM)</FormLabel>
-              <FormControl>
-                <Input 
-                  type="number" 
-                  step="0.01" 
-                  {...field} 
-                  value={field.value || ""} 
-                  onChange={(e) => field.onChange(e.target.value === "" ? undefined : Number(e.target.value))}
-                />
-              </FormControl>
-              <div className="text-sm text-muted-foreground">
-                RM {parseFloat((field.value || 0).toString()).toFixed(2)}
-              </div>
-              <FormMessage />
-            </FormItem>
-          )}
-        />
-
         <div className="space-y-4 pt-4">
           <h3 className="text-lg font-medium">Variasi Produk</h3>
           <div className="space-y-4">
             {variations.map((variation, index) => (
               <Card key={index} className="bg-muted/40">
                 <CardContent className="pt-6">
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div>
                       <FormLabel>Jenis</FormLabel>
                       <Input 
@@ -238,6 +217,19 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
                       />
                       <div className="text-sm text-muted-foreground">
                         RM {parseFloat(variation.price.toString()).toFixed(2)}
+                      </div>
+                    </div>
+
+                    <div>
+                      <FormLabel>Kos Produk (RM)</FormLabel>
+                      <Input 
+                        type="number" 
+                        step="0.01" 
+                        value={variation.cost} 
+                        onChange={(e) => handleVariationChange(index, 'cost', e.target.value)} 
+                      />
+                      <div className="text-sm text-muted-foreground">
+                        RM {parseFloat(variation.cost.toString()).toFixed(2)}
                       </div>
                     </div>
                   </div>
