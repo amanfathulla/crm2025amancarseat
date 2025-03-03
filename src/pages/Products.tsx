@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -38,20 +37,39 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data, error } = await supabase
+      // First, fetch all products
+      const { data: productsData, error: productsError } = await supabase
         .from("products")
         .select("*")
         .order("name");
 
-      if (error) throw error;
+      if (productsError) throw productsError;
       
       // Type safety: ensure all products have status, defaulting to 'active' if missing
-      const productsWithStatus = data.map(product => ({
+      const productsWithStatus = productsData.map(product => ({
         ...product,
         status: product.status || 'active'
       }));
       
-      setProducts(productsWithStatus as Product[]);
+      // Then fetch all variations
+      const { data: variationsData, error: variationsError } = await supabase
+        .from("product_variations")
+        .select("*");
+
+      if (variationsError) throw variationsError;
+      
+      // Attach variations to their respective products
+      const productsWithVariations = productsWithStatus.map(product => {
+        const productVariations = variationsData.filter(
+          variation => variation.product_id === product.id
+        );
+        return {
+          ...product,
+          variations: productVariations.length > 0 ? productVariations : undefined
+        };
+      });
+      
+      setProducts(productsWithVariations as Product[]);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({
@@ -161,6 +179,7 @@ export default function Products() {
                     <th className="text-left py-3 px-4 font-medium">Product</th>
                     <th className="text-left py-3 px-4 font-medium">Status</th>
                     <th className="text-left py-3 px-4 font-medium">Inventory</th>
+                    <th className="text-left py-3 px-4 font-medium">Variations</th>
                     <th className="text-right py-3 px-4 font-medium">Price</th>
                     <th className="text-right py-3 px-4 font-medium">Actions</th>
                   </tr>
@@ -168,7 +187,7 @@ export default function Products() {
                 <tbody>
                   {filteredProducts.length === 0 ? (
                     <tr>
-                      <td colSpan={5} className="py-8 text-center text-muted-foreground">
+                      <td colSpan={6} className="py-8 text-center text-muted-foreground">
                         {searchTerm ? "No products match your search" : "No products found"}
                       </td>
                     </tr>
@@ -198,8 +217,32 @@ export default function Products() {
                           {getStatusBadge(product.status)}
                         </td>
                         <td className="py-3 px-4 text-sm">{product.inventory || 0}</td>
+                        <td className="py-3 px-4 text-sm">
+                          {product.variations && product.variations.length > 0 ? (
+                            <div className="flex flex-wrap gap-1">
+                              {product.variations.map((variation, index) => (
+                                <Badge 
+                                  key={index} 
+                                  variant="outline" 
+                                  className="text-xs"
+                                >
+                                  {variation.name}
+                                </Badge>
+                              ))}
+                            </div>
+                          ) : (
+                            <span className="text-muted-foreground">None</span>
+                          )}
+                        </td>
                         <td className="py-3 px-4 text-sm text-right font-medium">
-                          {formatPrice(product.price)}
+                          {product.variations && product.variations.length > 0 ? (
+                            <div>
+                              {formatPrice(product.price)}
+                              <span className="text-xs text-muted-foreground block">+{product.variations.length} variations</span>
+                            </div>
+                          ) : (
+                            formatPrice(product.price)
+                          )}
                         </td>
                         <td className="py-3 px-4 text-sm text-right">
                           <DropdownMenu>
@@ -235,7 +278,7 @@ export default function Products() {
 
       {/* Add Product Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[600px]">
+        <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
             <DialogTitle>Add New Product</DialogTitle>
             <DialogDescription>
@@ -252,7 +295,7 @@ export default function Products() {
       {/* Edit Product Dialog */}
       {selectedProduct && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[600px]">
+          <DialogContent className="sm:max-w-[700px]">
             <DialogHeader>
               <DialogTitle>Edit Product</DialogTitle>
               <DialogDescription>
@@ -270,6 +313,7 @@ export default function Products() {
                 cost: selectedProduct.cost || 0,
                 image_url: selectedProduct.image_url || "",
                 status: selectedProduct.status || "active",
+                variations: selectedProduct.variations
               }}
             />
           </DialogContent>
