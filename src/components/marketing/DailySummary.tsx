@@ -3,14 +3,14 @@ import { useState } from "react";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Badge } from "@/components/ui/badge";
 import { ListTodoIcon, NotebookIcon } from "lucide-react";
-import { MarketingEvent } from "@/types/marketing";
+import { MarketingEvent, MarketingTask, MarketingNote } from "@/types/marketing";
 import { EventList } from "./EventList";
 
 interface DailySummaryProps {
   date: Date | undefined;
   events: MarketingEvent[];
-  tasks: any[];
-  notes: any[];
+  tasks: MarketingTask[];
+  notes: MarketingNote[];
   onEditEvent: (event: MarketingEvent) => void;
   onDeleteEvent: (id: string) => void;
   isLoading: boolean;

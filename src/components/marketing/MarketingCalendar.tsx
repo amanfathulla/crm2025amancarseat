@@ -6,7 +6,7 @@ import { CalendarIcon, PlusIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { isSameDay } from "@/utils/dateUtils";
 import { useMarketingEvents } from "@/hooks/useMarketingEvents";
-import { MarketingEvent } from "@/types/marketing";
+import { MarketingEvent, MarketingTask, MarketingNote } from "@/types/marketing";
 import { DayContent } from "./CalendarDayContent";
 import { DailySummary } from "./DailySummary";
 import { EventDialog } from "./EventDialog";
@@ -19,8 +19,9 @@ export function MarketingCalendar() {
   
   const { events, isLoading, addEvent, updateEvent, deleteEvent } = useMarketingEvents();
   
-  const tasks = getSampleTasks();
-  const notes = getSampleNotes();
+  // Get sample data with proper typing
+  const tasks: MarketingTask[] = getSampleTasks();
+  const notes: MarketingNote[] = getSampleNotes() as MarketingNote[];
   
   // Get events for the selected date
   const selectedDateEvents = events.filter(
