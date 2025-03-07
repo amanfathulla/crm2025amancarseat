@@ -73,6 +73,14 @@ export default function Login() {
           "bg-white/80 backdrop-blur-sm shadow-glass border border-black/5"
         )}>
           <div className="text-center mb-6">
+            {/* Added company logo */}
+            <div className="flex justify-center mb-4">
+              <img 
+                src="/lovable-uploads/4bc7bb8f-2325-4928-b6e3-901158bd3eee.png" 
+                alt="AMAN CAR SEAT Logo" 
+                className="h-32 w-auto"
+              />
+            </div>
             <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
             <p className="text-muted-foreground mt-2">Sign in to your account</p>
           </div>
