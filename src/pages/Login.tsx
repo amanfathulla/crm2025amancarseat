@@ -19,8 +19,9 @@ export default function Login() {
   
   // Admin quick login dialog state
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
+  const [adminIdentifier, setAdminIdentifier] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [adminPasswordError, setAdminPasswordError] = useState("");
+  const [adminLoginError, setAdminLoginError] = useState("");
   
   const { login } = useAuth();
   const navigate = useNavigate();
@@ -40,15 +41,15 @@ export default function Login() {
   };
 
   const openAdminLoginDialog = () => {
+    setAdminIdentifier("");
     setAdminPassword("");
-    setAdminPasswordError("");
+    setAdminLoginError("");
     setShowAdminLoginDialog(true);
   };
 
   const handleAdminLogin = async () => {
-    // Check if password is correct
-    if (adminPassword !== "Muhsin@920926") {
-      setAdminPasswordError("Password is incorrect");
+    if (!adminIdentifier || !adminPassword) {
+      setAdminLoginError("Please provide both username and password");
       return;
     }
 
@@ -56,7 +57,7 @@ export default function Login() {
     setShowAdminLoginDialog(false);
     
     try {
-      const success = await login("admin", "Muhsin@920926");
+      const success = await login(adminIdentifier, adminPassword);
       if (success) {
         navigate("/dashboard");
       }
@@ -92,7 +93,7 @@ export default function Login() {
               className="w-full"
               disabled={isSubmitting}
             >
-              Quick Login as Admin
+              Admin Login
             </Button>
           </div>
           
@@ -183,6 +184,16 @@ export default function Login() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
+              <Label htmlFor="admin-identifier">Admin Username</Label>
+              <Input 
+                id="admin-identifier" 
+                type="text" 
+                placeholder="Enter admin username" 
+                value={adminIdentifier}
+                onChange={(e) => setAdminIdentifier(e.target.value)}
+              />
+            </div>
+            <div className="space-y-2">
               <Label htmlFor="admin-password">Admin Password</Label>
               <Input 
                 id="admin-password" 
@@ -191,8 +202,8 @@ export default function Login() {
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
               />
-              {adminPasswordError && (
-                <p className="text-sm text-destructive">{adminPasswordError}</p>
+              {adminLoginError && (
+                <p className="text-sm text-destructive">{adminLoginError}</p>
               )}
             </div>
           </div>

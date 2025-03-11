@@ -1,3 +1,4 @@
+
 import { createContext, useContext, useState, useEffect, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -42,49 +43,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     };
   }, []);
 
-  // This login function now accepts either a username or email
   const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
       // Check if input is an email (contains @) or a username
       const isEmail = usernameOrEmail.includes('@');
-      
-      // If it's a simple username demo flow for admin, handle it with a simplified approach
-      if (!isEmail && usernameOrEmail === 'admin' && password === 'Muhsin@920926') {
-        // Create a demo user session
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'admin@example.com',
-          password: 'Muhsin@920926'
-        });
-        
-        if (error) {
-          console.log("Fallback to demo mode");
-          // If the demo user doesn't exist in Supabase, create a fake session
-          setUser({
-            id: '1',
-            email: 'admin@example.com',
-            user_metadata: { username: 'admin' },
-            app_metadata: {},
-            aud: '',
-            created_at: '',
-          } as User);
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome back, admin!",
-          });
-          
-          return true;
-        }
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome back, admin!`,
-        });
-        
-        return true;
-      }
       
       // Standard email-based authentication
       const { data, error } = await supabase.auth.signInWithPassword({ 
