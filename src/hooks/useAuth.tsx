@@ -46,6 +46,65 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
+      console.log("Login attempt with:", usernameOrEmail);
+      
+      // Support for hardcoded demo credentials for faster testing
+      if (usernameOrEmail === "muhsin@1234" && password === "Muhsin@920926") {
+        // Try to sign in with email that matches the format Supabase expects
+        const { data, error } = await supabase.auth.signInWithPassword({
+          email: "muhsin@example.com",
+          password: "Muhsin@920926"
+        });
+        
+        if (error) {
+          console.error("Login error:", error);
+          
+          // If account doesn't exist yet, try to create it
+          if (error.message.includes("Invalid login credentials")) {
+            console.log("Account doesn't exist, creating a new one");
+            const { data: signupData, error: signupError } = await supabase.auth.signUp({
+              email: "muhsin@example.com",
+              password: "Muhsin@920926",
+              options: {
+                data: {
+                  username: "muhsin",
+                  role: "admin"
+                }
+              }
+            });
+            
+            if (signupError) {
+              console.error("Signup error:", signupError);
+              toast({
+                title: "Login failed",
+                description: "Unable to create admin account automatically. Please contact support.",
+                variant: "destructive",
+              });
+              return false;
+            }
+            
+            toast({
+              title: "Admin account created",
+              description: "Admin account has been created and you are now logged in.",
+            });
+            return true;
+          }
+          
+          toast({
+            title: "Login failed",
+            description: error.message,
+            variant: "destructive",
+          });
+          return false;
+        }
+
+        toast({
+          title: "Login successful",
+          description: "Welcome back, Admin!",
+        });
+        
+        return true;
+      }
       
       // Check if input is an email (contains @) or a username
       const isEmail = usernameOrEmail.includes('@');
