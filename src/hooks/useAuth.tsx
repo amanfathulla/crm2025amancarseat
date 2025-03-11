@@ -50,9 +50,12 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
       
       // Support for hardcoded demo credentials for faster testing
       if (usernameOrEmail === "muhsin@1234" && password === "Muhsin@920926") {
-        // Try to sign in with email that matches the format Supabase expects
+        // Try to sign in with a valid email format
+        const validEmail = "muhsin1234@gmail.com";
+        
+        // Try to sign in first
         const { data, error } = await supabase.auth.signInWithPassword({
-          email: "muhsin@example.com",
+          email: validEmail,
           password: "Muhsin@920926"
         });
         
@@ -62,8 +65,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
           // If account doesn't exist yet, try to create it
           if (error.message.includes("Invalid login credentials")) {
             console.log("Account doesn't exist, creating a new one");
+            
+            // Create account with properly formatted email
             const { data: signupData, error: signupError } = await supabase.auth.signUp({
-              email: "muhsin@example.com",
+              email: validEmail,
               password: "Muhsin@920926",
               options: {
                 data: {
@@ -77,7 +82,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               console.error("Signup error:", signupError);
               toast({
                 title: "Login failed",
-                description: "Unable to create admin account automatically. Please contact support.",
+                description: "Unable to create admin account automatically. Please try using a different email format.",
                 variant: "destructive",
               });
               return false;
