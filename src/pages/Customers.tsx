@@ -1,9 +1,14 @@
+
 import { useState, useEffect } from "react";
+import { useLocation, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, UserPlus, MoreHorizontal, Pencil, Trash2, Users, DollarSign, TrendingUp } from "lucide-react";
+import { 
+  Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
+  Users, DollarSign, TrendingUp, Filter, MapPin
+} from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerForm } from "@/components/customers/CustomerForm";
@@ -15,6 +20,10 @@ import {
   DropdownMenuContent,
   DropdownMenuItem,
   DropdownMenuTrigger,
+  DropdownMenuSeparator,
+  DropdownMenuLabel,
+  DropdownMenuGroup,
+  DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import {
   Table,
@@ -24,12 +33,33 @@ import {
   TableRow,
   TableCell
 } from "@/components/ui/table";
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  Cell
+} from "recharts";
+
+// Malaysian states
+const malaysianStates = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
+  "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
+  "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan"
+];
 
 export default function Customers() {
   const { toast } = useToast();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [searchParams, setSearchParams] = useSearchParams();
+  const [statusFilter, setStatusFilter] = useState<string | null>(null);
+  const [stateFilter, setStateFilter] = useState<string | null>(null);
+  const [stateStats, setStateStats] = useState<any[]>([]);
   const [customerStats, setCustomerStats] = useState({
     totalCustomers: 0,
     totalSales: 0,
@@ -39,19 +69,45 @@ export default function Customers() {
     cancelledOrders: 0
   });
   
+  // Sort options
+  const [sortBy, setSortBy] = useState<string>("order_date");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  
   // Form states
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
+  
+  // Check for status filter from URL
+  useEffect(() => {
+    const status = searchParams.get("status");
+    if (status) {
+      setStatusFilter(status);
+    }
+  }, [searchParams]);
 
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      let query = supabase
         .from("customers")
-        .select("*")
-        .order("name", { ascending: true });
+        .select("*");
+      
+      // Apply status filter if set
+      if (statusFilter) {
+        query = query.eq("order_status", statusFilter);
+      }
+      
+      // Apply state filter if set
+      if (stateFilter) {
+        query = query.eq("city", stateFilter);
+      }
+      
+      // Apply sorting
+      query = query.order(sortBy, { ascending: sortDirection === "asc" });
+      
+      const { data, error } = await query;
 
       if (error) throw error;
       
@@ -68,7 +124,7 @@ export default function Customers() {
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
-        order_status: record.order_status || "processing", // Make sure to include this field
+        order_status: record.order_status || "processing",
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
         created_at: record.created_at || "",
@@ -80,6 +136,9 @@ export default function Customers() {
       // Calculate stats
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
+      
+      // Calculate state statistics
+      calculateStateStats();
     } catch (error: any) {
       console.error("Error fetching customers:", error);
       toast({
@@ -91,13 +150,45 @@ export default function Customers() {
       setIsLoading(false);
     }
   };
+  
+  // Fetch state statistics
+  const calculateStateStats = async () => {
+    try {
+      const stateData: any[] = [];
+      
+      for (const state of malaysianStates) {
+        const { data, error } = await supabase
+          .from("customers")
+          .select("id, sales_amount")
+          .eq("city", state);
+          
+        if (error) throw error;
+        
+        const count = data?.length || 0;
+        const totalAmount = data?.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0) || 0;
+        
+        stateData.push({
+          state,
+          count,
+          amount: totalAmount
+        });
+      }
+      
+      // Sort by count descending
+      stateData.sort((a, b) => b.count - a.count);
+      
+      setStateStats(stateData);
+    } catch (error) {
+      console.error("Error calculating state stats:", error);
+    }
+  };
 
   const calculateCustomerStats = (customers: Customer[]) => {
     const totalCustomers = customers.length;
     const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
     const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
     
-    // Count orders by status
+    // Count all orders by status (regardless of current filters)
     const processingOrders = customers.filter(c => c.order_status === "processing").length;
     const completedOrders = customers.filter(c => c.order_status === "completed").length;
     const cancelledOrders = customers.filter(c => c.order_status === "cancelled").length;
@@ -114,10 +205,43 @@ export default function Customers() {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [statusFilter, stateFilter, sortBy, sortDirection]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
+  };
+  
+  const clearFilters = () => {
+    setStatusFilter(null);
+    setStateFilter(null);
+    setSearchParams({});
+  };
+  
+  const handleStateFilter = (state: string) => {
+    setStateFilter(state === stateFilter ? null : state);
+  };
+  
+  const handleStatusFilter = (status: string) => {
+    setStatusFilter(status === statusFilter ? null : status);
+    
+    // Update URL params
+    if (status === statusFilter) {
+      searchParams.delete("status");
+    } else {
+      searchParams.set("status", status);
+    }
+    setSearchParams(searchParams);
+  };
+  
+  const handleSort = (field: string) => {
+    if (sortBy === field) {
+      // Toggle direction if clicking on same field
+      setSortDirection(sortDirection === "asc" ? "desc" : "asc");
+    } else {
+      // Set new field and default to descending
+      setSortBy(field);
+      setSortDirection("desc");
+    }
   };
 
   const filteredCustomers = customers.filter(
@@ -144,7 +268,7 @@ export default function Customers() {
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
-      order_status: customer.order_status || "processing", // Default to processing if not set
+      order_status: customer.order_status || "processing",
     });
     setIsEditFormOpen(true);
   };
@@ -161,7 +285,7 @@ export default function Customers() {
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
-      order_status: customer.order_status || "processing", // Default to processing if not set
+      order_status: customer.order_status || "processing",
     });
     setIsDeleteDialogOpen(true);
   };
@@ -169,6 +293,13 @@ export default function Customers() {
   const formatCurrency = (amount: number) => {
     return `RM ${amount.toFixed(2)}`;
   };
+  
+  // Chart colors
+  const stateColors = [
+    "#3B82F6", "#10B981", "#F59E0B", "#6366F1", "#EC4899", 
+    "#8B5CF6", "#06B6D4", "#84CC16", "#EF4444", "#F97316",
+    "#14B8A6", "#6D28D9", "#D946EF", "#0EA5E9"
+  ];
 
   return (
     <MainLayout>
@@ -218,7 +349,10 @@ export default function Customers() {
       
       {/* Order Status Stats */}
       <div className="flex flex-wrap gap-4 mb-8">
-        <Card className="flex-1 min-w-[180px]">
+        <Card 
+          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
+          onClick={() => handleStatusFilter('processing')}
+        >
           <CardContent className="p-4 flex items-center gap-3">
             <Badge variant="secondary" className="h-6 px-3">
               {customerStats.processingOrders}
@@ -227,7 +361,10 @@ export default function Customers() {
           </CardContent>
         </Card>
         
-        <Card className="flex-1 min-w-[180px]">
+        <Card 
+          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'completed' ? 'border-primary' : ''}`}
+          onClick={() => handleStatusFilter('completed')}
+        >
           <CardContent className="p-4 flex items-center gap-3">
             <Badge variant="default" className="h-6 px-3">
               {customerStats.completedOrders}
@@ -236,7 +373,10 @@ export default function Customers() {
           </CardContent>
         </Card>
         
-        <Card className="flex-1 min-w-[180px]">
+        <Card 
+          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'cancelled' ? 'border-primary' : ''}`}
+          onClick={() => handleStatusFilter('cancelled')}
+        >
           <CardContent className="p-4 flex items-center gap-3">
             <Badge variant="destructive" className="h-6 px-3">
               {customerStats.cancelledOrders}
@@ -246,11 +386,78 @@ export default function Customers() {
         </Card>
       </div>
       
+      {/* Malaysia States Chart */}
+      <Card className="mb-8">
+        <CardHeader>
+          <CardTitle className="text-lg">Orders by Malaysian States</CardTitle>
+          <CardDescription>Overview of orders distribution across Malaysian states</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="h-[300px]">
+            <ResponsiveContainer width="100%" height="100%">
+              <BarChart 
+                data={stateStats.filter(s => s.count > 0)}
+                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
+              >
+                <CartesianGrid strokeDasharray="3 3" />
+                <XAxis 
+                  dataKey="state" 
+                  angle={-45} 
+                  textAnchor="end" 
+                  height={70}
+                  tick={{ fontSize: 12 }}
+                />
+                <YAxis />
+                <Tooltip 
+                  formatter={(value: any, name: string) => {
+                    return name === 'amount' ? [`${formatCurrency(value)}`, 'Sales Amount'] : [value, 'Order Count'];
+                  }}
+                />
+                <Bar dataKey="count" name="Orders" onClick={(data) => handleStateFilter(data.state)}>
+                  {stateStats.filter(s => s.count > 0).map((entry, index) => (
+                    <Cell 
+                      key={`cell-${index}`} 
+                      fill={stateColors[index % stateColors.length]} 
+                      fillOpacity={stateFilter === entry.state ? 1 : 0.75}
+                      stroke={stateFilter === entry.state ? "#000" : "none"}
+                      strokeWidth={stateFilter === entry.state ? 1 : 0}
+                    />
+                  ))}
+                </Bar>
+              </BarChart>
+            </ResponsiveContainer>
+          </div>
+        </CardContent>
+      </Card>
+      
       <Card className="animate-fade-in delay-100 shadow-soft">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
           <div>
             <CardTitle className="font-semibold tracking-tight">All Customers</CardTitle>
-            <CardDescription>View and manage your customer list</CardDescription>
+            <CardDescription>
+              {statusFilter || stateFilter ? (
+                <div className="flex items-center gap-2">
+                  <span>Filtered view</span>
+                  {statusFilter && (
+                    <Badge variant={
+                      statusFilter === 'processing' ? 'secondary' :
+                      statusFilter === 'completed' ? 'default' : 'destructive'
+                    }>
+                      {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                    </Badge>
+                  )}
+                  {stateFilter && (
+                    <Badge variant="outline" className="flex items-center gap-1">
+                      <MapPin size={12} />
+                      {stateFilter}
+                    </Badge>
+                  )}
+                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 px-2">
+                    Clear filters
+                  </Button>
+                </div>
+              ) : 'View and manage your customer list'}
+            </CardDescription>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:flex-initial">
@@ -262,6 +469,71 @@ export default function Customers() {
                 onChange={handleSearch}
               />
             </div>
+            
+            <DropdownMenu>
+              <DropdownMenuTrigger asChild>
+                <Button size="icon" variant="outline" className="h-10 w-10">
+                  <Filter size={16} />
+                </Button>
+              </DropdownMenuTrigger>
+              <DropdownMenuContent align="end" className="w-56">
+                <DropdownMenuLabel>Filter by</DropdownMenuLabel>
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground pt-0">Order Status</DropdownMenuLabel>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "processing"}
+                    onCheckedChange={() => handleStatusFilter("processing")}
+                  >
+                    In Process
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "completed"}
+                    onCheckedChange={() => handleStatusFilter("completed")}
+                  >
+                    Completed
+                  </DropdownMenuCheckboxItem>
+                  <DropdownMenuCheckboxItem
+                    checked={statusFilter === "cancelled"}
+                    onCheckedChange={() => handleStatusFilter("cancelled")}
+                  >
+                    Cancelled
+                  </DropdownMenuCheckboxItem>
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground pt-0">State (Negeri)</DropdownMenuLabel>
+                  {malaysianStates.map(state => (
+                    <DropdownMenuCheckboxItem
+                      key={state}
+                      checked={stateFilter === state}
+                      onCheckedChange={() => handleStateFilter(state)}
+                    >
+                      {state}
+                    </DropdownMenuCheckboxItem>
+                  ))}
+                </DropdownMenuGroup>
+                
+                <DropdownMenuSeparator />
+                
+                <DropdownMenuGroup>
+                  <DropdownMenuLabel className="text-xs font-normal text-muted-foreground pt-0">Sort By</DropdownMenuLabel>
+                  <DropdownMenuItem onClick={() => handleSort("order_date")}>
+                    Order Date {sortBy === "order_date" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort("name")}>
+                    Name {sortBy === "name" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                  <DropdownMenuItem onClick={() => handleSort("sales_amount")}>
+                    Sales Amount {sortBy === "sales_amount" && (sortDirection === "asc" ? "↑" : "↓")}
+                  </DropdownMenuItem>
+                </DropdownMenuGroup>
+              </DropdownMenuContent>
+            </DropdownMenu>
+            
             <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddFormOpen(true)}>
               <UserPlus className="h-4 w-4 mr-2" />
               Add Customer
@@ -276,7 +548,7 @@ export default function Customers() {
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Name</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Email</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Phone</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Location</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">State</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Car Model</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Product</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Variation</TableHead>
@@ -297,7 +569,7 @@ export default function Customers() {
                 ) : filteredCustomers.length === 0 ? (
                   <TableRow>
                     <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
-                      {searchQuery
+                      {searchQuery || statusFilter || stateFilter
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
                     </TableCell>
@@ -324,6 +596,7 @@ export default function Customers() {
           isOpen={isAddFormOpen}
           onClose={() => setIsAddFormOpen(false)}
           onSuccess={fetchCustomers}
+          malaysianStates={malaysianStates}
         />
       )}
 
@@ -337,6 +610,7 @@ export default function Customers() {
           }}
           customer={selectedCustomer}
           onSuccess={fetchCustomers}
+          malaysianStates={malaysianStates}
         />
       )}
 

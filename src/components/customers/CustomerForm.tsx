@@ -18,14 +18,22 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
+// Default Malaysian states if not provided
+const defaultMalaysianStates = [
+  "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
+  "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
+  "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan"
+];
+
 interface CustomerFormProps {
   isOpen: boolean;
   onClose: () => void;
   customer?: CustomerFormData;
   onSuccess: () => void;
+  malaysianStates?: string[];
 }
 
-export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerFormProps) {
+export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianStates = defaultMalaysianStates }: CustomerFormProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<CustomerFormData>(
     customer || {
@@ -182,7 +190,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Map location to city in the database
+            city: formData.location, // Store as city field for states
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
@@ -205,7 +213,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Map location to city in the database
+            city: formData.location, // Store as city field for states
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
@@ -278,14 +286,22 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess }: CustomerF
               />
             </div>
             <div className="space-y-2">
-              <Label htmlFor="location">Location</Label>
-              <Input
-                id="location"
-                name="location"
+              <Label htmlFor="location">State (Negeri)</Label>
+              <Select
                 value={formData.location}
-                onChange={handleChange}
-                required
-              />
+                onValueChange={(value) => handleSelectChange("location", value)}
+              >
+                <SelectTrigger id="location" className="w-full">
+                  <SelectValue placeholder="Select state" />
+                </SelectTrigger>
+                <SelectContent>
+                  {malaysianStates.map((state) => (
+                    <SelectItem key={state} value={state}>
+                      {state}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
             </div>
             <div className="space-y-2">
               <Label htmlFor="car_model">Car Model</Label>

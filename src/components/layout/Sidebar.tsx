@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from "react";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
@@ -24,6 +24,7 @@ export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   const isMobile = useIsMobile();
   const location = useLocation();
+  const navigate = useNavigate();
   const { logout } = useAuth();
   
   // Always collapse sidebar on mobile by default
@@ -95,6 +96,12 @@ export function Sidebar() {
       setExpanded(!expanded);
     }
   };
+  
+  // Handle filter by order status
+  const handleOrderFilter = (status) => {
+    navigate(`/customers?status=${status}`);
+    if (isMobile) setMobileOpen(false);
+  };
 
   // Base sidebar items - simplified with no children/dropdowns
   const sidebarItems = [
@@ -104,9 +111,27 @@ export function Sidebar() {
       path: "/customers", 
       icon: Users,
       badges: [
-        { label: `${orderCounts.processing}`, variant: "secondary", tooltip: "Orders In Process" },
-        { label: `${orderCounts.completed}`, variant: "default", tooltip: "Completed Orders" },
-        { label: `${orderCounts.cancelled}`, variant: "destructive", tooltip: "Cancelled Orders" }
+        { 
+          label: `${orderCounts.processing}`, 
+          variant: "secondary", 
+          tooltip: "Orders In Process",
+          onClick: () => handleOrderFilter('processing'),
+          icon: ShoppingBag
+        },
+        { 
+          label: `${orderCounts.completed}`, 
+          variant: "default", 
+          tooltip: "Completed Orders",
+          onClick: () => handleOrderFilter('completed'),
+          icon: PackageCheck
+        },
+        { 
+          label: `${orderCounts.cancelled}`, 
+          variant: "destructive", 
+          tooltip: "Cancelled Orders",
+          onClick: () => handleOrderFilter('cancelled'),
+          icon: PackageX
+        }
       ]
     },
     { title: "Sales", path: "/sales", icon: ShoppingCart },
@@ -189,16 +214,25 @@ export function Sidebar() {
                       {/* Order status badges */}
                       {item.badges && (
                         <div className="ml-auto flex items-center gap-1.5">
-                          {item.badges.map((badge, index) => (
-                            <Badge 
-                              key={index} 
-                              variant={badge.variant as any}
-                              className="h-5 min-w-5 flex justify-center items-center"
-                              title={badge.tooltip}
-                            >
-                              {badge.label}
-                            </Badge>
-                          ))}
+                          {item.badges.map((badge, index) => {
+                            const BadgeIcon = badge.icon;
+                            return (
+                              <Badge 
+                                key={index} 
+                                variant={badge.variant as any}
+                                className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2"
+                                title={badge.tooltip}
+                                onClick={(e) => {
+                                  e.preventDefault();
+                                  e.stopPropagation();
+                                  badge.onClick();
+                                }}
+                              >
+                                <BadgeIcon size={12} />
+                                {badge.label}
+                              </Badge>
+                            );
+                          })}
                         </div>
                       )}
                     </>
@@ -208,16 +242,25 @@ export function Sidebar() {
                 {/* Badges for collapsed state */}
                 {!expanded && !isMobile && item.badges && (
                   <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
-                    {item.badges.map((badge, index) => (
-                      <Badge 
-                        key={index} 
-                        variant={badge.variant as any}
-                        className="h-5 min-w-5 flex justify-center items-center"
-                        title={badge.tooltip}
-                      >
-                        {badge.label}
-                      </Badge>
-                    ))}
+                    {item.badges.map((badge, index) => {
+                      const BadgeIcon = badge.icon;
+                      return (
+                        <Badge 
+                          key={index} 
+                          variant={badge.variant as any}
+                          className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-1.5"
+                          title={badge.tooltip}
+                          onClick={(e) => {
+                            e.preventDefault();
+                            e.stopPropagation();
+                            badge.onClick();
+                          }}
+                        >
+                          <BadgeIcon size={12} />
+                          {badge.label}
+                        </Badge>
+                      );
+                    })}
                   </div>
                 )}
               </div>
