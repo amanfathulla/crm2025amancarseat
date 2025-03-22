@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -151,33 +150,44 @@ export default function Customers() {
     }
   };
   
-  // Fetch state statistics
+  // Fetch state statistics - updated to ensure all states are displayed
   const calculateStateStats = async () => {
     try {
-      const stateData: any[] = [];
+      // Initialize data for all states with zero values
+      const initialStateData = malaysianStates.map(state => ({
+        state,
+        count: 0,
+        amount: 0
+      }));
       
-      for (const state of malaysianStates) {
+      // Fetch order counts and sales amounts for each state
+      for (let i = 0; i < malaysianStates.length; i++) {
+        const state = malaysianStates[i];
         const { data, error } = await supabase
           .from("customers")
           .select("id, sales_amount")
           .eq("city", state);
           
-        if (error) throw error;
+        if (error) {
+          console.error(`Error fetching data for ${state}:`, error);
+          continue;
+        }
         
-        const count = data?.length || 0;
-        const totalAmount = data?.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0) || 0;
-        
-        stateData.push({
-          state,
-          count,
-          amount: totalAmount
-        });
+        // Update data if orders exist for this state
+        if (data && data.length > 0) {
+          const count = data.length;
+          const totalAmount = data.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0);
+          
+          // Update the corresponding state in our array
+          initialStateData[i].count = count;
+          initialStateData[i].amount = totalAmount;
+        }
       }
       
       // Sort by count descending
-      stateData.sort((a, b) => b.count - a.count);
+      initialStateData.sort((a, b) => b.count - a.count);
       
-      setStateStats(stateData);
+      setStateStats(initialStateData);
     } catch (error) {
       console.error("Error calculating state stats:", error);
     }
@@ -301,6 +311,20 @@ export default function Customers() {
     "#14B8A6", "#6D28D9", "#D946EF", "#0EA5E9"
   ];
 
+  // Custom tooltip for the chart
+  const CustomTooltip = ({ active, payload, label }: any) => {
+    if (active && payload && payload.length) {
+      return (
+        <div className="bg-white p-3 rounded shadow-lg border">
+          <p className="font-bold">{label}</p>
+          <p className="text-sm">Orders: <span className="font-medium">{payload[0].value}</span></p>
+          <p className="text-sm">Sales: <span className="font-medium">{formatCurrency(payload[0].payload.amount)}</span></p>
+        </div>
+      );
+    }
+    return null;
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -386,17 +410,17 @@ export default function Customers() {
         </Card>
       </div>
       
-      {/* Malaysia States Chart */}
+      {/* Malaysia States Chart - Updated to show all states */}
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-lg">Orders by Malaysian States</CardTitle>
-          <CardDescription>Overview of orders distribution across Malaysian states</CardDescription>
+          <CardTitle className="text-lg">Orders by Malaysian States (Negeri)</CardTitle>
+          <CardDescription>Overview of orders distribution across all Malaysian states</CardDescription>
         </CardHeader>
         <CardContent>
           <div className="h-[300px]">
             <ResponsiveContainer width="100%" height="100%">
               <BarChart 
-                data={stateStats.filter(s => s.count > 0)}
+                data={stateStats}
                 margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
               >
                 <CartesianGrid strokeDasharray="3 3" />
@@ -408,17 +432,13 @@ export default function Customers() {
                   tick={{ fontSize: 12 }}
                 />
                 <YAxis />
-                <Tooltip 
-                  formatter={(value: any, name: string) => {
-                    return name === 'amount' ? [`${formatCurrency(value)}`, 'Sales Amount'] : [value, 'Order Count'];
-                  }}
-                />
+                <Tooltip content={<CustomTooltip />} />
                 <Bar dataKey="count" name="Orders" onClick={(data) => handleStateFilter(data.state)}>
-                  {stateStats.filter(s => s.count > 0).map((entry, index) => (
+                  {stateStats.map((entry, index) => (
                     <Cell 
                       key={`cell-${index}`} 
                       fill={stateColors[index % stateColors.length]} 
-                      fillOpacity={stateFilter === entry.state ? 1 : 0.75}
+                      fillOpacity={stateFilter === entry.state ? 1 : entry.count > 0 ? 0.75 : 0.25}
                       stroke={stateFilter === entry.state ? "#000" : "none"}
                       strokeWidth={stateFilter === entry.state ? 1 : 0}
                     />
@@ -698,3 +718,4 @@ function CustomerRow({
     </TableRow>
   );
 }
+
