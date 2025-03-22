@@ -8,8 +8,8 @@ import {
   Settings,
   User,
   LogOut,
+  Store,
 } from "lucide-react";
-import Logo from "@/assets/logo.svg";
 import {
   Sidebar,
   SidebarContent,
@@ -70,7 +70,7 @@ export function AppSidebar() {
       <SidebarHeader className="flex h-14 items-center border-b px-6">
         <SidebarTrigger />
         <div className="flex items-center gap-2 font-semibold">
-          <img src={Logo} alt="Logo" className="h-6 w-6" />
+          <Store className="h-6 w-6 text-primary" />
           <span>My Business</span>
         </div>
       </SidebarHeader>

@@ -2,7 +2,7 @@
 import { ReactNode, useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Sidebar } from "./Sidebar";
+import { AppSidebar } from "./Sidebar";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -50,7 +50,7 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   return (
     <div className="min-h-screen bg-background flex">
       {/* Only show sidebar if user is authenticated */}
-      {user && <Sidebar />}
+      {user && <AppSidebar />}
       
       {/* Main content */}
       <main className={cn(
