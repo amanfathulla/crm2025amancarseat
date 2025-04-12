@@ -114,7 +114,7 @@ export default function Customers() {
         product_variation: record.product_variation || "",
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
-        paid_amount: record.paid_amount || record.sales_amount || 0,
+        paid_amount: record.sales_amount || 0,
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
         total_orders: record.total_orders || 0,
