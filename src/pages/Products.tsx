@@ -1,13 +1,14 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image, Grid3X3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
-import ProductForm, { ProductFormValues } from "@/components/products/ProductForm";
+import ProductForm from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
 import {
   Dialog,
@@ -22,6 +23,7 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -31,6 +33,7 @@ export default function Products() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
+  const [viewMode, setViewMode] = useState<'grid' | 'table'>('grid');
   const { toast } = useToast();
 
   const fetchProducts = async () => {
@@ -121,6 +124,191 @@ export default function Products() {
     }).format(price);
   };
 
+  const renderGridView = () => {
+    if (filteredProducts.length === 0) {
+      return (
+        <div className="py-8 text-center text-muted-foreground">
+          {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
+        </div>
+      );
+    }
+
+    return (
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        {filteredProducts.map((product) => {
+          const lowestPrice = product.variations
+            ? Math.min(...product.variations.map(v => v.price))
+            : product.price;
+            
+          return (
+            <Card key={product.id} className="h-full overflow-hidden hover:shadow-md transition-shadow">
+              <div className="relative">
+                <AspectRatio ratio={4/3}>
+                  {product.image_url ? (
+                    <img 
+                      src={product.image_url} 
+                      alt={product.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <div className="w-full h-full bg-muted/30 flex items-center justify-center">
+                      <Image className="h-12 w-12 text-muted-foreground/40" />
+                    </div>
+                  )}
+                </AspectRatio>
+              </div>
+              <CardHeader className="pb-2">
+                <div className="flex justify-between items-start">
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
+                  <DropdownMenu>
+                    <DropdownMenuTrigger asChild>
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
+                        <MoreHorizontal className="h-4 w-4" />
+                      </Button>
+                    </DropdownMenuTrigger>
+                    <DropdownMenuContent align="end">
+                      <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                        <Edit className="h-4 w-4 mr-2" />
+                        Edit
+                      </DropdownMenuItem>
+                      <DropdownMenuItem 
+                        onClick={() => handleDeleteClick(product)}
+                        className="text-destructive focus:text-destructive"
+                      >
+                        <Trash className="h-4 w-4 mr-2" />
+                        Buang
+                      </DropdownMenuItem>
+                    </DropdownMenuContent>
+                  </DropdownMenu>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <div className="text-lg font-medium text-primary">
+                  {formatPrice(lowestPrice)}
+                </div>
+                <div className="mt-2 space-y-1">
+                  {product.variations?.map((variation) => (
+                    <div key={variation.id} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{variation.name}</span>
+                      <span>{formatPrice(variation.price)}</span>
+                    </div>
+                  ))}
+                </div>
+              </CardContent>
+            </Card>
+          );
+        })}
+      </div>
+    );
+  };
+
+  const renderTableView = () => {
+    return (
+      <div className="overflow-x-auto">
+        {filteredProducts.length === 0 ? (
+          <div className="py-8 text-center text-muted-foreground">
+            {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
+          </div>
+        ) : (
+          <table className="w-full">
+            <thead>
+              <tr className="border-b">
+                <th className="text-left py-3 px-4 font-medium">Nama Produk</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">2 Seater</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">5 Seater</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">7 Seater</th>
+                <th className="text-right py-3 px-4 font-medium">Imej</th>
+                <th className="text-right py-3 px-4 font-medium">Tindakan</th>
+              </tr>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left py-2 px-4"></th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-right py-2 px-4"></th>
+                <th className="text-right py-2 px-4"></th>
+              </tr>
+            </thead>
+            <tbody>
+              {filteredProducts.map((product) => {
+                const twoSeater = product.variations?.find(v => v.name === "2 Seater");
+                const fiveSeater = product.variations?.find(v => v.name === "5 Seater");
+                const sevenSeater = product.variations?.find(v => v.name === "7 Seater");
+                
+                return (
+                  <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
+                    <td className="py-3 px-4">
+                      <div className="font-medium">{product.name}</div>
+                    </td>
+                    
+                    {/* 2 Seater */}
+                    <td className="py-3 px-2 text-center">
+                      {twoSeater ? formatPrice(twoSeater.price) : "-"}
+                    </td>
+                    <td className="py-3 px-2 text-center text-muted-foreground">
+                      {twoSeater?.cost ? formatPrice(twoSeater.cost) : "-"}
+                    </td>
+                    
+                    {/* 5 Seater */}
+                    <td className="py-3 px-2 text-center">
+                      {fiveSeater ? formatPrice(fiveSeater.price) : "-"}
+                    </td>
+                    <td className="py-3 px-2 text-center text-muted-foreground">
+                      {fiveSeater?.cost ? formatPrice(fiveSeater.cost) : "-"}
+                    </td>
+                    
+                    {/* 7 Seater */}
+                    <td className="py-3 px-2 text-center">
+                      {sevenSeater ? formatPrice(sevenSeater.price) : "-"}
+                    </td>
+                    <td className="py-3 px-2 text-center text-muted-foreground">
+                      {sevenSeater?.cost ? formatPrice(sevenSeater.cost) : "-"}
+                    </td>
+                    
+                    <td className="py-3 px-4 text-center">
+                      {product.image_url ? (
+                        <div className="flex justify-center">
+                          <a href={product.image_url} target="_blank" rel="noopener noreferrer">
+                            <Image className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                          </a>
+                        </div>
+                      ) : "-"}
+                    </td>
+                    <td className="py-3 px-4 text-right">
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem 
+                            onClick={() => handleDeleteClick(product)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Buang
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </td>
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        )}
+      </div>
+    );
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -144,6 +332,17 @@ export default function Products() {
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
             </div>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
+            >
+              {viewMode === 'grid' ? (
+                <Grid3X3 className="h-4 w-4" />
+              ) : (
+                <Grid3X3 className="h-4 w-4" />
+              )}
+            </Button>
             <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddDialogOpen(true)}>
               <Save className="h-4 w-4 mr-2" />
               Tambah Produk
@@ -151,116 +350,15 @@ export default function Products() {
           </div>
         </CardHeader>
         <CardContent>
-          <div className="overflow-x-auto">
-            {loading ? (
-              <div className="flex justify-center items-center py-8">
-                <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <table className="w-full">
-                <thead>
-                  <tr className="border-b">
-                    <th className="text-left py-3 px-4 font-medium">Nama Produk</th>
-                    <th colSpan={2} className="text-center py-3 px-4 font-medium">2 Seater</th>
-                    <th colSpan={2} className="text-center py-3 px-4 font-medium">5 Seater</th>
-                    <th colSpan={2} className="text-center py-3 px-4 font-medium">7 Seater</th>
-                    <th className="text-right py-3 px-4 font-medium">Imej</th>
-                    <th className="text-right py-3 px-4 font-medium">Tindakan</th>
-                  </tr>
-                  <tr className="border-b bg-muted/30">
-                    <th className="text-left py-2 px-4"></th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-                    <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-                    <th className="text-right py-2 px-4"></th>
-                    <th className="text-right py-2 px-4"></th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {filteredProducts.length === 0 ? (
-                    <tr>
-                      <td colSpan={10} className="py-8 text-center text-muted-foreground">
-                        {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
-                      </td>
-                    </tr>
-                  ) : (
-                    filteredProducts.map((product) => {
-                      const twoSeater = product.variations?.find(v => v.name === "2 Seater");
-                      const fiveSeater = product.variations?.find(v => v.name === "5 Seater");
-                      const sevenSeater = product.variations?.find(v => v.name === "7 Seater");
-                      
-                      return (
-                        <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
-                          <td className="py-3 px-4">
-                            <div className="font-medium">{product.name}</div>
-                          </td>
-                          
-                          {/* 2 Seater */}
-                          <td className="py-3 px-2 text-center">
-                            {twoSeater ? formatPrice(twoSeater.price) : "-"}
-                          </td>
-                          <td className="py-3 px-2 text-center text-muted-foreground">
-                            {twoSeater?.cost ? formatPrice(twoSeater.cost) : "-"}
-                          </td>
-                          
-                          {/* 5 Seater */}
-                          <td className="py-3 px-2 text-center">
-                            {fiveSeater ? formatPrice(fiveSeater.price) : "-"}
-                          </td>
-                          <td className="py-3 px-2 text-center text-muted-foreground">
-                            {fiveSeater?.cost ? formatPrice(fiveSeater.cost) : "-"}
-                          </td>
-                          
-                          {/* 7 Seater */}
-                          <td className="py-3 px-2 text-center">
-                            {sevenSeater ? formatPrice(sevenSeater.price) : "-"}
-                          </td>
-                          <td className="py-3 px-2 text-center text-muted-foreground">
-                            {sevenSeater?.cost ? formatPrice(sevenSeater.cost) : "-"}
-                          </td>
-                          
-                          <td className="py-3 px-4 text-center">
-                            {product.image_url ? (
-                              <div className="flex justify-center">
-                                <a href={product.image_url} target="_blank" rel="noopener noreferrer">
-                                  <Image className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-                                </a>
-                              </div>
-                            ) : "-"}
-                          </td>
-                          <td className="py-3 px-4 text-right">
-                            <DropdownMenu>
-                              <DropdownMenuTrigger asChild>
-                                <Button variant="ghost" size="icon" className="h-8 w-8">
-                                  <MoreHorizontal className="h-4 w-4" />
-                                </Button>
-                              </DropdownMenuTrigger>
-                              <DropdownMenuContent align="end">
-                                <DropdownMenuItem onClick={() => handleEditClick(product)}>
-                                  <Edit className="h-4 w-4 mr-2" />
-                                  Edit
-                                </DropdownMenuItem>
-                                <DropdownMenuItem 
-                                  onClick={() => handleDeleteClick(product)}
-                                  className="text-destructive focus:text-destructive"
-                                >
-                                  <Trash className="h-4 w-4 mr-2" />
-                                  Buang
-                                </DropdownMenuItem>
-                              </DropdownMenuContent>
-                            </DropdownMenu>
-                          </td>
-                        </tr>
-                      );
-                    })
-                  )}
-                </tbody>
-              </table>
-            )}
-          </div>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+            </div>
+          ) : viewMode === 'grid' ? (
+            renderGridView()
+          ) : (
+            renderTableView()
+          )}
         </CardContent>
       </Card>
 
