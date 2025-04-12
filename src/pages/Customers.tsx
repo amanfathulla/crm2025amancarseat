@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
@@ -114,7 +115,7 @@ export default function Customers() {
         product: record.product || "",
         product_variation: record.product_variation || "",
         sales_amount: record.sales_amount || 0,
-        paid_amount: record.paid_amount || record.sales_amount || 0,
+        paid_amount: record.paid_amount || record.sales_amount || 0, // Correctly map paid_amount with fallback to sales_amount
         gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
