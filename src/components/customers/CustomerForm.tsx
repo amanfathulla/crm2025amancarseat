@@ -47,7 +47,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       order_date: new Date().toISOString().split("T")[0],
       sales_amount: 0,
       gross_profit: 0,
-      paid_amount: 0, // Initialize paid amount to 0
       order_status: "processing", // Default status
     }
   );
@@ -57,7 +56,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [loadingVariations, setLoadingVariations] = useState(false);
-  const [discountApplied, setDiscountApplied] = useState(false);
 
   // Fetch products for the dropdown
   useEffect(() => {
@@ -129,15 +127,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
-    
-    // Check if paid amount is less than sales amount to determine if discount applied
-    if (name === "paid_amount") {
-      const paidAmount = parseFloat(value);
-      setDiscountApplied(paidAmount < formData.sales_amount);
-      setFormData((prev) => ({ ...prev, [name]: paidAmount }));
-    } else {
-      setFormData((prev) => ({ ...prev, [name]: value }));
-    }
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
   const handleSelectChange = (name: string, value: string) => {
@@ -150,7 +140,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
         ...prev, 
         product_variation: "", 
         sales_amount: 0,
-        paid_amount: 0, // Reset paid amount when product changes
         gross_profit: 0 
       }));
       
@@ -175,12 +164,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       ...prev,
       product_variation: variationName,
       sales_amount: salesAmount,
-      paid_amount: salesAmount, // Default paid amount to full price initially
       gross_profit: grossProfit
     }));
-    
-    // Reset discount flag when variation changes
-    setDiscountApplied(false);
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -210,7 +195,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
-            paid_amount: formData.paid_amount, // Store the actual paid amount
             gross_profit: formData.gross_profit,
             order_date: formData.order_date,
             order_status: formData.order_status, // Save order status
@@ -234,7 +218,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
-            paid_amount: formData.paid_amount, // Store the actual paid amount
             gross_profit: formData.gross_profit,
             order_date: formData.order_date,
             order_status: formData.order_status, // Save order status
@@ -432,34 +415,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             </div>
           )}
           
-          {/* Show customer paid amount field if a variation is selected */}
-          {formData.product_variation && (
-            <div className="space-y-2">
-              <Label htmlFor="paid_amount" className="flex items-center">
-                Customer Paid Amount (RM)
-              </Label>
-              <Input
-                id="paid_amount"
-                name="paid_amount"
-                type="number"
-                min="0"
-                step="0.01"
-                value={formData.paid_amount}
-                onChange={handleChange}
-                className="font-medium"
-                required
-              />
-              {discountApplied && (
-                <div className="text-sm text-green-600 font-medium flex items-center gap-1 mt-1">
-                  <span>Discount applied: RM {(formData.sales_amount - formData.paid_amount).toFixed(2)}</span>
-                  <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50">
-                    {((formData.sales_amount - formData.paid_amount) / formData.sales_amount * 100).toFixed(0)}% off
-                  </Badge>
-                </div>
-              )}
-            </div>
-          )}
-          
           {/* Show sales amount and gross profit if a variation is selected */}
           {formData.product_variation && (
             <div className="mt-4 p-4 bg-muted rounded-md">
@@ -469,16 +424,12 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
                 <span>{formData.product_variation}</span>
               </div>
               <div className="flex justify-between mb-1">
-                <span>Standard Price:</span>
+                <span>Sales Amount:</span>
                 <span>RM {formData.sales_amount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span className="font-medium">Customer Paid:</span>
-                <span className="font-medium">RM {formData.paid_amount.toFixed(2)}</span>
               </div>
               <div className="flex justify-between font-medium">
                 <span>Gross Profit:</span>
-                <span>RM {(formData.paid_amount - (formData.sales_amount - formData.gross_profit)).toFixed(2)}</span>
+                <span>RM {formData.gross_profit.toFixed(2)}</span>
               </div>
               <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
                 <span>Order Status:</span>

@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, Wallet
+  Users, DollarSign, TrendingUp, Filter, MapPin
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -43,6 +43,7 @@ import {
   Cell
 } from "recharts";
 
+// Malaysian states
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
   "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
@@ -61,21 +62,23 @@ export default function Customers() {
   const [customerStats, setCustomerStats] = useState({
     totalCustomers: 0,
     totalSales: 0,
-    totalPaid: 0,
     grossProfit: 0,
     processingOrders: 0,
     completedOrders: 0,
     cancelledOrders: 0
   });
   
+  // Sort options
   const [sortBy, setSortBy] = useState<string>("order_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
+  // Form states
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   
+  // Check for status filter from URL
   useEffect(() => {
     const status = searchParams.get("status");
     if (status) {
@@ -90,20 +93,24 @@ export default function Customers() {
         .from("customers")
         .select("*");
       
+      // Apply status filter if set
       if (statusFilter) {
         query = query.eq("order_status", statusFilter);
       }
       
+      // Apply state filter if set
       if (stateFilter) {
         query = query.eq("city", stateFilter);
       }
       
+      // Apply sorting
       query = query.order(sortBy, { ascending: sortDirection === "asc" });
       
       const { data, error } = await query;
 
       if (error) throw error;
       
+      // Map database records to our Customer type
       const mappedCustomers = data?.map(record => ({
         id: record.id,
         name: record.name,
@@ -114,7 +121,6 @@ export default function Customers() {
         product: record.product || "",
         product_variation: record.product_variation || "",
         sales_amount: record.sales_amount || 0,
-        paid_amount: record.paid_amount || record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
@@ -126,9 +132,11 @@ export default function Customers() {
       
       setCustomers(mappedCustomers);
       
+      // Calculate stats
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
       
+      // Calculate state statistics
       calculateStateStats();
     } catch (error: any) {
       console.error("Error fetching customers:", error);
@@ -141,15 +149,18 @@ export default function Customers() {
       setIsLoading(false);
     }
   };
-
+  
+  // Fetch state statistics - updated to ensure all states are displayed
   const calculateStateStats = async () => {
     try {
+      // Initialize data for all states with zero values
       const initialStateData = malaysianStates.map(state => ({
         state,
         count: 0,
         amount: 0
       }));
       
+      // Fetch order counts and sales amounts for each state
       for (let i = 0; i < malaysianStates.length; i++) {
         const state = malaysianStates[i];
         const { data, error } = await supabase
@@ -162,15 +173,18 @@ export default function Customers() {
           continue;
         }
         
+        // Update data if orders exist for this state
         if (data && data.length > 0) {
           const count = data.length;
           const totalAmount = data.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0);
           
+          // Update the corresponding state in our array
           initialStateData[i].count = count;
           initialStateData[i].amount = totalAmount;
         }
       }
       
+      // Sort by count descending
       initialStateData.sort((a, b) => b.count - a.count);
       
       setStateStats(initialStateData);
@@ -182,9 +196,9 @@ export default function Customers() {
   const calculateCustomerStats = (customers: Customer[]) => {
     const totalCustomers = customers.length;
     const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
-    const totalPaid = customers.reduce((sum, customer) => sum + customer.paid_amount, 0);
     const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
     
+    // Count all orders by status (regardless of current filters)
     const processingOrders = customers.filter(c => c.order_status === "processing").length;
     const completedOrders = customers.filter(c => c.order_status === "completed").length;
     const cancelledOrders = customers.filter(c => c.order_status === "cancelled").length;
@@ -192,7 +206,6 @@ export default function Customers() {
     return {
       totalCustomers,
       totalSales,
-      totalPaid,
       grossProfit,
       processingOrders,
       completedOrders,
@@ -221,6 +234,7 @@ export default function Customers() {
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status === statusFilter ? null : status);
     
+    // Update URL params
     if (status === statusFilter) {
       searchParams.delete("status");
     } else {
@@ -231,8 +245,10 @@ export default function Customers() {
   
   const handleSort = (field: string) => {
     if (sortBy === field) {
+      // Toggle direction if clicking on same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
+      // Set new field and default to descending
       setSortBy(field);
       setSortDirection("desc");
     }
@@ -260,7 +276,6 @@ export default function Customers() {
       product: customer.product,
       product_variation: customer.product_variation,
       sales_amount: customer.sales_amount,
-      paid_amount: customer.paid_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
@@ -278,7 +293,6 @@ export default function Customers() {
       product: customer.product,
       product_variation: customer.product_variation,
       sales_amount: customer.sales_amount,
-      paid_amount: customer.paid_amount,
       gross_profit: customer.gross_profit,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
@@ -290,12 +304,14 @@ export default function Customers() {
     return `RM ${amount.toFixed(2)}`;
   };
   
+  // Chart colors
   const stateColors = [
     "#3B82F6", "#10B981", "#F59E0B", "#6366F1", "#EC4899", 
     "#8B5CF6", "#06B6D4", "#84CC16", "#EF4444", "#F97316",
     "#14B8A6", "#6D28D9", "#D946EF", "#0EA5E9"
   ];
 
+  // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -316,7 +332,8 @@ export default function Customers() {
         <p className="text-muted-foreground">Manage your customer base</p>
       </section>
       
-      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 animate-fade-in">
+      {/* Customer Stats Cards */}
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
@@ -332,28 +349,11 @@ export default function Customers() {
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">List Price</span>
+              <span className="text-sm text-muted-foreground">Total Sales</span>
               <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
             </div>
             <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
               <DollarSign className="h-6 w-6 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm bg-gradient-to-r from-blue-50 to-green-50 border-blue-200">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Amount Paid</span>
-              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalPaid)}</span>
-              {customerStats.totalPaid < customerStats.totalSales && (
-                <span className="text-xs text-green-600 font-medium mt-1">
-                  Discounted: {formatCurrency(customerStats.totalSales - customerStats.totalPaid)}
-                </span>
-              )}
-            </div>
-            <div className="h-12 w-12 rounded-full bg-blue-100 flex items-center justify-center">
-              <Wallet className="h-6 w-6 text-blue-600" />
             </div>
           </CardContent>
         </Card>
@@ -371,6 +371,7 @@ export default function Customers() {
         </Card>
       </div>
       
+      {/* Order Status Stats */}
       <div className="flex flex-wrap gap-4 mb-8">
         <Card 
           className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
@@ -409,6 +410,7 @@ export default function Customers() {
         </Card>
       </div>
       
+      {/* Malaysia States Chart - Updated to show all states */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-lg">Orders by Malaysian States (Negeri)</CardTitle>
@@ -570,8 +572,7 @@ export default function Customers() {
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Car Model</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Product</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Variation</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">List Price</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Amount Paid</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Sales Amount</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Profit</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Order Date</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Status</TableHead>
@@ -581,13 +582,13 @@ export default function Customers() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                       Loading customers...
                     </TableCell>
                   </TableRow>
                 ) : filteredCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
                       {searchQuery || statusFilter || stateFilter
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
@@ -609,6 +610,7 @@ export default function Customers() {
         </CardContent>
       </Card>
 
+      {/* Add Customer Form Dialog */}
       {isAddFormOpen && (
         <CustomerForm
           isOpen={isAddFormOpen}
@@ -618,6 +620,7 @@ export default function Customers() {
         />
       )}
 
+      {/* Edit Customer Form Dialog */}
       {isEditFormOpen && selectedCustomer && (
         <CustomerForm
           isOpen={isEditFormOpen}
@@ -631,6 +634,7 @@ export default function Customers() {
         />
       )}
 
+      {/* Delete Customer Dialog */}
       {isDeleteDialogOpen && selectedCustomer && (
         <DeleteCustomerDialog
           isOpen={isDeleteDialogOpen}
@@ -679,18 +683,6 @@ function CustomerRow({
     }
   };
 
-  const getDiscountBadge = (salesAmount: number, paidAmount: number) => {
-    if (paidAmount < salesAmount) {
-      const discountPercent = ((salesAmount - paidAmount) / salesAmount * 100).toFixed(0);
-      return (
-        <Badge variant="outline" className="text-green-600 border-green-200 bg-green-50 ml-1">
-          {discountPercent}% off
-        </Badge>
-      );
-    }
-    return null;
-  };
-
   return (
     <TableRow className="border-b hover:bg-muted/30 transition-colors">
       <TableCell className="py-3 px-4 text-sm font-medium">{customer.name}</TableCell>
@@ -701,10 +693,6 @@ function CustomerRow({
       <TableCell className="py-3 px-4 text-sm">{customer.product}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{customer.product_variation}</TableCell>
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.sales_amount)}</TableCell>
-      <TableCell className="py-3 px-4 text-sm font-medium text-right">
-        {formatCurrency(customer.paid_amount)}
-        {getDiscountBadge(customer.sales_amount, customer.paid_amount)}
-      </TableCell>
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.gross_profit)}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{getStatusBadge(customer.order_status || "processing")}</TableCell>
@@ -730,3 +718,4 @@ function CustomerRow({
     </TableRow>
   );
 }
+
