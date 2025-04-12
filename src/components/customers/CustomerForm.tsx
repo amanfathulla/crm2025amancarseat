@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -18,7 +17,6 @@ import {
 import { Card, CardContent } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 
-// Default Malaysian states if not provided
 const defaultMalaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
   "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
@@ -47,7 +45,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       order_date: new Date().toISOString().split("T")[0],
       sales_amount: 0,
       gross_profit: 0,
-      order_status: "processing", // Default status
+      paid_amount: 0,
+      order_status: "processing",
     }
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -57,7 +56,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
   const [variations, setVariations] = useState<ProductVariation[]>([]);
   const [loadingVariations, setLoadingVariations] = useState(false);
 
-  // Fetch products for the dropdown
   useEffect(() => {
     const fetchProducts = async () => {
       try {
@@ -70,7 +68,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
         if (error) throw error;
         setProducts(data || []);
         
-        // If editing and product already selected, find the product details
         if (customer?.product) {
           const foundProduct = data?.find(p => p.name === customer.product) || null;
           setSelectedProduct(foundProduct);
@@ -93,7 +90,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
     fetchProducts();
   }, [toast, customer]);
 
-  // Fetch product variations when product changes
   const fetchProductVariations = async (productId: string) => {
     try {
       setLoadingVariations(true);
@@ -106,7 +102,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       if (error) throw error;
       setVariations(data || []);
       
-      // If editing and variation already selected, find it in the fetched variations
       if (customer?.product_variation && data) {
         const foundVariation = data.find(v => v.name === customer.product_variation);
         if (foundVariation) {
@@ -133,17 +128,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
   const handleSelectChange = (name: string, value: string) => {
     setFormData((prev) => ({ ...prev, [name]: value }));
     
-    // If selecting a product, fetch its variations
     if (name === "product") {
-      // Reset variation selection when product changes
       setFormData(prev => ({ 
         ...prev, 
         product_variation: "", 
         sales_amount: 0,
-        gross_profit: 0 
+        gross_profit: 0,
+        paid_amount: 0
       }));
       
-      // Find the selected product and fetch its variations
       const product = products.find(p => p.name === value) || null;
       setSelectedProduct(product);
       
@@ -156,7 +149,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
   };
   
   const handleVariationChange = (variationName: string, price: number, cost: number) => {
-    // Calculate sales amount and gross profit
     const salesAmount = price;
     const grossProfit = price - cost;
     
@@ -164,7 +156,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       ...prev,
       product_variation: variationName,
       sales_amount: salesAmount,
-      gross_profit: grossProfit
+      gross_profit: grossProfit,
+      paid_amount: salesAmount
     }));
   };
 
@@ -183,21 +176,21 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
 
     try {
       if (customer) {
-        // Update existing customer
         const { error } = await supabase
           .from("customers")
           .update({
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Store as city field for states
+            city: formData.location,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
-            order_status: formData.order_status, // Save order status
+            order_status: formData.order_status,
           })
           .eq("email", customer.email);
 
@@ -207,20 +200,20 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
           description: "Customer information has been updated successfully.",
         });
       } else {
-        // Add new customer
         const { error } = await supabase.from("customers").insert([
           {
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Store as city field for states
+            city: formData.location,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
-            order_status: formData.order_status, // Save order status
+            order_status: formData.order_status,
           },
         ]);
 
@@ -385,7 +378,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             </div>
           </div>
           
-          {/* Product Variations */}
           {formData.product && (
             <div className="mt-4">
               <Label>Product Variation</Label>
@@ -415,7 +407,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             </div>
           )}
           
-          {/* Show sales amount and gross profit if a variation is selected */}
           {formData.product_variation && (
             <div className="mt-4 p-4 bg-muted rounded-md">
               <div className="text-sm font-medium mb-2">Order Summary</div>

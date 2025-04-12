@@ -10,7 +10,7 @@ export interface Customer {
   product_variation: string;
   sales_amount: number;
   gross_profit: number;
-  paid_amount: number; // Added paid_amount field
+  paid_amount: number; // This field is already here
   order_date: string;
   order_status: string; // Added for order status tracking
   total_orders: number;
@@ -29,7 +29,7 @@ export interface CustomerFormData {
   product_variation: string;
   sales_amount: number;
   gross_profit: number;
-  paid_amount: number; // Added paid_amount field
+  paid_amount: number; // This field is already here
   order_date: string;
   order_status: string; // Added for order status tracking
 }

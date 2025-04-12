@@ -43,7 +43,6 @@ import {
   Cell
 } from "recharts";
 
-// Malaysian states
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
   "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
@@ -68,17 +67,14 @@ export default function Customers() {
     cancelledOrders: 0
   });
   
-  // Sort options
   const [sortBy, setSortBy] = useState<string>("order_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
-  // Form states
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   
-  // Check for status filter from URL
   useEffect(() => {
     const status = searchParams.get("status");
     if (status) {
@@ -93,24 +89,20 @@ export default function Customers() {
         .from("customers")
         .select("*");
       
-      // Apply status filter if set
       if (statusFilter) {
         query = query.eq("order_status", statusFilter);
       }
       
-      // Apply state filter if set
       if (stateFilter) {
         query = query.eq("city", stateFilter);
       }
       
-      // Apply sorting
       query = query.order(sortBy, { ascending: sortDirection === "asc" });
       
       const { data, error } = await query;
 
       if (error) throw error;
       
-      // Map database records to our Customer type
       const mappedCustomers = data?.map(record => ({
         id: record.id,
         name: record.name,
@@ -122,6 +114,7 @@ export default function Customers() {
         product_variation: record.product_variation || "",
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
+        paid_amount: record.paid_amount || record.sales_amount || 0,
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
         total_orders: record.total_orders || 0,
@@ -132,11 +125,9 @@ export default function Customers() {
       
       setCustomers(mappedCustomers);
       
-      // Calculate stats
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
       
-      // Calculate state statistics
       calculateStateStats();
     } catch (error: any) {
       console.error("Error fetching customers:", error);
@@ -149,18 +140,15 @@ export default function Customers() {
       setIsLoading(false);
     }
   };
-  
-  // Fetch state statistics - updated to ensure all states are displayed
+
   const calculateStateStats = async () => {
     try {
-      // Initialize data for all states with zero values
       const initialStateData = malaysianStates.map(state => ({
         state,
         count: 0,
         amount: 0
       }));
       
-      // Fetch order counts and sales amounts for each state
       for (let i = 0; i < malaysianStates.length; i++) {
         const state = malaysianStates[i];
         const { data, error } = await supabase
@@ -173,18 +161,15 @@ export default function Customers() {
           continue;
         }
         
-        // Update data if orders exist for this state
         if (data && data.length > 0) {
           const count = data.length;
           const totalAmount = data.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0);
           
-          // Update the corresponding state in our array
           initialStateData[i].count = count;
           initialStateData[i].amount = totalAmount;
         }
       }
       
-      // Sort by count descending
       initialStateData.sort((a, b) => b.count - a.count);
       
       setStateStats(initialStateData);
@@ -198,7 +183,6 @@ export default function Customers() {
     const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
     const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
     
-    // Count all orders by status (regardless of current filters)
     const processingOrders = customers.filter(c => c.order_status === "processing").length;
     const completedOrders = customers.filter(c => c.order_status === "completed").length;
     const cancelledOrders = customers.filter(c => c.order_status === "cancelled").length;
@@ -234,7 +218,6 @@ export default function Customers() {
   const handleStatusFilter = (status: string) => {
     setStatusFilter(status === statusFilter ? null : status);
     
-    // Update URL params
     if (status === statusFilter) {
       searchParams.delete("status");
     } else {
@@ -245,10 +228,8 @@ export default function Customers() {
   
   const handleSort = (field: string) => {
     if (sortBy === field) {
-      // Toggle direction if clicking on same field
       setSortDirection(sortDirection === "asc" ? "desc" : "asc");
     } else {
-      // Set new field and default to descending
       setSortBy(field);
       setSortDirection("desc");
     }
@@ -277,6 +258,7 @@ export default function Customers() {
       product_variation: customer.product_variation,
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
+      paid_amount: customer.paid_amount,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
     });
@@ -294,6 +276,7 @@ export default function Customers() {
       product_variation: customer.product_variation,
       sales_amount: customer.sales_amount,
       gross_profit: customer.gross_profit,
+      paid_amount: customer.paid_amount,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
     });
@@ -303,15 +286,13 @@ export default function Customers() {
   const formatCurrency = (amount: number) => {
     return `RM ${amount.toFixed(2)}`;
   };
-  
-  // Chart colors
+
   const stateColors = [
     "#3B82F6", "#10B981", "#F59E0B", "#6366F1", "#EC4899", 
     "#8B5CF6", "#06B6D4", "#84CC16", "#EF4444", "#F97316",
     "#14B8A6", "#6D28D9", "#D946EF", "#0EA5E9"
   ];
 
-  // Custom tooltip for the chart
   const CustomTooltip = ({ active, payload, label }: any) => {
     if (active && payload && payload.length) {
       return (
@@ -332,7 +313,6 @@ export default function Customers() {
         <p className="text-muted-foreground">Manage your customer base</p>
       </section>
       
-      {/* Customer Stats Cards */}
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
@@ -371,7 +351,6 @@ export default function Customers() {
         </Card>
       </div>
       
-      {/* Order Status Stats */}
       <div className="flex flex-wrap gap-4 mb-8">
         <Card 
           className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
@@ -410,7 +389,6 @@ export default function Customers() {
         </Card>
       </div>
       
-      {/* Malaysia States Chart - Updated to show all states */}
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-lg">Orders by Malaysian States (Negeri)</CardTitle>
@@ -610,7 +588,6 @@ export default function Customers() {
         </CardContent>
       </Card>
 
-      {/* Add Customer Form Dialog */}
       {isAddFormOpen && (
         <CustomerForm
           isOpen={isAddFormOpen}
@@ -620,7 +597,6 @@ export default function Customers() {
         />
       )}
 
-      {/* Edit Customer Form Dialog */}
       {isEditFormOpen && selectedCustomer && (
         <CustomerForm
           isOpen={isEditFormOpen}
@@ -634,7 +610,6 @@ export default function Customers() {
         />
       )}
 
-      {/* Delete Customer Dialog */}
       {isDeleteDialogOpen && selectedCustomer && (
         <DeleteCustomerDialog
           isOpen={isDeleteDialogOpen}
@@ -718,4 +693,3 @@ function CustomerRow({
     </TableRow>
   );
 }
-
