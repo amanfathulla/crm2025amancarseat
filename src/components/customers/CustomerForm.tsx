@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -47,7 +46,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       order_date: new Date().toISOString().split("T")[0],
       sales_amount: 0,
       gross_profit: 0,
-      order_status: "processing", // Default status
+      paid_amount: 0,
+      order_status: "processing",
     }
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -140,7 +140,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
         ...prev, 
         product_variation: "", 
         sales_amount: 0,
-        gross_profit: 0 
+        gross_profit: 0,
+        paid_amount: 0
       }));
       
       // Find the selected product and fetch its variations
@@ -164,7 +165,8 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       ...prev,
       product_variation: variationName,
       sales_amount: salesAmount,
-      gross_profit: grossProfit
+      gross_profit: grossProfit,
+      paid_amount: salesAmount
     }));
   };
 
@@ -190,14 +192,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Store as city field for states
+            city: formData.location,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
-            order_status: formData.order_status, // Save order status
+            order_status: formData.order_status,
           })
           .eq("email", customer.email);
 
@@ -213,14 +216,15 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             name: formData.name,
             email: formData.email,
             phone: formData.phone,
-            city: formData.location, // Store as city field for states
+            city: formData.location,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
-            order_status: formData.order_status, // Save order status
+            order_status: formData.order_status,
           },
         ]);
 
@@ -385,7 +389,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             </div>
           </div>
           
-          {/* Product Variations */}
           {formData.product && (
             <div className="mt-4">
               <Label>Product Variation</Label>
@@ -415,7 +418,6 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             </div>
           )}
           
-          {/* Show sales amount and gross profit if a variation is selected */}
           {formData.product_variation && (
             <div className="mt-4 p-4 bg-muted rounded-md">
               <div className="text-sm font-medium mb-2">Order Summary</div>
@@ -424,13 +426,37 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
                 <span>{formData.product_variation}</span>
               </div>
               <div className="flex justify-between mb-1">
-                <span>Sales Amount:</span>
+                <span>Sales Amount (List Price):</span>
                 <span>RM {formData.sales_amount.toFixed(2)}</span>
               </div>
+              
+              <div className="flex justify-between mb-1 items-center">
+                <span>Customer Paid Amount:</span>
+                <div className="w-24">
+                  <Input
+                    type="number"
+                    name="paid_amount"
+                    value={formData.paid_amount}
+                    onChange={handleChange}
+                    className="h-7 text-right"
+                    step="0.01"
+                    min="0"
+                  />
+                </div>
+              </div>
+              
               <div className="flex justify-between font-medium">
                 <span>Gross Profit:</span>
                 <span>RM {formData.gross_profit.toFixed(2)}</span>
               </div>
+              
+              {formData.paid_amount < formData.sales_amount && (
+                <div className="flex justify-between mt-1 pt-1 border-t border-muted-foreground/20 text-sm text-green-600">
+                  <span>Discount:</span>
+                  <span>RM {(formData.sales_amount - formData.paid_amount).toFixed(2)} ({(100 - (formData.paid_amount / formData.sales_amount) * 100).toFixed(0)}%)</span>
+                </div>
+              )}
+              
               <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
                 <span>Order Status:</span>
                 <Badge variant={getStatusBadgeVariant(formData.order_status)}>

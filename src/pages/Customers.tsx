@@ -62,6 +62,7 @@ export default function Customers() {
   const [customerStats, setCustomerStats] = useState({
     totalCustomers: 0,
     totalSales: 0,
+    totalPaid: 0,
     grossProfit: 0,
     processingOrders: 0,
     completedOrders: 0,
@@ -122,6 +123,7 @@ export default function Customers() {
         product_variation: record.product_variation || "",
         sales_amount: record.sales_amount || 0,
         gross_profit: record.gross_profit || 0,
+        paid_amount: record.paid_amount || record.sales_amount || 0,
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
         total_orders: record.total_orders || 0,
@@ -150,7 +152,6 @@ export default function Customers() {
     }
   };
   
-  // Fetch state statistics - updated to ensure all states are displayed
   const calculateStateStats = async () => {
     try {
       // Initialize data for all states with zero values
@@ -196,6 +197,7 @@ export default function Customers() {
   const calculateCustomerStats = (customers: Customer[]) => {
     const totalCustomers = customers.length;
     const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
+    const totalPaid = customers.reduce((sum, customer) => sum + (customer.paid_amount || customer.sales_amount), 0);
     const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
     
     // Count all orders by status (regardless of current filters)
@@ -206,6 +208,7 @@ export default function Customers() {
     return {
       totalCustomers,
       totalSales,
+      totalPaid,
       grossProfit,
       processingOrders,
       completedOrders,
@@ -333,7 +336,7 @@ export default function Customers() {
       </section>
       
       {/* Customer Stats Cards */}
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
+      <div className="grid grid-cols-1 md:grid-cols-4 gap-6 mb-6 animate-fade-in">
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
@@ -349,11 +352,28 @@ export default function Customers() {
         <Card className="shadow-sm">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Total Sales</span>
+              <span className="text-sm text-muted-foreground">Total Sales (List Price)</span>
               <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
             </div>
             <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
               <DollarSign className="h-6 w-6 text-green-500" />
+            </div>
+          </CardContent>
+        </Card>
+
+        <Card className="shadow-sm">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-muted-foreground">Total Paid by Customers</span>
+              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalPaid)}</span>
+              {customerStats.totalPaid < customerStats.totalSales && (
+                <span className="text-xs text-green-600 mt-1">
+                  Saved {formatCurrency(customerStats.totalSales - customerStats.totalPaid)}
+                </span>
+              )}
+            </div>
+            <div className="h-12 w-12 rounded-full bg-amber-50 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-amber-500" />
             </div>
           </CardContent>
         </Card>
@@ -572,7 +592,8 @@ export default function Customers() {
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Car Model</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Product</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Variation</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Sales Amount</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">List Price</TableHead>
+                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Customer Paid</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Profit</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Order Date</TableHead>
                   <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Status</TableHead>
@@ -582,13 +603,13 @@ export default function Customers() {
               <TableBody>
                 {isLoading ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
                       Loading customers...
                     </TableCell>
                   </TableRow>
                 ) : filteredCustomers.length === 0 ? (
                   <TableRow>
-                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
+                    <TableCell colSpan={13} className="py-8 text-center text-muted-foreground">
                       {searchQuery || statusFilter || stateFilter
                         ? "No customers match your search criteria."
                         : "No customers found. Add your first customer to get started."}
@@ -683,6 +704,11 @@ function CustomerRow({
     }
   };
 
+  const hasDiscount = customer.paid_amount < customer.sales_amount;
+  const discountPercentage = hasDiscount 
+    ? ((customer.sales_amount - customer.paid_amount) / customer.sales_amount * 100).toFixed(0)
+    : 0;
+
   return (
     <TableRow className="border-b hover:bg-muted/30 transition-colors">
       <TableCell className="py-3 px-4 text-sm font-medium">{customer.name}</TableCell>
@@ -693,6 +719,16 @@ function CustomerRow({
       <TableCell className="py-3 px-4 text-sm">{customer.product}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{customer.product_variation}</TableCell>
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.sales_amount)}</TableCell>
+      <TableCell className="py-3 px-4 text-sm font-medium text-right">
+        <div className="flex justify-end items-center">
+          {formatCurrency(customer.paid_amount)}
+          {hasDiscount && (
+            <Badge variant="outline" className="ml-2 bg-green-50 text-green-700 text-[10px] px-1 py-0 h-4">
+              -{discountPercentage}%
+            </Badge>
+          )}
+        </div>
+      </TableCell>
       <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.gross_profit)}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</TableCell>
       <TableCell className="py-3 px-4 text-sm">{getStatusBadge(customer.order_status || "processing")}</TableCell>
@@ -718,4 +754,3 @@ function CustomerRow({
     </TableRow>
   );
 }
-

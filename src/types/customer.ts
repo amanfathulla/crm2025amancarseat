@@ -10,6 +10,7 @@ export interface Customer {
   product_variation: string;
   sales_amount: number;
   gross_profit: number;
+  paid_amount: number; // New field for actual amount paid by customer after discounts
   order_date: string;
   order_status: string; // Added for order status tracking
   total_orders: number;
@@ -28,6 +29,7 @@ export interface CustomerFormData {
   product_variation: string;
   sales_amount: number;
   gross_profit: number;
+  paid_amount: number; // New field for actual amount paid by customer
   order_date: string;
   order_status: string; // Added for order status tracking
 }
