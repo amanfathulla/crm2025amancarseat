@@ -5,39 +5,20 @@ import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LoaderCircle, User, Mail } from "lucide-react";
+import { LoaderCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 
 export default function Login() {
-  // Login state
-  const [identifier, setIdentifier] = useState("");
-  const [password, setPassword] = useState("");
-  const [isSubmitting, setIsSubmitting] = useState(false);
-  const [loginMode, setLoginMode] = useState<"username" | "email">("username");
-  
   // Admin quick login dialog state
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
   const [adminPassword, setAdminPassword] = useState("");
   const [adminPasswordError, setAdminPasswordError] = useState("");
+  const [isSubmitting, setIsSubmitting] = useState(false);
   
   const { login } = useAuth();
   const navigate = useNavigate();
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsSubmitting(true);
-    
-    try {
-      const success = await login(identifier, password);
-      if (success) {
-        navigate("/dashboard");
-      }
-    } finally {
-      setIsSubmitting(false);
-    }
-  };
 
   const openAdminLoginDialog = () => {
     setAdminPassword("");
@@ -73,7 +54,7 @@ export default function Login() {
           "bg-white/80 backdrop-blur-sm shadow-glass border border-black/5"
         )}>
           <div className="text-center mb-6">
-            {/* Added company logo */}
+            {/* Company logo */}
             <div className="flex justify-center mb-4">
               <img 
                 src="/lovable-uploads/4bc7bb8f-2325-4928-b6e3-901158bd3eee.png" 
@@ -81,97 +62,27 @@ export default function Login() {
                 className="h-32 w-auto"
               />
             </div>
-            <h1 className="text-3xl font-semibold tracking-tight">Welcome Back</h1>
-            <p className="text-muted-foreground mt-2">Sign in to your account</p>
+            <h1 className="text-3xl font-semibold tracking-tight">Welcome</h1>
+            <p className="text-muted-foreground mt-2">Login to access the dashboard</p>
           </div>
           
-          <div className="flex justify-center mb-4">
+          <div className="flex justify-center mt-8 mb-4">
             <Button 
               onClick={openAdminLoginDialog} 
-              variant="outline" 
-              className="w-full"
-              disabled={isSubmitting}
-            >
-              Quick Login as Admin
-            </Button>
-          </div>
-          
-          <div className="text-center mb-4">
-            <span className="text-sm text-muted-foreground">or sign in with your details</span>
-          </div>
-          
-          <div className="flex justify-center mb-4">
-            <div className="flex">
-              <Button 
-                type="button" 
-                variant={loginMode === "username" ? "default" : "outline"} 
-                onClick={() => setLoginMode("username")}
-                className="rounded-r-none"
-                size="sm"
-              >
-                <User className="mr-2 h-4 w-4" />
-                Username
-              </Button>
-              <Button 
-                type="button" 
-                variant={loginMode === "email" ? "default" : "outline"} 
-                onClick={() => setLoginMode("email")}
-                className="rounded-l-none"
-                size="sm"
-              >
-                <Mail className="mr-2 h-4 w-4" />
-                Email
-              </Button>
-            </div>
-          </div>
-          
-          <form onSubmit={handleLogin} className="space-y-5">
-            <div className="space-y-2">
-              <Label htmlFor="identifier">{loginMode === "email" ? "Email" : "Username"}</Label>
-              <Input
-                id="identifier"
-                type={loginMode === "email" ? "email" : "text"}
-                placeholder={loginMode === "email" ? "your@email.com" : "username"}
-                value={identifier}
-                onChange={(e) => setIdentifier(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
-            
-            <div className="space-y-2">
-              <div className="flex items-center justify-between">
-                <Label htmlFor="password">Password</Label>
-                <Button type="button" variant="link" className="p-0 h-auto text-xs">
-                  Forgot password?
-                </Button>
-              </div>
-              <Input
-                id="password"
-                type="password"
-                placeholder="••••••••"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12"
-                required
-              />
-            </div>
-            
-            <Button
-              type="submit"
-              className="w-full h-12"
+              variant="default" 
+              className="w-full h-12 text-lg"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
                 <>
-                  <LoaderCircle className="mr-2 h-4 w-4 animate-spin" />
-                  Signing in...
+                  <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+                  Logging in...
                 </>
               ) : (
-                "Sign in"
+                "Login as Admin"
               )}
             </Button>
-          </form>
+          </div>
         </div>
       </div>
 
@@ -190,6 +101,11 @@ export default function Login() {
                 placeholder="Enter admin password" 
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === 'Enter') {
+                    handleAdminLogin();
+                  }
+                }}
               />
               {adminPasswordError && (
                 <p className="text-sm text-destructive">{adminPasswordError}</p>
