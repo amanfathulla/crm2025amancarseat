@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -188,7 +189,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
-            paid_amount: formData.paid_amount,
+            paid_amount: formData.paid_amount, // Ensure this property is included
             order_date: formData.order_date,
             order_status: formData.order_status,
           })
@@ -211,7 +212,7 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
-            paid_amount: formData.paid_amount,
+            paid_amount: formData.paid_amount, // Ensure this property is included
             order_date: formData.order_date,
             order_status: formData.order_status,
           },
