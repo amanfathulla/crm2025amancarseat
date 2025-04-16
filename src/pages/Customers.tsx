@@ -42,6 +42,8 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
+import { Accordion } from "@/components/ui/accordion";
+import { CustomerDetails } from "@/components/customers/CustomerDetails";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -539,52 +541,28 @@ export default function Customers() {
           </div>
         </CardHeader>
         <CardContent className="px-3 sm:px-6">
-          <div className="rounded-md border overflow-hidden">
-            <Table>
-              <TableHeader>
-                <TableRow className="bg-muted/50 hover:bg-muted/50">
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Name</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Email</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Phone</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">State</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Car Model</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Product</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Variation</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Sales Amount</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Profit</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Order Date</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4">Status</TableHead>
-                  <TableHead className="font-medium text-xs uppercase tracking-wider py-3 px-4 text-right">Actions</TableHead>
-                </TableRow>
-              </TableHeader>
-              <TableBody>
-                {isLoading ? (
-                  <TableRow>
-                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
-                      Loading customers...
-                    </TableCell>
-                  </TableRow>
-                ) : filteredCustomers.length === 0 ? (
-                  <TableRow>
-                    <TableCell colSpan={12} className="py-8 text-center text-muted-foreground">
-                      {searchQuery || statusFilter || stateFilter
-                        ? "No customers match your search criteria."
-                        : "No customers found. Add your first customer to get started."}
-                    </TableCell>
-                  </TableRow>
-                ) : (
-                  filteredCustomers.map((customer) => (
-                    <CustomerRow
-                      key={customer.id}
-                      customer={customer}
-                      onEdit={() => handleEditCustomer(customer)}
-                      onDelete={() => handleDeleteCustomer(customer)}
-                    />
-                  ))
-                )}
-              </TableBody>
-            </Table>
-          </div>
+          {isLoading ? (
+            <div className="py-8 text-center text-muted-foreground">
+              Loading customers...
+            </div>
+          ) : filteredCustomers.length === 0 ? (
+            <div className="py-8 text-center text-muted-foreground">
+              {searchQuery || statusFilter || stateFilter
+                ? "No customers match your search criteria."
+                : "No customers found. Add your first customer to get started."}
+            </div>
+          ) : (
+            <Accordion type="single" collapsible className="w-full">
+              {filteredCustomers.map((customer) => (
+                <CustomerDetails
+                  key={customer.id}
+                  customer={customer}
+                  onEdit={() => handleEditCustomer(customer)}
+                  onDelete={() => handleDeleteCustomer(customer)}
+                />
+              ))}
+            </Accordion>
+          )}
         </CardContent>
       </Card>
 
@@ -623,73 +601,5 @@ export default function Customers() {
         />
       )}
     </MainLayout>
-  );
-}
-
-function CustomerRow({
-  customer,
-  onEdit,
-  onDelete,
-}: {
-  customer: Customer;
-  onEdit: () => void;
-  onDelete: () => void;
-}) {
-  const formatDate = (dateString: string) => {
-    if (!dateString) return "";
-    const date = new Date(dateString);
-    return date.toLocaleDateString();
-  };
-
-  const formatCurrency = (amount: number) => {
-    return `RM ${amount.toFixed(2)}`;
-  };
-
-  const getStatusBadge = (status: string) => {
-    switch(status) {
-      case "processing":
-        return <Badge variant="secondary">In Process</Badge>;
-      case "completed":
-        return <Badge variant="default">Completed</Badge>;
-      case "cancelled":
-        return <Badge variant="destructive">Cancelled</Badge>;
-      default:
-        return <Badge variant="secondary">{status}</Badge>;
-    }
-  };
-
-  return (
-    <TableRow className="border-b hover:bg-muted/30 transition-colors">
-      <TableCell className="py-3 px-4 text-sm font-medium">{customer.name}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.email}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.phone}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.location}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.car_model}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.product}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{customer.product_variation}</TableCell>
-      <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.sales_amount)}</TableCell>
-      <TableCell className="py-3 px-4 text-sm font-medium text-right">{formatCurrency(customer.gross_profit)}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{formatDate(customer.order_date)}</TableCell>
-      <TableCell className="py-3 px-4 text-sm">{getStatusBadge(customer.order_status || "processing")}</TableCell>
-      <TableCell className="py-3 px-4 text-sm text-right">
-        <DropdownMenu>
-          <DropdownMenuTrigger asChild>
-            <Button variant="ghost" size="icon" className="h-8 w-8">
-              <MoreHorizontal className="h-4 w-4" />
-            </Button>
-          </DropdownMenuTrigger>
-          <DropdownMenuContent align="end">
-            <DropdownMenuItem onClick={onEdit}>
-              <Pencil className="mr-2 h-4 w-4" />
-              Edit
-            </DropdownMenuItem>
-            <DropdownMenuItem onClick={onDelete} className="text-destructive focus:text-destructive">
-              <Trash2 className="mr-2 h-4 w-4" />
-              Delete
-            </DropdownMenuItem>
-          </DropdownMenuContent>
-        </DropdownMenu>
-      </TableCell>
-    </TableRow>
   );
 }
