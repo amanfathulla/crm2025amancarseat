@@ -13,9 +13,10 @@ interface CustomerDetailsProps {
   customer: Customer;
   onEdit: () => void;
   onDelete: () => void;
+  index: number; // Added index prop for numbering
 }
 
-export function CustomerDetails({ customer, onEdit, onDelete }: CustomerDetailsProps) {
+export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerDetailsProps) {
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -38,7 +39,10 @@ export function CustomerDetails({ customer, onEdit, onDelete }: CustomerDetailsP
   return (
     <AccordionItem value={customer.id} className="border-b">
       <AccordionTrigger className="hover:no-underline hover:bg-muted/50 px-4">
-        <span className="text-base font-medium">{customer.name}</span>
+        <span className="flex items-center text-base font-medium">
+          <span className="inline-block w-8 text-right mr-3 text-muted-foreground">{index}.</span>
+          {customer.name}
+        </span>
       </AccordionTrigger>
       <AccordionContent>
         <div className="px-4 py-2 grid gap-4 text-sm">

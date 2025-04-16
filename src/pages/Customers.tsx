@@ -25,13 +25,14 @@ import {
   DropdownMenuCheckboxItem,
 } from "@/components/ui/dropdown-menu";
 import {
-  Table,
-  TableHeader,
-  TableBody,
-  TableHead,
-  TableRow,
-  TableCell
-} from "@/components/ui/table";
+  Pagination,
+  PaginationContent,
+  PaginationEllipsis,
+  PaginationItem,
+  PaginationLink,
+  PaginationNext,
+  PaginationPrevious,
+} from "@/components/ui/pagination";
 import {
   BarChart,
   Bar,
@@ -44,12 +45,15 @@ import {
 } from "recharts";
 import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
+import { compareDates, formatCurrency } from "@/lib/utils";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
   "Pahang", "Perak", "Perlis", "Pulau Pinang", "Sabah", 
   "Sarawak", "Selangor", "Terengganu", "Wilayah Persekutuan"
 ];
+
+const CUSTOMERS_PER_PAGE = 20;
 
 export default function Customers() {
   const { toast } = useToast();
@@ -69,6 +73,10 @@ export default function Customers() {
     cancelledOrders: 0
   });
   
+  const [currentPage, setCurrentPage] = useState(1);
+  const [totalPages, setTotalPages] = useState(1);
+  const [totalCustomers, setTotalCustomers] = useState(0);
+  
   const [sortBy, setSortBy] = useState<string>("order_date");
   const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
@@ -87,6 +95,27 @@ export default function Customers() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
+      let countQuery = supabase
+        .from("customers")
+        .select("id", { count: "exact" });
+      
+      if (statusFilter) {
+        countQuery = countQuery.eq("order_status", statusFilter);
+      }
+      
+      if (stateFilter) {
+        countQuery = countQuery.eq("city", stateFilter);
+      }
+      
+      const { count, error: countError } = await countQuery;
+      
+      if (countError) throw countError;
+      
+      if (count !== null) {
+        setTotalCustomers(count);
+        setTotalPages(Math.ceil(count / CUSTOMERS_PER_PAGE));
+      }
+      
       let query = supabase
         .from("customers")
         .select("*");
@@ -99,7 +128,10 @@ export default function Customers() {
         query = query.eq("city", stateFilter);
       }
       
-      query = query.order(sortBy, { ascending: sortDirection === "asc" });
+      const startIndex = (currentPage - 1) * CUSTOMERS_PER_PAGE;
+      query = query
+        .order(sortBy, { ascending: sortDirection === "asc" })
+        .range(startIndex, startIndex + CUSTOMERS_PER_PAGE - 1);
       
       const { data, error } = await query;
 
@@ -125,7 +157,11 @@ export default function Customers() {
         updated_at: record.updated_at || "",
       })) || [];
       
-      setCustomers(mappedCustomers);
+      const sortedCustomers = [...mappedCustomers].sort((a, b) => 
+        compareDates(a.order_date, b.order_date)
+      );
+      
+      setCustomers(sortedCustomers);
       
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
@@ -201,7 +237,7 @@ export default function Customers() {
 
   useEffect(() => {
     fetchCustomers();
-  }, [statusFilter, stateFilter, sortBy, sortDirection]);
+  }, [statusFilter, stateFilter, sortBy, sortDirection, currentPage]);
 
   const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
     setSearchQuery(e.target.value);
@@ -235,6 +271,11 @@ export default function Customers() {
       setSortBy(field);
       setSortDirection("desc");
     }
+  };
+
+  const handlePageChange = (page: number) => {
+    if (page < 1 || page > totalPages) return;
+    setCurrentPage(page);
   };
 
   const filteredCustomers = customers.filter(
@@ -308,6 +349,55 @@ export default function Customers() {
     return null;
   };
 
+  const renderPaginationItems = () => {
+    const items = [];
+    
+    if (currentPage > 3) {
+      items.push(
+        <PaginationItem key="ellipsis1">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+    
+    for (let i = Math.max(2, currentPage - 1); i <= Math.min(totalPages - 1, currentPage + 1); i++) {
+      if (i === 1 || i === totalPages) continue;
+      items.push(
+        <PaginationItem key={i}>
+          <PaginationLink 
+            isActive={currentPage === i} 
+            onClick={() => handlePageChange(i)}
+          >
+            {i}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+    
+    if (currentPage < totalPages - 2) {
+      items.push(
+        <PaginationItem key="ellipsis2">
+          <PaginationEllipsis />
+        </PaginationItem>
+      );
+    }
+    
+    if (totalPages > 1) {
+      items.push(
+        <PaginationItem key="last">
+          <PaginationLink 
+            isActive={currentPage === totalPages} 
+            onClick={() => handlePageChange(totalPages)}
+          >
+            {totalPages}
+          </PaginationLink>
+        </PaginationItem>
+      );
+    }
+    
+    return items;
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -320,7 +410,7 @@ export default function Customers() {
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
               <span className="text-sm text-muted-foreground">Total Customers</span>
-              <span className="text-3xl font-bold mt-1">{customerStats.totalCustomers}</span>
+              <span className="text-3xl font-bold mt-1">{totalCustomers}</span>
             </div>
             <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
               <Users className="h-6 w-6 text-blue-500" />
@@ -552,16 +642,45 @@ export default function Customers() {
                 : "No customers found. Add your first customer to get started."}
             </div>
           ) : (
-            <Accordion type="single" collapsible className="w-full">
-              {filteredCustomers.map((customer) => (
-                <CustomerDetails
-                  key={customer.id}
-                  customer={customer}
-                  onEdit={() => handleEditCustomer(customer)}
-                  onDelete={() => handleDeleteCustomer(customer)}
-                />
-              ))}
-            </Accordion>
+            <>
+              <Accordion type="single" collapsible className="w-full">
+                {filteredCustomers.map((customer, index) => (
+                  <CustomerDetails
+                    key={customer.id}
+                    customer={customer}
+                    onEdit={() => handleEditCustomer(customer)}
+                    onDelete={() => handleDeleteCustomer(customer)}
+                    index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
+                  />
+                ))}
+              </Accordion>
+              
+              {totalPages > 1 && (
+                <Pagination className="mt-6">
+                  <PaginationContent>
+                    <PaginationItem>
+                      <PaginationPrevious 
+                        onClick={() => handlePageChange(currentPage - 1)}
+                        aria-disabled={currentPage === 1}
+                        tabIndex={currentPage === 1 ? -1 : 0}
+                        className={currentPage === 1 ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                    
+                    {renderPaginationItems()}
+                    
+                    <PaginationItem>
+                      <PaginationNext 
+                        onClick={() => handlePageChange(currentPage + 1)}
+                        aria-disabled={currentPage === totalPages}
+                        tabIndex={currentPage === totalPages ? -1 : 0}
+                        className={currentPage === totalPages ? "pointer-events-none opacity-50" : ""}
+                      />
+                    </PaginationItem>
+                  </PaginationContent>
+                </Pagination>
+              )}
+            </>
           )}
         </CardContent>
       </Card>
