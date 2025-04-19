@@ -31,7 +31,6 @@ interface CustomerFormProps {
   malaysianStates?: string[];
 }
 
-// Function to get time period based on current time
 const getTimePeriod = (timeString: string) => {
   const time = new Date(`2000-01-01T${timeString}`);
   const hours = time.getHours();
@@ -171,16 +170,30 @@ export function CustomerForm({
   };
   
   const handleVariationChange = (variationName: string, price: number, cost: number) => {
-    const salesAmount = price;
-    const grossProfit = price - cost;
+    const paidAmount = price;
+    const grossProfit = paidAmount - cost;
     
     setFormData(prev => ({
       ...prev,
       product_variation: variationName,
-      sales_amount: salesAmount,
+      sales_amount: price,
       gross_profit: grossProfit,
-      paid_amount: salesAmount
+      paid_amount: paidAmount
     }));
+  };
+
+  const handlePaidAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const paidAmount = Number(e.target.value);
+    const selectedVariation = variations.find(v => v.name === formData.product_variation);
+    
+    if (selectedVariation) {
+      const newGrossProfit = paidAmount - selectedVariation.cost;
+      setFormData(prev => ({
+        ...prev,
+        paid_amount: paidAmount,
+        gross_profit: newGrossProfit
+      }));
+    }
   };
 
   const getStatusBadgeVariant = (status: string) => {
@@ -192,7 +205,6 @@ export function CustomerForm({
     }
   };
 
-  // Add a new input for paid amount and order time display
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
@@ -271,7 +283,7 @@ export function CustomerForm({
         <DialogHeader>
           <DialogTitle>{customer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
         </DialogHeader>
-        <form onSubmit={handleSubmit} className="space-y-4 py-4">
+        <form onSubmit={handleSubmit} className="space-y-4">
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
             <div className="space-y-2">
               <Label htmlFor="name">Name</Label>
@@ -435,49 +447,55 @@ export function CustomerForm({
           )}
           
           {formData.product_variation && (
-            <div className="mt-4 p-4 bg-muted rounded-md">
-              <div className="text-sm font-medium mb-2">Order Summary</div>
-              <div className="flex justify-between mb-1">
-                <span>Selected Variation:</span>
-                <span>{formData.product_variation}</span>
-              </div>
-              <div className="flex justify-between mb-1">
-                <span>Sales Amount:</span>
-                <span>RM {formData.sales_amount.toFixed(2)}</span>
-              </div>
-              <div className="flex justify-between font-medium">
-                <span>Gross Profit:</span>
-                <span>RM {formData.gross_profit.toFixed(2)}</span>
-              </div>
-              
-            <div className="flex justify-between mb-1">
-              <span>Jumlah Dibayar Pelanggan:</span>
-              <Input
-                type="number"
-                value={formData.paid_amount}
-                onChange={(e) => setFormData(prev => ({
-                  ...prev, 
-                  paid_amount: Number(e.target.value)
-                }))}
-                className="w-32 text-right"
-                placeholder="RM 0.00"
-              />
-            </div>
-            
-            {formData.order_time && (
-              <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
-                <span>Masa Tempahan:</span>
-                <div className="flex items-center gap-2">
-                  <Badge variant="secondary">
-                    {formData.order_time} 
-                    {` (${getTimePeriod(formData.order_time)})`}
-                  </Badge>
+            <>
+              <div className="space-y-2">
+                <Label htmlFor="paid_amount">Jumlah Dibayar Pelanggan</Label>
+                <div className="relative">
+                  <span className="absolute left-3 top-2.5">RM</span>
+                  <Input
+                    id="paid_amount"
+                    type="number"
+                    step="0.01"
+                    min="0"
+                    value={formData.paid_amount}
+                    onChange={handlePaidAmountChange}
+                    className="pl-10"
+                    required
+                  />
                 </div>
               </div>
-            )}
-          </div>
-        )}
-        
+
+              <div className="mt-4 p-4 bg-muted rounded-md">
+                <div className="text-sm font-medium mb-2">Order Summary</div>
+                <div className="flex justify-between mb-1">
+                  <span>Selected Variation:</span>
+                  <span>{formData.product_variation}</span>
+                </div>
+                <div className="flex justify-between mb-1">
+                  <span>Sales Amount:</span>
+                  <span>RM {formData.sales_amount.toFixed(2)}</span>
+                </div>
+                <div className="flex justify-between font-medium">
+                  <span>Gross Profit:</span>
+                  <span className={formData.gross_profit < 0 ? 'text-destructive' : ''}>
+                    RM {formData.gross_profit.toFixed(2)}
+                  </span>
+                </div>
+                
+                {formData.order_time && (
+                  <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
+                    <span>Masa Tempahan:</span>
+                    <div className="flex items-center gap-2">
+                      <Badge variant="secondary">
+                        {formData.order_time} 
+                        {` (${getTimePeriod(formData.order_time)})`}
+                      </Badge>
+                    </div>
+                  </div>
+                )}
+              </div>
+            </>
+          )}
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
