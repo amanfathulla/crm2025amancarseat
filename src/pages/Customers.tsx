@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -46,6 +46,7 @@ import {
 import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { compareDates, formatCurrency } from "@/lib/utils";
+import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -84,6 +85,7 @@ export default function Customers() {
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
+  const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   
   useEffect(() => {
     const status = searchParams.get("status");
@@ -560,6 +562,16 @@ export default function Customers() {
               />
             </div>
             
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDownloadDialogOpen(true)}
+              className="whitespace-nowrap"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Muat Turun
+            </Button>
+            
             <DropdownMenu>
               <DropdownMenuTrigger asChild>
                 <Button size="icon" variant="outline" className="h-10 w-10">
@@ -717,6 +729,13 @@ export default function Customers() {
           customerEmail={selectedCustomer.email}
           customerName={selectedCustomer.name}
           onSuccess={fetchCustomers}
+        />
+      )}
+
+      {isDownloadDialogOpen && (
+        <DownloadCustomersDialog
+          isOpen={isDownloadDialogOpen}
+          onClose={() => setIsDownloadDialogOpen(false)}
         />
       )}
     </MainLayout>
