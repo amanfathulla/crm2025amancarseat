@@ -21,6 +21,7 @@ export type Database = {
           name: string
           order_date: string | null
           order_status: string
+          order_time: string | null
           paid_amount: number | null
           phone: string | null
           product: string | null
@@ -43,6 +44,7 @@ export type Database = {
           name: string
           order_date?: string | null
           order_status?: string
+          order_time?: string | null
           paid_amount?: number | null
           phone?: string | null
           product?: string | null
@@ -65,6 +67,7 @@ export type Database = {
           name?: string
           order_date?: string | null
           order_status?: string
+          order_time?: string | null
           paid_amount?: number | null
           phone?: string | null
           product?: string | null

@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
@@ -13,8 +12,18 @@ interface CustomerDetailsProps {
   customer: Customer;
   onEdit: () => void;
   onDelete: () => void;
-  index: number; // Added index prop for numbering
+  index: number;
 }
+
+const getTimePeriod = (timeString: string) => {
+  const time = new Date(`2000-01-01T${timeString}`);
+  const hours = time.getHours();
+  
+  if (hours >= 6 && hours < 12) return "Pagi";
+  if (hours >= 12 && hours < 18) return "Petang";
+  if (hours >= 18 && hours < 24) return "Malam";
+  return "Lewat Malam";
+};
 
 export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerDetailsProps) {
   const formatDate = (dateString: string) => {
@@ -78,10 +87,22 @@ export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerD
               <div>{formatCurrency(customer.gross_profit)}</div>
             </div>
             <div>
-              <div className="font-medium mb-1">Paid Amount</div>
+              <div className="font-medium mb-1">Jumlah Dibayar</div>
               <div>{formatCurrency(customer.paid_amount)}</div>
             </div>
           </div>
+          
+          {customer.order_time && (
+            <div className="mt-2">
+              <div className="font-medium mb-1">Masa Tempahan</div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {customer.order_time} 
+                  {` (${getTimePeriod(customer.order_time)})`}
+                </Badge>
+              </div>
+            </div>
+          )}
           
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" size="sm" onClick={onEdit}>

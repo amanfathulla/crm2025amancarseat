@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,7 +31,24 @@ interface CustomerFormProps {
   malaysianStates?: string[];
 }
 
-export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianStates = defaultMalaysianStates }: CustomerFormProps) {
+// Function to get time period based on current time
+const getTimePeriod = (timeString: string) => {
+  const time = new Date(`2000-01-01T${timeString}`);
+  const hours = time.getHours();
+  
+  if (hours >= 6 && hours < 12) return "Pagi";
+  if (hours >= 12 && hours < 18) return "Petang";
+  if (hours >= 18 && hours < 24) return "Malam";
+  return "Lewat Malam";
+};
+
+export function CustomerForm({ 
+  isOpen, 
+  onClose, 
+  customer, 
+  onSuccess, 
+  malaysianStates = defaultMalaysianStates 
+}: CustomerFormProps) {
   const { toast } = useToast();
   const [formData, setFormData] = useState<CustomerFormData>(
     customer || {
@@ -48,6 +64,11 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
       gross_profit: 0,
       paid_amount: 0,
       order_status: "processing",
+      order_time: new Date().toLocaleTimeString('en-US', { 
+        hour: '2-digit', 
+        minute: '2-digit', 
+        hour12: true 
+      })
     }
   );
   const [isLoading, setIsLoading] = useState(false);
@@ -171,11 +192,14 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
     }
   };
 
+  // Add a new input for paid amount and order time display
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     setIsLoading(true);
 
     try {
+      const timePeriod = getTimePeriod(formData.order_time || '');
+      
       if (customer) {
         const { error } = await supabase
           .from("customers")
@@ -189,16 +213,17 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
-            paid_amount: formData.paid_amount, // Ensure this property is included
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
             order_status: formData.order_status,
+            order_time: formData.order_time
           })
           .eq("email", customer.email);
 
         if (error) throw error;
         toast({
           title: "Customer updated",
-          description: "Customer information has been updated successfully.",
+          description: `Customer information updated. Order time: ${formData.order_time} (${timePeriod})`,
         });
       } else {
         const { error } = await supabase.from("customers").insert([
@@ -212,16 +237,17 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
             product_variation: formData.product_variation,
             sales_amount: formData.sales_amount,
             gross_profit: formData.gross_profit,
-            paid_amount: formData.paid_amount, // Ensure this property is included
+            paid_amount: formData.paid_amount,
             order_date: formData.order_date,
             order_status: formData.order_status,
+            order_time: formData.order_time
           },
         ]);
 
         if (error) throw error;
         toast({
           title: "Customer added",
-          description: "New customer has been added successfully.",
+          description: `New customer added. Order time: ${formData.order_time} (${timePeriod})`,
         });
       }
 
@@ -423,17 +449,35 @@ export function CustomerForm({ isOpen, onClose, customer, onSuccess, malaysianSt
                 <span>Gross Profit:</span>
                 <span>RM {formData.gross_profit.toFixed(2)}</span>
               </div>
-              <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
-                <span>Order Status:</span>
-                <Badge variant={getStatusBadgeVariant(formData.order_status)}>
-                  {formData.order_status === "processing" ? "In Process" : 
-                   formData.order_status === "completed" ? "Completed" : 
-                   formData.order_status === "cancelled" ? "Cancelled" : 
-                   formData.order_status}
-                </Badge>
-              </div>
+              
+            <div className="flex justify-between mb-1">
+              <span>Jumlah Dibayar Pelanggan:</span>
+              <Input
+                type="number"
+                value={formData.paid_amount}
+                onChange={(e) => setFormData(prev => ({
+                  ...prev, 
+                  paid_amount: Number(e.target.value)
+                }))}
+                className="w-32 text-right"
+                placeholder="RM 0.00"
+              />
             </div>
-          )}
+            
+            {formData.order_time && (
+              <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
+                <span>Masa Tempahan:</span>
+                <div className="flex items-center gap-2">
+                  <Badge variant="secondary">
+                    {formData.order_time} 
+                    {` (${getTimePeriod(formData.order_time)})`}
+                  </Badge>
+                </div>
+              </div>
+            )}
+          </div>
+        )}
+        
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>

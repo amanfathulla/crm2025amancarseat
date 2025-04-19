@@ -1,4 +1,3 @@
-
 export interface Customer {
   id: string;
   name: string;
@@ -32,4 +31,5 @@ export interface CustomerFormData {
   paid_amount: number; // This field is already here
   order_date: string;
   order_status: string; // Added for order status tracking
+  order_time?: string; // Optional field for order time
 }
