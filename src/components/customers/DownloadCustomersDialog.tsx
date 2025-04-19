@@ -75,10 +75,10 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         return;
       }
 
-      // Format data for export
+      // Format data for export - ensure phone numbers are properly formatted
       const formattedData = data.map(customer => ({
         "Nama": customer.name,
-        "No. Telefon": customer.phone,
+        "No. Telefon": `'${customer.phone}`, // Add leading apostrophe to preserve leading zeros
         "Email": customer.email,
         "Tarikh Daftar": formatDate(new Date(customer.created_at), "dd/MM/yyyy"),
         "Jumlah Pesanan": customer.total_orders,
@@ -90,7 +90,10 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         const headers = Object.keys(formattedData[0]);
         const csv = [
           headers.join(","),
-          ...formattedData.map(row => headers.map(header => `"${row[header]}"`).join(","))
+          ...formattedData.map(row => headers.map(header => {
+            // Ensure all cells are properly quoted to preserve formatting
+            return `"${row[header]}"`;
+          }).join(","))
         ].join("\n");
 
         // Create and download file
@@ -100,11 +103,14 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         link.download = `pelanggan_${selectedYear}_${selectedMonth !== "all" ? selectedMonth : "semua"}.csv`;
         link.click();
       } else {
-        // For Excel, we'll use CSV with a different extension
+        // For Excel, we'll use CSV with tab separator and special formatting for numbers
         const headers = Object.keys(formattedData[0]);
         const csv = [
           headers.join("\t"),
-          ...formattedData.map(row => headers.map(header => `"${row[header]}"`).join("\t"))
+          ...formattedData.map(row => headers.map(header => {
+            // Ensure all cells are properly quoted to preserve formatting
+            return `"${row[header]}"`;
+          }).join("\t"))
         ].join("\n");
 
         const blob = new Blob([csv], { type: "application/vnd.ms-excel" });
