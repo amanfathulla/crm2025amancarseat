@@ -2,20 +2,13 @@ import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { CustomerFormData } from "@/types/customer";
 import { Product, ProductVariation } from "@/types/product";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { 
-  Select, 
-  SelectContent, 
-  SelectItem, 
-  SelectTrigger, 
-  SelectValue 
-} from "@/components/ui/select";
-import { Card, CardContent } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
+import { CustomerInformation } from "./form/CustomerInformation";
+import { ProductSelection } from "./form/ProductSelection";
+import { PaymentDetails } from "./form/PaymentDetails";
+import { OrderStatus } from "./form/OrderStatus";
 
 const defaultMalaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -284,218 +277,45 @@ export function CustomerForm({
           <DialogTitle>{customer ? "Edit Customer" : "Add New Customer"}</DialogTitle>
         </DialogHeader>
         <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
-            <div className="space-y-2">
-              <Label htmlFor="name">Name</Label>
-              <Input
-                id="name"
-                name="name"
-                value={formData.name}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                name="email"
-                type="email"
-                value={formData.email}
-                onChange={handleChange}
-                required
-                readOnly={!!customer}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                name="phone"
-                value={formData.phone}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="location">State (Negeri)</Label>
-              <Select
-                value={formData.location}
-                onValueChange={(value) => handleSelectChange("location", value)}
-              >
-                <SelectTrigger id="location" className="w-full">
-                  <SelectValue placeholder="Select state" />
-                </SelectTrigger>
-                <SelectContent>
-                  {malaysianStates.map((state) => (
-                    <SelectItem key={state} value={state}>
-                      {state}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="car_model">Car Model</Label>
-              <Input
-                id="car_model"
-                name="car_model"
-                value={formData.car_model}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="product">Product</Label>
-              <Select
-                value={formData.product}
-                onValueChange={(value) => handleSelectChange("product", value)}
-              >
-                <SelectTrigger id="product" className="w-full">
-                  <SelectValue placeholder="Select a product" />
-                </SelectTrigger>
-                <SelectContent>
-                  {loadingProducts ? (
-                    <SelectItem value="loading" disabled>
-                      Loading products...
-                    </SelectItem>
-                  ) : products.length === 0 ? (
-                    <SelectItem value="none" disabled>
-                      No products available
-                    </SelectItem>
-                  ) : (
-                    products.map((product) => (
-                      <SelectItem key={product.id} value={product.name}>
-                        {product.name}
-                      </SelectItem>
-                    ))
-                  )}
-                </SelectContent>
-              </Select>
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="order_date">Order Date</Label>
-              <Input
-                id="order_date"
-                name="order_date"
-                type="date"
-                value={formData.order_date}
-                onChange={handleChange}
-                required
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="order_status">Order Status</Label>
-              <Select
-                value={formData.order_status}
-                onValueChange={(value) => handleSelectChange("order_status", value)}
-              >
-                <SelectTrigger id="order_status" className="w-full">
-                  <SelectValue placeholder="Select status" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="processing">
-                    <div className="flex items-center">
-                      <Badge variant="secondary" className="mr-2">Processing</Badge>
-                      <span>Order In Process</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="completed">
-                    <div className="flex items-center">
-                      <Badge variant="default" className="mr-2">Completed</Badge>
-                      <span>Order Completed</span>
-                    </div>
-                  </SelectItem>
-                  <SelectItem value="cancelled">
-                    <div className="flex items-center">
-                      <Badge variant="destructive" className="mr-2">Cancelled</Badge>
-                      <span>Order Cancelled</span>
-                    </div>
-                  </SelectItem>
-                </SelectContent>
-              </Select>
-            </div>
-          </div>
-          
-          {formData.product && (
-            <div className="mt-4">
-              <Label>Product Variation</Label>
-              <div className="grid grid-cols-1 gap-2 mt-2">
-                {loadingVariations ? (
-                  <div className="text-sm text-muted-foreground py-2">Loading variations...</div>
-                ) : variations.length === 0 ? (
-                  <div className="text-sm text-muted-foreground py-2">No variations available for this product</div>
-                ) : (
-                  variations.map((variation) => (
-                    <Card 
-                      key={variation.id} 
-                      className={`cursor-pointer hover:bg-accent transition-colors ${formData.product_variation === variation.name ? 'border-primary' : ''}`}
-                      onClick={() => handleVariationChange(variation.name, variation.price, variation.cost)}
-                    >
-                      <CardContent className="p-3 flex justify-between items-center">
-                        <div>
-                          <div className="font-medium">{variation.name}</div>
-                          <div className="text-sm text-muted-foreground">Price: RM {variation.price.toFixed(2)}</div>
-                        </div>
-                        <div className={`w-4 h-4 rounded-full border ${formData.product_variation === variation.name ? 'bg-primary border-primary' : 'border-muted'}`}></div>
-                      </CardContent>
-                    </Card>
-                  ))
-                )}
-              </div>
-            </div>
-          )}
-          
-          {formData.product_variation && (
-            <>
-              <div className="space-y-2">
-                <Label htmlFor="paid_amount">Jumlah Dibayar Pelanggan</Label>
-                <div className="relative">
-                  <span className="absolute left-3 top-2.5">RM</span>
-                  <Input
-                    id="paid_amount"
-                    type="number"
-                    step="0.01"
-                    min="0"
-                    value={formData.paid_amount}
-                    onChange={handlePaidAmountChange}
-                    className="pl-10"
-                    required
-                  />
-                </div>
-              </div>
+          <CustomerInformation
+            name={formData.name}
+            email={formData.email}
+            phone={formData.phone}
+            location={formData.location}
+            carModel={formData.car_model}
+            malaysianStates={malaysianStates}
+            isEditing={!!customer}
+            onChange={handleChange}
+            onSelectChange={handleSelectChange}
+          />
 
-              <div className="mt-4 p-4 bg-muted rounded-md">
-                <div className="text-sm font-medium mb-2">Order Summary</div>
-                <div className="flex justify-between mb-1">
-                  <span>Selected Variation:</span>
-                  <span>{formData.product_variation}</span>
-                </div>
-                <div className="flex justify-between mb-1">
-                  <span>Sales Amount:</span>
-                  <span>RM {formData.sales_amount.toFixed(2)}</span>
-                </div>
-                <div className="flex justify-between font-medium">
-                  <span>Gross Profit:</span>
-                  <span className={formData.gross_profit < 0 ? 'text-destructive' : ''}>
-                    RM {formData.gross_profit.toFixed(2)}
-                  </span>
-                </div>
-                
-                {formData.order_time && (
-                  <div className="flex justify-between mt-2 pt-2 border-t border-muted-foreground/20">
-                    <span>Masa Tempahan:</span>
-                    <div className="flex items-center gap-2">
-                      <Badge variant="secondary">
-                        {formData.order_time} 
-                        {` (${getTimePeriod(formData.order_time)})`}
-                      </Badge>
-                    </div>
-                  </div>
-                )}
-              </div>
-            </>
-          )}
+          <OrderStatus
+            orderStatus={formData.order_status}
+            orderDate={formData.order_date}
+            onSelectChange={handleSelectChange}
+            onChange={handleChange}
+          />
+
+          <ProductSelection
+            product={formData.product}
+            productVariation={formData.product_variation}
+            products={products}
+            variations={variations}
+            loadingProducts={loadingProducts}
+            loadingVariations={loadingVariations}
+            onProductChange={handleSelectChange}
+            onVariationChange={handleVariationChange}
+          />
+
+          <PaymentDetails
+            productVariation={formData.product_variation}
+            salesAmount={formData.sales_amount}
+            grossProfit={formData.gross_profit}
+            paidAmount={formData.paid_amount}
+            orderTime={formData.order_time}
+            onPaidAmountChange={handlePaidAmountChange}
+            getTimePeriod={getTimePeriod}
+          />
           
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
