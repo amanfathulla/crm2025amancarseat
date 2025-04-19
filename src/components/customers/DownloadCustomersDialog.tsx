@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { format } from "date-fns";
+import { format as formatDate } from "date-fns";
 
 interface DownloadCustomersDialogProps {
   isOpen: boolean;
@@ -34,7 +34,7 @@ const months = [
 export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDialogProps) {
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [format, setFormat] = useState<"csv" | "excel">("csv");
+  const [fileFormat, setFileFormat] = useState<"csv" | "excel">("csv");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
 
@@ -80,13 +80,13 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         "Nama": customer.name,
         "No. Telefon": customer.phone,
         "Email": customer.email,
-        "Tarikh Daftar": format(new Date(customer.created_at), "dd/MM/yyyy"),
+        "Tarikh Daftar": formatDate(new Date(customer.created_at), "dd/MM/yyyy"),
         "Jumlah Pesanan": customer.total_orders,
         "Negeri": customer.city
       }));
 
       // Convert to CSV/Excel format
-      if (format === "csv") {
+      if (fileFormat === "csv") {
         const headers = Object.keys(formattedData[0]);
         const csv = [
           headers.join(","),
@@ -176,7 +176,7 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
 
           <div className="grid grid-cols-4 items-center gap-4">
             <label className="text-right text-sm">Format</label>
-            <Select value={format} onValueChange={(value: "csv" | "excel") => setFormat(value)}>
+            <Select value={fileFormat} onValueChange={(value: "csv" | "excel") => setFileFormat(value)}>
               <SelectTrigger className="col-span-3">
                 <SelectValue placeholder="Pilih format fail" />
               </SelectTrigger>
