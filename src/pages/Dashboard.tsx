@@ -1,8 +1,7 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Calendar, ShoppingBag, PackageCheck, PackageX, DollarSign, BarChart4, TrendingUp, Package, ShoppingCart } from "lucide-react";
+import { Calendar, ShoppingCart, DollarSign, BarChart4, TrendingUp, Package, ShoppingBag, PackageCheck, PackageX } from "lucide-react";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from "recharts";
 import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
@@ -347,37 +346,7 @@ export default function Dashboard() {
         </Card>
       </section>
       
-      {/* Order & Gross Profit Stats */}
-      <section className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up delay-400">
-        <StatCard 
-          title="Order Dalam Proses" 
-          value={revenueData.orders.processing.toString()} 
-          icon={ShoppingBag}
-          iconColor="text-blue-500"
-          iconBg="bg-blue-100 dark:bg-blue-900/20"
-        />
-        <StatCard 
-          title="Order Selesai" 
-          value={revenueData.orders.completed.toString()}
-          icon={PackageCheck}
-          iconColor="text-green-500" 
-          iconBg="bg-green-100 dark:bg-green-900/20"
-        />
-        <StatCard 
-          title="Order Dibatalkan" 
-          value={revenueData.orders.cancelled.toString()}
-          icon={PackageX}
-          iconColor="text-red-500"
-          iconBg="bg-red-100 dark:bg-red-900/20"
-        />
-        <StatCard 
-          title="Pesanan Bulan Ini" 
-          value={revenueData.orders.thisMonth.toString()}
-          icon={ShoppingCart}
-          iconColor="text-purple-500"
-          iconBg="bg-purple-100 dark:bg-purple-900/20"
-        />
-      </section>
+      {/* Removed the Order Status cards as requested */}
       
       {/* Gross Profit Stats */}
       <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up delay-500">

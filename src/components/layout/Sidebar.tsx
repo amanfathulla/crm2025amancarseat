@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -12,9 +13,6 @@ import {
   Menu,
   X,
   LogOut,
-  ShoppingBag,
-  PackageCheck,
-  PackageX,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -106,21 +104,18 @@ export function Sidebar() {
           variant: "secondary", 
           tooltip: "Orders In Process",
           onClick: () => handleOrderFilter('processing'),
-          icon: ShoppingBag
         },
         { 
           label: `${orderCounts.completed}`, 
           variant: "default", 
           tooltip: "Completed Orders",
           onClick: () => handleOrderFilter('completed'),
-          icon: PackageCheck
         },
         { 
           label: `${orderCounts.cancelled}`, 
           variant: "destructive", 
           tooltip: "Cancelled Orders",
           onClick: () => handleOrderFilter('cancelled'),
-          icon: PackageX
         }
       ]
     },
@@ -144,14 +139,14 @@ export function Sidebar() {
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 flex flex-col",
           "border-r shadow-sm transition-all duration-300 ease-in-out",
-          "bg-sidebar text-sidebar-foreground",
+          "bg-black text-white",
           sidebarWidth,
           isMobile && "transition-transform",
           isMobile && !mobileOpen && "-translate-x-full",
           isMobile && mobileOpen && "w-64 translate-x-0"
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-sidebar/80 backdrop-blur-sm">
+        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-sm">
           {(expanded || isMobile) && (
             <h2 className="text-xl font-bold animate-fade-in">Admin Panel</h2>
           )}
@@ -160,7 +155,7 @@ export function Sidebar() {
             variant="ghost" 
             size="icon"
             className={cn(
-              "h-8 w-8",
+              "h-8 w-8 text-white hover:bg-white/10",
               !expanded && !isMobile && "ml-auto"
             )}
           >
@@ -186,38 +181,34 @@ export function Sidebar() {
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
                     isActive 
-                      ? "bg-black text-white font-medium" 
-                      : "hover:bg-gray-100 text-sidebar-foreground",
+                      ? "bg-white text-black font-medium" 
+                      : "hover:bg-white/10 text-white/80",
                     !expanded && !isMobile && "justify-center px-2"
                   )}
                   onClick={() => isMobile && setMobileOpen(false)}
                 >
-                  <Icon size={20} className={isActive ? "text-white" : "text-gray-600"} />
+                  <Icon size={20} className={isActive ? "text-black" : ""} />
                   {(expanded || isMobile) && (
                     <>
                       <span className="animate-fade-in">{item.title}</span>
                       
                       {item.badges && (
                         <div className="ml-auto flex items-center gap-1.5">
-                          {item.badges.map((badge, index) => {
-                            const BadgeIcon = badge.icon;
-                            return (
-                              <Badge 
-                                key={index} 
-                                variant={badge.variant as any}
-                                className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2"
-                                title={badge.tooltip}
-                                onClick={(e) => {
-                                  e.preventDefault();
-                                  e.stopPropagation();
-                                  badge.onClick();
-                                }}
-                              >
-                                <BadgeIcon size={12} />
-                                {badge.label}
-                              </Badge>
-                            );
-                          })}
+                          {item.badges.map((badge, index) => (
+                            <Badge 
+                              key={index} 
+                              variant={badge.variant as any}
+                              className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2"
+                              title={badge.tooltip}
+                              onClick={(e) => {
+                                e.preventDefault();
+                                e.stopPropagation();
+                                badge.onClick();
+                              }}
+                            >
+                              {badge.label}
+                            </Badge>
+                          ))}
                         </div>
                       )}
                     </>
@@ -226,25 +217,21 @@ export function Sidebar() {
                 
                 {!expanded && !isMobile && item.badges && (
                   <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
-                    {item.badges.map((badge, index) => {
-                      const BadgeIcon = badge.icon;
-                      return (
-                        <Badge 
-                          key={index} 
-                          variant={badge.variant as any}
-                          className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-1.5"
-                          title={badge.tooltip}
-                          onClick={(e) => {
-                            e.preventDefault();
-                            e.stopPropagation();
-                            badge.onClick();
-                          }}
-                        >
-                          <BadgeIcon size={12} />
-                          {badge.label}
-                        </Badge>
-                      );
-                    })}
+                    {item.badges.map((badge, index) => (
+                      <Badge 
+                        key={index} 
+                        variant={badge.variant as any}
+                        className="h-5 min-w-5 cursor-pointer flex justify-center items-center px-1"
+                        title={badge.tooltip}
+                        onClick={(e) => {
+                          e.preventDefault();
+                          e.stopPropagation();
+                          badge.onClick();
+                        }}
+                      >
+                        {badge.label}
+                      </Badge>
+                    ))}
                   </div>
                 )}
               </div>
@@ -252,12 +239,12 @@ export function Sidebar() {
           })}
         </nav>
         
-        <div className="p-3 mt-auto border-t">
+        <div className="p-3 mt-auto border-t border-white/10">
           <Button
             variant="ghost"
             onClick={logout}
             className={cn(
-              "w-full flex items-center gap-3 text-sidebar-foreground hover:bg-gray-100",
+              "w-full flex items-center gap-3 text-white/80 hover:bg-white/10 hover:text-white",
               !expanded && !isMobile && "justify-center px-2"
             )}
           >
@@ -274,7 +261,7 @@ export function Sidebar() {
           onClick={toggleSidebar}
           variant="outline"
           size="icon"
-          className="fixed top-4 left-4 z-40 h-10 w-10 shadow-md"
+          className="fixed top-4 left-4 z-40 h-10 w-10 shadow-md bg-black text-white border-white/20 hover:bg-black/80"
         >
           <Menu size={20} />
         </Button>
