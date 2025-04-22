@@ -47,6 +47,8 @@ import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { compareDates, formatCurrency } from "@/lib/utils";
 import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
+import { Checkbox } from "@/components/ui/checkbox";
+import { BulkDeleteCustomersDialog } from "@/components/customers/BulkDeleteCustomersDialog";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -86,6 +88,8 @@ export default function Customers() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
     const status = searchParams.get("status");
@@ -400,6 +404,22 @@ export default function Customers() {
     return items;
   };
 
+  const handleSelectAll = (checked: boolean) => {
+    if (checked) {
+      setSelectedCustomers(filteredCustomers.map(customer => customer.id));
+    } else {
+      setSelectedCustomers([]);
+    }
+  };
+
+  const handleSelectCustomer = (customerId: string, checked: boolean) => {
+    if (checked) {
+      setSelectedCustomers(prev => [...prev, customerId]);
+    } else {
+      setSelectedCustomers(prev => prev.filter(id => id !== customerId));
+    }
+  };
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -524,34 +544,54 @@ export default function Customers() {
       
       <Card className="animate-fade-in delay-100 shadow-soft">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
-          <div>
-            <CardTitle className="font-semibold tracking-tight">All Customers</CardTitle>
-            <CardDescription>
-              {statusFilter || stateFilter ? (
-                <div className="flex items-center gap-2">
-                  <span>Filtered view</span>
-                  {statusFilter && (
-                    <Badge variant={
-                      statusFilter === 'processing' ? 'secondary' :
-                      statusFilter === 'completed' ? 'default' : 'destructive'
-                    }>
-                      {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
-                    </Badge>
-                  )}
-                  {stateFilter && (
-                    <Badge variant="outline" className="flex items-center gap-1">
-                      <MapPin size={12} />
-                      {stateFilter}
-                    </Badge>
-                  )}
-                  <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 px-2">
-                    Clear filters
-                  </Button>
-                </div>
-              ) : 'View and manage your customer list'}
-            </CardDescription>
+          <div className="flex items-center gap-4 w-full">
+            {filteredCustomers.length > 0 && (
+              <Checkbox 
+                checked={selectedCustomers.length === filteredCustomers.length}
+                onCheckedChange={(checked) => handleSelectAll(checked as boolean)}
+                className="h-5 w-5"
+              />
+            )}
+            <div className="flex items-center gap-2">
+              <CardTitle className="font-semibold tracking-tight">All Customers</CardTitle>
+              <CardDescription>
+                {statusFilter || stateFilter ? (
+                  <div className="flex items-center gap-2">
+                    <span>Filtered view</span>
+                    {statusFilter && (
+                      <Badge variant={
+                        statusFilter === 'processing' ? 'secondary' :
+                        statusFilter === 'completed' ? 'default' : 'destructive'
+                      }>
+                        {statusFilter.charAt(0).toUpperCase() + statusFilter.slice(1)}
+                      </Badge>
+                    )}
+                    {stateFilter && (
+                      <Badge variant="outline" className="flex items-center gap-1">
+                        <MapPin size={12} />
+                        {stateFilter}
+                      </Badge>
+                    )}
+                    <Button variant="ghost" size="sm" onClick={clearFilters} className="h-7 px-2">
+                      Clear filters
+                    </Button>
+                  </div>
+                ) : 'View and manage your customer list'}
+              </CardDescription>
+            </div>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {selectedCustomers.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsBulkDeleteDialogOpen(true)}
+                className="whitespace-nowrap"
+              >
+                <Trash2 className="h-4 w-4 mr-2" />
+                Hapus ({selectedCustomers.length})
+              </Button>
+            )}
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -657,13 +697,22 @@ export default function Customers() {
             <>
               <Accordion type="single" collapsible className="w-full">
                 {filteredCustomers.map((customer, index) => (
-                  <CustomerDetails
-                    key={customer.id}
-                    customer={customer}
-                    onEdit={() => handleEditCustomer(customer)}
-                    onDelete={() => handleDeleteCustomer(customer)}
-                    index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
-                  />
+                  <div key={customer.id} className="flex items-start gap-4">
+                    <Checkbox
+                      checked={selectedCustomers.includes(customer.id)}
+                      onCheckedChange={(checked) => 
+                        handleSelectCustomer(customer.id, checked as boolean)
+                      }
+                      className="mt-5 h-5 w-5"
+                    />
+                    <CustomerDetails
+                      customer={customer}
+                      onEdit={() => handleEditCustomer(customer)}
+                      onDelete={() => handleDeleteCustomer(customer)}
+                      index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
+                      className="flex-1"
+                    />
+                  </div>
                 ))}
               </Accordion>
               
@@ -736,6 +785,21 @@ export default function Customers() {
         <DownloadCustomersDialog
           isOpen={isDownloadDialogOpen}
           onClose={() => setIsDownloadDialogOpen(false)}
+        />
+      )}
+
+      {isBulkDeleteDialogOpen && (
+        <BulkDeleteCustomersDialog
+          isOpen={isBulkDeleteDialogOpen}
+          onClose={() => {
+            setIsBulkDeleteDialogOpen(false);
+            setSelectedCustomers([]);
+          }}
+          selectedCustomers={selectedCustomers}
+          onSuccess={() => {
+            fetchCustomers();
+            setSelectedCustomers([]);
+          }}
         />
       )}
     </MainLayout>
