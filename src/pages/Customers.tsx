@@ -47,6 +47,8 @@ import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { compareDates, formatCurrency } from "@/lib/utils";
 import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
+import { MassDeleteCustomersDialog } from "@/components/customers/MassDeleteCustomersDialog"
+import { Checkbox } from "@/components/ui/checkbox";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -86,6 +88,8 @@ export default function Customers() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
+  const [selectedCustomers, setSelectedCustomers] = useState<string[]>([])
+  const [isMassDeleteDialogOpen, setIsMassDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
     const status = searchParams.get("status");
@@ -400,6 +404,18 @@ export default function Customers() {
     return items;
   };
 
+  const handleSelectCustomer = (customerId: string) => {
+    setSelectedCustomers(prev => 
+      prev.includes(customerId)
+        ? prev.filter(id => id !== customerId)
+        : [...prev, customerId]
+    )
+  }
+
+  const handleSelectAll = (checked: boolean) => {
+    setSelectedCustomers(checked ? filteredCustomers.map(c => c.id) : [])
+  }
+
   return (
     <MainLayout>
       <section className="mb-8 animate-slide-up">
@@ -552,6 +568,16 @@ export default function Customers() {
             </CardDescription>
           </div>
           <div className="flex items-center gap-2 w-full sm:w-auto">
+            {selectedCustomers.length > 0 && (
+              <Button
+                variant="destructive"
+                size="sm"
+                onClick={() => setIsMassDeleteDialogOpen(true)}
+                className="whitespace-nowrap"
+              >
+                Hapus ({selectedCustomers.length})
+              </Button>
+            )}
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
@@ -655,6 +681,19 @@ export default function Customers() {
             </div>
           ) : (
             <>
+              <div className="mb-2 px-4 flex items-center gap-2">
+                <Checkbox
+                  checked={
+                    selectedCustomers.length === filteredCustomers.length &&
+                    filteredCustomers.length > 0
+                  }
+                  onCheckedChange={handleSelectAll}
+                  aria-label="Select all customers"
+                />
+                <span className="text-sm text-muted-foreground">
+                  Pilih Semua
+                </span>
+              </div>
               <Accordion type="single" collapsible className="w-full">
                 {filteredCustomers.map((customer, index) => (
                   <CustomerDetails
@@ -663,6 +702,8 @@ export default function Customers() {
                     onEdit={() => handleEditCustomer(customer)}
                     onDelete={() => handleDeleteCustomer(customer)}
                     index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
+                    isSelected={selectedCustomers.includes(customer.id)}
+                    onSelect={handleSelectCustomer}
                   />
                 ))}
               </Accordion>
@@ -736,6 +777,18 @@ export default function Customers() {
         <DownloadCustomersDialog
           isOpen={isDownloadDialogOpen}
           onClose={() => setIsDownloadDialogOpen(false)}
+        />
+      )}
+
+      {isMassDeleteDialogOpen && (
+        <MassDeleteCustomersDialog
+          isOpen={isMassDeleteDialogOpen}
+          onClose={() => {
+            setIsMassDeleteDialogOpen(false)
+            setSelectedCustomers([])
+          }}
+          selectedCustomers={selectedCustomers}
+          onSuccess={fetchCustomers}
         />
       )}
     </MainLayout>
