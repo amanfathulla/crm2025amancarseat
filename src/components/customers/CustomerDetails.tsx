@@ -1,124 +1,119 @@
-import { AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
-import { Button } from "@/components/ui/button"
-import { Checkbox } from "@/components/ui/checkbox"
-import { Badge } from "@/components/ui/badge"
-import { Pencil, Trash2, MoreHorizontal } from "lucide-react"
+import { Button } from "@/components/ui/button";
+import { Customer } from "@/types/customer";
+import { Badge } from "@/components/ui/badge";
 import {
-  DropdownMenu,
-  DropdownMenuContent,
-  DropdownMenuItem,
-  DropdownMenuTrigger,
-} from "@/components/ui/dropdown-menu"
-import { Customer } from "@/types/customer"
-import { formatDate, formatCurrency } from "@/lib/utils"
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from "@/components/ui/accordion";
+import { formatCurrency } from "@/lib/utils";
 
 interface CustomerDetailsProps {
-  customer: Customer
-  onEdit: () => void
-  onDelete: () => void
-  index: number
-  isSelected?: boolean
-  onSelect?: (customerId: string) => void
+  customer: Customer;
+  onEdit: () => void;
+  onDelete: () => void;
+  index: number;
 }
 
-export function CustomerDetails({
-  customer,
-  onEdit,
-  onDelete,
-  index,
-  isSelected = false,
-  onSelect,
-}: CustomerDetailsProps) {
+const getTimePeriod = (timeString: string) => {
+  const time = new Date(`2000-01-01T${timeString}`);
+  const hours = time.getHours();
+  
+  if (hours >= 6 && hours < 12) return "Pagi";
+  if (hours >= 12 && hours < 18) return "Petang";
+  if (hours >= 18 && hours < 24) return "Malam";
+  return "Lewat Malam";
+};
+
+export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerDetailsProps) {
+  const formatDate = (dateString: string) => {
+    if (!dateString) return "";
+    const date = new Date(dateString);
+    return date.toLocaleDateString();
+  };
+
+  const getStatusBadge = (status: string) => {
+    switch(status) {
+      case "processing":
+        return <Badge variant="secondary">In Process</Badge>;
+      case "completed":
+        return <Badge variant="default">Completed</Badge>;
+      case "cancelled":
+        return <Badge variant="destructive">Cancelled</Badge>;
+      default:
+        return <Badge variant="secondary">{status}</Badge>;
+    }
+  };
+
   return (
-    <AccordionItem value={`item-${index}`} className="border-b">
-      <div className="flex items-center gap-4">
-        {onSelect && (
-          <div className="pl-4">
-            <Checkbox
-              checked={isSelected}
-              onCheckedChange={() => onSelect(customer.id)}
-              aria-label={`Select ${customer.name}`}
-            />
-          </div>
-        )}
-        <AccordionTrigger className="hover:no-underline hover:bg-accent/50 px-4 py-2 [&[data-state=open]]:bg-accent/50 flex-1">
-          <div className="flex items-center justify-between w-full">
-            <div className="flex items-center gap-4">
-              <span className="w-8 text-right">{index}.</span>
-              <div className="flex flex-col">
-                <span className="font-medium">{customer.name}</span>
-                <span className="text-sm text-muted-foreground">{customer.email}</span>
-              </div>
-              {customer.order_status && (
-                <Badge
-                  variant={
-                    customer.order_status === "processing"
-                      ? "secondary"
-                      : customer.order_status === "completed"
-                      ? "default"
-                      : "destructive"
-                  }
-                >
-                  {customer.order_status}
-                </Badge>
-              )}
+    <AccordionItem value={customer.id} className="border-b">
+      <AccordionTrigger className="hover:no-underline hover:bg-muted/50 px-4">
+        <span className="flex items-center text-base font-medium">
+          <span className="inline-block w-8 text-right mr-3 text-muted-foreground">{index}.</span>
+          {customer.name}
+        </span>
+      </AccordionTrigger>
+      <AccordionContent>
+        <div className="px-4 py-2 grid gap-4 text-sm">
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            <div>
+              <div className="font-medium mb-1">Contact Information</div>
+              <div>Email: {customer.email}</div>
+              <div>Phone: {customer.phone || 'N/A'}</div>
+              <div>Location: {customer.location || 'N/A'}</div>
             </div>
-            <DropdownMenu>
-              <DropdownMenuTrigger asChild>
-                <Button variant="ghost" className="h-8 w-8 p-0">
-                  <span className="sr-only">Open menu</span>
-                  <MoreHorizontal className="h-4 w-4" />
-                </Button>
-              </DropdownMenuTrigger>
-              <DropdownMenuContent align="end">
-                <DropdownMenuItem onClick={onEdit}>
-                  <Pencil className="mr-2 h-4 w-4" /> Edit
-                </DropdownMenuItem>
-                <DropdownMenuItem onClick={onDelete}>
-                  <Trash2 className="mr-2 h-4 w-4" /> Delete
-                </DropdownMenuItem>
-              </DropdownMenuContent>
-            </DropdownMenu>
+            
+            <div>
+              <div className="font-medium mb-1">Product Details</div>
+              <div>Car Model: {customer.car_model || 'N/A'}</div>
+              <div>Product: {customer.product || 'N/A'}</div>
+              <div>Variation: {customer.product_variation || 'N/A'}</div>
+            </div>
+            
+            <div>
+              <div className="font-medium mb-1">Order Information</div>
+              <div>Order Date: {formatDate(customer.order_date)}</div>
+              <div>Status: {getStatusBadge(customer.order_status || 'processing')}</div>
+            </div>
           </div>
-        </AccordionTrigger>
-      </div>
-      <AccordionContent className="px-4 py-2">
-        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div>
-            <h4 className="font-semibold">Customer Information</h4>
-            <p>
-              <strong>Phone:</strong> {customer.phone}
-            </p>
-            <p>
-              <strong>Location:</strong> {customer.location}
-            </p>
-            <p>
-              <strong>Car Model:</strong> {customer.car_model}
-            </p>
-            <p>
-              <strong>Product:</strong> {customer.product}
-            </p>
-            <p>
-              <strong>Product Variation:</strong> {customer.product_variation}
-            </p>
+          
+          <div className="grid grid-cols-3 gap-4 mt-2">
+            <div>
+              <div className="font-medium mb-1">Sales Amount</div>
+              <div>{formatCurrency(customer.sales_amount)}</div>
+            </div>
+            <div>
+              <div className="font-medium mb-1">Gross Profit</div>
+              <div>{formatCurrency(customer.gross_profit)}</div>
+            </div>
+            <div>
+              <div className="font-medium mb-1">Jumlah Dibayar</div>
+              <div>{formatCurrency(customer.paid_amount)}</div>
+            </div>
           </div>
-          <div>
-            <h4 className="font-semibold">Order Details</h4>
-            <p>
-              <strong>Sales Amount:</strong> {formatCurrency(customer.sales_amount)}
-            </p>
-            <p>
-              <strong>Gross Profit:</strong> {formatCurrency(customer.gross_profit)}
-            </p>
-            <p>
-              <strong>Paid Amount:</strong> {formatCurrency(customer.paid_amount)}
-            </p>
-            <p>
-              <strong>Order Date:</strong> {formatDate(customer.order_date)}
-            </p>
+          
+          {customer.order_time && (
+            <div className="mt-2">
+              <div className="font-medium mb-1">Masa Tempahan</div>
+              <div className="flex items-center gap-2">
+                <Badge variant="secondary">
+                  {customer.order_time} 
+                  {` (${getTimePeriod(customer.order_time)})`}
+                </Badge>
+              </div>
+            </div>
+          )}
+          
+          <div className="flex justify-end gap-2 mt-2">
+            <Button variant="outline" size="sm" onClick={onEdit}>
+              Edit Customer
+            </Button>
+            <Button variant="destructive" size="sm" onClick={onDelete}>
+              Delete
+            </Button>
           </div>
         </div>
       </AccordionContent>
     </AccordionItem>
-  )
+  );
 }
