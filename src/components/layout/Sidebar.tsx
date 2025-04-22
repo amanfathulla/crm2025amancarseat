@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -27,33 +26,27 @@ export function Sidebar() {
   const navigate = useNavigate();
   const { logout } = useAuth();
   
-  // Always collapse sidebar on mobile by default
   const [mobileOpen, setMobileOpen] = useState(false);
   
-  // Order status counts
   const [orderCounts, setOrderCounts] = useState({
     processing: 0,
     completed: 0,
     cancelled: 0
   });
   
-  // Fetch order status counts
   useEffect(() => {
     const fetchOrderCounts = async () => {
       try {
-        // Fetch processing orders
         const { data: processingData, error: processingError } = await supabase
           .from('customers')
           .select('id')
           .eq('order_status', 'processing');
         
-        // Fetch completed orders
         const { data: completedData, error: completedError } = await supabase
           .from('customers')
           .select('id')
           .eq('order_status', 'completed');
         
-        // Fetch cancelled orders
         const { data: cancelledData, error: cancelledError } = await supabase
           .from('customers')
           .select('id')
@@ -76,7 +69,6 @@ export function Sidebar() {
     
     fetchOrderCounts();
     
-    // Set up a subscription to refresh counts when data changes
     const subscription = supabase
       .channel('public:customers')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'customers' }, () => {
@@ -97,13 +89,11 @@ export function Sidebar() {
     }
   };
   
-  // Handle filter by order status
   const handleOrderFilter = (status) => {
     navigate(`/customers?status=${status}`);
     if (isMobile) setMobileOpen(false);
   };
 
-  // Base sidebar items - simplified with no children/dropdowns
   const sidebarItems = [
     { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { 
@@ -138,13 +128,11 @@ export function Sidebar() {
     { title: "Products", path: "/products", icon: Package },
   ];
 
-  // Handle mobile sidebar visibility
   const sidebarVisible = isMobile ? mobileOpen : true;
   const sidebarWidth = expanded && !isMobile ? "w-64" : "w-20";
 
   return (
     <>
-      {/* Mobile sidebar backdrop */}
       {isMobile && mobileOpen && (
         <div 
           className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
@@ -152,7 +140,6 @@ export function Sidebar() {
         />
       )}
     
-      {/* Sidebar */}
       <aside 
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 flex flex-col",
@@ -164,7 +151,6 @@ export function Sidebar() {
           isMobile && mobileOpen && "w-64 translate-x-0"
         )}
       >
-        {/* Sidebar header */}
         <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b bg-sidebar/80 backdrop-blur-sm">
           {(expanded || isMobile) && (
             <h2 className="text-xl font-bold animate-fade-in">Admin Panel</h2>
@@ -188,7 +174,6 @@ export function Sidebar() {
           </Button>
         </div>
         
-        {/* Navigation - Simplified without dropdowns */}
         <nav className="flex flex-col gap-2 px-2 py-4 flex-1 overflow-y-auto">
           {sidebarItems.map((item) => {
             const Icon = item.icon;
@@ -200,18 +185,18 @@ export function Sidebar() {
                   to={item.path}
                   className={({ isActive }) => cn(
                     "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-                    "hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-                    isActive ? "bg-sidebar-accent text-sidebar-accent-foreground font-medium" : "text-sidebar-foreground",
+                    isActive 
+                      ? "bg-black text-white font-medium" 
+                      : "hover:bg-gray-100 text-sidebar-foreground",
                     !expanded && !isMobile && "justify-center px-2"
                   )}
                   onClick={() => isMobile && setMobileOpen(false)}
                 >
-                  <Icon size={20} />
+                  <Icon size={20} className={isActive ? "text-white" : "text-gray-600"} />
                   {(expanded || isMobile) && (
                     <>
                       <span className="animate-fade-in">{item.title}</span>
                       
-                      {/* Order status badges */}
                       {item.badges && (
                         <div className="ml-auto flex items-center gap-1.5">
                           {item.badges.map((badge, index) => {
@@ -239,7 +224,6 @@ export function Sidebar() {
                   )}
                 </NavLink>
                 
-                {/* Badges for collapsed state */}
                 {!expanded && !isMobile && item.badges && (
                   <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
                     {item.badges.map((badge, index) => {
@@ -268,13 +252,12 @@ export function Sidebar() {
           })}
         </nav>
         
-        {/* Logout button */}
         <div className="p-3 mt-auto border-t">
           <Button
             variant="ghost"
             onClick={logout}
             className={cn(
-              "w-full flex items-center gap-3 text-sidebar-foreground hover:bg-sidebar-accent",
+              "w-full flex items-center gap-3 text-sidebar-foreground hover:bg-gray-100",
               !expanded && !isMobile && "justify-center px-2"
             )}
           >
@@ -286,7 +269,6 @@ export function Sidebar() {
         </div>
       </aside>
       
-      {/* Mobile toggle button */}
       {isMobile && !mobileOpen && (
         <Button
           onClick={toggleSidebar}
