@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
@@ -13,6 +14,7 @@ interface CustomerDetailsProps {
   onEdit: () => void;
   onDelete: () => void;
   index: number;
+  className?: string; // Added className as an optional prop
 }
 
 const getTimePeriod = (timeString: string) => {
@@ -25,7 +27,7 @@ const getTimePeriod = (timeString: string) => {
   return "Lewat Malam";
 };
 
-export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerDetailsProps) {
+export function CustomerDetails({ customer, onEdit, onDelete, index, className }: CustomerDetailsProps) {
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -46,7 +48,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index }: CustomerD
   };
 
   return (
-    <AccordionItem value={customer.id} className="border-b">
+    <AccordionItem value={customer.id} className={`border-b ${className || ''}`}>
       <AccordionTrigger className="hover:no-underline hover:bg-muted/50 px-4">
         <span className="flex items-center text-base font-medium">
           <span className="inline-block w-8 text-right mr-3 text-muted-foreground">{index}.</span>
