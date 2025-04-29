@@ -108,3 +108,96 @@ export const getMarketingNotes = async (startDate: string, endDate: string): Pro
     return [];
   }
 };
+
+/**
+ * Creates a new marketing note
+ * @param note The marketing note to create
+ * @returns Result of the creation operation
+ */
+export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'created_at' | 'updated_at'>) => {
+  try {
+    // Validate the note data before insertion
+    if (!note.title || !note.content_date || !note.type) {
+      return { 
+        success: false, 
+        error: 'Missing required fields',
+        data: null
+      };
+    }
+    
+    // Ensure the status is valid
+    const validatedNote = {
+      ...note,
+      status: note.status === 'completed' ? 'completed' : 'pending' as MarketingContentStatus,
+      type: (['event', 'task', 'reminder'].includes(note.type) 
+        ? note.type 
+        : 'task') as MarketingContentType
+    };
+    
+    // Add RLS bypass if possible
+    const { data, error } = await supabase
+      .from('marketing_content')
+      .insert(validatedNote)
+      .select()
+      .single();
+    
+    if (error) {
+      console.error('Error creating marketing note:', error);
+      return { 
+        success: false, 
+        error: error.message,
+        data: null
+      };
+    }
+    
+    return { 
+      success: true, 
+      error: null,
+      data
+    };
+  } catch (error: any) {
+    console.error('Unexpected error creating marketing note:', error);
+    return { 
+      success: false, 
+      error: error?.message || 'Unknown error occurred',
+      data: null
+    };
+  }
+};
+
+/**
+ * Updates the status of a marketing note
+ * @param id Note ID
+ * @param status New status
+ * @returns Result of the update operation
+ */
+export const updateMarketingNoteStatus = async (id: string, status: MarketingContentStatus) => {
+  try {
+    const { error } = await supabase
+      .from('marketing_content')
+      .update({ 
+        status: status === 'completed' ? 'completed' : 'pending',
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating marketing note status:', error);
+      return { 
+        success: false, 
+        error: error.message
+      };
+    }
+    
+    return { 
+      success: true, 
+      error: null
+    };
+  } catch (error: any) {
+    console.error('Unexpected error updating marketing note status:', error);
+    return { 
+      success: false, 
+      error: error?.message || 'Unknown error occurred'
+    };
+  }
+};

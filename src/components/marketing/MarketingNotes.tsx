@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -7,7 +8,7 @@ import { formatDate } from '@/lib/utils';
 import { AlertTriangle, Calendar, ListTodo, Bell } from 'lucide-react';
 import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter } from '@/components/ui/dialog';
+import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter, DialogDescription } from '@/components/ui/dialog';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
@@ -16,8 +17,11 @@ import {
   getMarketingNotes, 
   getNotesToDelete, 
   deleteOldMarketingNotes, 
+  createMarketingNote,
+  updateMarketingNoteStatus,
   MarketingContent, 
-  MarketingContentType 
+  MarketingContentType,
+  MarketingContentStatus
 } from '@/utils/marketingUtils';
 
 interface MarketingNotesProps {
@@ -170,18 +174,19 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         return;
       }
       
-      const { error } = await supabase
-        .from('marketing_content')
-        .insert({
-          title: newNote.title,
-          description: newNote.description,
-          type: newNote.type as MarketingContentType, // Type assertion to ensure it's the correct type
-          content_date: newNote.content_date,
-          content_time: newNote.content_time,
-          status: newNote.status || 'pending'
-        });
+      // Use the new utility function to create a note
+      const result = await createMarketingNote({
+        title: newNote.title,
+        description: newNote.description,
+        type: newNote.type as MarketingContentType,
+        content_date: newNote.content_date,
+        content_time: newNote.content_time,
+        status: newNote.status as MarketingContentStatus || 'pending'
+      });
       
-      if (error) throw error;
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to add note');
+      }
       
       toast({
         title: 'Nota Ditambah',
@@ -196,34 +201,32 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         content_date: new Date().toISOString().split('T')[0],
         status: 'pending',
       });
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error adding note:', error);
       toast({
         title: 'Error',
-        description: 'Failed to add note.',
+        description: error?.message || 'Failed to add note.',
         variant: 'destructive',
       });
     }
   };
   
   // Toggle task completion status
-  const toggleTaskStatus = async (id: string, currentStatus: string) => {
+  const toggleTaskStatus = async (id: string, currentStatus: MarketingContentStatus) => {
     try {
-      // Convert string to our allowed types
-      const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+      // Use the new utility function to update status
+      const newStatus: MarketingContentStatus = currentStatus === 'pending' ? 'completed' : 'pending';
+      const result = await updateMarketingNoteStatus(id, newStatus);
       
-      const { error } = await supabase
-        .from('marketing_content')
-        .update({ status: newStatus })
-        .eq('id', id);
+      if (!result.success) {
+        throw new Error(result.error || 'Failed to update task status');
+      }
       
-      if (error) throw error;
-      
-    } catch (error) {
+    } catch (error: any) {
       console.error('Error updating task status:', error);
       toast({
         title: 'Error',
-        description: 'Failed to update task status.',
+        description: error?.message || 'Failed to update task status.',
         variant: 'destructive',
       });
     }
@@ -360,6 +363,9 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         <DialogContent className="sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Tambah Nota Marketing</DialogTitle>
+            <DialogDescription>
+              Isi maklumat untuk tambah nota marketing baru
+            </DialogDescription>
           </DialogHeader>
           
           <div className="grid gap-4 py-3">
@@ -381,7 +387,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
                   Jenis
                 </label>
                 <Select 
-                  value={newNote.type} 
+                  value={newNote.type as string} 
                   onValueChange={(value: MarketingContentType) => setNewNote({...newNote, type: value})}
                 >
                   <SelectTrigger>
