@@ -13,9 +13,14 @@ import {
   Menu,
   X,
   LogOut,
+  Calendar,
+  ListTodo,
+  Bell,
+  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { MarketingNotes } from "@/components/marketing/MarketingNotes";
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -31,6 +36,8 @@ export function Sidebar() {
     completed: 0,
     cancelled: 0
   });
+  
+  const [showMarketingNotes, setShowMarketingNotes] = useState(false);
   
   useEffect(() => {
     const fetchOrderCounts = async () => {
@@ -237,6 +244,35 @@ export function Sidebar() {
               </div>
             );
           })}
+          
+          {/* Marketing Notes Section */}
+          <div className="mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => setShowMarketingNotes(!showMarketingNotes)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+                "hover:bg-white/10 text-white/80",
+                !expanded && !isMobile && "justify-center px-2"
+              )}
+            >
+              <ListTodo size={20} />
+              {(expanded || isMobile) && (
+                <span className="animate-fade-in mr-auto">Nota Marketing</span>
+              )}
+              {(expanded || isMobile) && (
+                <Badge variant="secondary" className="bg-purple-500 text-white">
+                  Auto
+                </Badge>
+              )}
+            </Button>
+            
+            {showMarketingNotes && (expanded || isMobile) && (
+              <div className="mt-2 px-2 py-1 bg-white/5 rounded-md">
+                <MarketingNotes expanded={expanded} isMobile={isMobile} />
+              </div>
+            )}
+          </div>
         </nav>
         
         <div className="p-3 mt-auto border-t border-white/10">
