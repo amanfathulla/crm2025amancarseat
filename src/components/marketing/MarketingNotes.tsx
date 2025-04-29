@@ -13,6 +13,7 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
+import { getMarketingNotes, getNotesToDelete, deleteOldMarketingNotes } from '@/utils/marketingUtils';
 
 // Define types for marketing content
 type MarketingContentType = 'event' | 'task' | 'reminder';
@@ -70,29 +71,24 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         const nextMonthEndStr = nextMonthEnd.toISOString().split('T')[0];
         
         // Get content for the last 2 months and next month
-        const { data, error } = await supabase
-          .from('marketing_content')
-          .select('*')
-          .lte('content_date', nextMonthEndStr)
-          .order('content_date', { ascending: true });
+        const data = await getMarketingNotes(twoMonthsAgoStr, nextMonthEndStr);
         
-        if (error) {
-          throw error;
-        }
+        // Ensure the type field is correctly cast as MarketingContentType
+        const typedData = data.map(item => ({
+          ...item,
+          type: item.type as MarketingContentType
+        }));
         
-        setNotes(data || []);
+        setNotes(typedData);
         
         // Check if there are notes to be auto-deleted (older than 2 months)
-        const { data: oldData, error: countError } = await supabase
-          .from('marketing_content')
-          .select('id')
-          .lt('content_date', twoMonthsAgoStr);
+        const deleteInfo = await getNotesToDelete();
         
-        if (!countError && oldData && oldData.length > 0) {
+        if (deleteInfo.count > 0) {
           // Show delete warning if there are notes to be deleted
           setDeleteInfo({
-            date: formatDate(twoMonthsAgoStr),
-            count: oldData.length
+            date: formatDate(deleteInfo.date),
+            count: deleteInfo.count
           });
           setShowDeleteAlert(true);
         }
@@ -126,21 +122,16 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
   // Function to handle note deletion
   const handleDeleteOldNotes = async () => {
     try {
-      const twoMonthsAgo = new Date();
-      twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-      const twoMonthsAgoStr = twoMonthsAgo.toISOString().split('T')[0];
+      const result = await deleteOldMarketingNotes();
       
-      const { error } = await supabase
-        .from('marketing_content')
-        .delete()
-        .lt('content_date', twoMonthsAgoStr);
-      
-      if (error) throw error;
-      
-      toast({
-        title: 'Nota Lama Dibuang',
-        description: `${deleteInfo.count} nota sebelum ${deleteInfo.date} telah dibuang.`,
-      });
+      if (result.success) {
+        toast({
+          title: 'Nota Lama Dibuang',
+          description: `${result.deletedCount} nota sebelum ${deleteInfo.date} telah dibuang.`,
+        });
+      } else {
+        throw new Error('Failed to delete notes');
+      }
       
       setShowDeleteAlert(false);
     } catch (error) {
@@ -187,10 +178,10 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
   // Submit new note
   const handleSubmit = async () => {
     try {
-      if (!newNote.title || !newNote.content_date) {
+      if (!newNote.title || !newNote.content_date || !newNote.type) {
         toast({
           title: 'Maklumat Tidak Lengkap',
-          description: 'Sila isi tajuk dan tarikh.',
+          description: 'Sila isi tajuk, jenis dan tarikh.',
           variant: 'destructive',
         });
         return;
@@ -198,7 +189,14 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
       
       const { error } = await supabase
         .from('marketing_content')
-        .insert([newNote]);
+        .insert({
+          title: newNote.title,
+          description: newNote.description,
+          type: newNote.type,
+          content_date: newNote.content_date,
+          content_time: newNote.content_time,
+          status: newNote.status || 'pending'
+        });
       
       if (error) throw error;
       

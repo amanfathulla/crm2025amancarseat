@@ -7,23 +7,28 @@ import { formatDateToYYYYMMDD } from '@/utils/dateUtils';
  * @returns The count of notes to be deleted and the cutoff date
  */
 export const getNotesToDelete = async () => {
-  // Get date 2 months ago
-  const twoMonthsAgo = new Date();
-  twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
-  const twoMonthsAgoStr = formatDateToYYYYMMDD(twoMonthsAgo);
-  
-  // Count notes older than 2 months
-  const { data, error } = await supabase
-    .from('marketing_content')
-    .select('id')
-    .lt('content_date', twoMonthsAgoStr);
-  
-  if (error) {
-    console.error('Error checking notes to delete:', error);
-    return { count: 0, date: twoMonthsAgoStr };
+  try {
+    // Get date 2 months ago
+    const twoMonthsAgo = new Date();
+    twoMonthsAgo.setMonth(twoMonthsAgo.getMonth() - 2);
+    const twoMonthsAgoStr = formatDateToYYYYMMDD(twoMonthsAgo);
+    
+    // Count notes older than 2 months
+    const { data, error } = await supabase
+      .from('marketing_content')
+      .select('id')
+      .lt('content_date', twoMonthsAgoStr);
+    
+    if (error) {
+      console.error('Error checking notes to delete:', error);
+      return { count: 0, date: twoMonthsAgoStr };
+    }
+    
+    return { count: data?.length || 0, date: twoMonthsAgoStr };
+  } catch (error) {
+    console.error('Unexpected error in getNotesToDelete:', error);
+    return { count: 0, date: formatDateToYYYYMMDD(new Date()) };
   }
-  
-  return { count: data?.length || 0, date: twoMonthsAgoStr };
 };
 
 /**
@@ -42,7 +47,9 @@ export const deleteOldMarketingNotes = async () => {
       .lt('content_date', twoMonthsAgoStr)
       .select();
     
-    return { success: !error, deletedCount: data?.length || 0 };
+    if (error) throw error;
+    
+    return { success: true, deletedCount: data?.length || 0 };
     
   } catch (error) {
     console.error('Error deleting old marketing notes:', error);
