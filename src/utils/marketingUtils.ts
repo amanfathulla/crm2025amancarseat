@@ -2,6 +2,23 @@
 import { supabase } from '@/integrations/supabase/client';
 import { formatDateToYYYYMMDD } from '@/utils/dateUtils';
 
+// Define strict types
+export type MarketingContentStatus = 'pending' | 'completed';
+export type MarketingContentType = 'event' | 'task' | 'reminder';
+
+// Interface for the marketing content
+export interface MarketingContent {
+  id: string;
+  title: string;
+  description?: string | null;
+  type: MarketingContentType;
+  content_date: string;
+  content_time?: string | null;
+  status: MarketingContentStatus;
+  created_at?: string | null;
+  updated_at?: string | null;
+}
+
 /**
  * Gets notes that should be auto-deleted (older than 2 months)
  * @returns The count of notes to be deleted and the cutoff date
@@ -63,7 +80,7 @@ export const deleteOldMarketingNotes = async () => {
  * @param endDate End date in YYYY-MM-DD format
  * @returns Array of marketing notes in the date range
  */
-export const getMarketingNotes = async (startDate: string, endDate: string) => {
+export const getMarketingNotes = async (startDate: string, endDate: string): Promise<MarketingContent[]> => {
   try {
     const { data, error } = await supabase
       .from('marketing_content')
@@ -74,7 +91,18 @@ export const getMarketingNotes = async (startDate: string, endDate: string) => {
     
     if (error) throw error;
     
-    return data || [];
+    // Validate and normalize the data to ensure it matches our expected types
+    const validatedData = (data || []).map(item => ({
+      ...item,
+      // Ensure status is either 'pending' or 'completed'
+      status: (item.status === 'completed' ? 'completed' : 'pending') as MarketingContentStatus,
+      // Ensure type is valid
+      type: (['event', 'task', 'reminder'].includes(item.type) 
+        ? item.type 
+        : 'task') as MarketingContentType
+    }));
+    
+    return validatedData;
   } catch (error) {
     console.error('Error fetching marketing notes:', error);
     return [];

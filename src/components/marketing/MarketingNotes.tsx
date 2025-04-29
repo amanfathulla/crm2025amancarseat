@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Badge } from '@/components/ui/badge';
@@ -13,22 +12,13 @@ import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { Checkbox } from '@/components/ui/checkbox';
-import { getMarketingNotes, getNotesToDelete, deleteOldMarketingNotes } from '@/utils/marketingUtils';
-
-// Define types for marketing content
-type MarketingContentType = 'event' | 'task' | 'reminder';
-
-interface MarketingContent {
-  id: string;
-  title: string;
-  description?: string;
-  type: MarketingContentType;
-  content_date: string;
-  content_time?: string;
-  status?: 'pending' | 'completed';
-  created_at?: string;
-  updated_at?: string;
-}
+import { 
+  getMarketingNotes, 
+  getNotesToDelete, 
+  deleteOldMarketingNotes, 
+  MarketingContent, 
+  MarketingContentType 
+} from '@/utils/marketingUtils';
 
 interface MarketingNotesProps {
   expanded: boolean;
@@ -72,14 +62,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         
         // Get content for the last 2 months and next month
         const data = await getMarketingNotes(twoMonthsAgoStr, nextMonthEndStr);
-        
-        // Ensure the type field is correctly cast as MarketingContentType
-        const typedData = data.map(item => ({
-          ...item,
-          type: item.type as MarketingContentType
-        }));
-        
-        setNotes(typedData);
+        setNotes(data);
         
         // Check if there are notes to be auto-deleted (older than 2 months)
         const deleteInfo = await getNotesToDelete();
@@ -192,7 +175,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
         .insert({
           title: newNote.title,
           description: newNote.description,
-          type: newNote.type,
+          type: newNote.type as MarketingContentType, // Type assertion to ensure it's the correct type
           content_date: newNote.content_date,
           content_time: newNote.content_time,
           status: newNote.status || 'pending'
@@ -226,6 +209,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
   // Toggle task completion status
   const toggleTaskStatus = async (id: string, currentStatus: string) => {
     try {
+      // Convert string to our allowed types
       const newStatus = currentStatus === 'pending' ? 'completed' : 'pending';
       
       const { error } = await supabase
@@ -326,7 +310,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
                       {note.type === 'task' && (
                         <Checkbox 
                           checked={note.status === 'completed'}
-                          onCheckedChange={() => toggleTaskStatus(note.id, note.status || 'pending')}
+                          onCheckedChange={() => toggleTaskStatus(note.id, note.status)}
                           className="mt-1"
                         />
                       )}
@@ -398,7 +382,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
                 </label>
                 <Select 
                   value={newNote.type} 
-                  onValueChange={(value) => setNewNote({...newNote, type: value as MarketingContentType})}
+                  onValueChange={(value: MarketingContentType) => setNewNote({...newNote, type: value})}
                 >
                   <SelectTrigger>
                     <SelectValue placeholder="Pilih jenis" />
