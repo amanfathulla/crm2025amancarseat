@@ -89,7 +89,10 @@ export const getMarketingNotes = async (startDate: string, endDate: string): Pro
       .lte('content_date', endDate)
       .order('content_date', { ascending: true });
     
-    if (error) throw error;
+    if (error) {
+      console.error('Error fetching marketing notes:', error);
+      throw error;
+    }
     
     // Validate and normalize the data to ensure it matches our expected types
     const validatedData = (data || []).map(item => ({
@@ -116,6 +119,8 @@ export const getMarketingNotes = async (startDate: string, endDate: string): Pro
  */
 export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'created_at' | 'updated_at'>) => {
   try {
+    console.log('Creating marketing note:', note);
+    
     // Validate the note data before insertion
     if (!note.title || !note.content_date || !note.type) {
       return { 
@@ -125,7 +130,7 @@ export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'c
       };
     }
     
-    // Ensure the status is valid
+    // Ensure the status and type are valid
     const validatedNote = {
       ...note,
       status: note.status === 'completed' ? 'completed' : 'pending' as MarketingContentStatus,
@@ -134,7 +139,8 @@ export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'c
         : 'task') as MarketingContentType
     };
     
-    // Add RLS bypass if possible
+    console.log('Validated note:', validatedNote);
+    
     const { data, error } = await supabase
       .from('marketing_content')
       .insert(validatedNote)
@@ -149,6 +155,8 @@ export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'c
         data: null
       };
     }
+    
+    console.log('Created marketing note:', data);
     
     return { 
       success: true, 
