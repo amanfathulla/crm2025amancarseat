@@ -111,7 +111,7 @@ export const getMarketingNotes = async (startDate: string, endDate: string): Pro
         ? item.type 
         : 'task') as MarketingContentType,
       // Ensure media is valid
-      media: (['tiktok', 'facebook', 'instagram', 'none'].includes(item.media as string)
+      media: (['tiktok', 'facebook', 'instagram', 'none'].includes(item.media || 'none')
         ? item.media
         : 'none') as MarketingContentMedia
     }));
@@ -148,7 +148,7 @@ export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'c
       type: (['event', 'task', 'reminder'].includes(note.type) 
         ? note.type 
         : 'task') as MarketingContentType,
-      media: (['tiktok', 'facebook', 'instagram', 'none'].includes(note.media as string)
+      media: (['tiktok', 'facebook', 'instagram', 'none'].includes(note.media || 'none')
         ? note.media
         : 'none') as MarketingContentMedia
     };
