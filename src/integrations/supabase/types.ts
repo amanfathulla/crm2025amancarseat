@@ -83,33 +83,39 @@ export type Database = {
       }
       marketing_content: {
         Row: {
+          completed_at: string | null
           content_date: string
           content_time: string | null
           created_at: string | null
           description: string | null
           id: string
+          media: string | null
           status: string
           title: string
           type: string
           updated_at: string | null
         }
         Insert: {
+          completed_at?: string | null
           content_date: string
           content_time?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          media?: string | null
           status?: string
           title: string
           type: string
           updated_at?: string | null
         }
         Update: {
+          completed_at?: string | null
           content_date?: string
           content_time?: string | null
           created_at?: string | null
           description?: string | null
           id?: string
+          media?: string | null
           status?: string
           title?: string
           type?: string

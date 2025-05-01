@@ -1,5 +1,5 @@
 
-import { Facebook, Instagram, TikTok } from "lucide-react";
+import { Facebook, Instagram, LucideIcon } from "lucide-react";
 import { MarketingContent, MarketingContentStatus } from "@/utils/marketingUtils";
 import { MarketingTaskCheckbox } from "./MarketingTaskCheckbox";
 
@@ -15,18 +15,18 @@ export function MarketingTaskItem({ task, onStatusChange }: MarketingTaskItemPro
   const day = taskDate.getDate();
 
   // Determine which media icon to show
-  const MediaIcon = (() => {
+  const renderMediaIcon = () => {
     switch (task.media) {
       case 'tiktok':
-        return <TikTok className="h-4 w-4 text-pink-400" title="TikTok" />;
+        return <span className="h-4 w-4 text-pink-400 flex items-center justify-center text-xs" aria-label="TikTok">TT</span>;
       case 'facebook':
-        return <Facebook className="h-4 w-4 text-blue-400" title="Facebook" />;
+        return <Facebook className="h-4 w-4 text-blue-400" aria-label="Facebook" />;
       case 'instagram':
-        return <Instagram className="h-4 w-4 text-purple-400" title="Instagram" />;
+        return <Instagram className="h-4 w-4 text-purple-400" aria-label="Instagram" />;
       default:
         return null;
     }
-  })();
+  };
 
   return (
     <div 
@@ -48,9 +48,9 @@ export function MarketingTaskItem({ task, onStatusChange }: MarketingTaskItemPro
           
           <div className="flex items-center mt-1 text-[10px] text-white/50 gap-1">
             <span className="font-medium">{dayName}, {day}</span>
-            {MediaIcon && (
+            {task.media && task.media !== 'none' && (
               <span className="flex items-center">
-                • {MediaIcon}
+                • {renderMediaIcon()}
               </span>
             )}
           </div>

@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { toast } from "sonner";
-import { Calendar, Facebook, Instagram, TikTok } from "lucide-react";
+import { Calendar, Facebook, Instagram } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -68,8 +68,8 @@ export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddM
   };
 
   const mediaOptions = [
-    { value: 'none', label: 'Tiada' },
-    { value: 'tiktok', label: 'TikTok', icon: TikTok },
+    { value: 'none', label: 'Tiada', icon: null },
+    { value: 'tiktok', label: 'TikTok', iconText: 'TT' },
     { value: 'facebook', label: 'Facebook', icon: Facebook },
     { value: 'instagram', label: 'Instagram', icon: Instagram },
   ];
@@ -125,7 +125,8 @@ export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddM
                 {mediaOptions.map(option => (
                   <SelectItem key={option.value} value={option.value}>
                     <div className="flex items-center gap-2">
-                      {option.icon && <option.icon className="h-4 w-4" />}
+                      {option.icon ? <option.icon className="h-4 w-4" /> : 
+                       option.iconText ? <span className="h-4 w-4 text-pink-400 flex items-center justify-center text-xs">{option.iconText}</span> : null}
                       <span>{option.label}</span>
                     </div>
                   </SelectItem>
