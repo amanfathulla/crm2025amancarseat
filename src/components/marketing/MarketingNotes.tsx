@@ -1,28 +1,19 @@
 
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
-import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { Card } from '@/components/ui/card';
 import { formatDate } from '@/lib/utils';
-import { AlertTriangle, Calendar, ListTodo, Bell } from 'lucide-react';
-import { useToast } from '@/hooks/use-toast';
 import { Separator } from '@/components/ui/separator';
-import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter, DialogDescription } from '@/components/ui/dialog';
-import { Input } from '@/components/ui/input';
-import { Textarea } from '@/components/ui/textarea';
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
-import { Checkbox } from '@/components/ui/checkbox';
+import { toast } from 'sonner';
 import { 
   getMarketingNotes, 
-  getNotesToDelete, 
-  deleteOldMarketingNotes, 
-  createMarketingNote,
-  updateMarketingNoteStatus,
-  MarketingContent, 
-  MarketingContentType,
+  getNotesToDelete,
+  MarketingContent,
   MarketingContentStatus
 } from '@/utils/marketingUtils';
+import { AddMarketingNoteDialog } from './AddMarketingNoteDialog';
+import { DeleteMarketingNotesAlert } from './DeleteMarketingNotesAlert';
+import { MarketingTaskItem } from './MarketingTaskItem';
 
 interface MarketingNotesProps {
   expanded: boolean;
@@ -30,106 +21,68 @@ interface MarketingNotesProps {
 }
 
 export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
-  const { toast } = useToast();
   const [notes, setNotes] = useState<MarketingContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [showAddDialog, setShowAddDialog] = useState(false);
-  const [newNote, setNewNote] = useState<Partial<MarketingContent>>({
-    title: '',
-    description: '',
-    type: 'task',
-    content_date: new Date().toISOString().split('T')[0],
-    status: 'pending',
-  });
   const [showDeleteAlert, setShowDeleteAlert] = useState(false);
   const [deleteInfo, setDeleteInfo] = useState<{ date: string; count: number }>({ date: '', count: 0 });
 
   // Fetch marketing notes from Supabase
-  useEffect(() => {
-    const fetchMarketingNotes = async () => {
-      try {
-        setIsLoading(true);
-        
-        // Get current date
-        const today = new Date();
-        
-        // Get date 2 months ago (for deletion check)
-        const twoMonthsAgo = new Date();
-        twoMonthsAgo.setMonth(today.getMonth() - 2);
-        const twoMonthsAgoStr = twoMonthsAgo.toISOString().split('T')[0];
-        
-        // Get date for next month (for display range)
-        const nextMonth = new Date();
-        nextMonth.setMonth(today.getMonth() + 1);
-        const nextMonthEnd = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
-        const nextMonthEndStr = nextMonthEnd.toISOString().split('T')[0];
-        
-        // Get content for the last 2 months and next month
-        const data = await getMarketingNotes(twoMonthsAgoStr, nextMonthEndStr);
-        setNotes(data);
-        
-        // Check if there are notes to be auto-deleted (older than 2 months)
-        const deleteInfo = await getNotesToDelete();
-        
-        if (deleteInfo.count > 0) {
-          // Show delete warning if there are notes to be deleted
-          setDeleteInfo({
-            date: formatDate(deleteInfo.date),
-            count: deleteInfo.count
-          });
-          setShowDeleteAlert(true);
-        }
-        
-      } catch (error) {
-        console.error('Error fetching marketing notes:', error);
-        toast({
-          title: 'Error',
-          description: 'Failed to load marketing notes.',
-          variant: 'destructive',
+  const fetchMarketingNotes = async () => {
+    try {
+      setIsLoading(true);
+      
+      // Get current date
+      const today = new Date();
+      
+      // Get date 3 days ago (for deletion check)
+      const threeDaysAgo = new Date();
+      threeDaysAgo.setDate(today.getDate() - 3);
+      const threeDaysAgoStr = threeDaysAgo.toISOString().split('T')[0];
+      
+      // Get date for next month (for display range)
+      const nextMonth = new Date();
+      nextMonth.setMonth(today.getMonth() + 1);
+      const nextMonthEnd = new Date(nextMonth.getFullYear(), nextMonth.getMonth() + 1, 0);
+      const nextMonthEndStr = nextMonthEnd.toISOString().split('T')[0];
+      
+      // Get content for the current month and next month (limited to 10)
+      const data = await getMarketingNotes(threeDaysAgoStr, nextMonthEndStr);
+      setNotes(data);
+      
+      // Check if there are completed notes to be auto-deleted (older than 3 days)
+      const deleteInfo = await getNotesToDelete();
+      
+      if (deleteInfo.count > 0) {
+        // Show delete warning if there are notes to be deleted
+        setDeleteInfo({
+          date: formatDate(deleteInfo.date),
+          count: deleteInfo.count
         });
-      } finally {
-        setIsLoading(false);
+        setShowDeleteAlert(true);
       }
-    };
-    
+      
+    } catch (error) {
+      console.error('Error fetching marketing notes:', error);
+      toast.error('Failed to load marketing notes');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+  
+  useEffect(() => {
     fetchMarketingNotes();
     
     // Set up real-time listener for changes to marketing_content
     const subscription = supabase
       .channel('public:marketing_content')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketing_content' }, 
-        fetchMarketingNotes)
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'marketing_content' }, fetchMarketingNotes)
       .subscribe();
     
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [toast]);
-  
-  // Function to handle note deletion
-  const handleDeleteOldNotes = async () => {
-    try {
-      const result = await deleteOldMarketingNotes();
-      
-      if (result.success) {
-        toast({
-          title: 'Nota Lama Dibuang',
-          description: `${result.deletedCount} nota sebelum ${deleteInfo.date} telah dibuang.`,
-        });
-      } else {
-        throw new Error('Failed to delete notes');
-      }
-      
-      setShowDeleteAlert(false);
-    } catch (error) {
-      console.error('Error deleting old notes:', error);
-      toast({
-        title: 'Error',
-        description: 'Failed to delete old notes.',
-        variant: 'destructive',
-      });
-    }
-  };
+  }, []);
   
   // Group notes by month
   const groupedNotes = notes.reduce<Record<string, MarketingContent[]>>((acc, note) => {
@@ -144,92 +97,19 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
     return acc;
   }, {});
   
-  const getTypeIcon = (type: MarketingContentType) => {
-    switch (type) {
-      case 'event': return <Calendar className="h-4 w-4" />;
-      case 'task': return <ListTodo className="h-4 w-4" />;
-      case 'reminder': return <Bell className="h-4 w-4" />;
-      default: return <ListTodo className="h-4 w-4" />;
-    }
-  };
-  
-  const getTypeBadgeColor = (type: MarketingContentType) => {
-    switch (type) {
-      case 'event': return 'bg-blue-500 hover:bg-blue-600';
-      case 'task': return 'bg-purple-500 hover:bg-purple-600';
-      case 'reminder': return 'bg-amber-500 hover:bg-amber-600';
-      default: return 'bg-gray-500 hover:bg-gray-600';
-    }
-  };
-  
-  // Submit new note
-  const handleSubmit = async () => {
-    try {
-      if (!newNote.title || !newNote.content_date || !newNote.type) {
-        toast({
-          title: 'Maklumat Tidak Lengkap',
-          description: 'Sila isi tajuk, jenis dan tarikh.',
-          variant: 'destructive',
-        });
-        return;
-      }
-      
-      // Use the new utility function to create a note
-      const result = await createMarketingNote({
-        title: newNote.title,
-        description: newNote.description,
-        type: newNote.type as MarketingContentType,
-        content_date: newNote.content_date,
-        content_time: newNote.content_time,
-        status: newNote.status as MarketingContentStatus || 'pending'
-      });
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to add note');
-      }
-      
-      toast({
-        title: 'Nota Ditambah',
-        description: 'Nota marketing baru telah ditambah.',
-      });
-      
-      setShowAddDialog(false);
-      setNewNote({
-        title: '',
-        description: '',
-        type: 'task',
-        content_date: new Date().toISOString().split('T')[0],
-        status: 'pending',
-      });
-    } catch (error: any) {
-      console.error('Error adding note:', error);
-      toast({
-        title: 'Error',
-        description: error?.message || 'Failed to add note.',
-        variant: 'destructive',
-      });
-    }
-  };
-  
-  // Toggle task completion status
-  const toggleTaskStatus = async (id: string, currentStatus: MarketingContentStatus) => {
-    try {
-      // Use the new utility function to update status
-      const newStatus: MarketingContentStatus = currentStatus === 'pending' ? 'completed' : 'pending';
-      const result = await updateMarketingNoteStatus(id, newStatus);
-      
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to update task status');
-      }
-      
-    } catch (error: any) {
-      console.error('Error updating task status:', error);
-      toast({
-        title: 'Error',
-        description: error?.message || 'Failed to update task status.',
-        variant: 'destructive',
-      });
-    }
+  const handleTaskStatusChange = (taskId: string, newStatus: MarketingContentStatus) => {
+    // Update the local state for immediate UI feedback
+    setNotes(prevNotes => 
+      prevNotes.map(note => 
+        note.id === taskId 
+          ? { 
+              ...note, 
+              status: newStatus,
+              completed_at: newStatus === 'completed' ? new Date().toISOString() : null
+            } 
+          : note
+      )
+    );
   };
   
   if (isLoading) {
@@ -258,35 +138,11 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
       
       {/* Delete Alert */}
       {showDeleteAlert && (
-        <Card className="mb-3 p-2 bg-amber-950/30 border-amber-500/50">
-          <div className="flex gap-2 items-start">
-            <AlertTriangle className="text-amber-500 h-5 w-5 shrink-0 mt-0.5" />
-            <div className="text-xs">
-              <p className="font-medium text-amber-200">Nota Lama Akan Dibuang</p>
-              <p className="text-amber-200/80">
-                {deleteInfo.count} nota sebelum {deleteInfo.date} akan dibuang secara automatik.
-              </p>
-              <div className="flex gap-2 mt-2">
-                <Button 
-                  size="sm" 
-                  variant="outline" 
-                  className="h-7 px-2 bg-white/10 border-white/20 hover:bg-white/20 text-white"
-                  onClick={() => setShowDeleteAlert(false)}
-                >
-                  Simpan
-                </Button>
-                <Button 
-                  size="sm" 
-                  variant="destructive" 
-                  className="h-7 px-2"
-                  onClick={handleDeleteOldNotes}
-                >
-                  Buang Sekarang
-                </Button>
-              </div>
-            </div>
-          </div>
-        </Card>
+        <DeleteMarketingNotesAlert 
+          deleteInfo={deleteInfo}
+          onClose={() => setShowDeleteAlert(false)}
+          onDeleted={fetchMarketingNotes}
+        />
       )}
       
       {/* Marketing Notes List */}
@@ -299,53 +155,13 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
             </div>
             
             <div className="space-y-2">
-              {monthNotes.map((note) => {
-                const noteDate = new Date(note.content_date);
-                const dayName = noteDate.toLocaleDateString('ms-MY', { weekday: 'short' });
-                const day = noteDate.getDate();
-                
-                return (
-                  <div 
-                    key={note.id} 
-                    className={`p-2 rounded-md ${note.type === 'task' && note.status === 'completed' ? 'bg-white/5' : 'bg-white/10'} hover:bg-white/15`}
-                  >
-                    <div className="flex items-start gap-2">
-                      {note.type === 'task' && (
-                        <Checkbox 
-                          checked={note.status === 'completed'}
-                          onCheckedChange={() => toggleTaskStatus(note.id, note.status)}
-                          className="mt-1"
-                        />
-                      )}
-                      
-                      <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                          <div className={`font-medium ${note.type === 'task' && note.status === 'completed' ? 'line-through text-white/50' : ''}`}>
-                            {note.title}
-                          </div>
-                          <Badge className={`ml-2 ${getTypeBadgeColor(note.type)} text-white text-[10px]`}>
-                            {getTypeIcon(note.type)}
-                            <span className="ml-1">{note.type}</span>
-                          </Badge>
-                        </div>
-                        
-                        {note.description && (
-                          <p className={`text-xs mt-0.5 text-white/70 ${note.type === 'task' && note.status === 'completed' ? 'line-through text-white/40' : ''}`}>
-                            {note.description}
-                          </p>
-                        )}
-                        
-                        <div className="flex items-center mt-1 text-[10px] text-white/50">
-                          <span className="font-medium">{dayName}, {day}</span>
-                          {note.content_time && (
-                            <span className="ml-1">• {note.content_time}</span>
-                          )}
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                );
-              })}
+              {monthNotes.map((note) => (
+                <MarketingTaskItem 
+                  key={note.id} 
+                  task={note} 
+                  onStatusChange={handleTaskStatusChange} 
+                />
+              ))}
             </div>
           </div>
         ))}
@@ -359,98 +175,11 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
       </div>
       
       {/* Add Note Dialog */}
-      <Dialog open={showAddDialog} onOpenChange={setShowAddDialog}>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Tambah Nota Marketing</DialogTitle>
-            <DialogDescription>
-              Isi maklumat untuk tambah nota marketing baru
-            </DialogDescription>
-          </DialogHeader>
-          
-          <div className="grid gap-4 py-3">
-            <div className="grid gap-2">
-              <label htmlFor="title" className="text-sm font-medium">
-                Tajuk
-              </label>
-              <Input 
-                id="title"
-                value={newNote.title || ''}
-                onChange={(e) => setNewNote({...newNote, title: e.target.value})}
-                placeholder="Tajuk nota"
-              />
-            </div>
-            
-            <div className="grid grid-cols-2 gap-4">
-              <div className="grid gap-2">
-                <label htmlFor="type" className="text-sm font-medium">
-                  Jenis
-                </label>
-                <Select 
-                  value={newNote.type as string} 
-                  onValueChange={(value: MarketingContentType) => setNewNote({...newNote, type: value})}
-                >
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih jenis" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="task">Tugasan</SelectItem>
-                    <SelectItem value="event">Acara</SelectItem>
-                    <SelectItem value="reminder">Peringatan</SelectItem>
-                  </SelectContent>
-                </Select>
-              </div>
-              
-              <div className="grid gap-2">
-                <label htmlFor="date" className="text-sm font-medium">
-                  Tarikh
-                </label>
-                <Input 
-                  id="date"
-                  type="date"
-                  value={newNote.content_date || ''}
-                  onChange={(e) => setNewNote({...newNote, content_date: e.target.value})}
-                />
-              </div>
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="time" className="text-sm font-medium">
-                Masa (Pilihan)
-              </label>
-              <Input 
-                id="time"
-                type="time"
-                value={newNote.content_time || ''}
-                onChange={(e) => setNewNote({...newNote, content_time: e.target.value})}
-                placeholder="00:00"
-              />
-            </div>
-            
-            <div className="grid gap-2">
-              <label htmlFor="description" className="text-sm font-medium">
-                Penerangan (Pilihan)
-              </label>
-              <Textarea 
-                id="description"
-                value={newNote.description || ''}
-                onChange={(e) => setNewNote({...newNote, description: e.target.value})}
-                placeholder="Tambah penerangan..."
-                rows={3}
-              />
-            </div>
-          </div>
-          
-          <DialogFooter>
-            <Button type="button" variant="secondary" onClick={() => setShowAddDialog(false)}>
-              Batal
-            </Button>
-            <Button type="button" onClick={handleSubmit}>
-              Simpan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
+      <AddMarketingNoteDialog 
+        open={showAddDialog} 
+        onOpenChange={setShowAddDialog} 
+        onNoteAdded={fetchMarketingNotes} 
+      />
     </div>
   );
 }

@@ -22,7 +22,7 @@ const App = () => (
     <TooltipProvider>
       <AuthProvider>
         <Toaster />
-        <Sonner />
+        <Sonner position="top-right" />
         <BrowserRouter>
           <Routes>
             <Route path="/" element={<Index />} />

@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,10 +12,7 @@ import {
   Menu,
   X,
   LogOut,
-  Calendar,
   ListTodo,
-  Bell,
-  AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -177,6 +173,7 @@ export function Sidebar() {
         </div>
         
         <nav className="flex flex-col gap-2 px-2 py-4 flex-1 overflow-y-auto">
+          {/* Main navigation items */}
           {sidebarItems.map((item) => {
             const Icon = item.icon;
             const isActive = location.pathname === item.path;
@@ -252,6 +249,7 @@ export function Sidebar() {
               onClick={() => setShowMarketingNotes(!showMarketingNotes)}
               className={cn(
                 "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+                showMarketingNotes ? "bg-white/10" : "",
                 "hover:bg-white/10 text-white/80",
                 !expanded && !isMobile && "justify-center px-2"
               )}
