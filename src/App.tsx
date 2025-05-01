@@ -13,6 +13,7 @@ import Dashboard from "./pages/Dashboard";
 import Customers from "./pages/Customers";
 import Sales from "./pages/Sales";
 import Products from "./pages/Products";
+import MarketingNotes from "./pages/MarketingNotes"; // Add the new page import
 import NotFound from "./pages/NotFound";
 
 const queryClient = new QueryClient();
@@ -31,6 +32,7 @@ const App = () => (
             <Route path="/customers" element={<Customers />} />
             <Route path="/sales" element={<Sales />} />
             <Route path="/products" element={<Products />} />
+            <Route path="/marketing-notes" element={<MarketingNotes />} /> {/* Add the new route */}
             <Route path="*" element={<NotFound />} />
           </Routes>
         </BrowserRouter>
