@@ -2,11 +2,12 @@
 import { useState, useEffect } from "react";
 import { formatDate } from "@/lib/utils";
 import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/sonner";
+import { toast } from "sonner"; // Changed from importing useToast from '@/components/ui/sonner'
 import { FileText, Facebook, Instagram } from "lucide-react";
 import {
   MarketingContent,
   MarketingContentType,
+  MarketingContentStatus,
   createMarketingNote,
   getMarketingNotes,
 } from "@/utils/marketingUtils";
@@ -50,7 +51,6 @@ const formSchema = z.object({
 });
 
 export default function MarketingNotes() {
-  const { toast } = useToast();
   const [notes, setNotes] = useState<MarketingContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
@@ -81,11 +81,7 @@ export default function MarketingNotes() {
         setNotes(data);
       } catch (error) {
         console.error("Error fetching notes:", error);
-        toast({
-          title: "Error",
-          description: "Failed to load marketing notes",
-          variant: "destructive",
-        });
+        toast.error("Failed to load marketing notes");
       } finally {
         setIsLoading(false);
       }
@@ -102,7 +98,7 @@ export default function MarketingNotes() {
     return () => {
       supabase.removeChannel(subscription);
     };
-  }, [toast]);
+  }, []);
 
   // Group notes by month
   const groupedNotes = notes.reduce<Record<string, MarketingContent[]>>((acc, note) => {
@@ -132,7 +128,7 @@ export default function MarketingNotes() {
         description: `${values.description}\n\nPlatforms: ${platformsText}`,
         type: "task" as MarketingContentType,
         content_date: values.content_date,
-        status: "pending"
+        status: "pending" as MarketingContentStatus // Fix type error by casting to MarketingContentStatus
       };
       
       const result = await createMarketingNote(newNote);
@@ -149,17 +145,10 @@ export default function MarketingNotes() {
         content_date: format(new Date(), "yyyy-MM-dd")
       });
       
-      toast({
-        title: "Success",
-        description: "Marketing note created successfully",
-      });
+      toast.success("Marketing note created successfully");
     } catch (error: any) {
       console.error("Error creating note:", error);
-      toast({
-        title: "Error",
-        description: error.message || "Failed to create marketing note",
-        variant: "destructive", 
-      });
+      toast.error(error.message || "Failed to create marketing note");
     }
   };
 
@@ -335,19 +324,19 @@ export default function MarketingNotes() {
                                   <div className="flex justify-between items-center mt-3">
                                     <div className="flex gap-1.5">
                                       {note.description?.includes("Facebook") && (
-                                        <Badge variant="secondary" size="sm" className="bg-blue-100 text-blue-700 border-blue-200">
+                                        <Badge variant="secondary" className="bg-blue-100 text-blue-700 border-blue-200">
                                           <Facebook className="h-3 w-3 mr-1" />
                                           Facebook
                                         </Badge>
                                       )}
                                       {note.description?.includes("Instagram") && (
-                                        <Badge variant="secondary" size="sm" className="bg-pink-100 text-pink-700 border-pink-200">
+                                        <Badge variant="secondary" className="bg-pink-100 text-pink-700 border-pink-200">
                                           <Instagram className="h-3 w-3 mr-1" />
                                           Instagram
                                         </Badge>
                                       )}
                                       {note.description?.includes("TikTok") && (
-                                        <Badge variant="secondary" size="sm" className="bg-slate-100 text-slate-700 border-slate-200">
+                                        <Badge variant="secondary" className="bg-slate-100 text-slate-700 border-slate-200">
                                           <FileText className="h-3 w-3 mr-1" />
                                           TikTok
                                         </Badge>
