@@ -13,11 +13,14 @@ import {
   Menu,
   X,
   LogOut,
-  FileText, // Changed from Calendar, ListTodo, Bell
+  Calendar,
+  ListTodo,
+  Bell,
   AlertTriangle,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
+import { MarketingNotes } from "@/components/marketing/MarketingNotes";
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -34,7 +37,7 @@ export function Sidebar() {
     cancelled: 0
   });
   
-  // Remove showMarketingNotes state as we'll navigate to a dedicated page instead
+  const [showMarketingNotes, setShowMarketingNotes] = useState(false);
   
   useEffect(() => {
     const fetchOrderCounts = async () => {
@@ -125,8 +128,6 @@ export function Sidebar() {
     },
     { title: "Sales", path: "/sales", icon: ShoppingCart },
     { title: "Products", path: "/products", icon: Package },
-    // Add Marketing Notes as a regular sidebar item
-    { title: "Nota Marketing", path: "/marketing-notes", icon: FileText },
   ];
 
   const sidebarVisible = isMobile ? mobileOpen : true;
@@ -243,6 +244,35 @@ export function Sidebar() {
               </div>
             );
           })}
+          
+          {/* Marketing Notes Section */}
+          <div className="mt-6">
+            <Button
+              variant="ghost"
+              onClick={() => setShowMarketingNotes(!showMarketingNotes)}
+              className={cn(
+                "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+                "hover:bg-white/10 text-white/80",
+                !expanded && !isMobile && "justify-center px-2"
+              )}
+            >
+              <ListTodo size={20} />
+              {(expanded || isMobile) && (
+                <span className="animate-fade-in mr-auto">Nota Marketing</span>
+              )}
+              {(expanded || isMobile) && (
+                <Badge variant="secondary" className="bg-purple-500 text-white">
+                  Auto
+                </Badge>
+              )}
+            </Button>
+            
+            {showMarketingNotes && (expanded || isMobile) && (
+              <div className="mt-2 px-2 py-1 bg-white/5 rounded-md">
+                <MarketingNotes expanded={expanded} isMobile={isMobile} />
+              </div>
+            )}
+          </div>
         </nav>
         
         <div className="p-3 mt-auto border-t border-white/10">
