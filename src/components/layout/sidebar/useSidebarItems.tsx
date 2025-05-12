@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { Users, ShoppingCart, Package, LayoutDashboard, Download } from "lucide-react";
+import { Users, ShoppingCart, Package, LayoutDashboard, FileText } from "lucide-react";
 
 export function useSidebarItems(orderCounts: {
   processing: number;

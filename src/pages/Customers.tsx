@@ -1,12 +1,12 @@
 import { useState, useEffect } from "react";
-import { useLocation, useSearchParams } from "react-router-dom";
+import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FilePdf
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -58,8 +58,9 @@ const malaysianStates = [
 
 const CUSTOMERS_PER_PAGE = 20;
 
-export default function Customers() {
+function Customers() {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
@@ -332,7 +333,7 @@ export default function Customers() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleGenerateReceipt = (customerId) => {
+  const handleGenerateReceipt = (customerId: string) => {
     navigate(`/customers/receipt?id=${customerId}`);
   };
 
@@ -424,7 +425,7 @@ export default function Customers() {
     }
   };
 
-  const renderCustomerActions = (customer) => {
+  const renderCustomerActions = (customer: Customer) => {
     return (
       <div className="flex items-center gap-2">
         <Button
@@ -433,7 +434,7 @@ export default function Customers() {
           onClick={() => handleGenerateReceipt(customer.id)}
           title="Generate Receipt"
         >
-          <FilePdf className="h-4 w-4" />
+          <FileText className="h-4 w-4" />
         </Button>
         
         <Button
