@@ -1,16 +1,16 @@
 
 import { ReactNode, useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
+import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Sidebar } from "./Sidebar";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 
-type MainLayoutProps = {
-  children: ReactNode;
+interface MainLayoutProps {
+  children?: ReactNode;
   requireAuth?: boolean;
-};
+}
 
 export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   const { user, isLoading } = useAuth();
@@ -59,9 +59,11 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
         isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
-          {children}
+          {children || <Outlet />}
         </div>
       </main>
     </div>
   );
 }
+
+export default MainLayout;

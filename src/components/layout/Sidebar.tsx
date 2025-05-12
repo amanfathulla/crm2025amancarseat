@@ -1,51 +1,20 @@
 
 import { useState, useEffect } from "react";
-import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
-import { useAuth } from "@/hooks/useAuth";
-import { Button } from "@/components/ui/button";
-import {
-  LayoutDashboard,
-  Users,
-  ShoppingCart,
-  Package,
-  Menu,
-  X,
-  LogOut,
-  ListTodo,
-  FilePdf,
-  Download,
-} from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
-import { MarketingNotes } from "@/components/marketing/MarketingNotes";
 
-// Define the badge type to include className property
-interface SidebarBadge {
-  label: string;
-  variant: string;
-  tooltip: string;
-  onClick: () => void;
-  className?: string;
-}
-
-// Define the sidebar item type with badges
-interface SidebarItem {
-  title: string;
-  path: string;
-  icon: React.ElementType;
-  badges?: SidebarBadge[];
-  rightIcon?: React.ElementType;
-}
+// Import sidebar components
+import { SidebarItem } from "./sidebar/SidebarItem";
+import { SidebarHeader } from "./sidebar/SidebarHeader";
+import { SidebarFooter } from "./sidebar/SidebarFooter";
+import { MarketingNotesSection } from "./sidebar/MarketingNotesSection";
+import { MobileToggle } from "./sidebar/MobileToggle";
+import { useSidebarItems } from "./sidebar/useSidebarItems";
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   const isMobile = useIsMobile();
-  const location = useLocation();
-  const navigate = useNavigate();
-  const { logout } = useAuth();
-  
   const [mobileOpen, setMobileOpen] = useState(false);
   
   const [orderCounts, setOrderCounts] = useState({
@@ -110,59 +79,9 @@ export function Sidebar() {
       setExpanded(!expanded);
     }
   };
-  
-  const handleOrderFilter = (status) => {
-    navigate(`/customers?status=${status}`);
-    if (isMobile) setMobileOpen(false);
-  };
-  
-  const handleDownloadReceipt = () => {
-    navigate('/customers/receipt');
-    if (isMobile) setMobileOpen(false);
-  };
 
-  const sidebarItems: SidebarItem[] = [
-    { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
-    { 
-      title: "Customers", 
-      path: "/customers", 
-      icon: Users,
-      badges: [
-        { 
-          label: `${orderCounts.processing}`, 
-          variant: "secondary", 
-          tooltip: "Orders In Process",
-          onClick: () => handleOrderFilter('processing'),
-        },
-        { 
-          label: `${orderCounts.completed}`, 
-          variant: "default", 
-          tooltip: "Completed Orders",
-          onClick: () => handleOrderFilter('completed'),
-        },
-        { 
-          label: `${orderCounts.cancelled}`, 
-          variant: "destructive", 
-          tooltip: "Cancelled Orders",
-          onClick: () => handleOrderFilter('cancelled'),
-        },
-        {
-          label: "PDF",
-          variant: "outline",
-          tooltip: "Download Official Receipt",
-          onClick: handleDownloadReceipt,
-          className: "bg-purple-100 text-purple-800"
-        }
-      ]
-    },
-    { 
-      title: "Sales", 
-      path: "/sales", 
-      icon: ShoppingCart
-    },
-    { title: "Products", path: "/products", icon: Package },
-  ];
-
+  const sidebarItems = useSidebarItems(orderCounts);
+  
   const sidebarVisible = isMobile ? mobileOpen : true;
   const sidebarWidth = expanded && !isMobile ? "w-64" : "w-20";
 
@@ -186,170 +105,37 @@ export function Sidebar() {
           isMobile && mobileOpen && "w-64 translate-x-0"
         )}
       >
-        <div className="sticky top-0 z-10 flex items-center justify-between p-4 border-b border-white/10 bg-black/80 backdrop-blur-sm">
-          {(expanded || isMobile) && (
-            <h2 className="text-xl font-bold animate-fade-in">Admin Panel</h2>
-          )}
-          <Button 
-            onClick={toggleSidebar} 
-            variant="ghost" 
-            size="icon"
-            className={cn(
-              "h-8 w-8 text-white hover:bg-white/10",
-              !expanded && !isMobile && "ml-auto"
-            )}
-          >
-            {isMobile ? (
-              <X size={18} />
-            ) : expanded ? (
-              <X size={18} />
-            ) : (
-              <Menu size={18} />
-            )}
-          </Button>
-        </div>
+        <SidebarHeader 
+          expanded={expanded}
+          isMobile={isMobile}
+          toggleSidebar={toggleSidebar}
+        />
         
         <nav className="flex flex-col gap-2 px-2 py-4 flex-1 overflow-y-auto">
           {/* Main navigation items */}
-          {sidebarItems.map((item) => {
-            const Icon = item.icon;
-            const RightIcon = item.rightIcon;
-            const isActive = location.pathname === item.path;
-            
-            return (
-              <div key={item.path} className="relative">
-                <NavLink
-                  to={item.path}
-                  className={({ isActive }) => cn(
-                    "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-                    isActive 
-                      ? "bg-white text-black font-medium" 
-                      : "hover:bg-white/10 text-white/80",
-                    !expanded && !isMobile && "justify-center px-2"
-                  )}
-                  onClick={() => isMobile && setMobileOpen(false)}
-                >
-                  <Icon size={20} className={isActive ? "text-black" : ""} />
-                  {(expanded || isMobile) && (
-                    <>
-                      <span className="animate-fade-in">{item.title}</span>
-                      
-                      {RightIcon && (
-                        <RightIcon size={16} className="ml-auto mr-1" />
-                      )}
-                      
-                      {item.badges && (
-                        <div className={cn(
-                          "flex items-center gap-1.5",
-                          RightIcon ? "" : "ml-auto"
-                        )}>
-                          {item.badges.map((badge, index) => (
-                            <Badge 
-                              key={index} 
-                              variant={badge.variant as any}
-                              className={cn(
-                                "h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2",
-                                badge.className
-                              )}
-                              title={badge.tooltip}
-                              onClick={(e) => {
-                                e.preventDefault();
-                                e.stopPropagation();
-                                badge.onClick();
-                              }}
-                            >
-                              {badge.label}
-                            </Badge>
-                          ))}
-                        </div>
-                      )}
-                    </>
-                  )}
-                </NavLink>
-                
-                {!expanded && !isMobile && item.badges && (
-                  <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
-                    {item.badges.slice(0, 3).map((badge, index) => (
-                      <Badge 
-                        key={index} 
-                        variant={badge.variant as any}
-                        className={cn(
-                          "h-5 min-w-5 cursor-pointer flex justify-center items-center px-1",
-                          badge.className
-                        )}
-                        title={badge.tooltip}
-                        onClick={(e) => {
-                          e.preventDefault();
-                          e.stopPropagation();
-                          badge.onClick();
-                        }}
-                      >
-                        {index < 2 ? badge.label.substring(0, 3) : badge.label}
-                      </Badge>
-                    ))}
-                  </div>
-                )}
-              </div>
-            );
-          })}
+          {sidebarItems.map((item) => (
+            <SidebarItem 
+              key={item.path} 
+              item={item} 
+              expanded={expanded} 
+              isMobile={isMobile}
+              onClick={() => isMobile && setMobileOpen(false)}
+            />
+          ))}
           
-          {/* Marketing Notes Section */}
-          <div className="mt-6">
-            <Button
-              variant="ghost"
-              onClick={() => setShowMarketingNotes(!showMarketingNotes)}
-              className={cn(
-                "w-full flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-                showMarketingNotes ? "bg-white/10" : "",
-                "hover:bg-white/10 text-white/80",
-                !expanded && !isMobile && "justify-center px-2"
-              )}
-            >
-              <ListTodo size={20} />
-              {(expanded || isMobile) && (
-                <span className="animate-fade-in mr-auto">Nota Marketing</span>
-              )}
-              {(expanded || isMobile) && (
-                <Badge variant="secondary" className="bg-purple-500 text-white">
-                  Auto
-                </Badge>
-              )}
-            </Button>
-            
-            {showMarketingNotes && (expanded || isMobile) && (
-              <div className="mt-2 px-2 py-1 bg-white/5 rounded-md">
-                <MarketingNotes expanded={expanded} isMobile={isMobile} />
-              </div>
-            )}
-          </div>
+          <MarketingNotesSection
+            expanded={expanded}
+            isMobile={isMobile}
+            showMarketingNotes={showMarketingNotes}
+            setShowMarketingNotes={setShowMarketingNotes}
+          />
         </nav>
         
-        <div className="p-3 mt-auto border-t border-white/10">
-          <Button
-            variant="ghost"
-            onClick={logout}
-            className={cn(
-              "w-full flex items-center gap-3 text-white/80 hover:bg-white/10 hover:text-white",
-              !expanded && !isMobile && "justify-center px-2"
-            )}
-          >
-            <LogOut size={20} />
-            {(expanded || isMobile) && (
-              <span className="animate-fade-in">Logout</span>
-            )}
-          </Button>
-        </div>
+        <SidebarFooter expanded={expanded} isMobile={isMobile} />
       </aside>
       
       {isMobile && !mobileOpen && (
-        <Button
-          onClick={toggleSidebar}
-          variant="outline"
-          size="icon"
-          className="fixed top-4 left-4 z-40 h-10 w-10 shadow-md bg-black text-white border-white/20 hover:bg-black/80"
-        >
-          <Menu size={20} />
-        </Button>
+        <MobileToggle toggleSidebar={toggleSidebar} />
       )}
     </>
   );

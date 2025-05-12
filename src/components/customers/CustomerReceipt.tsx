@@ -3,7 +3,7 @@ import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
-import { FilePdf, Download, ArrowLeft } from "lucide-react";
+import { Download, ArrowLeft } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { formatDate, formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";

@@ -1,3 +1,4 @@
+
 import React from 'react';
 import {
   BrowserRouter as Router,
@@ -18,7 +19,7 @@ import Customers from "@/pages/Customers";
 import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
 import NotFound from "@/pages/NotFound";
-import MainLayout from "@/components/layout/MainLayout";
+import { MainLayout } from "@/components/layout/MainLayout";
 
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
 
