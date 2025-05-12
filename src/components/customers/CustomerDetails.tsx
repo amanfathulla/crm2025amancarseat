@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Customer } from "@/types/customer";
 import { Badge } from "@/components/ui/badge";
@@ -8,13 +7,15 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { formatCurrency } from "@/lib/utils";
+import { FileText } from "lucide-react";
+import { useNavigate } from "react-router-dom";
 
 interface CustomerDetailsProps {
   customer: Customer;
   onEdit: () => void;
   onDelete: () => void;
   index: number;
-  className?: string; // Added className as an optional prop
+  className?: string; 
 }
 
 const getTimePeriod = (timeString: string) => {
@@ -28,6 +29,8 @@ const getTimePeriod = (timeString: string) => {
 };
 
 export function CustomerDetails({ customer, onEdit, onDelete, index, className }: CustomerDetailsProps) {
+  const navigate = useNavigate();
+  
   const formatDate = (dateString: string) => {
     if (!dateString) return "";
     const date = new Date(dateString);
@@ -46,14 +49,33 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
         return <Badge variant="secondary">{status}</Badge>;
     }
   };
+  
+  const handleGenerateReceipt = () => {
+    navigate(`/customers/receipt?id=${customer.id}`);
+  };
 
   return (
     <AccordionItem value={customer.id} className={`border-b ${className || ''}`}>
       <AccordionTrigger className="hover:no-underline hover:bg-muted/50 px-4">
-        <span className="flex items-center text-base font-medium">
-          <span className="inline-block w-8 text-right mr-3 text-muted-foreground">{index}.</span>
-          {customer.name}
-        </span>
+        <div className="flex items-center justify-between w-full text-base font-medium">
+          <span className="flex items-center">
+            <span className="inline-block w-8 text-right mr-3 text-muted-foreground">{index}.</span>
+            {customer.name}
+          </span>
+          
+          <Button
+            variant="ghost"
+            size="sm"
+            onClick={(e) => {
+              e.stopPropagation();
+              handleGenerateReceipt();
+            }}
+            title="Generate Receipt"
+            className="mr-2"
+          >
+            <FileText className="h-4 w-4 mr-1" /> Resit PDF
+          </Button>
+        </div>
       </AccordionTrigger>
       <AccordionContent>
         <div className="px-4 py-2 grid gap-4 text-sm">
