@@ -393,6 +393,7 @@ export type Database = {
           quarter_2: number
           quarter_3: number
           quarter_4: number
+          total_profit: number
           total_revenue: number
           year: number
         }
@@ -403,6 +404,7 @@ export type Database = {
           quarter_2: number
           quarter_3: number
           quarter_4: number
+          total_profit?: number
           total_revenue: number
           year: number
         }
@@ -413,6 +415,7 @@ export type Database = {
           quarter_2?: number
           quarter_3?: number
           quarter_4?: number
+          total_profit?: number
           total_revenue?: number
           year?: number
         }

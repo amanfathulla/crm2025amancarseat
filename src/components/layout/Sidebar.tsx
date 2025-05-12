@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -85,8 +84,17 @@ export function Sidebar() {
         }
         
         if (data && data.length > 0) {
-          const totalSalesAmount = data.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0);
-          const totalProfitAmount = data.reduce((sum, item) => sum + parseFloat(String(item.total_profit || 0)), 0);
+          const totalSalesAmount = data.reduce((sum, item) => {
+            // Make sure to handle the scenario if the property doesn't exist
+            const revenue = typeof item.total_revenue === 'number' ? item.total_revenue : 0;
+            return sum + revenue;
+          }, 0);
+          
+          const totalProfitAmount = data.reduce((sum, item) => {
+            // Make sure to handle the scenario if the property doesn't exist
+            const profit = typeof item.total_profit === 'number' ? item.total_profit : 0;
+            return sum + profit;
+          }, 0);
           
           setTotalSales(totalSalesAmount);
           setTotalProfit(totalProfitAmount);
