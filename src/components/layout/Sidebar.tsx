@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -18,6 +19,24 @@ import {
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
 import { MarketingNotes } from "@/components/marketing/MarketingNotes";
+
+// Define the badge type to include className property
+interface SidebarBadge {
+  label: string;
+  variant: string;
+  tooltip: string;
+  onClick: () => void;
+  className?: string; // Add className as an optional property
+}
+
+// Define the sidebar item type with badges
+interface SidebarItem {
+  title: string;
+  path: string;
+  icon: React.ElementType;
+  badges?: SidebarBadge[];
+  rightIcon?: React.ElementType;
+}
 
 export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
@@ -148,7 +167,7 @@ export function Sidebar() {
     }).format(amount).replace("MYR", "RM");
   };
 
-  const sidebarItems = [
+  const sidebarItems: SidebarItem[] = [
     { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
     { 
       title: "Customers", 
