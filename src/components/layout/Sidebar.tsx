@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from "react";
 import { NavLink, useLocation, useNavigate } from "react-router-dom";
 import { cn } from "@/lib/utils";
@@ -13,6 +14,7 @@ import {
   X,
   LogOut,
   ListTodo,
+  DollarSign,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -34,6 +36,9 @@ export function Sidebar() {
   });
   
   const [showMarketingNotes, setShowMarketingNotes] = useState(false);
+  
+  const [totalSales, setTotalSales] = useState(0);
+  const [totalProfit, setTotalProfit] = useState(0);
   
   useEffect(() => {
     const fetchOrderCounts = async () => {
@@ -68,7 +73,31 @@ export function Sidebar() {
       }
     };
     
+    const fetchTotalSalesAndProfit = async () => {
+      try {
+        const { data, error } = await supabase
+          .from('yearly_sales')
+          .select('total_revenue, total_profit');
+        
+        if (error) {
+          console.error("Error fetching sales data:", error);
+          return;
+        }
+        
+        if (data && data.length > 0) {
+          const totalSalesAmount = data.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0);
+          const totalProfitAmount = data.reduce((sum, item) => sum + parseFloat(String(item.total_profit || 0)), 0);
+          
+          setTotalSales(totalSalesAmount);
+          setTotalProfit(totalProfitAmount);
+        }
+      } catch (error) {
+        console.error("Error calculating total sales:", error);
+      }
+    };
+    
     fetchOrderCounts();
+    fetchTotalSalesAndProfit();
     
     const subscription = supabase
       .channel('public:customers')
@@ -77,8 +106,16 @@ export function Sidebar() {
       })
       .subscribe();
     
+    const salesSubscription = supabase
+      .channel('public:yearly_sales')
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'yearly_sales' }, () => {
+        fetchTotalSalesAndProfit();
+      })
+      .subscribe();
+    
     return () => {
       supabase.removeChannel(subscription);
+      supabase.removeChannel(salesSubscription);
     };
   }, []);
   
@@ -93,6 +130,14 @@ export function Sidebar() {
   const handleOrderFilter = (status) => {
     navigate(`/customers?status=${status}`);
     if (isMobile) setMobileOpen(false);
+  };
+  
+  const formatCurrency = (amount) => {
+    return new Intl.NumberFormat('ms-MY', {
+      style: 'currency',
+      currency: 'MYR',
+      maximumFractionDigits: 2,
+    }).format(amount).replace("MYR", "RM");
   };
 
   const sidebarItems = [
@@ -122,7 +167,28 @@ export function Sidebar() {
         }
       ]
     },
-    { title: "Sales", path: "/sales", icon: ShoppingCart },
+    { 
+      title: "Sales", 
+      path: "/sales", 
+      icon: ShoppingCart,
+      badges: [
+        {
+          label: formatCurrency(totalSales),
+          variant: "outline",
+          tooltip: "Total Sales Revenue",
+          onClick: () => navigate('/sales'),
+          className: "text-xs whitespace-nowrap"
+        },
+        {
+          label: formatCurrency(totalProfit),
+          variant: "outline",
+          tooltip: "Total Profit",
+          onClick: () => navigate('/sales'),
+          className: "text-xs text-green-600 whitespace-nowrap"
+        }
+      ],
+      rightIcon: DollarSign
+    },
     { title: "Products", path: "/products", icon: Package },
   ];
 
@@ -176,6 +242,7 @@ export function Sidebar() {
           {/* Main navigation items */}
           {sidebarItems.map((item) => {
             const Icon = item.icon;
+            const RightIcon = item.rightIcon;
             const isActive = location.pathname === item.path;
             
             return (
@@ -196,13 +263,23 @@ export function Sidebar() {
                     <>
                       <span className="animate-fade-in">{item.title}</span>
                       
+                      {RightIcon && (
+                        <RightIcon size={16} className="ml-auto mr-1" />
+                      )}
+                      
                       {item.badges && (
-                        <div className="ml-auto flex items-center gap-1.5">
+                        <div className={cn(
+                          "flex items-center gap-1.5",
+                          RightIcon ? "" : "ml-auto"
+                        )}>
                           {item.badges.map((badge, index) => (
                             <Badge 
                               key={index} 
                               variant={badge.variant as any}
-                              className="h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2"
+                              className={cn(
+                                "h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2",
+                                badge.className
+                              )}
                               title={badge.tooltip}
                               onClick={(e) => {
                                 e.preventDefault();
@@ -221,11 +298,14 @@ export function Sidebar() {
                 
                 {!expanded && !isMobile && item.badges && (
                   <div className="absolute -right-1 top-0.5 flex flex-col gap-1">
-                    {item.badges.map((badge, index) => (
+                    {item.badges.slice(0, 3).map((badge, index) => (
                       <Badge 
                         key={index} 
                         variant={badge.variant as any}
-                        className="h-5 min-w-5 cursor-pointer flex justify-center items-center px-1"
+                        className={cn(
+                          "h-5 min-w-5 cursor-pointer flex justify-center items-center px-1",
+                          badge.className
+                        )}
                         title={badge.tooltip}
                         onClick={(e) => {
                           e.preventDefault();
@@ -233,7 +313,7 @@ export function Sidebar() {
                           badge.onClick();
                         }}
                       >
-                        {badge.label}
+                        {index < 2 ? badge.label.substring(0, 3) : badge.label}
                       </Badge>
                     ))}
                   </div>

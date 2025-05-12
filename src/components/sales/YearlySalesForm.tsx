@@ -23,6 +23,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
     salesRecord || {
       year: currentYear,
       total_revenue: 0,
+      total_profit: 0, // Initialize total profit
       quarter_1: 0,
       quarter_2: 0,
       quarter_3: 0,
@@ -56,6 +57,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
           .update({
             year: formData.year,
             total_revenue: formData.total_revenue,
+            total_profit: formData.total_profit, // Update total profit
             quarter_1: 0,  // Set all quarters to 0 since we're not using them
             quarter_2: 0,
             quarter_3: 0,
@@ -97,6 +99,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
             {
               year: formData.year,
               total_revenue: formData.total_revenue,
+              total_profit: formData.total_profit, // Add total profit
               quarter_1: 0,  // Set all quarters to 0 since we're not using them
               quarter_2: 0,
               quarter_3: 0,
@@ -164,6 +167,21 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
               />
             </div>
           </div>
+          
+          <div className="space-y-2">
+            <Label htmlFor="total_profit">Total Profit (RM)</Label>
+            <Input
+              id="total_profit"
+              name="total_profit"
+              type="number"
+              min={0}
+              step="0.01"
+              value={formData.total_profit}
+              onChange={handleChange}
+              required
+            />
+          </div>
+          
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>
               Cancel

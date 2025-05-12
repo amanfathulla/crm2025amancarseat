@@ -52,6 +52,7 @@ export default function Sales() {
         id: record.id,
         year: record.year,
         total_revenue: record.total_revenue,
+        total_profit: record.total_profit || 0, // Handle null values
         quarter_1: record.quarter_1,
         quarter_2: record.quarter_2,
         quarter_3: record.quarter_3,
@@ -75,9 +76,12 @@ export default function Sales() {
         
         const currentYearRevenue = currentYearData ? currentYearData.total_revenue : 0;
         const previousYearRevenue = previousYearData ? previousYearData.total_revenue : 0;
+        const currentYearProfit = currentYearData ? currentYearData.total_profit : 0;
+        const previousYearProfit = previousYearData ? previousYearData.total_profit : 0;
         
         // Calculate total revenue across all years
         const totalAllTimeRevenue = sortedData.reduce((total, record) => total + record.total_revenue, 0);
+        const totalAllTimeProfit = sortedData.reduce((total, record) => total + (record.total_profit || 0), 0);
         
         const percentageChange = previousYearRevenue > 0
           ? ((currentYearRevenue - previousYearRevenue) / previousYearRevenue) * 100
@@ -87,14 +91,18 @@ export default function Sales() {
         const yearlyData = sortedData.slice(0, 5).map(record => ({
           year: record.year,
           totalRevenue: record.total_revenue,
+          totalProfit: record.total_profit || 0,
         }));
         
         setAnalytics({
           currentYearRevenue,
           previousYearRevenue,
+          currentYearProfit,
+          previousYearProfit,
           percentageChange,
           yearlyData,
           totalAllTimeRevenue,
+          totalAllTimeProfit,
           minYear: Math.min(...sortedData.map(record => record.year)),
           maxYear: Math.max(...sortedData.map(record => record.year)),
         });
@@ -131,6 +139,7 @@ export default function Sales() {
     setSelectedRecord({
       year: record.year,
       total_revenue: record.total_revenue,
+      total_profit: record.total_profit,
       quarter_1: record.quarter_1,
       quarter_2: record.quarter_2,
       quarter_3: record.quarter_3,
@@ -145,6 +154,7 @@ export default function Sales() {
     setSelectedRecord({ 
       year: year,
       total_revenue: 0,
+      total_profit: 0,
       quarter_1: 0,
       quarter_2: 0,
       quarter_3: 0,
@@ -216,6 +226,22 @@ export default function Sales() {
                   </CardContent>
                 </Card>
                 
+                {/* Total Profit Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <DollarSign className="h-5 w-5 text-green-500" />
+                      <span className="text-sm text-muted-foreground">Total Profit</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.totalAllTimeProfit).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
                 {/* Year-over-Year Growth Card */}
                 <Card className="bg-white">
                   <CardContent className="p-6">
@@ -256,22 +282,6 @@ export default function Sales() {
                     </div>
                   </CardContent>
                 </Card>
-                
-                {/* Previous Year Card */}
-                <Card className="bg-white">
-                  <CardContent className="p-6">
-                    <div className="flex items-center justify-between mb-2">
-                      <Calendar className="h-5 w-5 text-orange-500" />
-                      <span className="text-sm text-muted-foreground">Previous Year ({new Date().getFullYear() - 1})</span>
-                    </div>
-                    <div>
-                      <p className="text-2xl font-bold text-slate-900">
-                        {formatCurrency(analytics.previousYearRevenue).replace("MYR", "RM")}
-                      </p>
-                      <p className="text-xs text-muted-foreground mt-1">Full year total</p>
-                    </div>
-                  </CardContent>
-                </Card>
               </div>
               
               <div className="h-80">
@@ -288,6 +298,7 @@ export default function Sales() {
                     />
                     <Legend />
                     <Bar dataKey="totalRevenue" name="Total Revenue (RM)" fill="#4f46e5" />
+                    <Bar dataKey="totalProfit" name="Total Profit (RM)" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
@@ -333,19 +344,20 @@ export default function Sales() {
                 <tr className="border-b">
                   <th className="text-left py-3 px-4 font-medium">Year</th>
                   <th className="text-right py-3 px-4 font-medium">Total Revenue (RM)</th>
+                  <th className="text-right py-3 px-4 font-medium">Total Profit (RM)</th>
                   <th className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={4} className="py-8 text-center text-muted-foreground">
                       Loading yearly sales data...
                     </td>
                   </tr>
                 ) : filteredYearlySales.length === 0 ? (
                   <tr>
-                    <td colSpan={3} className="py-8 text-center text-muted-foreground">
+                    <td colSpan={4} className="py-8 text-center text-muted-foreground">
                       {searchQuery ? "No matching yearly sales records found." : "No yearly sales records found. Add your first record to get started."}
                     </td>
                   </tr>
@@ -357,6 +369,9 @@ export default function Sales() {
                       </td>
                       <td className="py-3 px-4 text-sm text-right font-medium">
                         {formatCurrency(record.total_revenue)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        {formatCurrency(record.total_profit)}
                       </td>
                       <td className="py-3 px-4 text-sm text-right">
                         <div className="flex justify-end gap-2">
