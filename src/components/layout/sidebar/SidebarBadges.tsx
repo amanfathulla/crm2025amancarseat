@@ -27,7 +27,7 @@ export function SidebarBadges({ badges, expanded, isMobile }: {
             variant={badge.variant as any}
             className={cn(
               "h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2",
-              badge.className
+              badge.className || ""
             )}
             title={badge.tooltip}
             onClick={(e) => {
@@ -52,7 +52,7 @@ export function SidebarBadges({ badges, expanded, isMobile }: {
           variant={badge.variant as any}
           className={cn(
             "h-5 min-w-5 cursor-pointer flex justify-center items-center px-1",
-            badge.className
+            badge.className || ""
           )}
           title={badge.tooltip}
           onClick={(e) => {

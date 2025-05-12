@@ -42,21 +42,29 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
           if (isMobile && onClick) onClick();
         }}
       >
-        <Icon size={20} className={({ isActive }) => isActive ? "text-black" : ""} />
-        {(expanded || isMobile) && (
+        {({ isActive }) => (
           <>
-            <span className="animate-fade-in">{item.title}</span>
+            <Icon 
+              size={20} 
+              className={isActive ? "text-black" : ""} 
+            />
             
-            {RightIcon && (
-              <RightIcon size={16} className="ml-auto mr-1" />
-            )}
-            
-            {item.badges && (
-              <SidebarBadges 
-                badges={item.badges}
-                expanded={expanded}
-                isMobile={isMobile}
-              />
+            {(expanded || isMobile) && (
+              <>
+                <span className="animate-fade-in">{item.title}</span>
+                
+                {RightIcon && (
+                  <RightIcon size={16} className="ml-auto mr-1" />
+                )}
+                
+                {item.badges && (
+                  <SidebarBadges 
+                    badges={item.badges}
+                    expanded={expanded}
+                    isMobile={isMobile}
+                  />
+                )}
+              </>
             )}
           </>
         )}
