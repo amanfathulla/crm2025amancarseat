@@ -14,7 +14,8 @@ import {
   X,
   LogOut,
   ListTodo,
-  DollarSign,
+  FilePdf,
+  Download,
 } from "lucide-react";
 import { Badge } from "@/components/ui/badge";
 import { supabase } from "@/integrations/supabase/client";
@@ -26,7 +27,7 @@ interface SidebarBadge {
   variant: string;
   tooltip: string;
   onClick: () => void;
-  className?: string; // Add className as an optional property
+  className?: string;
 }
 
 // Define the sidebar item type with badges
@@ -54,9 +55,6 @@ export function Sidebar() {
   });
   
   const [showMarketingNotes, setShowMarketingNotes] = useState(false);
-  
-  const [totalSales, setTotalSales] = useState(0);
-  const [totalProfit, setTotalProfit] = useState(0);
   
   useEffect(() => {
     const fetchOrderCounts = async () => {
@@ -91,40 +89,7 @@ export function Sidebar() {
       }
     };
     
-    const fetchTotalSalesAndProfit = async () => {
-      try {
-        const { data, error } = await supabase
-          .from('yearly_sales')
-          .select('total_revenue, total_profit');
-        
-        if (error) {
-          console.error("Error fetching sales data:", error);
-          return;
-        }
-        
-        if (data && data.length > 0) {
-          const totalSalesAmount = data.reduce((sum, item) => {
-            // Make sure to handle the scenario if the property doesn't exist
-            const revenue = typeof item.total_revenue === 'number' ? item.total_revenue : 0;
-            return sum + revenue;
-          }, 0);
-          
-          const totalProfitAmount = data.reduce((sum, item) => {
-            // Make sure to handle the scenario if the property doesn't exist
-            const profit = typeof item.total_profit === 'number' ? item.total_profit : 0;
-            return sum + profit;
-          }, 0);
-          
-          setTotalSales(totalSalesAmount);
-          setTotalProfit(totalProfitAmount);
-        }
-      } catch (error) {
-        console.error("Error calculating total sales:", error);
-      }
-    };
-    
     fetchOrderCounts();
-    fetchTotalSalesAndProfit();
     
     const subscription = supabase
       .channel('public:customers')
@@ -133,16 +98,8 @@ export function Sidebar() {
       })
       .subscribe();
     
-    const salesSubscription = supabase
-      .channel('public:yearly_sales')
-      .on('postgres_changes', { event: '*', schema: 'public', table: 'yearly_sales' }, () => {
-        fetchTotalSalesAndProfit();
-      })
-      .subscribe();
-    
     return () => {
       supabase.removeChannel(subscription);
-      supabase.removeChannel(salesSubscription);
     };
   }, []);
   
@@ -159,12 +116,9 @@ export function Sidebar() {
     if (isMobile) setMobileOpen(false);
   };
   
-  const formatCurrency = (amount) => {
-    return new Intl.NumberFormat('ms-MY', {
-      style: 'currency',
-      currency: 'MYR',
-      maximumFractionDigits: 2,
-    }).format(amount).replace("MYR", "RM");
+  const handleDownloadReceipt = () => {
+    navigate('/customers/receipt');
+    if (isMobile) setMobileOpen(false);
   };
 
   const sidebarItems: SidebarItem[] = [
@@ -191,30 +145,20 @@ export function Sidebar() {
           variant: "destructive", 
           tooltip: "Cancelled Orders",
           onClick: () => handleOrderFilter('cancelled'),
+        },
+        {
+          label: "PDF",
+          variant: "outline",
+          tooltip: "Download Official Receipt",
+          onClick: handleDownloadReceipt,
+          className: "bg-purple-100 text-purple-800"
         }
       ]
     },
     { 
       title: "Sales", 
       path: "/sales", 
-      icon: ShoppingCart,
-      badges: [
-        {
-          label: formatCurrency(totalSales),
-          variant: "outline",
-          tooltip: "Total Sales Revenue",
-          onClick: () => navigate('/sales'),
-          className: "text-xs whitespace-nowrap"
-        },
-        {
-          label: formatCurrency(totalProfit),
-          variant: "outline",
-          tooltip: "Total Profit",
-          onClick: () => navigate('/sales'),
-          className: "text-xs text-green-600 whitespace-nowrap"
-        }
-      ],
-      rightIcon: DollarSign
+      icon: ShoppingCart
     },
     { title: "Products", path: "/products", icon: Package },
   ];

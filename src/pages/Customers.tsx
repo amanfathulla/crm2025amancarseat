@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FilePdf
 } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -332,6 +332,10 @@ export default function Customers() {
     setIsDeleteDialogOpen(true);
   };
 
+  const handleGenerateReceipt = (customerId) => {
+    navigate(`/customers/receipt?id=${customerId}`);
+  };
+
   const formatCurrency = (amount: number) => {
     return `RM ${amount.toFixed(2)}`;
   };
@@ -418,6 +422,39 @@ export default function Customers() {
     } else {
       setSelectedCustomers(prev => prev.filter(id => id !== customerId));
     }
+  };
+
+  const renderCustomerActions = (customer) => {
+    return (
+      <div className="flex items-center gap-2">
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleGenerateReceipt(customer.id)}
+          title="Generate Receipt"
+        >
+          <FilePdf className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleEditCustomer(customer)}
+          title="Edit"
+        >
+          <Pencil className="h-4 w-4" />
+        </Button>
+        
+        <Button
+          variant="ghost"
+          size="icon"
+          onClick={() => handleDeleteCustomer(customer)}
+          title="Delete"
+        >
+          <Trash2 className="h-4 w-4" />
+        </Button>
+      </div>
+    );
   };
 
   return (
@@ -805,3 +842,5 @@ export default function Customers() {
     </MainLayout>
   );
 }
+
+export default Customers;
