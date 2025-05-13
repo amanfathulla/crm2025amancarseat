@@ -31,13 +31,15 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
     <div className="relative">
       <NavLink
         to={item.path}
-        className={({ isActive }) => cn(
-          "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
-          isActive 
-            ? "bg-white text-black font-medium" 
-            : "hover:bg-white/10 text-white/80",
-          !expanded && !isMobile && "justify-center px-2"
-        )}
+        className={({ isActive }) => {
+          return cn(
+            "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+            isActive 
+              ? "bg-white text-black font-medium" 
+              : "hover:bg-white/10 text-white/80",
+            !expanded && !isMobile ? "justify-center px-2" : ""
+          );
+        }}
         onClick={() => {
           if (isMobile && onClick) onClick();
         }}

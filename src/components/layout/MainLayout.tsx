@@ -65,5 +65,3 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
     </div>
   );
 }
-
-export default MainLayout;

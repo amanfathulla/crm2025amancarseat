@@ -1,6 +1,6 @@
 
 import { useNavigate } from "react-router-dom";
-import { Users, ShoppingCart, Package, LayoutDashboard, FileText } from "lucide-react";
+import { Users, ShoppingCart, Package, LayoutDashboard } from "lucide-react";
 
 export function useSidebarItems(orderCounts: {
   processing: number;
@@ -11,10 +11,6 @@ export function useSidebarItems(orderCounts: {
   
   const handleOrderFilter = (status: string) => {
     navigate(`/customers?status=${status}`);
-  };
-  
-  const handleDownloadReceipt = () => {
-    navigate('/customers/receipt');
   };
 
   return [
@@ -41,13 +37,6 @@ export function useSidebarItems(orderCounts: {
           variant: "destructive", 
           tooltip: "Cancelled Orders",
           onClick: () => handleOrderFilter('cancelled'),
-        },
-        {
-          label: "PDF",
-          variant: "outline",
-          tooltip: "Download Official Receipt",
-          onClick: handleDownloadReceipt,
-          className: "bg-purple-100 text-purple-800"
         }
       ]
     },
