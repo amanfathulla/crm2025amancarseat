@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
@@ -137,12 +136,14 @@ export function CustomerReceipt() {
                 <div className="flex items-center justify-between mb-8 border-b pb-4">
                   <div className="flex items-center">
                     {/* ACS Logo */}
-                    <div className="w-16 h-16 bg-black text-white rounded-full flex items-center justify-center font-bold text-xl">
-                      ACS
-                    </div>
+                    <img
+                      src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png"
+                      alt="ACS Logo"
+                      className="h-16 w-auto"
+                    />
                     <div className="ml-4">
                       <h2 className="text-2xl font-bold">Official Receipt</h2>
-                      <p className="text-gray-500">ACS Enterprise</p>
+                      <p className="text-gray-500">ACS Legacy</p>
                     </div>
                   </div>
                   <div className="text-right">
@@ -209,7 +210,7 @@ export function CustomerReceipt() {
                 <div className="mt-12 border-t pt-4">
                   <p className="text-center text-gray-500 text-sm">
                     Thank you for your business!<br />
-                    ACS Enterprise - Quality Products & Services
+                    ACS Legacy - Quality Products & Services
                   </p>
                 </div>
               </div>

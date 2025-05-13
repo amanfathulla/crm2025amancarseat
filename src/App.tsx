@@ -20,6 +20,7 @@ import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
+import { Sidebar } from "@/components/layout/Sidebar";
 
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
 
@@ -30,20 +31,28 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/login" element={<Login />} />
-            <Route element={<MainLayout />}>
-              <Route path="/dashboard" element={<Dashboard />} />
-              <Route path="/customers" element={<Customers />} />
-              <Route path="/customers/receipt" element={<CustomerReceipt />} />
-              <Route path="/sales" element={<Sales />} />
-              <Route path="/products" element={<Products />} />
-            </Route>
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <div className="flex min-h-screen">
+            <Routes>
+              <Route path="/" element={<Index />} />
+              <Route path="/login" element={<Login />} />
+              
+              {/* Routes that require authentication and sidebar */}
+              <Route element={<>
+                <Sidebar />
+                <MainLayout />
+              </>}>
+                <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/customers" element={<Customers />} />
+                <Route path="/customers/receipt" element={<CustomerReceipt />} />
+                <Route path="/sales" element={<Sales />} />
+                <Route path="/products" element={<Products />} />
+              </Route>
+              
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </div>
+          <Toaster />
         </Router>
-        <Toaster />
       </QueryClientProvider>
     </AuthProvider>
   );

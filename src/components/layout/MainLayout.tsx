@@ -2,7 +2,6 @@
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
-import { Sidebar } from "./Sidebar";
 import { Loader2 } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
@@ -49,13 +48,9 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Only show sidebar if user is authenticated */}
-      {user && <Sidebar />}
-      
-      {/* Main content */}
+      {/* Main content - We're removing the sidebar from here since it's now handled in App.tsx */}
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out",
-        user ? (isMobile ? "ml-0" : "ml-20 lg:ml-20") : "ml-0",
         isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
         <div className="p-4 md:p-6 max-w-7xl mx-auto">
