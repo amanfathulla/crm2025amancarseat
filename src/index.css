@@ -111,6 +111,21 @@
   }
 }
 
+/* Responsive helper classes */
+@layer components {
+  .responsive-container {
+    @apply w-full px-3 sm:px-4 md:px-6 max-w-[1400px] mx-auto;
+  }
+  
+  .responsive-grid {
+    @apply grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4;
+  }
+  
+  .responsive-flex {
+    @apply flex flex-col md:flex-row gap-4;
+  }
+}
+
 /* Smooth scrolling */
 html {
   scroll-behavior: smooth;
@@ -176,4 +191,22 @@ textarea {
   background: linear-gradient(90deg, #292929 25%, #333333 50%, #292929 75%);
   background-size: 200% 100%;
   animation: shimmer 1.5s infinite;
+}
+
+/* Added responsive utilities */
+@media (max-width: 640px) {
+  .container {
+    padding-left: 12px;
+    padding-right: 12px;
+  }
+}
+
+/* Improved spacing on mobile */
+@media (max-width: 768px) {
+  .p-6 {
+    padding: 16px;
+  }
+  .gap-6 {
+    gap: 16px;
+  }
 }

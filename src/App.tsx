@@ -31,13 +31,13 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          <div className="flex min-h-screen">
+          <div className="flex min-h-screen w-full">
             <Routes>
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               
               {/* Routes that require authentication and sidebar */}
-              <Route element={<>
+              <Route path="/" element={<>
                 <Sidebar />
                 <MainLayout />
               </>}>

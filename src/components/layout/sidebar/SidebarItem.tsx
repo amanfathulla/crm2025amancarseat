@@ -33,7 +33,7 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
         to={item.path}
         className={({ isActive }) => {
           return cn(
-            "flex items-center gap-3 px-3 py-2.5 rounded-md transition-all duration-200",
+            "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200",
             isActive 
               ? "bg-white text-black font-medium" 
               : "hover:bg-white/10 text-white/80",
@@ -41,22 +41,25 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
           );
         }}
         onClick={() => {
-          if (isMobile && onClick) onClick();
+          if (onClick) onClick();
         }}
       >
         {({ isActive }) => (
           <>
             <Icon 
               size={20} 
-              className={isActive ? "text-black" : ""} 
+              className={cn(
+                "flex-shrink-0",
+                isActive ? "text-black" : ""
+              )} 
             />
             
             {(expanded || isMobile) && (
               <>
-                <span className="animate-fade-in">{item.title}</span>
+                <span className="animate-fade-in truncate">{item.title}</span>
                 
                 {RightIcon && (
-                  <RightIcon size={16} className="ml-auto mr-1" />
+                  <RightIcon size={16} className="ml-auto mr-1 flex-shrink-0" />
                 )}
                 
                 {item.badges && (

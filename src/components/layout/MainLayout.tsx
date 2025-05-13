@@ -48,12 +48,11 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex">
-      {/* Main content - We're removing the sidebar from here since it's now handled in App.tsx */}
       <main className={cn(
-        "flex-1 transition-all duration-300 ease-in-out",
+        "flex-1 transition-all duration-300 ease-in-out w-full",
         isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
-        <div className="p-4 md:p-6 max-w-7xl mx-auto">
+        <div className="p-3 sm:p-4 md:p-6 max-w-[1400px] mx-auto">
           {children || <Outlet />}
         </div>
       </main>

@@ -26,6 +26,26 @@ export function Sidebar() {
   const [showMarketingNotes, setShowMarketingNotes] = useState(false);
   
   useEffect(() => {
+    // Set the initial sidebar state based on screen size
+    const handleResize = () => {
+      if (window.innerWidth < 1024) {
+        setExpanded(false);
+      } else {
+        setExpanded(true);
+      }
+    };
+    
+    // Initial check
+    handleResize();
+    
+    // Add event listener
+    window.addEventListener('resize', handleResize);
+    
+    // Cleanup
+    return () => window.removeEventListener('resize', handleResize);
+  }, []);
+  
+  useEffect(() => {
     const fetchOrderCounts = async () => {
       try {
         const { data: processingData, error: processingError } = await supabase
@@ -83,14 +103,16 @@ export function Sidebar() {
   const sidebarItems = useSidebarItems(orderCounts);
   
   const sidebarVisible = isMobile ? mobileOpen : true;
-  const sidebarWidth = expanded && !isMobile ? "w-64" : "w-20";
+  const sidebarWidth = expanded && !isMobile ? "w-64" : "w-16";
 
   return (
     <>
+      {/* Overlay for mobile */}
       {isMobile && mobileOpen && (
         <div 
-          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40"
+          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ease-in-out"
           onClick={() => setMobileOpen(false)}
+          aria-hidden="true"
         />
       )}
     
@@ -111,7 +133,7 @@ export function Sidebar() {
           toggleSidebar={toggleSidebar}
         />
         
-        <nav className="flex flex-col gap-2 px-2 py-4 flex-1 overflow-y-auto">
+        <nav className="flex flex-col gap-2 px-2 py-3 flex-1 overflow-y-auto">
           {/* Main navigation items */}
           {sidebarItems.map((item) => (
             <SidebarItem 

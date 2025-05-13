@@ -16,17 +16,17 @@ export function SidebarBadges({ badges, expanded, isMobile }: {
   expanded: boolean,
   isMobile: boolean
 }) {
-  if (!badges) return null;
+  if (!badges || badges.length === 0) return null;
   
   if (expanded || isMobile) {
     return (
-      <div className="flex items-center gap-1.5 ml-auto">
+      <div className="flex items-center gap-1 ml-auto flex-shrink-0">
         {badges.map((badge, index) => (
           <Badge 
             key={index} 
             variant={badge.variant as any}
             className={cn(
-              "h-6 min-w-6 cursor-pointer flex justify-center items-center gap-1 px-2",
+              "h-5 min-w-5 cursor-pointer flex justify-center items-center gap-1 px-1.5 text-xs",
               badge.className || ""
             )}
             title={badge.tooltip}
@@ -51,7 +51,7 @@ export function SidebarBadges({ badges, expanded, isMobile }: {
           key={index} 
           variant={badge.variant as any}
           className={cn(
-            "h-5 min-w-5 cursor-pointer flex justify-center items-center px-1",
+            "h-4 min-w-4 cursor-pointer flex justify-center items-center px-1 text-[10px]",
             badge.className || ""
           )}
           title={badge.tooltip}
@@ -61,7 +61,7 @@ export function SidebarBadges({ badges, expanded, isMobile }: {
             badge.onClick();
           }}
         >
-          {index < 2 ? badge.label.substring(0, 3) : badge.label}
+          {badge.label.length > 2 ? badge.label.substring(0, 2) : badge.label}
         </Badge>
       ))}
     </div>
