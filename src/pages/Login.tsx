@@ -50,10 +50,10 @@ export default function Login() {
 
   return (
     <MainLayout requireAuth={false}>
-      <div className="min-h-[100vh] flex items-center justify-center">
-        {/* Two-column layout container */}
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8">
-          <Card className="overflow-hidden border-none shadow-xl bg-transparent">
+      <div className="flex items-center justify-center w-full h-screen">
+        {/* Two-column layout container - properly centered */}
+        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center">
+          <Card className="overflow-hidden border-none shadow-xl bg-transparent w-full">
             <div className="flex flex-col lg:flex-row">
               {/* Left column: Branding and welcome message */}
               <div className="lg:w-1/2 bg-gradient-to-br from-primary/90 to-primary p-6 lg:p-12 flex flex-col justify-center items-center text-white">

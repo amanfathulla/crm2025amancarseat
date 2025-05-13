@@ -31,16 +31,20 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
+          {/* Ensure content wrapper is full width */}
           <div className="flex min-h-screen w-full">
             <Routes>
+              {/* Routes without sidebar */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               
-              {/* Routes that require authentication and sidebar */}
-              <Route path="/" element={<>
-                <Sidebar />
-                <MainLayout />
-              </>}>
+              {/* Routes with sidebar and authenticated layout */}
+              <Route path="/" element={
+                <div className="flex w-full">
+                  <Sidebar />
+                  <MainLayout />
+                </div>
+              }>
                 <Route path="/dashboard" element={<Dashboard />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customers/receipt" element={<CustomerReceipt />} />

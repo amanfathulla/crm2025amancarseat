@@ -47,12 +47,14 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex">
+    <div className="min-h-screen bg-background flex w-full">
       <main className={cn(
         "flex-1 transition-all duration-300 ease-in-out w-full",
+        "ml-0 md:ml-16", // Add default spacing for collapsed sidebar
+        "lg:ml-64", // Add spacing for expanded sidebar on larger screens
         isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
-        <div className="p-3 sm:p-4 md:p-6 max-w-[1400px] mx-auto">
+        <div className="p-3 sm:p-4 md:p-6 max-w-screen-xl mx-auto">
           {children || <Outlet />}
         </div>
       </main>
