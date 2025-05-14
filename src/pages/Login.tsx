@@ -9,7 +9,6 @@ import { LoaderCircle } from "lucide-react";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
 import { Card, CardContent } from "@/components/ui/card";
 
 export default function Login() {
@@ -51,56 +50,36 @@ export default function Login() {
   return (
     <MainLayout requireAuth={false}>
       <div className="flex items-center justify-center w-full h-screen">
-        {/* Full centered content container */}
-        <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center">
-          <Card className="overflow-hidden border-none shadow-xl bg-transparent w-full">
-            <div className="flex flex-col lg:flex-row">
-              {/* Left column: Black background with centered logo */}
-              <div className="lg:w-1/2 bg-black p-6 lg:p-12 flex flex-col justify-center items-center text-white">
-                <div className="max-w-md mx-auto text-center flex flex-col items-center justify-center">
-                  <div className="mb-6 flex justify-center">
-                    <AspectRatio ratio={1} className="w-64 h-64 lg:w-72 lg:h-72">
-                      <img 
-                        src="/lovable-uploads/b9c7e803-961e-418c-a48b-e3f641eb576e.png" 
-                        alt="AMAN CAR SEAT Logo" 
-                        className="object-contain"
-                      />
-                    </AspectRatio>
-                  </div>
-                  <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
-                    ACS Legacy
-                  </h1>
-                </div>
+        <div className="w-full max-w-md mx-auto px-4">
+          <Card className="shadow-xl border-none overflow-hidden bg-white">
+            <CardContent className="p-8 flex flex-col items-center">
+              <div className="w-full flex justify-center mb-8">
+                <img 
+                  src="/lovable-uploads/662e2fd0-d700-4822-b948-3897c436fb05.png" 
+                  alt="AMAN CAR SEAT Logo" 
+                  className="w-56 h-auto"
+                />
               </div>
               
-              {/* Right column: Login form */}
-              <div className="lg:w-1/2 bg-white dark:bg-gray-900 p-6 lg:p-12 flex flex-col justify-center">
-                <div className="max-w-md mx-auto w-full">
-                  <div className="text-center mb-10">
-                    <h2 className="text-2xl font-semibold tracking-tight text-primary">Login ke Dashboard</h2>
-                    <p className="text-muted-foreground mt-2">Masukkan kredensial untuk akses sistem</p>
-                  </div>
-                  
-                  <div className="space-y-6">
-                    <Button 
-                      onClick={openAdminLoginDialog} 
-                      variant="default" 
-                      className="w-full h-12 text-base font-medium shadow-md hover:shadow-lg transition-all"
-                      disabled={isSubmitting}
-                    >
-                      {isSubmitting ? (
-                        <>
-                          <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
-                          Logging in...
-                        </>
-                      ) : (
-                        "Login as Admin"
-                      )}
-                    </Button>
-                  </div>
-                </div>
-              </div>
-            </div>
+              <h2 className="text-2xl font-semibold mb-2 text-center">Welcome</h2>
+              <p className="text-muted-foreground text-center mb-8">Login to access the dashboard</p>
+              
+              <Button 
+                onClick={openAdminLoginDialog} 
+                variant="default" 
+                className="w-full h-12 text-base font-medium bg-[#1f2d50] hover:bg-[#1a254a] shadow-md hover:shadow-lg transition-all"
+                disabled={isSubmitting}
+              >
+                {isSubmitting ? (
+                  <>
+                    <LoaderCircle className="mr-2 h-5 w-5 animate-spin" />
+                    Logging in...
+                  </>
+                ) : (
+                  "Login as Admin"
+                )}
+              </Button>
+            </CardContent>
           </Card>
         </div>
       </div>
