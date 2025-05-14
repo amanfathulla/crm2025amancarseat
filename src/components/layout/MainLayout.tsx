@@ -54,7 +54,7 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
         "lg:ml-64", // Add spacing for expanded sidebar on larger screens
         isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
       )}>
-        <div className="p-3 sm:p-4 md:p-6 max-w-screen-xl mx-auto">
+        <div className="p-3 sm:p-4 md:p-6 w-full max-w-screen-xl mx-auto">
           {children || <Outlet />}
         </div>
       </main>

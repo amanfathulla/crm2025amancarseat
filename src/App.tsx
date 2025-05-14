@@ -31,7 +31,6 @@ function App() {
     <AuthProvider>
       <QueryClientProvider client={queryClient}>
         <Router>
-          {/* Ensure content wrapper is full width */}
           <div className="flex min-h-screen w-full">
             <Routes>
               {/* Routes without sidebar */}

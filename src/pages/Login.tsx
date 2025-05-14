@@ -51,15 +51,15 @@ export default function Login() {
   return (
     <MainLayout requireAuth={false}>
       <div className="flex items-center justify-center w-full h-screen">
-        {/* Two-column layout container - properly centered */}
+        {/* Full centered content container */}
         <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center">
           <Card className="overflow-hidden border-none shadow-xl bg-transparent w-full">
             <div className="flex flex-col lg:flex-row">
-              {/* Left column: Branding and welcome message - changed from blue to black background */}
+              {/* Left column: Black background with centered logo */}
               <div className="lg:w-1/2 bg-black p-6 lg:p-12 flex flex-col justify-center items-center text-white">
-                <div className="max-w-md mx-auto text-center">
-                  <div className="mb-8 flex justify-center">
-                    <AspectRatio ratio={1} className="w-48 h-48 lg:w-60 lg:h-60">
+                <div className="max-w-md mx-auto text-center flex flex-col items-center justify-center">
+                  <div className="mb-6 flex justify-center">
+                    <AspectRatio ratio={1} className="w-64 h-64 lg:w-72 lg:h-72">
                       <img 
                         src="/lovable-uploads/b9c7e803-961e-418c-a48b-e3f641eb576e.png" 
                         alt="AMAN CAR SEAT Logo" 
@@ -70,12 +70,6 @@ export default function Login() {
                   <h1 className="text-3xl lg:text-4xl font-bold tracking-tight mb-4">
                     ACS Legacy
                   </h1>
-                  <p className="text-lg lg:text-xl mb-6 opacity-90">
-                    Selamat datang ke sistem pengurusan ACS Legacy
-                  </p>
-                  <p className="text-sm lg:text-base opacity-75 hidden lg:block">
-                    Sistem pengurusan inventori dan pelanggan yang komprehensif untuk ACS Legacy Enterprise
-                  </p>
                 </div>
               </div>
               
@@ -103,17 +97,6 @@ export default function Login() {
                         "Login as Admin"
                       )}
                     </Button>
-                    
-                    <div className="relative flex items-center gap-4 py-3">
-                      <div className="flex-grow h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                      <span className="text-sm text-muted-foreground">Sistem ACS Legacy</span>
-                      <div className="flex-grow h-0.5 bg-gray-200 dark:bg-gray-700"></div>
-                    </div>
-                    
-                    <div className="text-center text-sm text-muted-foreground">
-                      <p>2023-2024 © ACS Legacy Enterprise</p>
-                      <p className="mt-1">Semua hak cipta terpelihara</p>
-                    </div>
                   </div>
                 </div>
               </div>
