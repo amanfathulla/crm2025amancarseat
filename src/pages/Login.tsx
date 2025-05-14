@@ -55,13 +55,13 @@ export default function Login() {
         <div className="w-full max-w-7xl px-4 sm:px-6 lg:px-8 flex items-center justify-center">
           <Card className="overflow-hidden border-none shadow-xl bg-transparent w-full">
             <div className="flex flex-col lg:flex-row">
-              {/* Left column: Branding and welcome message */}
-              <div className="lg:w-1/2 bg-gradient-to-br from-primary/90 to-primary p-6 lg:p-12 flex flex-col justify-center items-center text-white">
+              {/* Left column: Branding and welcome message - changed from blue to black background */}
+              <div className="lg:w-1/2 bg-black p-6 lg:p-12 flex flex-col justify-center items-center text-white">
                 <div className="max-w-md mx-auto text-center">
                   <div className="mb-8 flex justify-center">
-                    <AspectRatio ratio={1} className="w-40 h-40 lg:w-48 lg:h-48">
+                    <AspectRatio ratio={1} className="w-48 h-48 lg:w-60 lg:h-60">
                       <img 
-                        src="/lovable-uploads/4bc7bb8f-2325-4928-b6e3-901158bd3eee.png" 
+                        src="/lovable-uploads/b9c7e803-961e-418c-a48b-e3f641eb576e.png" 
                         alt="AMAN CAR SEAT Logo" 
                         className="object-contain"
                       />
