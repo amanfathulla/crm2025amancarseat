@@ -1,5 +1,5 @@
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
@@ -17,9 +17,16 @@ export default function Login() {
   const [adminPassword, setAdminPassword] = useState("");
   const [adminPasswordError, setAdminPasswordError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
+  const [lastLogin, setLastLogin] = useState<string | null>(null);
   
   const { login } = useAuth();
   const navigate = useNavigate();
+
+  useEffect(() => {
+    // Get the last login time from localStorage if available
+    const storedLastLogin = localStorage.getItem("lastLoginTime");
+    setLastLogin(storedLastLogin);
+  }, []);
 
   const openAdminLoginDialog = () => {
     setAdminPassword("");
@@ -35,11 +42,15 @@ export default function Login() {
     }
 
     setIsSubmitting(true);
-    setShowAdminLoginDialog(false);
     
     try {
       const success = await login("admin", "Muhsin@920926");
       if (success) {
+        // Store current login time
+        const currentTime = new Date().toLocaleString();
+        localStorage.setItem("lastLoginTime", currentTime);
+        
+        setShowAdminLoginDialog(false);
         navigate("/dashboard");
       }
     } finally {
@@ -47,34 +58,34 @@ export default function Login() {
     }
   };
 
+  // Get current year for copyright text
+  const currentYear = new Date().getFullYear();
+
   return (
-    <div className="min-h-screen w-full bg-black flex items-center justify-center overflow-hidden relative">
-      {/* Background gradient effect */}
-      <div className="absolute inset-0 bg-gradient-to-b from-black to-gray-900 opacity-80"></div>
-      
-      {/* Subtle pattern overlay */}
+    <div className="fixed inset-0 w-full h-full bg-black flex flex-col items-center justify-center overflow-hidden">
+      {/* Background pattern overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxMTEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djFjMCAyLjItMS44IDQtNCA0aC0yYy0yLjIgMC00LTEuOC00LTR2LTFjMC0yLjIgMS44LTQgNC00aDJjMi4yIDAgNCAxLjggNCA0ek0yIDJ2MWMwIDIuMi0xLjggNC00IDRoLTJjLTIuMiAwLTQtMS44LTQtNHYtMWMwLTIuMiAxLjgtNCA0LTRoMmMyLjIgMCA0IDEuOCA0IDR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10"></div>
-      
-      <div className="flex flex-col justify-center items-center z-10 p-4 w-full max-w-md">
-        {/* Logo container with proper aspect ratio */}
-        <div className="w-full max-w-[280px] mb-8">
-          <AspectRatio ratio={16/9} className="flex items-center justify-center">
+
+      {/* Logo container - taking up significant screen space */}
+      <div className="w-full px-6 flex-1 flex items-center justify-center max-h-[60vh]">
+        <div className="w-full max-w-[500px] lg:max-w-[600px] relative">
+          <AspectRatio ratio={1/1} className="w-full">
             <img 
-              src="/lovable-uploads/662e2fd0-d700-4822-b948-3897c436fb05.png" 
-              alt="AMAN CAR SEAT Logo" 
-              className="w-full h-auto object-contain"
+              src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png" 
+              alt="AMANCARSEAT Logo" 
+              className="w-full h-full object-contain"
             />
           </AspectRatio>
         </div>
-        
-        <Card className="w-full shadow-2xl border-none overflow-hidden bg-black/50 backdrop-blur-md border-t border-white/10">
-          <CardContent className="p-8">
-            <h2 className="text-2xl font-semibold mb-6 text-white/90 text-center">Admin Login</h2>
-            
+      </div>
+      
+      <div className="w-full px-4 flex flex-col items-center justify-end pb-8">
+        <Card className="w-full max-w-[400px] shadow-2xl border-none overflow-hidden bg-black/50 backdrop-blur-md border-t border-white/10">
+          <CardContent className="p-6">
             <Button 
               onClick={openAdminLoginDialog} 
               variant="default" 
-              className="w-full h-12 text-base font-medium bg-gradient-to-r from-blue-600 to-blue-800 hover:from-blue-700 hover:to-blue-900 shadow-md hover:shadow-lg transition-all rounded-md flex items-center justify-center gap-2"
+              className="w-full h-12 text-base font-medium bg-gradient-to-r from-red-600 to-red-800 hover:from-red-700 hover:to-red-900 shadow-md hover:shadow-lg transition-all rounded-md flex items-center justify-center gap-2"
               disabled={isSubmitting}
             >
               {isSubmitting ? (
@@ -90,9 +101,14 @@ export default function Login() {
               )}
             </Button>
             
-            <div className="mt-6 pt-6 border-t border-white/5 text-center">
+            <div className="mt-4 pt-4 border-t border-white/5 text-center space-y-2">
+              {lastLogin && (
+                <p className="text-xs text-white/60">
+                  Last login: {lastLogin}
+                </p>
+              )}
               <p className="text-xs text-white/40">
-                &copy; 2024 AMAN CAR SEAT. All rights reserved.
+                &copy; {currentYear} AMAN CAR SEAT. All rights reserved.
               </p>
             </div>
           </CardContent>
@@ -139,7 +155,7 @@ export default function Login() {
               type="button" 
               onClick={handleAdminLogin}
               disabled={isSubmitting}
-              className="bg-blue-600 hover:bg-blue-700 text-white"
+              className="bg-red-600 hover:bg-red-700 text-white"
             >
               {isSubmitting ? (
                 <>
