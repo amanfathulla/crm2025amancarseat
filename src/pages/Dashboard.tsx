@@ -1,4 +1,3 @@
-
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -75,6 +74,39 @@ export default function Dashboard() {
         // Last day of month (exclusive)
         const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().split('T')[0];
 
+        // Fetch all customer data for complete aggregation
+        const { data: allCustomers, error: allCustomersError } = await supabase
+          .from('customers')
+          .select('sales_amount, gross_profit, order_status, order_date');
+        if (allCustomersError) throw allCustomersError;
+
+        // --- Dapatkan dari customer, bukan yearly_sales untuk jumlah terkini ---
+        // Semua tahun
+        const totalRevenueAll = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0
+        );
+        const totalProfitAll = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
+        );
+
+        // Tahun ini
+        const currentYear = new Date().getFullYear();
+        const customersThisYear = allCustomers.filter(
+          item => {
+            const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
+            return orderYear === currentYear;
+          }
+        );
+        const totalProfitYear = customersThisYear.reduce(
+          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
+        );
+        const totalRevenueYear = customersThisYear.reduce(
+          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0
+        );
+
+        // Completed orders accurate count
+        const completedOrders = allCustomers.filter(item => item.order_status === "completed").length;
+
         // Fetch yearly data from customers table
         const { data: yearData, error: yearError } = await supabase
           .from('customers')
@@ -119,7 +151,7 @@ export default function Dashboard() {
 
         if (processingError) throw processingError;
 
-        const { data: completedOrders, error: completedError } = await supabase
+        const { data: completedOrdersData, error: completedError } = await supabase
           .from('customers')
           .select('id')
           .eq('order_status', 'completed');
@@ -170,11 +202,11 @@ export default function Dashboard() {
         const monthlyRevenue = monthData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
         const monthlyProfit = monthData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
 
-        // Update state with all fetched data, including correct "thisMonth" stats
+        // Update state seperti sebelum ini tetapi gunakan jumlah untung/jualan berdasarkan customers
         setRevenueData({
           currentYear: {
             year: currentYear,
-            total: yearlyRevenue,
+            total: totalRevenueYear,
           },
           today: {
             revenue: todayRevenue,
@@ -195,16 +227,18 @@ export default function Dashboard() {
             today: todayData.length,
             thisMonth: monthData.length,
             processing: processingOrders?.length || 0,
-            completed: completedOrders?.length || 0,
+            completed: completedOrders,   // patch completed correctly
             cancelled: cancelledOrders?.length || 0
           },
           grossProfit: {
             today: todayProfit,
             thisMonth: monthlyProfit,
-            thisYear: yearlyProfit
+            thisYear: totalProfitYear     // patch correct profit
           },
-          yearlySalesTotal: yearlySalesTotal
+          yearlySalesTotal: totalRevenueAll
         });
+        setTotalProfitAll(totalProfitAll);     // Patch box "Jumlah Untung Keseluruhan"
+        setTotalProfitYear(totalProfitYear);   // Patch box "Jumlah Untung Tahun Ini"
 
         // Generate daily data for chart (fungsi sedia ada)
         const dailyData = await generateDailyData(currentMonth, currentYear);
@@ -282,49 +316,46 @@ export default function Dashboard() {
         <p className="text-muted-foreground">"Kejayaan bermula dengan langkah berani. Terus maju tanpa ragu! – Aman, Founder AMAN CAR SEAT"</p>
       </section>
 
-      {/* Annual Revenue Section - Now a grid with four cards */}
-      <section className="grid grid-cols-1 md:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
+      {/* --- UPDATE: Responsive grid for 4 summary boxes in 2 rows on mobile and 1 row on large --- */}
+      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
         {/* Customer Orders Revenue */}
         <Card className="bg-black text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
-            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
+          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
+            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
+            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
               RM{revenueData.currentYear.total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-gray-400 mt-2">Jualan dari Pesanan Pelanggan</p>
+            <p className="text-xs text-gray-400 mt-2">Jualan dari Pesanan Pelanggan</p>
           </CardContent>
         </Card>
-
         {/* Total Yearly Sales Revenue */}
         <Card className="bg-indigo-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Jualan Keseluruhan</h2>
-            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
+          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
+            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Jualan Keseluruhan</h2>
+            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
               RM{revenueData.yearlySalesTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-gray-300 mt-2">Data dari Rekod Jualan Tahunan</p>
+            <p className="text-xs text-gray-300 mt-2">Data dari semua pesanan pelanggan</p>
           </CardContent>
         </Card>
-
-        {/* NEW: Total Profit ALL TIME */}
+        {/* Total Profit ALL TIME */}
         <Card className="bg-green-700 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Untung Keseluruhan</h2>
-            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
+          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
+            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Untung Keseluruhan</h2>
+            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
               RM{totalProfitAll.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-white/80 mt-2">Keseluruhan Untung (Setiap Tahun)</p>
+            <p className="text-xs text-white/80 mt-2">Keseluruhan Untung (Setiap Tahun)</p>
           </CardContent>
         </Card>
-
-        {/* NEW: Total Profit Current Year */}
+        {/* Total Profit Current Year */}
         <Card className="bg-emerald-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-10 px-4 text-center">
-            <h2 className="text-xl md:text-2xl font-bold mb-2">Jumlah Untung {new Date().getFullYear()}</h2>
-            <div className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-bold mt-1">
+          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
+            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Untung {new Date().getFullYear()}</h2>
+            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
               RM{totalProfitYear.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
             </div>
-            <p className="text-sm text-white/80 mt-2">Untung Tahun Ini (Auto Update Setiap Tahun)</p>
+            <p className="text-xs text-white/80 mt-2">Untung Tahun Ini (Auto Update Setiap Tahun)</p>
           </CardContent>
         </Card>
       </section>
