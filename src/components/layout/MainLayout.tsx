@@ -39,21 +39,23 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   }
 
   return (
-    <div className="min-h-screen bg-background flex flex-row w-full h-full">
+    // Struktur asal dikekalkan, kecuali pada padding kiri (pl-0 di mobile, lg:pl-64 di desktop)
+    <div className={cn(
+      "min-h-screen bg-background flex w-full h-full",
+      // Sidebar ambil ruang 64 (256px), pastikan content bermula selepas itu di desktop
+      !isMobile && "lg:pl-64" // space for sidebar at desktop
+    )}>
       <main
         className={cn(
           "flex-1 min-h-screen w-full h-full transition-all duration-300 ease-in-out",
-          // Entrance animation
           isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
-        style={{}}
       >
-        {/* Responsive, no constraint, with soft horizontal padding */}
-        <div className="w-full h-full px-2 sm:px-4 md:px-6 py-4">
+        {/* Responsive, padding kiri & kanan kecil, atas bawah selesa */}
+        <div className="w-full h-full px-3 sm:px-4 md:px-8 py-6">
           {children || <Outlet />}
         </div>
       </main>
     </div>
   );
 }
-
