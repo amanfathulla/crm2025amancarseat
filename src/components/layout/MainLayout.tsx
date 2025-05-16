@@ -18,20 +18,15 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   const [isPageLoaded, setIsPageLoaded] = useState(false);
 
   useEffect(() => {
-    // Redirect to login if authentication is required but user is not logged in
     if (!isLoading && requireAuth && !user) {
       navigate("/login");
     }
-
-    // Add a slight delay to show entrance animation
     const timer = setTimeout(() => {
       setIsPageLoaded(true);
     }, 50);
-
     return () => clearTimeout(timer);
   }, [user, isLoading, requireAuth, navigate]);
 
-  // Show loading spinner while checking authentication
   if (isLoading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
@@ -39,27 +34,26 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
       </div>
     );
   }
-
-  // If authentication is required and user is not logged in, don't render anything
-  // (the useEffect will handle the redirect)
   if (requireAuth && !user) {
     return null;
   }
 
   return (
-    <div className="min-h-screen bg-background flex w-full">
+    <div className="min-h-screen bg-background flex flex-row w-full h-full">
       <main
         className={cn(
-          "flex-1 transition-all duration-300 ease-in-out w-full h-full",
-          // Buang had max-width & padding supaya fullscreen, responsif
-          // Optional: anda boleh tambah padding kecil untuk rasa lebih "lega", tetapi pastikan tidak terhad ruang
+          "flex-1 min-h-screen w-full h-full transition-all duration-300 ease-in-out",
+          // Entrance animation
           isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
-        style={{ minHeight: "100vh", width: "100vw" }} // Ini benar-benar penuh
+        style={{}}
       >
-        {/* Buang max-w-[1200px] mx-auto & px-6 py-6 */}
-        {children || <Outlet />}
+        {/* Responsive, no constraint, with soft horizontal padding */}
+        <div className="w-full h-full px-2 sm:px-4 md:px-6 py-4">
+          {children || <Outlet />}
+        </div>
       </main>
     </div>
   );
 }
+
