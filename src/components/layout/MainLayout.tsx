@@ -16,21 +16,21 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   const navigate = useNavigate();
   const isMobile = useIsMobile();
   const [isPageLoaded, setIsPageLoaded] = useState(false);
-  
+
   useEffect(() => {
     // Redirect to login if authentication is required but user is not logged in
     if (!isLoading && requireAuth && !user) {
       navigate("/login");
     }
-    
+
     // Add a slight delay to show entrance animation
     const timer = setTimeout(() => {
       setIsPageLoaded(true);
     }, 50);
-    
+
     return () => clearTimeout(timer);
   }, [user, isLoading, requireAuth, navigate]);
-  
+
   // Show loading spinner while checking authentication
   if (isLoading) {
     return (
@@ -39,7 +39,7 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
       </div>
     );
   }
-  
+
   // If authentication is required and user is not logged in, don't render anything
   // (the useEffect will handle the redirect)
   if (requireAuth && !user) {
@@ -48,15 +48,17 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
 
   return (
     <div className="min-h-screen bg-background flex w-full">
-      <main className={cn(
-        "flex-1 transition-all duration-300 ease-in-out w-full",
-        "ml-0 md:ml-16", // Add default spacing for collapsed sidebar
-        "lg:ml-64", // Add spacing for expanded sidebar on larger screens
-        isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
-      )}>
-        <div className="px-6 py-6 w-full max-w-[1200px] mx-auto">
-          {children || <Outlet />}
-        </div>
+      <main
+        className={cn(
+          "flex-1 transition-all duration-300 ease-in-out w-full h-full",
+          // Buang had max-width & padding supaya fullscreen, responsif
+          // Optional: anda boleh tambah padding kecil untuk rasa lebih "lega", tetapi pastikan tidak terhad ruang
+          isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
+        )}
+        style={{ minHeight: "100vh", width: "100vw" }} // Ini benar-benar penuh
+      >
+        {/* Buang max-w-[1200px] mx-auto & px-6 py-6 */}
+        {children || <Outlet />}
       </main>
     </div>
   );
