@@ -58,7 +58,7 @@ export default function Dashboard() {
     const fetchDashboardData = async () => {
       setIsLoading(true);
       try {
-        // Get current date info
+        // Dapatkan tahun & bulan semasa sekali sahaja
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
@@ -89,12 +89,12 @@ export default function Dashboard() {
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
         );
 
-        // Tahun ini
-        const currentYear = new Date().getFullYear();
+        // Tahun ini - guna pembolehubah berlainan untuk elak duplikasi
+        const dashboardYear = currentYear;
         const customersThisYear = allCustomers.filter(
           item => {
             const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
-            return orderYear === currentYear;
+            return orderYear === dashboardYear;
           }
         );
         const totalProfitYear = customersThisYear.reduce(
@@ -111,8 +111,8 @@ export default function Dashboard() {
         const { data: yearData, error: yearError } = await supabase
           .from('customers')
           .select('sales_amount, gross_profit, order_date')
-          .gte('order_date', `${currentYear}-01-01`)
-          .lt('order_date', `${currentYear + 1}-01-01`);
+          .gte('order_date', `${dashboardYear}-01-01`)
+          .lt('order_date', `${dashboardYear + 1}-01-01`);
 
         if (yearError) throw yearError;
 
