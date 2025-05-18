@@ -7,6 +7,12 @@ import { cn } from "@/lib/utils";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
+// Refactored components
+import { SummaryStatCards } from "./dashboard/SummaryStatCards";
+import { DailyRevenueStats } from "./dashboard/DailyRevenueStats";
+import { GrossProfitStats } from "./dashboard/GrossProfitStats";
+import { RevenueProfitChart } from "./dashboard/RevenueProfitChart";
+
 export default function Dashboard() {
   const [revenueData, setRevenueData] = useState({
     currentYear: {
@@ -313,189 +319,18 @@ export default function Dashboard() {
     <MainLayout>
       <section className="mb-6 animate-slide-up delay-100">
         <h1 className="text-3xl font-semibold mb-2">Dashboard</h1>
-        <p className="text-muted-foreground">"Kejayaan bermula dengan langkah berani. Terus maju tanpa ragu! – Aman, Founder AMAN CAR SEAT"</p>
+        <p className="text-muted-foreground">
+          "Kejayaan bermula dengan langkah berani. Terus maju tanpa ragu! – Aman, Founder AMAN CAR SEAT"
+        </p>
       </section>
-
-      {/* --- UPDATE: Responsive grid for 4 summary boxes in 2 rows on mobile and 1 row on large --- */}
-      <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
-        {/* Customer Orders Revenue */}
-        <Card className="bg-black text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Jualan {revenueData.currentYear.year}</h2>
-            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
-              RM{revenueData.currentYear.total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-400 mt-2">Jualan dari Pesanan Pelanggan</p>
-          </CardContent>
-        </Card>
-        {/* Total Yearly Sales Revenue */}
-        <Card className="bg-indigo-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Jualan Keseluruhan</h2>
-            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
-              RM{revenueData.yearlySalesTotal.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-gray-300 mt-2">Data dari semua pesanan pelanggan</p>
-          </CardContent>
-        </Card>
-        {/* Total Profit ALL TIME */}
-        <Card className="bg-green-700 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Untung Keseluruhan</h2>
-            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
-              RM{totalProfitAll.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-white/80 mt-2">Keseluruhan Untung (Setiap Tahun)</p>
-          </CardContent>
-        </Card>
-        {/* Total Profit Current Year */}
-        <Card className="bg-emerald-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
-          <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-            <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Untung {new Date().getFullYear()}</h2>
-            <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
-              RM{totalProfitYear.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
-            </div>
-            <p className="text-xs text-white/80 mt-2">Untung Tahun Ini (Auto Update Setiap Tahun)</p>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Daily Revenue Stats */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up delay-300">
-        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <h3 className="text-lg font-medium">Semalam</h3>
-              </div>
-            </div>
-            <p className="text-3xl font-bold mt-3">RM{revenueData.yesterday.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            <div className="flex items-center mt-2 text-xs text-gray-500">
-              <span>{revenueData.yesterday.orders} pesanan</span>
-              <span className="mx-2">•</span>
-              <span>{revenueData.yesterday.products} produk</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <h3 className="text-lg font-medium">Hari Ini</h3>
-              </div>
-            </div>
-            <p className="text-3xl font-bold mt-3">RM{revenueData.today.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            <div className="flex items-center mt-2 text-xs text-gray-500">
-              <span>{revenueData.today.orders} pesanan</span>
-              <span className="mx-2">•</span>
-              <span>{revenueData.today.products} produk</span>
-            </div>
-          </CardContent>
-        </Card>
-
-        <Card className="bg-white dark:bg-gray-950 hover:shadow-md transition-shadow">
-          <CardContent className="pt-6">
-            <div className="flex items-center justify-between">
-              <div className="flex items-center space-x-2">
-                <Calendar className="h-5 w-5 text-gray-500" />
-                <h3 className="text-lg font-medium">Bulan Ini</h3>
-              </div>
-            </div>
-            <p className="text-3xl font-bold mt-3">RM{revenueData.thisMonth.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}</p>
-            <div className="flex items-center mt-2 text-xs text-gray-500">
-              <span>{revenueData.thisMonth.orders} pesanan</span>
-              <span className="mx-2">•</span>
-              <span>{revenueData.thisMonth.products} produk</span>
-            </div>
-          </CardContent>
-        </Card>
-      </section>
-
-      {/* Gross Profit Stats */}
-      <section className="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6 animate-slide-up delay-500">
-        <GrossProfitCard
-          title="Untung Kasar Hari Ini"
-          value={`RM${revenueData.grossProfit.today.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={DollarSign}
-        />
-        <GrossProfitCard
-          title="Untung Kasar Bulan Ini"
-          value={`RM${revenueData.grossProfit.thisMonth.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={BarChart4}
-        />
-        <GrossProfitCard
-          title="Untung Kasar Tahun Ini"
-          value={`RM${revenueData.grossProfit.thisYear.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`}
-          icon={TrendingUp}
-        />
-      </section>
-
-      {/* Revenue & Profit Chart */}
-      <section className="grid grid-cols-1 gap-6 mb-8 animate-slide-up delay-600">
-        <Card>
-          <CardHeader>
-            <CardTitle>Jumlah Jualan & Untung Kasar</CardTitle>
-            <CardDescription>Data harian untuk bulan ini</CardDescription>
-          </CardHeader>
-          <CardContent className="h-80">
-            {isLoading ? (
-              <div className="flex items-center justify-center h-full">
-                <p>Memuat data...</p>
-              </div>
-            ) : (
-              <ResponsiveContainer width="100%" height="100%">
-                <LineChart data={dailyRevenueData} margin={{ top: 10, right: 10, left: 10, bottom: 20 }}>
-                  <CartesianGrid strokeDasharray="3 3" opacity={0.2} />
-                  <XAxis
-                    dataKey="date"
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: 'var(--muted-foreground)' }}
-                  />
-                  <YAxis
-                    fontSize={12}
-                    tickLine={false}
-                    axisLine={false}
-                    tick={{ fill: 'var(--muted-foreground)' }}
-                    tickFormatter={(value) => `RM${value}`}
-                  />
-                  <Tooltip
-                    formatter={(value) => [`RM${value}`, '']}
-                    labelFormatter={(label) => `Tarikh: ${label}`}
-                    contentStyle={{
-                      borderRadius: '8px',
-                      boxShadow: '0 4px 12px rgba(0, 0, 0, 0.1)',
-                      border: 'none'
-                    }}
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="revenue"
-                    strokeWidth={3}
-                    dot={{ strokeWidth: 0, r: 0 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                    stroke="hsl(var(--primary))"
-                    name="Jumlah Jualan"
-                  />
-                  <Line
-                    type="monotone"
-                    dataKey="profit"
-                    strokeWidth={3}
-                    dot={{ strokeWidth: 0, r: 0 }}
-                    activeDot={{ r: 6, strokeWidth: 0 }}
-                    stroke="rgb(239, 68, 68)"
-                    name="Untung Kasar"
-                  />
-                </LineChart>
-              </ResponsiveContainer>
-            )}
-          </CardContent>
-        </Card>
-      </section>
+      <SummaryStatCards
+        revenueData={revenueData}
+        totalProfitAll={totalProfitAll}
+        totalProfitYear={totalProfitYear}
+      />
+      <DailyRevenueStats revenueData={revenueData} />
+      <GrossProfitStats revenueData={revenueData} />
+      <RevenueProfitChart dailyRevenueData={dailyRevenueData} isLoading={isLoading} />
     </MainLayout>
   );
 }
