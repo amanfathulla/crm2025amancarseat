@@ -9,6 +9,54 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      admins: {
+        Row: {
+          created_at: string
+          email: string
+          id: string
+          password: string
+        }
+        Insert: {
+          created_at?: string
+          email: string
+          id?: string
+          password: string
+        }
+        Update: {
+          created_at?: string
+          email?: string
+          id?: string
+          password?: string
+        }
+        Relationships: []
+      }
+      api_keys: {
+        Row: {
+          created_at: string
+          id: string
+          is_active: boolean
+          key: string
+          name: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key: string
+          name: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          is_active?: boolean
+          key?: string
+          name?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -426,7 +474,10 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      check_admin_password: {
+        Args: { email: string; password: string }
+        Returns: string
+      }
     }
     Enums: {
       [_ in never]: never
