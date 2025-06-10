@@ -18,26 +18,21 @@ export function useSidebarItems(orderCounts: {
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        // Fetch all customer data - EXACTLY same as dashboard "Jumlah Jualan Keseluruhan" & "Jumlah Untung Keseluruhan"
+        // Fetch all customer data to match dashboard's "Jumlah Jualan Keseluruhan" 
         const { data: allCustomers, error } = await supabase
           .from('customers')
           .select('sales_amount, gross_profit');
         
         if (error) throw error;
         
-        console.log("Sidebar: All customers data:", allCustomers);
-        
-        // Calculate EXACTLY same as dashboard - Total Revenue (Jumlah Jualan Keseluruhan)
+        // Calculate total revenue and profit from all customers (same as dashboard)
         const totalRevenue = allCustomers
           ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0)
           : 0;
         
-        // Calculate EXACTLY same as dashboard - Total Profit (Jumlah Untung Keseluruhan)  
         const totalProfit = allCustomers
           ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0)
           : 0;
-        
-        console.log("Sidebar calculated - Total Revenue:", totalRevenue, "Total Profit:", totalProfit);
         
         setSalesData({
           totalRevenue,
