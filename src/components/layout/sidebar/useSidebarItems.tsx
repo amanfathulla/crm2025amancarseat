@@ -18,20 +18,21 @@ export function useSidebarItems(orderCounts: {
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        // Fetch all customer data to calculate totals (same as dashboard)
-        const { data: allCustomers, error } = await supabase
-          .from('customers')
-          .select('sales_amount, gross_profit');
+        // Fetch from yearly_sales table to match dashboard's "Jumlah Jualan Keseluruhan" 
+        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+          .from('yearly_sales')
+          .select('total_revenue, total_profit');
         
-        if (error) throw error;
+        if (yearlySalesError) throw yearlySalesError;
         
-        // Calculate total revenue and profit from all customers
-        const totalRevenue = allCustomers.reduce(
-          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0
-        );
-        const totalProfit = allCustomers.reduce(
-          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
-        );
+        // Calculate total revenue and profit from yearly_sales (same as dashboard)
+        const totalRevenue = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0)
+          : 0;
+        
+        const totalProfit = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_profit)), 0)
+          : 0;
         
         setSalesData({
           totalRevenue,
@@ -44,13 +45,13 @@ export function useSidebarItems(orderCounts: {
     
     fetchSalesData();
     
-    // Set up realtime subscription to update sidebar when customer data changes
+    // Set up realtime subscription to update sidebar when yearly_sales data changes
     const channel = supabase
       .channel('sidebar-sales-updates')
       .on('postgres_changes', {
         event: '*',
         schema: 'public',
-        table: 'customers'
+        table: 'yearly_sales'
       }, () => {
         fetchSalesData();
       })
