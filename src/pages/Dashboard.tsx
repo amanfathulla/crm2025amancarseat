@@ -48,12 +48,9 @@ export default function Dashboard() {
     },
     yearlySalesTotal: 0
   });
-  // State untuk total profit tahun semasa dan sidebar sales data
+  // Tambah state untuk total profit keseluruhan dan tahun semasa
+  const [totalProfitAll, setTotalProfitAll] = useState(0);
   const [totalProfitYear, setTotalProfitYear] = useState(0);
-  const [sidebarSalesData, setSidebarSalesData] = useState({
-    totalRevenue: 0,
-    totalProfit: 0
-  });
 
   const [dailyRevenueData, setDailyRevenueData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -83,24 +80,20 @@ export default function Dashboard() {
         // Last day of month (exclusive)
         const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1).toISOString().split('T')[0];
 
-        // Fetch all customer data for sidebar sales data (same as sidebar calculation)
+        // Fetch all customer data for complete aggregation
         const { data: allCustomers, error: allCustomersError } = await supabase
           .from('customers')
           .select('sales_amount, gross_profit, order_status, order_date');
         if (allCustomersError) throw allCustomersError;
 
-        // Calculate sidebar sales data - EXACTLY same as sidebar
-        const sidebarTotalRevenue = allCustomers
-          ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0)
-          : 0;
-        const sidebarTotalProfit = allCustomers
-          ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0)
-          : 0;
-
-        setSidebarSalesData({
-          totalRevenue: sidebarTotalRevenue,
-          totalProfit: sidebarTotalProfit
-        });
+        // --- Dapatkan dari customer, bukan yearly_sales untuk jumlah terkini ---
+        // Semua tahun
+        const totalRevenueAll = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0
+        );
+        const totalProfitAll = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
+        );
 
         // Tahun ini - guna pembolehubah berlainan untuk elak duplikasi
         const dashboardYear = currentYear;
@@ -178,6 +171,30 @@ export default function Dashboard() {
 
         if (cancelledError) throw cancelledError;
 
+        // Fetch yearly sales data for total revenue display
+        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+          .from('yearly_sales')
+          .select('total_revenue, total_profit, year');
+
+        if (yearlySalesError) throw yearlySalesError;
+
+        // Calculate yearly sales total
+        const yearlySalesTotal = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0)
+          : 0;
+
+        // --- Tambahan: dapatkan total profit keseluruhan & tahun semasa ---
+        let totalProfitAllTemp = 0;
+        let totalProfitYearTemp = 0;
+        if (yearlySalesData) {
+          totalProfitAllTemp = yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_profit)), 0);
+          // cari data untuk tahun semasa
+          const profitYear = yearlySalesData.find((item) => item.year === currentYear);
+          totalProfitYearTemp = profitYear ? parseFloat(String(profitYear.total_profit)) : 0;
+        }
+        setTotalProfitAll(totalProfitAllTemp);
+        setTotalProfitYear(totalProfitYearTemp);
+
         // Calculate sums
         const yearlyRevenue = yearData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
         const yearlyProfit = yearData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
@@ -191,7 +208,7 @@ export default function Dashboard() {
         const monthlyRevenue = monthData.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0);
         const monthlyProfit = monthData.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0);
 
-        // Update state
+        // Update state seperti sebelum ini tetapi gunakan jumlah untung/jualan berdasarkan customers
         setRevenueData({
           currentYear: {
             year: currentYear,
@@ -216,17 +233,18 @@ export default function Dashboard() {
             today: todayData.length,
             thisMonth: monthData.length,
             processing: processingOrders?.length || 0,
-            completed: completedOrders,
+            completed: completedOrders,   // patch completed correctly
             cancelled: cancelledOrders?.length || 0
           },
           grossProfit: {
             today: todayProfit,
             thisMonth: monthlyProfit,
-            thisYear: totalProfitYear
+            thisYear: totalProfitYear     // patch correct profit
           },
-          yearlySalesTotal: sidebarTotalRevenue
+          yearlySalesTotal: totalRevenueAll
         });
-        setTotalProfitYear(totalProfitYear);
+        setTotalProfitAll(totalProfitAll);     // Patch box "Jumlah Untung Keseluruhan"
+        setTotalProfitYear(totalProfitYear);   // Patch box "Jumlah Untung Tahun Ini"
 
         // Generate daily data for chart (fungsi sedia ada)
         const dailyData = await generateDailyData(currentMonth, currentYear);
@@ -307,8 +325,8 @@ export default function Dashboard() {
       </section>
       <SummaryStatCards
         revenueData={revenueData}
+        totalProfitAll={totalProfitAll}
         totalProfitYear={totalProfitYear}
-        sidebarSalesData={sidebarSalesData}
       />
       <DailyRevenueStats revenueData={revenueData} />
       <GrossProfitStats revenueData={revenueData} />

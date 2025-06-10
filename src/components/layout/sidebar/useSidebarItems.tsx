@@ -18,7 +18,7 @@ export function useSidebarItems(orderCounts: {
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        // Fetch all customer data - EXACTLY same as dashboard "Total Revenue" & "Total Profit"
+        // Fetch all customer data - EXACTLY same as dashboard "Jumlah Jualan Keseluruhan" & "Jumlah Untung Keseluruhan"
         const { data: allCustomers, error } = await supabase
           .from('customers')
           .select('sales_amount, gross_profit');
@@ -27,12 +27,12 @@ export function useSidebarItems(orderCounts: {
         
         console.log("Sidebar: All customers data:", allCustomers);
         
-        // Calculate EXACTLY same as dashboard - Total Revenue
+        // Calculate EXACTLY same as dashboard - Total Revenue (Jumlah Jualan Keseluruhan)
         const totalRevenue = allCustomers
           ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0)
           : 0;
         
-        // Calculate EXACTLY same as dashboard - Total Profit
+        // Calculate EXACTLY same as dashboard - Total Profit (Jumlah Untung Keseluruhan)  
         const totalProfit = allCustomers
           ? allCustomers.reduce((sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0)
           : 0;
@@ -104,22 +104,22 @@ export function useSidebarItems(orderCounts: {
       icon: ShoppingCart,
       badges: [
         {
-          label: `${salesData.totalRevenue.toLocaleString('en-MY', { 
+          label: `RM${salesData.totalRevenue.toLocaleString('en-MY', { 
             minimumFractionDigits: 0, 
             maximumFractionDigits: 0 
           })}`,
           variant: "default",
-          tooltip: "Total Revenue",
+          tooltip: "Total Revenue (Jumlah Jualan Keseluruhan)",
           onClick: () => navigate('/sales'),
           className: "bg-blue-600 hover:bg-blue-700 text-white"
         },
         {
-          label: `${salesData.totalProfit.toLocaleString('en-MY', { 
+          label: `RM${salesData.totalProfit.toLocaleString('en-MY', { 
             minimumFractionDigits: 0, 
             maximumFractionDigits: 0 
           })}`,
           variant: "default", 
-          tooltip: "Total Profit",
+          tooltip: "Total Profit (Jumlah Untung Keseluruhan)",
           onClick: () => navigate('/sales'),
           className: "bg-green-600 hover:bg-green-700 text-white"
         }
