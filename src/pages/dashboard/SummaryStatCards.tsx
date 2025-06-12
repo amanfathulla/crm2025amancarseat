@@ -32,7 +32,7 @@ export function SummaryStatCards({
       </Card>
       <Card className="bg-indigo-900 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
         <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-          <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Jualan Keseluruhan</h2>
+          <h2 className="text-lg md:text-xl font-bold mb-2">Total Revenue</h2>
           <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
             RM
             {revenueData.yearlySalesTotal.toLocaleString("en-MY", {
@@ -45,7 +45,7 @@ export function SummaryStatCards({
       </Card>
       <Card className="bg-green-700 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
         <CardContent className="flex flex-col items-center justify-center py-8 px-2 text-center">
-          <h2 className="text-lg md:text-xl font-bold mb-2">Jumlah Untung Keseluruhan</h2>
+          <h2 className="text-lg md:text-xl font-bold mb-2">Total Profit</h2>
           <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
             RM
             {totalProfitAll.toLocaleString("en-MY", {
