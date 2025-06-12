@@ -4,13 +4,15 @@ import React from "react";
 
 interface SummaryStatCardsProps {
   revenueData: any;
-  totalProfitAll: number;
+  totalAllTimeRevenue: number;
+  totalAllTimeProfit: number;
   totalProfitYear: number;
 }
 
 export function SummaryStatCards({
   revenueData,
-  totalProfitAll,
+  totalAllTimeRevenue,
+  totalAllTimeProfit,
   totalProfitYear,
 }: SummaryStatCardsProps) {
   return (
@@ -52,7 +54,7 @@ export function SummaryStatCards({
           <h2 className="text-lg md:text-xl font-bold mb-2">Total Revenue</h2>
           <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
             RM
-            {revenueData.yearlySalesTotal.toLocaleString("en-MY", {
+            {totalAllTimeRevenue.toLocaleString("en-MY", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
@@ -64,7 +66,7 @@ export function SummaryStatCards({
           <h2 className="text-lg md:text-xl font-bold mb-2">Total Profit</h2>
           <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
             RM
-            {totalProfitAll.toLocaleString("en-MY", {
+            {totalAllTimeProfit.toLocaleString("en-MY", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
