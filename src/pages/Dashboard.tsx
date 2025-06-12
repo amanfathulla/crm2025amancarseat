@@ -1,3 +1,4 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
@@ -51,7 +52,7 @@ export default function Dashboard() {
   // State untuk total profit dan revenue dari yearly_sales table (sama seperti Sales page)
   const [totalAllTimeRevenue, setTotalAllTimeRevenue] = useState(0);
   const [totalAllTimeProfit, setTotalAllTimeProfit] = useState(0);
-  const [totalProfitYear, setTotalProfitYear] = useState(0);
+  const [totalProfitYearFromCustomers, setTotalProfitYearFromCustomers] = useState(0);
 
   const [dailyRevenueData, setDailyRevenueData] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -107,12 +108,7 @@ export default function Dashboard() {
         setTotalAllTimeRevenue(calculatedTotalAllTimeRevenue);
         setTotalAllTimeProfit(calculatedTotalAllTimeProfit);
 
-        // Cari data untuk tahun semasa dari yearly_sales
-        const currentYearData = yearlySalesData?.find(record => record.year === currentYear);
-        const totalProfitYearFromYearlySales = currentYearData ? currentYearData.total_profit : 0;
-        setTotalProfitYear(totalProfitYearFromYearlySales);
-
-        // Tahun ini dari customers table untuk "Jumlah Jualan 2025"
+        // Calculate current year profit from customers table (for Jumlah Untung 2025)
         const customersThisYear = allCustomers.filter(
           item => {
             const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
@@ -122,6 +118,10 @@ export default function Dashboard() {
         const totalRevenueYear = customersThisYear.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0), 0
         );
+        const totalProfitYearFromCustomersTable = customersThisYear.reduce(
+          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0), 0
+        );
+        setTotalProfitYearFromCustomers(totalProfitYearFromCustomersTable);
 
         // Completed orders accurate count
         const completedOrders = allCustomers.filter(item => item.order_status === "completed").length;
@@ -228,7 +228,7 @@ export default function Dashboard() {
           grossProfit: {
             today: todayProfit,
             thisMonth: monthlyProfit,
-            thisYear: totalProfitYearFromYearlySales
+            thisYear: totalProfitYearFromCustomersTable
           },
           yearlySalesTotal: calculatedTotalAllTimeRevenue // Use sama calculation seperti Sales page
         });
@@ -314,7 +314,7 @@ export default function Dashboard() {
         revenueData={revenueData}
         totalAllTimeRevenue={totalAllTimeRevenue}
         totalAllTimeProfit={totalAllTimeProfit}
-        totalProfitYear={totalProfitYear}
+        totalProfitYearFromCustomers={totalProfitYearFromCustomers}
       />
       <DailyRevenueStats revenueData={revenueData} />
       <GrossProfitStats revenueData={revenueData} />

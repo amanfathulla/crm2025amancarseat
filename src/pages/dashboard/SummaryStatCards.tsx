@@ -6,14 +6,14 @@ interface SummaryStatCardsProps {
   revenueData: any;
   totalAllTimeRevenue: number;
   totalAllTimeProfit: number;
-  totalProfitYear: number;
+  totalProfitYearFromCustomers: number;
 }
 
 export function SummaryStatCards({
   revenueData,
   totalAllTimeRevenue,
   totalAllTimeProfit,
-  totalProfitYear,
+  totalProfitYearFromCustomers,
 }: SummaryStatCardsProps) {
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
@@ -39,11 +39,12 @@ export function SummaryStatCards({
           </h2>
           <div className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold mt-1 break-words">
             RM
-            {totalProfitYear.toLocaleString("en-MY", {
+            {totalProfitYearFromCustomers.toLocaleString("en-MY", {
               minimumFractionDigits: 2,
               maximumFractionDigits: 2,
             })}
           </div>
+          <p className="text-xs text-gray-400 mt-2">Untung dari Pesanan Pelanggan</p>
         </CardContent>
       </Card>
       <Card className="bg-red-600 text-white hover:shadow-md transition-shadow w-full mx-auto rounded-xl overflow-hidden">
