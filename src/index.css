@@ -210,3 +210,62 @@ textarea {
     gap: 16px;
   }
 }
+
+/* Tablet landscape orientation fixes */
+@media (orientation: landscape) and (min-width: 768px) and (max-width: 1024px) {
+  .landscape\:max-h-\[55vh\] {
+    max-height: 55vh;
+  }
+  
+  .landscape\:max-h-\[65vh\] {
+    max-height: 65vh;
+  }
+  
+  .landscape\:max-h-\[70vh\] {
+    max-height: 70vh;
+  }
+  
+  .landscape\:max-w-\[350px\] {
+    max-width: 350px;
+  }
+  
+  .landscape\:max-w-\[450px\] {
+    max-width: 450px;
+  }
+  
+  .landscape\:max-w-\[550px\] {
+    max-width: 550px;
+  }
+  
+  .landscape\:pb-4 {
+    padding-bottom: 1rem;
+  }
+  
+  .landscape\:pb-6 {
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 768px) and (max-width: 1024px) and (max-height: 800px) {
+  .landscape\:md\:max-h-\[65vh\] {
+    max-height: 65vh;
+  }
+  
+  .landscape\:md\:max-w-\[450px\] {
+    max-width: 450px;
+  }
+  
+  .landscape\:md\:pb-6 {
+    padding-bottom: 1.5rem;
+  }
+}
+
+@media (orientation: landscape) and (min-width: 1024px) {
+  .landscape\:lg\:max-h-\[70vh\] {
+    max-height: 70vh;
+  }
+  
+  .landscape\:lg\:max-w-\[550px\] {
+    max-width: 550px;
+  }
+}

@@ -66,9 +66,12 @@ export default function Login() {
       {/* Background pattern overlay */}
       <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxMTEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djFjMCAyLjItMS44IDQtNCA0aC0yYy0yLjIgMC00LTEuOC00LTR2LTFjMC0yLjIgMS44LTQgNC00aDJjMi4yIDAgNCAxLjggNCA0ek0yIDJ2MWMwIDIuMi0xLjggNC00IDRoLTJjLTIuMiAwLTQtMS44LTQtNHYtMWMwLTIuMiAxLjgtNCA0LTRoMmMyLjIgMCA0IDEuOCA0IDR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10"></div>
 
-      {/* Logo container - taking up significant screen space */}
-      <div className="w-full px-6 flex-1 flex items-center justify-center max-h-[60vh]">
-        <div className="w-full max-w-[500px] lg:max-w-[600px] relative">
+      {/* Logo container - responsive untuk tablet landscape */}
+      <div className="w-full px-4 sm:px-6 flex-1 flex items-center justify-center 
+                      portrait:max-h-[60vh] landscape:max-h-[55vh] 
+                      landscape:md:max-h-[65vh] landscape:lg:max-h-[70vh]">
+        <div className="w-full max-w-[400px] sm:max-w-[500px] lg:max-w-[600px]
+                       landscape:max-w-[350px] landscape:md:max-w-[450px] landscape:lg:max-w-[550px] relative">
           <AspectRatio ratio={1/1} className="w-full">
             <img 
               src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png" 
@@ -79,7 +82,8 @@ export default function Login() {
         </div>
       </div>
       
-      <div className="w-full px-4 flex flex-col items-center justify-end pb-8">
+      <div className="w-full px-4 flex flex-col items-center justify-end 
+                      pb-6 sm:pb-8 landscape:pb-4 landscape:md:pb-6">
         <Card className="w-full max-w-[400px] shadow-2xl border-none overflow-hidden bg-black/50 backdrop-blur-md border-t border-white/10">
           <CardContent className="p-6">
             <Button 
