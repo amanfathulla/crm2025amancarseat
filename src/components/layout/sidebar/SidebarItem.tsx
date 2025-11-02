@@ -33,10 +33,11 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
         to={item.path}
         className={({ isActive }) => {
           return cn(
-            "relative flex h-11 w-full items-center rounded-md transition-all duration-200",
+            "flex items-center gap-3 px-3 py-2 rounded-md transition-all duration-200",
             isActive 
-              ? "bg-blue-50 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 shadow-sm border-l-2 border-blue-500" 
-              : "text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+              ? "bg-white text-black font-medium" 
+              : "hover:bg-white/10 text-white/80",
+            !expanded && !isMobile ? "justify-center px-2" : ""
           );
         }}
         onClick={() => {
@@ -45,18 +46,21 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
       >
         {({ isActive }) => (
           <>
-            <div className="grid h-full w-12 place-content-center">
-              <Icon size={16} className="flex-shrink-0" />
-            </div>
+            <Icon 
+              size={20} 
+              className={cn(
+                "flex-shrink-0",
+                isActive ? "text-black" : ""
+              )} 
+            />
             
             {(expanded || isMobile) && (
               <>
-                <span className={cn(
-                  "text-sm font-medium transition-opacity duration-200 truncate flex-1",
-                  (expanded || isMobile) ? "opacity-100" : "opacity-0"
-                )}>
-                  {item.title}
-                </span>
+                <span className="animate-fade-in truncate">{item.title}</span>
+                
+                {RightIcon && (
+                  <RightIcon size={16} className="ml-auto mr-1 flex-shrink-0" />
+                )}
                 
                 {item.badges && (
                   <SidebarBadges 
@@ -64,10 +68,6 @@ export function SidebarItem({ item, expanded, isMobile, onClick }: SidebarItemPr
                     expanded={expanded}
                     isMobile={isMobile}
                   />
-                )}
-                
-                {RightIcon && (
-                  <RightIcon size={16} className="flex-shrink-0 mr-3" />
                 )}
               </>
             )}
