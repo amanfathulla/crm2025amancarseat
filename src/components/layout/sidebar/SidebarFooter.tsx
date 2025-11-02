@@ -2,7 +2,6 @@
 import React from "react";
 import { LogOut } from "lucide-react";
 import { cn } from "@/lib/utils";
-import { Button } from "@/components/ui/button";
 import { useAuth } from "@/hooks/useAuth";
 
 interface SidebarFooterProps {
@@ -14,20 +13,23 @@ export function SidebarFooter({ expanded, isMobile }: SidebarFooterProps) {
   const { logout } = useAuth();
   
   return (
-    <div className="p-3 mt-auto border-t border-white/10">
-      <Button
-        variant="ghost"
-        onClick={logout}
-        className={cn(
-          "w-full flex items-center gap-3 text-white/80 hover:bg-white/10 hover:text-white",
-          !expanded && !isMobile && "justify-center px-2"
-        )}
-      >
-        <LogOut size={20} />
+    <button
+      onClick={logout}
+      className="w-full border-t border-gray-200 dark:border-gray-800 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+    >
+      <div className="flex items-center p-3">
+        <div className="grid size-10 place-content-center">
+          <LogOut size={16} className="text-gray-500 dark:text-gray-400" />
+        </div>
         {(expanded || isMobile) && (
-          <span className="animate-fade-in">Logout</span>
+          <span className={cn(
+            "text-sm font-medium text-gray-600 dark:text-gray-300 transition-opacity duration-200",
+            (expanded || isMobile) ? "opacity-100" : "opacity-0"
+          )}>
+            Logout
+          </span>
         )}
-      </Button>
-    </div>
+      </div>
+    </button>
   );
 }

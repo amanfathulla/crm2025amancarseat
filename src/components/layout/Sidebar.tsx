@@ -3,6 +3,7 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { supabase } from "@/integrations/supabase/client";
+import { ChevronsRight } from "lucide-react";
 
 // Import sidebar components
 import { SidebarItem } from "./sidebar/SidebarItem";
@@ -16,7 +17,6 @@ export function Sidebar() {
   const [expanded, setExpanded] = useState(true);
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
-  
   const [orderCounts, setOrderCounts] = useState({
     processing: 0,
     completed: 0,
@@ -110,7 +110,7 @@ export function Sidebar() {
       {/* Overlay for mobile */}
       {isMobile && mobileOpen && (
         <div 
-          className="fixed inset-0 bg-black/50 backdrop-blur-sm z-40 transition-all duration-300 ease-in-out"
+          className="fixed inset-0 bg-black/30 backdrop-blur-sm z-40 transition-all duration-300 ease-in-out"
           onClick={() => setMobileOpen(false)}
           aria-hidden="true"
         />
@@ -119,8 +119,8 @@ export function Sidebar() {
       <aside 
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 flex flex-col",
-          "border-r shadow-sm transition-all duration-300 ease-in-out",
-          "bg-black text-white",
+          "border-r transition-all duration-300 ease-in-out",
+          "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800 shadow-sm",
           sidebarWidth,
           isMobile && "transition-transform",
           isMobile && !mobileOpen && "-translate-x-full",
@@ -130,10 +130,10 @@ export function Sidebar() {
         <SidebarHeader 
           expanded={expanded}
           isMobile={isMobile}
-          toggleSidebar={toggleSidebar}
+          onClose={() => setMobileOpen(false)}
         />
         
-        <nav className="flex flex-col gap-2 px-2 py-3 flex-1 overflow-y-auto">
+        <nav className="flex flex-col gap-1 px-2 py-3 flex-1 overflow-y-auto">
           {/* Main navigation items */}
           {sidebarItems.map((item) => (
             <SidebarItem 
@@ -153,7 +153,34 @@ export function Sidebar() {
           />
         </nav>
         
-        <SidebarFooter expanded={expanded} isMobile={isMobile} />
+        <div className="mt-auto">
+          {/* Toggle button at bottom - only for desktop */}
+          {!isMobile && (
+            <button
+              onClick={() => setExpanded(!expanded)}
+              className="w-full border-t border-gray-200 dark:border-gray-800 transition-colors hover:bg-gray-50 dark:hover:bg-gray-800"
+            >
+              <div className="flex items-center p-3">
+                <div className="grid size-10 place-content-center">
+                  <ChevronsRight
+                    size={16}
+                    className={cn(
+                      "transition-transform duration-300 text-gray-500 dark:text-gray-400",
+                      expanded ? "rotate-180" : ""
+                    )}
+                  />
+                </div>
+                {expanded && (
+                  <span className="text-sm font-medium text-gray-600 dark:text-gray-300 transition-opacity duration-200">
+                    Hide
+                  </span>
+                )}
+              </div>
+            </button>
+          )}
+          
+          <SidebarFooter expanded={expanded} isMobile={isMobile} />
+        </div>
       </aside>
       
       {isMobile && !mobileOpen && (
