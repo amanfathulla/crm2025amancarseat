@@ -18,6 +18,7 @@ import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
 import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
+import Install from "@/pages/Install";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -36,6 +37,7 @@ function App() {
               {/* Routes without sidebar */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/install" element={<Install />} />
               
               {/* Routes with sidebar and authenticated layout */}
               <Route path="/" element={
@@ -62,3 +64,4 @@ function App() {
 }
 
 export default App;
+
