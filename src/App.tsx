@@ -19,6 +19,7 @@ import Customers from "@/pages/Customers";
 import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
 import Install from "@/pages/Install";
+import Leads from "@/pages/Leads";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -47,6 +48,7 @@ function App() {
                 </div>
               }>
                 <Route path="/dashboard" element={<Dashboard />} />
+                <Route path="/leads" element={<Leads />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customers/receipt" element={<CustomerReceipt />} />
                 <Route path="/sales" element={<Sales />} />
