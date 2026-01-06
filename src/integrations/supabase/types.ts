@@ -134,6 +134,39 @@ export type Database = {
         }
         Relationships: []
       }
+      leads: {
+        Row: {
+          closed_at: string | null
+          contacted_at: string | null
+          created_at: string
+          id: string
+          name: string
+          phone: string
+          status: string
+          updated_at: string
+        }
+        Insert: {
+          closed_at?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          phone: string
+          status?: string
+          updated_at?: string
+        }
+        Update: {
+          closed_at?: string | null
+          contacted_at?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          phone?: string
+          status?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       marketing_content: {
         Row: {
           completed_at: string | null

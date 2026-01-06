@@ -17,6 +17,7 @@ import {
   Settings,
   HelpCircle,
   Menu,
+  Target,
 } from "lucide-react";
 import { MarketingNotesSection } from "./sidebar/MarketingNotesSection";
 
@@ -109,6 +110,7 @@ export function Sidebar() {
 
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/", icon: Home },
+    { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Customers", path: "/customers", icon: Users, badge: orderCounts.processing },
     { title: "Products", path: "/products", icon: Package },
     { title: "Sales", path: "/sales", icon: BarChart3 },
@@ -136,7 +138,7 @@ export function Sidebar() {
         className={cn(
           "fixed top-0 bottom-0 left-0 z-50 flex flex-col",
           "border-r transition-all duration-300 ease-in-out",
-          "bg-white dark:bg-gray-900 border-gray-200 dark:border-gray-800",
+          "bg-sidebar border-sidebar-border",
           sidebarWidth,
           isMobile && "transition-transform",
           isMobile && !mobileOpen && "-translate-x-full",
@@ -144,10 +146,10 @@ export function Sidebar() {
         )}
       >
         {/* Header */}
-        <div className="border-b border-gray-200 dark:border-gray-800 p-3">
+        <div className="border-b border-sidebar-border p-3">
           <div className="flex items-center justify-between">
             <div className="flex items-center gap-3">
-              <div className="grid size-10 shrink-0 place-content-center rounded-lg bg-gradient-to-br from-primary to-primary/80 shadow-md">
+              <div className="grid size-10 shrink-0 place-content-center rounded-lg bg-sidebar-primary/20 shadow-md">
                 <img
                   src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png"
                   alt="Logo"
@@ -156,10 +158,10 @@ export function Sidebar() {
               </div>
               {(expanded || (isMobile && mobileOpen)) && (
                 <div className="transition-opacity duration-200">
-                  <span className="block text-sm font-semibold text-gray-900 dark:text-gray-100">
+                  <span className="block text-sm font-semibold text-sidebar-foreground">
                     ACS Legacy
                   </span>
-                  <span className="block text-xs text-gray-500 dark:text-gray-400">
+                  <span className="block text-xs text-sidebar-foreground/60">
                     CRM System
                   </span>
                 </div>
@@ -168,7 +170,7 @@ export function Sidebar() {
             {isMobile && mobileOpen && (
               <button
                 onClick={() => setMobileOpen(false)}
-                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-800 text-gray-500"
+                className="p-2 rounded-lg hover:bg-sidebar-accent text-sidebar-foreground/60"
               >
                 <X className="h-5 w-5" />
               </button>
@@ -188,8 +190,8 @@ export function Sidebar() {
                 className={cn(
                   "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
                   isActive
-                    ? "bg-primary/10 text-primary dark:bg-primary/20 dark:text-primary-foreground border-l-2 border-primary"
-                    : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800 hover:text-gray-900 dark:hover:text-gray-200"
+                    ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                 )}
               >
                 <div className="grid h-full w-12 place-content-center">
@@ -199,7 +201,7 @@ export function Sidebar() {
                   <span className="text-sm font-medium">{item.title}</span>
                 )}
                 {item.badge && item.badge > 0 && (expanded || (isMobile && mobileOpen)) && (
-                  <span className="absolute right-3 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-primary text-xs text-primary-foreground font-medium">
+                  <span className="absolute right-3 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-xs text-white font-medium">
                     {item.badge}
                   </span>
                 )}
@@ -217,8 +219,8 @@ export function Sidebar() {
 
           {/* Account Section */}
           {(expanded || (isMobile && mobileOpen)) && (
-            <div className="pt-4 mt-4 border-t border-gray-200 dark:border-gray-800">
-              <div className="px-3 py-2 text-xs font-medium text-gray-500 dark:text-gray-400 uppercase tracking-wide">
+            <div className="pt-4 mt-4 border-t border-sidebar-border">
+              <div className="px-3 py-2 text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wide">
                 Account
               </div>
               {accountItems.map((item) => {
@@ -231,8 +233,8 @@ export function Sidebar() {
                     className={cn(
                       "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
                       isActive
-                        ? "bg-primary/10 text-primary dark:bg-primary/20"
-                        : "text-gray-600 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-800"
+                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
                     )}
                   >
                     <div className="grid h-full w-12 place-content-center">
@@ -249,19 +251,19 @@ export function Sidebar() {
         {/* Toggle Button */}
         <button
           onClick={toggleSidebar}
-          className="border-t border-gray-200 dark:border-gray-800 hover:bg-gray-100 dark:hover:bg-gray-800 transition-colors"
+          className="border-t border-sidebar-border hover:bg-sidebar-accent transition-colors"
         >
           <div className="flex items-center p-3">
             <div className="grid size-10 place-content-center">
               <ChevronsRight
                 className={cn(
-                  "h-5 w-5 transition-transform duration-300 text-gray-500 dark:text-gray-400",
+                  "h-5 w-5 transition-transform duration-300 text-sidebar-foreground/60",
                   expanded && "rotate-180"
                 )}
               />
             </div>
             {(expanded || (isMobile && mobileOpen)) && (
-              <span className="text-sm font-medium text-gray-600 dark:text-gray-300">
+              <span className="text-sm font-medium text-sidebar-foreground/70">
                 {expanded ? "Collapse" : "Expand"}
               </span>
             )}
