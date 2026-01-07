@@ -6,6 +6,7 @@ import React, { useState, useMemo } from "react";
 
 interface RevenueProfitChartProps {
   dailyRevenueData: any[];
+  monthlyRevenueData: any[];
   isLoading: boolean;
 }
 
@@ -57,55 +58,67 @@ const CustomTooltip = ({ active, payload, label }: TooltipProps) => {
 
 // Period configuration
 const PERIODS = {
-  day: { key: 'day', label: 'Hari Ini' },
   week: { key: 'week', label: 'Minggu' },
   month: { key: 'month', label: 'Bulan' },
 } as const;
 
 type PeriodKey = keyof typeof PERIODS;
 
-export function RevenueProfitChart({ dailyRevenueData, isLoading }: RevenueProfitChartProps) {
+const monthNames = ['Jan', 'Feb', 'Mac', 'Apr', 'Mei', 'Jun', 'Jul', 'Ogos', 'Sep', 'Okt', 'Nov', 'Dis'];
+
+export function RevenueProfitChart({ dailyRevenueData, monthlyRevenueData, isLoading }: RevenueProfitChartProps) {
   const [selectedPeriod, setSelectedPeriod] = useState<PeriodKey>('month');
 
   // Process data based on selected period
   const processedData = useMemo(() => {
-    if (!dailyRevenueData || dailyRevenueData.length === 0) return [];
-
-    const now = new Date();
-    
-    if (selectedPeriod === 'day') {
-      // Show last 24 hours in 4-hour intervals
-      const todayData = dailyRevenueData.filter(item => {
-        const itemDate = new Date(item.date);
-        return itemDate.toDateString() === now.toDateString();
-      });
-      
-      if (todayData.length > 0) {
-        return [
-          { date: '00:00-04:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-          { date: '04:00-08:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-          { date: '08:00-12:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-          { date: '12:00-16:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-          { date: '16:00-20:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-          { date: '20:00-00:00', revenue: todayData[0]?.revenue || 0, profit: todayData[0]?.profit || 0 },
-        ];
-      }
-      return [];
-    } else if (selectedPeriod === 'week') {
+    if (selectedPeriod === 'week') {
       // Show last 7 days
-      return dailyRevenueData.slice(-7).map(item => ({
-        ...item,
-        date: new Date(item.date).toLocaleDateString('ms-MY', { weekday: 'short' })
-      }));
+      if (!dailyRevenueData || dailyRevenueData.length === 0) return [];
+      
+      const last7Days = dailyRevenueData.slice(-7);
+      return last7Days.map(item => {
+        // Parse the date string (format: "d/m/yyyy")
+        const parts = item.date.split('/');
+        if (parts.length === 3) {
+          const day = parseInt(parts[0], 10);
+          const month = parseInt(parts[1], 10) - 1;
+          const year = parseInt(parts[2], 10);
+          const dateObj = new Date(year, month, day);
+          
+          if (!isNaN(dateObj.getTime())) {
+            return {
+              ...item,
+              date: dateObj.toLocaleDateString('ms-MY', { weekday: 'short', day: 'numeric' })
+            };
+          }
+        }
+        return { ...item, date: item.date };
+      });
     } else {
-      // Show current month
-      return dailyRevenueData;
+      // Show all months of the year
+      if (!monthlyRevenueData || monthlyRevenueData.length === 0) {
+        // Return empty months if no data
+        return monthNames.map((name, index) => ({
+          date: name,
+          month: index + 1,
+          revenue: 0,
+          profit: 0
+        }));
+      }
+      
+      return monthlyRevenueData.map(item => ({
+        ...item,
+        date: monthNames[item.month - 1] || item.date
+      }));
     }
-  }, [dailyRevenueData, selectedPeriod]);
+  }, [dailyRevenueData, monthlyRevenueData, selectedPeriod]);
 
-  // Calculate totals from latest data
-  const latestData = processedData[processedData.length - 1] || { revenue: 0, profit: 0 };
-  const totalValue = latestData.revenue + latestData.profit;
+  // Calculate totals
+  const totals = useMemo(() => {
+    const totalRevenue = processedData.reduce((sum, item) => sum + (item.revenue || 0), 0);
+    const totalProfit = processedData.reduce((sum, item) => sum + (item.profit || 0), 0);
+    return { revenue: totalRevenue, profit: totalProfit, total: totalRevenue + totalProfit };
+  }, [processedData]);
 
   return (
     <section className="grid grid-cols-1 gap-6 mb-8 animate-slide-up delay-600">
@@ -115,7 +128,7 @@ export function RevenueProfitChart({ dailyRevenueData, isLoading }: RevenueProfi
             <div className="space-y-3">
               <div className="text-sm text-muted-foreground">Jumlah Keseluruhan</div>
               <div className="text-2xl md:text-3xl leading-none font-bold">
-                RM{totalValue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                RM{totals.total.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
               </div>
               <div className="flex items-center flex-wrap gap-4 md:gap-6 mt-4">
                 <div className="space-y-1">
@@ -130,7 +143,7 @@ export function RevenueProfitChart({ dailyRevenueData, isLoading }: RevenueProfi
                     Jumlah Jualan
                   </div>
                   <div className="text-lg md:text-xl font-bold leading-none">
-                    RM{latestData.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    RM{totals.revenue.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
                 <div className="space-y-1">
@@ -145,7 +158,7 @@ export function RevenueProfitChart({ dailyRevenueData, isLoading }: RevenueProfi
                     Untung Kasar
                   </div>
                   <div className="text-lg md:text-xl font-bold leading-none">
-                    RM{latestData.profit.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
+                    RM{totals.profit.toLocaleString('en-MY', { minimumFractionDigits: 2, maximumFractionDigits: 2 })}
                   </div>
                 </div>
               </div>

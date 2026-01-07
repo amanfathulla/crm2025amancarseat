@@ -1,13 +1,15 @@
 import { useState, useEffect } from "react";
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Plus, Users, Phone, CheckCircle, Target, TrendingUp } from "lucide-react";
+import { Plus, Users, Phone, CheckCircle, Target, TrendingUp, BarChart3, List } from "lucide-react";
 import { LeadCharts } from "@/components/leads/LeadCharts";
+import { LeadListTable } from "@/components/leads/LeadListTable";
 
 interface Lead {
   id: string;
@@ -39,6 +41,7 @@ export default function Leads() {
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
   const [newLead, setNewLead] = useState({ name: "", phone: "" });
   const [isLoading, setIsLoading] = useState(false);
+  const [activeTab, setActiveTab] = useState("charts");
 
   useEffect(() => {
     fetchLeads();
@@ -118,41 +121,31 @@ export default function Leads() {
       title: "Lead Baru",
       value: stats.new,
       icon: Users,
-      bgColor: "bg-blue-500",
-      lightBg: "bg-blue-50",
-      textColor: "text-blue-600",
+      gradient: "from-blue-500 to-blue-600",
     },
     {
       title: "Dihubungi",
       value: stats.contacted,
       icon: Phone,
-      bgColor: "bg-amber-500",
-      lightBg: "bg-amber-50",
-      textColor: "text-amber-600",
+      gradient: "from-amber-500 to-amber-600",
     },
     {
       title: "Closed",
       value: stats.closed,
       icon: CheckCircle,
-      bgColor: "bg-green-500",
-      lightBg: "bg-green-50",
-      textColor: "text-green-600",
+      gradient: "from-emerald-500 to-emerald-600",
     },
     {
       title: "Total Leads",
       value: stats.total,
       icon: Target,
-      bgColor: "bg-purple-500",
-      lightBg: "bg-purple-50",
-      textColor: "text-purple-600",
+      gradient: "from-purple-500 to-purple-600",
     },
     {
       title: "Conversion Rate",
       value: `${stats.conversionRate}%`,
       icon: TrendingUp,
-      bgColor: "bg-cyan-500",
-      lightBg: "bg-cyan-50",
-      textColor: "text-cyan-600",
+      gradient: "from-cyan-500 to-cyan-600",
     },
   ];
 
@@ -161,7 +154,7 @@ export default function Leads() {
       {/* Header */}
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-foreground">Lead Management</h1>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Lead Management</h1>
           <p className="text-muted-foreground text-sm">Urus semua leads anda di sini</p>
         </div>
         <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
@@ -207,27 +200,48 @@ export default function Leads() {
         </Dialog>
       </div>
 
-      {/* Stats Cards */}
+      {/* Stats Cards - Full color like Dashboard */}
       <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
         {statCards.map((stat, index) => (
-          <Card key={index} className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="flex items-center gap-3">
-                <div className={`p-2.5 rounded-xl ${stat.lightBg}`}>
-                  <stat.icon className={`h-5 w-5 ${stat.textColor}`} />
-                </div>
-                <div>
-                  <p className="text-xs text-muted-foreground">{stat.title}</p>
-                  <p className="text-xl font-bold text-foreground">{stat.value}</p>
-                </div>
+          <div
+            key={index}
+            className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.gradient} p-4 md:p-5 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
+          >
+            {/* Background decoration */}
+            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10" />
+            
+            <div className="relative z-10">
+              <div className="flex items-center justify-between mb-2">
+                <p className="text-xs font-medium text-white/90">{stat.title}</p>
+                <stat.icon className="h-4 w-4 text-white/80" />
               </div>
-            </CardContent>
-          </Card>
+              <p className="text-2xl md:text-3xl font-bold">{stat.value}</p>
+            </div>
+          </div>
         ))}
       </div>
 
-      {/* Charts */}
-      <LeadCharts leads={leads} />
+      {/* Tabs for Charts and List */}
+      <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
+        <TabsList className="grid w-full max-w-md grid-cols-2">
+          <TabsTrigger value="charts" className="gap-2">
+            <BarChart3 className="h-4 w-4" />
+            Graf
+          </TabsTrigger>
+          <TabsTrigger value="list" className="gap-2">
+            <List className="h-4 w-4" />
+            Senarai Lead
+          </TabsTrigger>
+        </TabsList>
+        
+        <TabsContent value="charts" className="mt-6">
+          <LeadCharts leads={leads} />
+        </TabsContent>
+        
+        <TabsContent value="list" className="mt-6">
+          <LeadListTable leads={leads} onLeadUpdated={fetchLeads} />
+        </TabsContent>
+      </Tabs>
     </div>
   );
 }
