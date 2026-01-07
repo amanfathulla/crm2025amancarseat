@@ -31,18 +31,15 @@ export default function Dashboard() {
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
 
-        // Calculate last month
         const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
         const lastMonth = lastMonthDate.getMonth() + 1;
         const lastMonthYear = lastMonthDate.getFullYear();
 
-        // Get all customers
         const { data: allCustomers, error: allCustomersError } = await supabase
           .from("customers")
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
-        // Get yearly sales data
         const { data: yearlySalesData, error: yearlySalesError } = await supabase
           .from("yearly_sales")
           .select("*")
@@ -59,7 +56,6 @@ export default function Dashboard() {
         setTotalAllTimeRevenue(calculatedTotalAllTimeRevenue);
         setTotalAllTimeProfit(calculatedTotalAllTimeProfit);
 
-        // Calculate current year totals
         const customersThisYear = allCustomers.filter((item) => {
           const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
           return orderYear === currentYear;
@@ -74,7 +70,6 @@ export default function Dashboard() {
         );
         setTotalProfitYearFromCustomers(totalProfitYearFromCustomersTable);
 
-        // Calculate this month data
         const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
           .toISOString()
           .split("T")[0];
@@ -98,7 +93,6 @@ export default function Dashboard() {
           0
         );
 
-        // Calculate last month data
         const firstDayLastMonth = new Date(lastMonthYear, lastMonth - 1, 1)
           .toISOString()
           .split("T")[0];
@@ -128,11 +122,9 @@ export default function Dashboard() {
           lastMonth: { revenue: lastMonthRevenue, profit: lastMonthProfit },
         });
 
-        // Generate daily data for chart
         const dailyData = await generateDailyData(currentMonth, currentYear);
         setDailyRevenueData(dailyData);
 
-        // Generate monthly data for chart (all months of current year)
         const monthlyData = await generateMonthlyData(currentYear);
         setMonthlyRevenueData(monthlyData);
 
@@ -253,34 +245,35 @@ export default function Dashboard() {
 
   return (
     <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <div className="flex items-center justify-between mb-2">
+      <div className="space-y-6">
+        {/* Header - Compact like Lead Management */}
+        <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+          <p className="text-muted-foreground text-sm">
+            Selamat datang! Berikut adalah ringkasan prestasi perniagaan anda.
+          </p>
         </div>
-        <p className="text-muted-foreground text-sm md:text-base">
-          Selamat datang! Berikut adalah ringkasan prestasi perniagaan anda.
-        </p>
-      </section>
 
-      <SummaryStatCards
-        revenueData={revenueData}
-        totalAllTimeRevenue={totalAllTimeRevenue}
-        totalAllTimeProfit={totalAllTimeProfit}
-        totalProfitYearFromCustomers={totalProfitYearFromCustomers}
-      />
-      
-      <MonthlyComparisonCards
-        thisMonthRevenue={revenueData.thisMonth.revenue}
-        lastMonthRevenue={revenueData.lastMonth.revenue}
-        thisMonthProfit={revenueData.thisMonth.profit}
-        lastMonthProfit={revenueData.lastMonth.profit}
-      />
-      
-      <RevenueProfitChart 
-        dailyRevenueData={dailyRevenueData} 
-        monthlyRevenueData={monthlyRevenueData}
-        isLoading={isLoading} 
-      />
+        <SummaryStatCards
+          revenueData={revenueData}
+          totalAllTimeRevenue={totalAllTimeRevenue}
+          totalAllTimeProfit={totalAllTimeProfit}
+          totalProfitYearFromCustomers={totalProfitYearFromCustomers}
+        />
+        
+        <MonthlyComparisonCards
+          thisMonthRevenue={revenueData.thisMonth.revenue}
+          lastMonthRevenue={revenueData.lastMonth.revenue}
+          thisMonthProfit={revenueData.thisMonth.profit}
+          lastMonthProfit={revenueData.lastMonth.profit}
+        />
+        
+        <RevenueProfitChart 
+          dailyRevenueData={dailyRevenueData} 
+          monthlyRevenueData={monthlyRevenueData}
+          isLoading={isLoading} 
+        />
+      </div>
     </MainLayout>
   );
 }
