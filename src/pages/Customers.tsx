@@ -460,86 +460,55 @@ function Customers() {
 
   return (
     <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-semibold mb-2">Customers</h1>
-        <p className="text-muted-foreground">Manage your customer base</p>
-      </section>
-      
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
-        <Card className="shadow-sm">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Total Customers</span>
-              <span className="text-3xl font-bold mt-1">{totalCustomers}</span>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
-              <Users className="h-6 w-6 text-blue-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Total Sales</span>
-              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-green-500" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Gross Profit</span>
-              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.grossProfit)}</span>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-purple-500" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
-      <div className="flex flex-wrap gap-4 mb-8">
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('processing')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="secondary" className="h-6 px-3">
-              {customerStats.processingOrders}
-            </Badge>
-            <span className="font-medium">Orders In Process</span>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'completed' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('completed')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="default" className="h-6 px-3">
-              {customerStats.completedOrders}
-            </Badge>
-            <span className="font-medium">Completed Orders</span>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'cancelled' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('cancelled')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="destructive" className="h-6 px-3">
-              {customerStats.cancelledOrders}
-            </Badge>
-            <span className="font-medium">Cancelled Orders</span>
-          </CardContent>
-        </Card>
-      </div>
+      <div className="space-y-6">
+        {/* Header - Compact like Lead Management */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Customers</h1>
+            <p className="text-muted-foreground text-sm">Urus senarai pelanggan anda</p>
+          </div>
+          <Button className="h-9 gap-2" onClick={() => setIsAddFormOpen(true)}>
+            <UserPlus className="h-4 w-4" />
+            Tambah
+          </Button>
+        </div>
+
+        {/* Stats Cards - Full color like Lead Management */}
+        <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3">
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 text-white shadow-lg">
+            <p className="text-xs font-medium text-white/90 mb-1">Total</p>
+            <p className="text-xl font-bold">{totalCustomers}</p>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-emerald-500 to-emerald-600 p-4 text-white shadow-lg">
+            <p className="text-xs font-medium text-white/90 mb-1">Jualan</p>
+            <p className="text-xl font-bold">{formatCurrency(customerStats.totalSales)}</p>
+          </div>
+          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-purple-500 to-purple-600 p-4 text-white shadow-lg">
+            <p className="text-xs font-medium text-white/90 mb-1">Untung</p>
+            <p className="text-xl font-bold">{formatCurrency(customerStats.grossProfit)}</p>
+          </div>
+          <div 
+            className={`relative overflow-hidden rounded-2xl p-4 text-white shadow-lg cursor-pointer bg-gradient-to-br from-amber-500 to-amber-600 ${statusFilter === 'processing' ? 'ring-2 ring-white' : ''}`}
+            onClick={() => handleStatusFilter('processing')}
+          >
+            <p className="text-xs font-medium text-white/90 mb-1">Processing</p>
+            <p className="text-xl font-bold">{customerStats.processingOrders}</p>
+          </div>
+          <div 
+            className={`relative overflow-hidden rounded-2xl p-4 text-white shadow-lg cursor-pointer bg-gradient-to-br from-green-500 to-green-600 ${statusFilter === 'completed' ? 'ring-2 ring-white' : ''}`}
+            onClick={() => handleStatusFilter('completed')}
+          >
+            <p className="text-xs font-medium text-white/90 mb-1">Completed</p>
+            <p className="text-xl font-bold">{customerStats.completedOrders}</p>
+          </div>
+          <div 
+            className={`relative overflow-hidden rounded-2xl p-4 text-white shadow-lg cursor-pointer bg-gradient-to-br from-red-500 to-red-600 ${statusFilter === 'cancelled' ? 'ring-2 ring-white' : ''}`}
+            onClick={() => handleStatusFilter('cancelled')}
+          >
+            <p className="text-xs font-medium text-white/90 mb-1">Cancelled</p>
+            <p className="text-xl font-bold">{customerStats.cancelledOrders}</p>
+          </div>
+        </div>
       
       <Card className="mb-8">
         <CardHeader>
