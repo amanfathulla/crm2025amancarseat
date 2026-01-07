@@ -3,8 +3,7 @@ import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 import { SummaryStatCards } from "./dashboard/SummaryStatCards";
-import { DailyRevenueStats } from "./dashboard/DailyRevenueStats";
-import { GrossProfitStats } from "./dashboard/GrossProfitStats";
+import { MonthlyComparisonCards } from "./dashboard/MonthlyComparisonCards";
 import { RevenueProfitChart } from "./dashboard/RevenueProfitChart";
 
 export default function Dashboard() {
@@ -13,24 +12,15 @@ export default function Dashboard() {
       year: new Date().getFullYear(),
       total: 0,
     },
-    today: { revenue: 0, orders: 0, products: 0 },
-    yesterday: { revenue: 0, orders: 0, products: 0 },
-    thisMonth: { revenue: 0, orders: 0, products: 0 },
-    orders: {
-      today: 0,
-      thisMonth: 0,
-      processing: 0,
-      completed: 0,
-      cancelled: 0,
-    },
-    grossProfit: { today: 0, thisMonth: 0, thisYear: 0 },
-    yearlySalesTotal: 0,
+    thisMonth: { revenue: 0, profit: 0 },
+    lastMonth: { revenue: 0, profit: 0 },
   });
 
   const [totalAllTimeRevenue, setTotalAllTimeRevenue] = useState(0);
   const [totalAllTimeProfit, setTotalAllTimeProfit] = useState(0);
   const [totalProfitYearFromCustomers, setTotalProfitYearFromCustomers] = useState(0);
-  const [dailyRevenueData, setDailyRevenueData] = useState([]);
+  const [dailyRevenueData, setDailyRevenueData] = useState<any[]>([]);
+  const [monthlyRevenueData, setMonthlyRevenueData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
@@ -40,24 +30,19 @@ export default function Dashboard() {
         const now = new Date();
         const currentYear = now.getFullYear();
         const currentMonth = now.getMonth() + 1;
-        const today = now.toISOString().split("T")[0];
 
-        const yesterday = new Date(now);
-        yesterday.setDate(yesterday.getDate() - 1);
-        const yesterdayStr = yesterday.toISOString().split("T")[0];
+        // Calculate last month
+        const lastMonthDate = new Date(now.getFullYear(), now.getMonth() - 1, 1);
+        const lastMonth = lastMonthDate.getMonth() + 1;
+        const lastMonthYear = lastMonthDate.getFullYear();
 
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-          .toISOString()
-          .split("T")[0];
-
+        // Get all customers
         const { data: allCustomers, error: allCustomersError } = await supabase
           .from("customers")
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
+        // Get yearly sales data
         const { data: yearlySalesData, error: yearlySalesError } = await supabase
           .from("yearly_sales")
           .select("*")
@@ -74,6 +59,7 @@ export default function Dashboard() {
         setTotalAllTimeRevenue(calculatedTotalAllTimeRevenue);
         setTotalAllTimeProfit(calculatedTotalAllTimeProfit);
 
+        // Calculate current year totals
         const customersThisYear = allCustomers.filter((item) => {
           const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
           return orderYear === currentYear;
@@ -88,30 +74,13 @@ export default function Dashboard() {
         );
         setTotalProfitYearFromCustomers(totalProfitYearFromCustomersTable);
 
-        const completedOrders = allCustomers.filter(
-          (item) => item.order_status === "completed"
-        ).length;
-
-        const { data: yearData, error: yearError } = await supabase
-          .from("customers")
-          .select("sales_amount, gross_profit, order_date")
-          .gte("order_date", `${currentYear}-01-01`)
-          .lt("order_date", `${currentYear + 1}-01-01`);
-        if (yearError) throw yearError;
-
-        const { data: todayData, error: todayError } = await supabase
-          .from("customers")
-          .select("sales_amount, gross_profit, order_date")
-          .gte("order_date", today)
-          .lt("order_date", new Date(now.getTime() + 86400000).toISOString().split("T")[0]);
-        if (todayError) throw todayError;
-
-        const { data: yesterdayData, error: yesterdayError } = await supabase
-          .from("customers")
-          .select("sales_amount, gross_profit, order_date")
-          .gte("order_date", yesterdayStr)
-          .lt("order_date", today);
-        if (yesterdayError) throw yesterdayError;
+        // Calculate this month data
+        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .split("T")[0];
+        const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
+          .toISOString()
+          .split("T")[0];
 
         const { data: monthData, error: monthError } = await supabase
           .from("customers")
@@ -120,69 +89,53 @@ export default function Dashboard() {
           .lt("order_date", firstDayNextMonth);
         if (monthError) throw monthError;
 
-        const { data: processingOrders } = await supabase
-          .from("customers")
-          .select("id")
-          .eq("order_status", "processing");
-
-        const { data: cancelledOrders } = await supabase
-          .from("customers")
-          .select("id")
-          .eq("order_status", "cancelled");
-
-        const todayRevenue = todayData.reduce(
+        const thisMonthRevenue = monthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
           0
         );
-        const todayProfit = todayData.reduce(
+        const thisMonthProfit = monthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
           0
         );
 
-        const yesterdayRevenue = yesterdayData.reduce(
-          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
-          0
-        );
+        // Calculate last month data
+        const firstDayLastMonth = new Date(lastMonthYear, lastMonth - 1, 1)
+          .toISOString()
+          .split("T")[0];
+        const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+          .toISOString()
+          .split("T")[0];
 
-        const monthlyRevenue = monthData.reduce(
+        const { data: lastMonthData, error: lastMonthError } = await supabase
+          .from("customers")
+          .select("sales_amount, gross_profit, order_date")
+          .gte("order_date", firstDayLastMonth)
+          .lt("order_date", firstDayCurrentMonth);
+        if (lastMonthError) throw lastMonthError;
+
+        const lastMonthRevenue = lastMonthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
           0
         );
-        const monthlyProfit = monthData.reduce(
+        const lastMonthProfit = lastMonthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
           0
         );
 
         setRevenueData({
           currentYear: { year: currentYear, total: totalRevenueYear },
-          today: { revenue: todayRevenue, orders: todayData.length, products: todayData.length },
-          yesterday: {
-            revenue: yesterdayRevenue,
-            orders: yesterdayData.length,
-            products: yesterdayData.length,
-          },
-          thisMonth: {
-            revenue: monthlyRevenue,
-            orders: monthData.length,
-            products: monthData.length,
-          },
-          orders: {
-            today: todayData.length,
-            thisMonth: monthData.length,
-            processing: processingOrders?.length || 0,
-            completed: completedOrders,
-            cancelled: cancelledOrders?.length || 0,
-          },
-          grossProfit: {
-            today: todayProfit,
-            thisMonth: monthlyProfit,
-            thisYear: totalProfitYearFromCustomersTable,
-          },
-          yearlySalesTotal: calculatedTotalAllTimeRevenue,
+          thisMonth: { revenue: thisMonthRevenue, profit: thisMonthProfit },
+          lastMonth: { revenue: lastMonthRevenue, profit: lastMonthProfit },
         });
 
+        // Generate daily data for chart
         const dailyData = await generateDailyData(currentMonth, currentYear);
         setDailyRevenueData(dailyData);
+
+        // Generate monthly data for chart (all months of current year)
+        const monthlyData = await generateMonthlyData(currentYear);
+        setMonthlyRevenueData(monthlyData);
+
       } catch (error) {
         console.error("Error fetching dashboard data:", error);
       } finally {
@@ -239,6 +192,47 @@ export default function Dashboard() {
       }
     };
 
+    const generateMonthlyData = async (year: number) => {
+      try {
+        let monthlyData = [];
+
+        for (let month = 1; month <= 12; month++) {
+          const firstDayOfMonth = `${year}-${month.toString().padStart(2, "0")}-01`;
+          const firstDayNextMonth = month === 12 
+            ? `${year + 1}-01-01`
+            : `${year}-${(month + 1).toString().padStart(2, "0")}-01`;
+
+          const { data, error } = await supabase
+            .from("customers")
+            .select("sales_amount, gross_profit")
+            .gte("order_date", firstDayOfMonth)
+            .lt("order_date", firstDayNextMonth);
+
+          if (error) throw error;
+
+          const monthRevenue = data.reduce(
+            (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
+            0
+          );
+          const monthProfit = data.reduce(
+            (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
+            0
+          );
+
+          monthlyData.push({
+            month: month,
+            revenue: monthRevenue,
+            profit: monthProfit,
+          });
+        }
+
+        return monthlyData;
+      } catch (error) {
+        console.error("Error generating monthly data:", error);
+        return [];
+      }
+    };
+
     fetchDashboardData();
 
     const channel = supabase
@@ -274,9 +268,19 @@ export default function Dashboard() {
         totalAllTimeProfit={totalAllTimeProfit}
         totalProfitYearFromCustomers={totalProfitYearFromCustomers}
       />
-      <DailyRevenueStats revenueData={revenueData} />
-      <GrossProfitStats revenueData={revenueData} />
-      <RevenueProfitChart dailyRevenueData={dailyRevenueData} isLoading={isLoading} />
+      
+      <MonthlyComparisonCards
+        thisMonthRevenue={revenueData.thisMonth.revenue}
+        lastMonthRevenue={revenueData.lastMonth.revenue}
+        thisMonthProfit={revenueData.thisMonth.profit}
+        lastMonthProfit={revenueData.lastMonth.profit}
+      />
+      
+      <RevenueProfitChart 
+        dailyRevenueData={dailyRevenueData} 
+        monthlyRevenueData={monthlyRevenueData}
+        isLoading={isLoading} 
+      />
     </MainLayout>
   );
 }

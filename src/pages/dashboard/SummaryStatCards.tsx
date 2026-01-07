@@ -1,4 +1,3 @@
-import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DollarSign, TrendingUp, Wallet, PiggyBank } from "lucide-react";
 import React from "react";
 
@@ -28,59 +27,53 @@ export function SummaryStatCards({
       title: `Jualan ${revenueData.currentYear.year}`,
       value: currentYearRevenue,
       icon: DollarSign,
-      iconBg: "bg-blue-100",
-      iconColor: "text-blue-600",
-      cardBorder: "border-l-4 border-l-blue-500",
+      gradient: "from-blue-500 to-blue-600",
     },
     {
       title: `Untung ${revenueData.currentYear.year}`,
       value: totalProfitYearFromCustomers,
       icon: TrendingUp,
-      iconBg: "bg-green-100",
-      iconColor: "text-green-600",
-      cardBorder: "border-l-4 border-l-green-500",
+      gradient: "from-emerald-500 to-emerald-600",
     },
     {
       title: "Total Revenue",
       value: totalAllTimeRevenue,
       icon: Wallet,
-      iconBg: "bg-purple-100",
-      iconColor: "text-purple-600",
-      cardBorder: "border-l-4 border-l-purple-500",
+      gradient: "from-purple-500 to-purple-600",
     },
     {
       title: "Total Profit",
       value: totalAllTimeProfit,
       icon: PiggyBank,
-      iconBg: "bg-orange-100",
-      iconColor: "text-orange-600",
-      cardBorder: "border-l-4 border-l-orange-500",
+      gradient: "from-orange-500 to-orange-600",
     },
   ];
 
   return (
     <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
       {stats.map((stat, index) => (
-        <Card
+        <div
           key={index}
-          className={`border-0 shadow-sm bg-card hover:shadow-md transition-all duration-200 ${stat.cardBorder}`}
+          className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1`}
         >
-          <CardContent className="p-5">
-            <div className="flex items-center gap-4">
-              <div className={`p-3 rounded-xl ${stat.iconBg}`}>
-                <stat.icon className={`h-6 w-6 ${stat.iconColor}`} />
-              </div>
-              <div>
-                <p className="text-sm font-medium text-muted-foreground">
-                  {stat.title}
-                </p>
-                <p className="text-2xl font-bold text-foreground">
-                  RM{formatNumber(stat.value)}
-                </p>
+          {/* Background decoration */}
+          <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10" />
+          <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-white/5" />
+          
+          <div className="relative z-10">
+            <div className="flex items-center justify-between mb-4">
+              <p className="text-sm font-medium text-white/90">
+                {stat.title}
+              </p>
+              <div className="p-2 rounded-lg bg-white/20">
+                <stat.icon className="h-5 w-5 text-white" />
               </div>
             </div>
-          </CardContent>
-        </Card>
+            <p className="text-3xl font-bold tracking-tight">
+              RM{formatNumber(stat.value)}
+            </p>
+          </div>
+        </div>
       ))}
     </section>
   );

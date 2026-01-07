@@ -1,5 +1,4 @@
-
-import { Facebook, Instagram, LucideIcon } from "lucide-react";
+import { Facebook, Instagram } from "lucide-react";
 import { MarketingContent, MarketingContentStatus } from "@/utils/marketingUtils";
 import { MarketingTaskCheckbox } from "./MarketingTaskCheckbox";
 
@@ -32,7 +31,7 @@ export function MarketingTaskItem({ task, onStatusChange }: MarketingTaskItemPro
     <div 
       className={`p-2 rounded-md ${
         isCompleted 
-          ? 'bg-white/5 text-white/60' 
+          ? 'bg-white/5' 
           : 'bg-white/10'
       } hover:bg-white/15 transition-colors`}
     >
@@ -41,12 +40,12 @@ export function MarketingTaskItem({ task, onStatusChange }: MarketingTaskItemPro
         
         <div className="flex-1 min-w-0">
           <div className="flex justify-between items-start">
-            <div className={`font-medium ${isCompleted ? 'line-through text-white/50' : ''}`}>
+            <div className={`font-medium text-white ${isCompleted ? 'line-through opacity-60' : ''}`}>
               {task.title}
             </div>
           </div>
           
-          <div className="flex items-center mt-1 text-[10px] text-white/50 gap-1">
+          <div className="flex items-center mt-1 text-[10px] text-white/60 gap-1">
             <span className="font-medium">{dayName}, {day}</span>
             {task.media && task.media !== 'none' && (
               <span className="flex items-center">

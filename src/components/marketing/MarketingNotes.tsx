@@ -1,4 +1,3 @@
-
 import { useState, useEffect } from 'react';
 import { supabase } from '@/integrations/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -123,14 +122,14 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
   }
   
   return (
-    <div className="overflow-hidden text-sm">
+    <div className="overflow-hidden text-sm text-white">
       <div className="flex justify-between items-center mb-2">
-        <span className="font-medium">Nota Marketing</span>
+        <span className="font-medium text-white">Nota Marketing</span>
         <Button 
           variant="outline" 
           size="sm" 
           onClick={() => setShowAddDialog(true)}
-          className="h-7 px-2 bg-white/10 hover:bg-white/20 border-white/20"
+          className="h-7 px-2 bg-white/10 hover:bg-white/20 border-white/20 text-white"
         >
           + Tambah
         </Button>
@@ -149,7 +148,7 @@ export function MarketingNotes({ expanded, isMobile }: MarketingNotesProps) {
       <div className="space-y-4 max-h-[350px] overflow-y-auto pr-1">
         {Object.entries(groupedNotes).map(([month, monthNotes]) => (
           <div key={month}>
-            <div className="sticky top-0 bg-black z-10 py-1">
+            <div className="sticky top-0 bg-sidebar-background z-10 py-1">
               <h3 className="font-medium text-xs text-white/70">{month}</h3>
               <Separator className="my-1 bg-white/10" />
             </div>
