@@ -1,5 +1,5 @@
 
-import { MainLayout } from "@/components/layout/MainLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -310,10 +310,10 @@ export default function Products() {
   };
 
   return (
-    <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-semibold mb-2">Produk</h1>
-        <p className="text-muted-foreground">Urus inventori produk anda</p>
+    <div className="p-4 md:p-6 space-y-6">
+      <section className="animate-slide-up">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Produk</h1>
+        <p className="text-muted-foreground text-sm">Urus inventori produk anda</p>
       </section>
       
       <Card className="animate-fade-in delay-100">
@@ -412,6 +412,6 @@ export default function Products() {
           onSuccess={handleDeleteSuccess}
         />
       )}
-    </MainLayout>
+    </div>
   );
 }

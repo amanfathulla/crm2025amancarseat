@@ -51,10 +51,7 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
           isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
       >
-        {/* Responsive, padding kiri & kanan kecil, atas bawah selesa */}
-        <div className="w-full h-full px-3 sm:px-4 md:px-8 py-6">
-          {children || <Outlet />}
-        </div>
+        {children || <Outlet />}
       </main>
     </div>
   );

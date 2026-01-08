@@ -1,4 +1,3 @@
-import { MainLayout } from "@/components/layout/MainLayout";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -89,6 +88,9 @@ export default function Dashboard() {
           .lt("order_date", firstDayNextMonth);
         if (monthError) throw monthError;
 
+        console.log("This month query:", firstDayOfMonth, "to", firstDayNextMonth);
+        console.log("This month data:", monthData);
+
         const thisMonthRevenue = monthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
           0
@@ -97,6 +99,8 @@ export default function Dashboard() {
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
           0
         );
+        
+        console.log("This month totals - Revenue:", thisMonthRevenue, "Profit:", thisMonthProfit);
 
         // Calculate last month data
         const firstDayLastMonth = new Date(lastMonthYear, lastMonth - 1, 1)
@@ -252,8 +256,8 @@ export default function Dashboard() {
   }, []);
 
   return (
-    <MainLayout>
-      <section className="mb-8 animate-slide-up">
+    <div className="p-4 md:p-6 space-y-6">
+      <section className="animate-slide-up">
         <div className="flex items-center justify-between mb-2">
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
         </div>
@@ -281,6 +285,6 @@ export default function Dashboard() {
         monthlyRevenueData={monthlyRevenueData}
         isLoading={isLoading} 
       />
-    </MainLayout>
+    </div>
   );
 }
