@@ -809,6 +809,7 @@ function Customers() {
           }}
         />
       )}
+      </div>
     </MainLayout>
   );
 }
