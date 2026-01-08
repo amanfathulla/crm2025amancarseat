@@ -1,8 +1,9 @@
+
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image, Grid3X3, Package } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image, Grid3X3 } from "lucide-react";
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product, ProductVariation } from "@/types/product";
@@ -133,14 +134,14 @@ export default function Products() {
     }
 
     return (
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
         {filteredProducts.map((product) => {
           const lowestPrice = product.variations
             ? Math.min(...product.variations.map(v => v.price))
             : product.price;
             
           return (
-            <Card key={product.id} className="overflow-hidden hover:shadow-md transition-shadow border-0 shadow-sm">
+            <Card key={product.id} className="h-full overflow-hidden hover:shadow-md transition-shadow">
               <div className="relative">
                 <AspectRatio ratio={4/3}>
                   {product.image_url ? (
@@ -151,17 +152,17 @@ export default function Products() {
                     />
                   ) : (
                     <div className="w-full h-full bg-muted/30 flex items-center justify-center">
-                      <Image className="h-10 w-10 text-muted-foreground/40" />
+                      <Image className="h-12 w-12 text-muted-foreground/40" />
                     </div>
                   )}
                 </AspectRatio>
               </div>
-              <CardHeader className="p-3 pb-1">
+              <CardHeader className="pb-2">
                 <div className="flex justify-between items-start">
-                  <CardTitle className="text-base line-clamp-1">{product.name}</CardTitle>
+                  <CardTitle className="text-lg">{product.name}</CardTitle>
                   <DropdownMenu>
                     <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-7 w-7 -mr-2">
+                      <Button variant="ghost" size="icon" className="h-8 w-8">
                         <MoreHorizontal className="h-4 w-4" />
                       </Button>
                     </DropdownMenuTrigger>
@@ -181,23 +182,18 @@ export default function Products() {
                   </DropdownMenu>
                 </div>
               </CardHeader>
-              <CardContent className="p-3 pt-0">
-                <div className="text-lg font-semibold text-primary">
+              <CardContent>
+                <div className="text-lg font-medium text-primary">
                   {formatPrice(lowestPrice)}
                 </div>
-                {product.variations && product.variations.length > 0 && (
-                  <div className="mt-1 space-y-0.5">
-                    {product.variations.slice(0, 2).map((variation) => (
-                      <div key={variation.id} className="flex justify-between text-xs">
-                        <span className="text-muted-foreground">{variation.name}</span>
-                        <span>{formatPrice(variation.price)}</span>
-                      </div>
-                    ))}
-                    {product.variations.length > 2 && (
-                      <span className="text-xs text-muted-foreground">+{product.variations.length - 2} lagi</span>
-                    )}
-                  </div>
-                )}
+                <div className="mt-2 space-y-1">
+                  {product.variations?.map((variation) => (
+                    <div key={variation.id} className="flex justify-between text-sm">
+                      <span className="text-muted-foreground">{variation.name}</span>
+                      <span>{formatPrice(variation.price)}</span>
+                    </div>
+                  ))}
+                </div>
               </CardContent>
             </Card>
           );
@@ -208,7 +204,7 @@ export default function Products() {
 
   const renderTableView = () => {
     return (
-      <div className="overflow-x-auto rounded-lg border bg-card">
+      <div className="overflow-x-auto">
         {filteredProducts.length === 0 ? (
           <div className="py-8 text-center text-muted-foreground">
             {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
@@ -216,12 +212,24 @@ export default function Products() {
         ) : (
           <table className="w-full">
             <thead>
-              <tr className="border-b bg-muted/50">
-                <th className="text-left py-2.5 px-3 font-medium text-sm">Nama Produk</th>
-                <th colSpan={2} className="text-center py-2.5 px-2 font-medium text-sm">2 Seater</th>
-                <th colSpan={2} className="text-center py-2.5 px-2 font-medium text-sm">5 Seater</th>
-                <th colSpan={2} className="text-center py-2.5 px-2 font-medium text-sm">7 Seater</th>
-                <th className="text-right py-2.5 px-3 font-medium text-sm">Tindakan</th>
+              <tr className="border-b">
+                <th className="text-left py-3 px-4 font-medium">Nama Produk</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">2 Seater</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">5 Seater</th>
+                <th colSpan={2} className="text-center py-3 px-4 font-medium">7 Seater</th>
+                <th className="text-right py-3 px-4 font-medium">Imej</th>
+                <th className="text-right py-3 px-4 font-medium">Tindakan</th>
+              </tr>
+              <tr className="border-b bg-muted/30">
+                <th className="text-left py-2 px-4"></th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
+                <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
+                <th className="text-right py-2 px-4"></th>
+                <th className="text-right py-2 px-4"></th>
               </tr>
             </thead>
             <tbody>
@@ -232,31 +240,47 @@ export default function Products() {
                 
                 return (
                   <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
-                    <td className="py-2.5 px-3">
-                      <div className="font-medium text-sm">{product.name}</div>
+                    <td className="py-3 px-4">
+                      <div className="font-medium">{product.name}</div>
                     </td>
-                    <td className="py-2.5 px-2 text-center text-sm">
+                    
+                    {/* 2 Seater */}
+                    <td className="py-3 px-2 text-center">
                       {twoSeater ? formatPrice(twoSeater.price) : "-"}
                     </td>
-                    <td className="py-2.5 px-2 text-center text-xs text-muted-foreground">
+                    <td className="py-3 px-2 text-center text-muted-foreground">
                       {twoSeater?.cost ? formatPrice(twoSeater.cost) : "-"}
                     </td>
-                    <td className="py-2.5 px-2 text-center text-sm">
+                    
+                    {/* 5 Seater */}
+                    <td className="py-3 px-2 text-center">
                       {fiveSeater ? formatPrice(fiveSeater.price) : "-"}
                     </td>
-                    <td className="py-2.5 px-2 text-center text-xs text-muted-foreground">
+                    <td className="py-3 px-2 text-center text-muted-foreground">
                       {fiveSeater?.cost ? formatPrice(fiveSeater.cost) : "-"}
                     </td>
-                    <td className="py-2.5 px-2 text-center text-sm">
+                    
+                    {/* 7 Seater */}
+                    <td className="py-3 px-2 text-center">
                       {sevenSeater ? formatPrice(sevenSeater.price) : "-"}
                     </td>
-                    <td className="py-2.5 px-2 text-center text-xs text-muted-foreground">
+                    <td className="py-3 px-2 text-center text-muted-foreground">
                       {sevenSeater?.cost ? formatPrice(sevenSeater.cost) : "-"}
                     </td>
-                    <td className="py-2.5 px-3 text-right">
+                    
+                    <td className="py-3 px-4 text-center">
+                      {product.image_url ? (
+                        <div className="flex justify-center">
+                          <a href={product.image_url} target="_blank" rel="noopener noreferrer">
+                            <Image className="h-5 w-5 text-blue-500 hover:text-blue-700" />
+                          </a>
+                        </div>
+                      ) : "-"}
+                    </td>
+                    <td className="py-3 px-4 text-right">
                       <DropdownMenu>
                         <DropdownMenuTrigger asChild>
-                          <Button variant="ghost" size="icon" className="h-7 w-7">
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
                             <MoreHorizontal className="h-4 w-4" />
                           </Button>
                         </DropdownMenuTrigger>
@@ -287,19 +311,23 @@ export default function Products() {
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header - Compact like Lead Management */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+      <section className="mb-8 animate-slide-up">
+        <h1 className="text-3xl font-semibold mb-2">Produk</h1>
+        <p className="text-muted-foreground">Urus inventori produk anda</p>
+      </section>
+      
+      <Card className="animate-fade-in delay-100">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
           <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Produk</h1>
-            <p className="text-muted-foreground text-sm">Urus inventori produk anda</p>
+            <CardTitle>Semua Produk</CardTitle>
+            <CardDescription>Lihat dan urus katalog produk anda</CardDescription>
           </div>
-          <div className="flex items-center gap-2">
+          <div className="flex items-center gap-2 w-full sm:w-auto">
             <div className="relative flex-1 sm:flex-initial">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Cari produk..."
-                className="pl-9 w-full sm:w-[200px] h-9"
+                className="pl-9 w-full sm:w-[260px]"
                 value={searchTerm}
                 onChange={(e) => setSearchTerm(e.target.value)}
               />
@@ -307,45 +335,34 @@ export default function Products() {
             <Button 
               variant="outline" 
               size="icon" 
-              className="h-9 w-9"
               onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
             >
-              <Grid3X3 className="h-4 w-4" />
+              {viewMode === 'grid' ? (
+                <Grid3X3 className="h-4 w-4" />
+              ) : (
+                <Grid3X3 className="h-4 w-4" />
+              )}
             </Button>
-            <Button className="h-9 gap-2" onClick={() => setIsAddDialogOpen(true)}>
-              <Save className="h-4 w-4" />
-              <span className="hidden sm:inline">Tambah Produk</span>
+            <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddDialogOpen(true)}>
+              <Save className="h-4 w-4 mr-2" />
+              Tambah Produk
             </Button>
           </div>
-        </div>
-
-        {/* Stats Card - Same style as Lead Management */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          <div className="relative overflow-hidden rounded-2xl bg-gradient-to-br from-blue-500 to-blue-600 p-4 text-white shadow-lg">
-            <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10" />
-            <div className="relative z-10">
-              <div className="flex items-center justify-between mb-2">
-                <p className="text-xs font-medium text-white/90">Total Produk</p>
-                <Package className="h-4 w-4 text-white/80" />
-              </div>
-              <p className="text-2xl font-bold">{products.length}</p>
+        </CardHeader>
+        <CardContent>
+          {loading ? (
+            <div className="flex justify-center items-center py-8">
+              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
             </div>
-          </div>
-        </div>
+          ) : viewMode === 'grid' ? (
+            renderGridView()
+          ) : (
+            renderTableView()
+          )}
+        </CardContent>
+      </Card>
 
-        {/* Products List */}
-        {loading ? (
-          <div className="flex justify-center items-center py-12">
-            <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-          </div>
-        ) : viewMode === 'grid' ? (
-          renderGridView()
-        ) : (
-          renderTableView()
-        )}
-      </div>
-
-      {/* Dialogs */}
+      {/* Add Product Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
         <DialogContent className="sm:max-w-[700px]">
           <DialogHeader>
@@ -361,6 +378,7 @@ export default function Products() {
         </DialogContent>
       </Dialog>
 
+      {/* Edit Product Dialog */}
       {selectedProduct && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
           <DialogContent className="sm:max-w-[700px]">
@@ -384,6 +402,7 @@ export default function Products() {
         </Dialog>
       )}
 
+      {/* Delete Product Dialog */}
       {selectedProduct && (
         <DeleteProductDialog
           isOpen={isDeleteDialogOpen}

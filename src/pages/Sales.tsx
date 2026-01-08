@@ -1,9 +1,10 @@
 import { useState, useEffect } from "react";
 import { MainLayout } from "@/components/layout/MainLayout";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, Edit, Trash, PlusCircle, TrendingUp, TrendingDown, DollarSign, Calendar, Wallet } from "lucide-react";
+import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, TrendingDown, DollarSign, Calendar } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { DeleteYearlySalesDialog } from "@/components/sales/DeleteYearlySalesDialog";
 import { supabase } from "@/integrations/supabase/client";
@@ -32,10 +33,12 @@ export default function Sales() {
   const [searchQuery, setSearchQuery] = useState("");
   const [selectedRecord, setSelectedRecord] = useState<YearlySalesFormData | null>(null);
   const [selectedRecordId, setSelectedRecordId] = useState<string>("");
+  const [lastUpdated, setLastUpdated] = useState<string>("");
   
   const fetchYearlySalesData = async () => {
     setIsLoading(true);
     try {
+      // Fetch yearly sales records
       const { data, error } = await supabase
         .from("yearly_sales")
         .select("*")
@@ -43,11 +46,12 @@ export default function Sales() {
 
       if (error) throw error;
 
+      // Convert the database records to our app's type format
       const typedData = data?.map(record => ({
         id: record.id,
         year: record.year,
         total_revenue: record.total_revenue,
-        total_profit: record.total_profit || 0,
+        total_profit: record.total_profit || 0, // Handle null values
         quarter_1: record.quarter_1,
         quarter_2: record.quarter_2,
         quarter_3: record.quarter_3,
@@ -57,7 +61,12 @@ export default function Sales() {
       
       setYearlySales(typedData);
       
+      // Set last updated time
+      setLastUpdated(format(new Date(), "d MMMM yyyy 'at' hh:mm a"));
+      
+      // Generate analytics if we have data
       if (typedData.length >= 1) {
+        // Sort by year to ensure correct order
         const sortedData = [...typedData].sort((a, b) => b.year - a.year);
         
         const currentYear = new Date().getFullYear();
@@ -69,6 +78,7 @@ export default function Sales() {
         const currentYearProfit = currentYearData ? currentYearData.total_profit : 0;
         const previousYearProfit = previousYearData ? previousYearData.total_profit : 0;
         
+        // Calculate total revenue across all years
         const totalAllTimeRevenue = sortedData.reduce((total, record) => total + record.total_revenue, 0);
         const totalAllTimeProfit = sortedData.reduce((total, record) => total + (record.total_profit || 0), 0);
         
@@ -76,6 +86,7 @@ export default function Sales() {
           ? ((currentYearRevenue - previousYearRevenue) / previousYearRevenue) * 100
           : currentYearRevenue > 0 ? 100 : 0;
         
+        // Create yearly data for chart visualization
         const yearlyData = sortedData.slice(0, 5).map(record => ({
           year: record.year,
           totalRevenue: record.total_revenue,
@@ -118,10 +129,11 @@ export default function Sales() {
     return new Intl.NumberFormat('ms-MY', {
       style: 'currency',
       currency: 'MYR',
-      maximumFractionDigits: 0,
+      maximumFractionDigits: 2,
     }).format(amount);
   };
 
+  // Handle edit record
   const handleEditRecord = (record: YearlySalesRecord) => {
     setSelectedRecord({
       year: record.year,
@@ -135,6 +147,7 @@ export default function Sales() {
     setIsEditFormOpen(true);
   };
 
+  // Handle delete record
   const handleDeleteRecord = (id: string, year: number) => {
     setSelectedRecordId(id);
     setSelectedRecord({ 
@@ -149,151 +162,232 @@ export default function Sales() {
     setIsDeleteDialogOpen(true);
   };
 
+  // Filter yearly sales records based on search query
   const filteredYearlySales = yearlySales.filter(record => {
     const searchLower = searchQuery.toLowerCase();
-    return record.year.toString().includes(searchQuery) || record.total_revenue.toString().includes(searchQuery);
+    const yearMatch = record.year.toString().includes(searchQuery);
+    const revenueMatch = record.total_revenue.toString().includes(searchQuery);
+    
+    return yearMatch || revenueMatch;
   });
-
-  const statCards = [
-    {
-      title: "Total Revenue",
-      value: analytics?.totalAllTimeRevenue || 0,
-      icon: DollarSign,
-      gradient: "from-blue-500 to-blue-600",
-    },
-    {
-      title: "Total Profit",
-      value: analytics?.totalAllTimeProfit || 0,
-      icon: Wallet,
-      gradient: "from-emerald-500 to-emerald-600",
-    },
-    {
-      title: "YoY Growth",
-      value: analytics?.percentageChange || 0,
-      icon: analytics?.percentageChange && analytics.percentageChange >= 0 ? TrendingUp : TrendingDown,
-      gradient: analytics?.percentageChange && analytics.percentageChange >= 0 ? "from-green-500 to-green-600" : "from-red-500 to-red-600",
-      isPercent: true,
-    },
-    {
-      title: `Tahun ${new Date().getFullYear()}`,
-      value: analytics?.currentYearRevenue || 0,
-      icon: Calendar,
-      gradient: "from-purple-500 to-purple-600",
-    },
-  ];
 
   return (
     <MainLayout>
-      <div className="space-y-6">
-        {/* Header - Compact like Lead Management */}
-        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-          <div>
-            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Yearly Sales</h1>
-            <p className="text-muted-foreground text-sm">Urus rekod jualan tahunan</p>
-          </div>
-          <Button className="gap-2" onClick={() => setIsAddFormOpen(true)}>
-            <PlusCircle className="h-4 w-4" />
-            Tambah Rekod
-          </Button>
-        </div>
-
-        {/* Stats Cards - Same style as Lead Management */}
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-4">
-          {statCards.map((stat, index) => (
-            <div
-              key={index}
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${stat.gradient} p-4 text-white shadow-lg`}
-            >
-              <div className="absolute top-0 right-0 -mt-2 -mr-2 w-16 h-16 rounded-full bg-white/10" />
-              <div className="relative z-10">
-                <div className="flex items-center justify-between mb-2">
-                  <p className="text-xs font-medium text-white/90">{stat.title}</p>
-                  <stat.icon className="h-4 w-4 text-white/80" />
-                </div>
-                <p className="text-xl md:text-2xl font-bold">
-                  {stat.isPercent 
-                    ? `${stat.value >= 0 ? '+' : ''}${stat.value.toFixed(1)}%`
-                    : formatCurrency(stat.value).replace("MYR", "RM")
-                  }
-                </p>
-              </div>
+      <section className="mb-8 animate-slide-up">
+        <h1 className="text-3xl font-semibold mb-2">Yearly Sales</h1>
+        <p className="text-muted-foreground">Manage yearly sales records and analytics</p>
+      </section>
+      
+      {/* Enhanced Sales Analytics */}
+      <Card className="mb-8 animate-fade-in">
+        <CardHeader>
+          <div className="flex flex-col md:flex-row md:items-center justify-between">
+            <div>
+              <CardTitle>Sales Analytics</CardTitle>
+              <CardDescription>
+                {analytics && (
+                  <>
+                    Yearly sales records ({analytics.minYear}-{analytics.maxYear})
+                    <div className="text-xs text-muted-foreground mt-1">
+                      Last updated: {lastUpdated}
+                    </div>
+                  </>
+                )}
+              </CardDescription>
             </div>
-          ))}
-        </div>
-
-        {/* Chart */}
-        {analytics && analytics.yearlyData.length > 0 && (
-          <Card className="border-0 shadow-sm">
-            <CardContent className="p-4">
-              <div className="h-64">
+          </div>
+        </CardHeader>
+        <CardContent>
+          {isLoading ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Loading analytics...</p>
+            </div>
+          ) : !analytics ? (
+            <div className="flex justify-center items-center h-64">
+              <p className="text-muted-foreground">Not enough data to display analytics. Add at least one yearly sales record.</p>
+            </div>
+          ) : (
+            <div className="space-y-8">
+              <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
+                {/* Total Revenue Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <DollarSign className="h-5 w-5 text-blue-500" />
+                      <span className="text-sm text-muted-foreground">Total Revenue</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.totalAllTimeRevenue).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Total Profit Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <DollarSign className="h-5 w-5 text-green-500" />
+                      <span className="text-sm text-muted-foreground">Total Profit</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.totalAllTimeProfit).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Year-over-Year Growth Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      {analytics.percentageChange >= 0 ? (
+                        <TrendingUp className="h-5 w-5 text-emerald-500" />
+                      ) : (
+                        <TrendingDown className="h-5 w-5 text-rose-500" />
+                      )}
+                      <span className="text-sm text-muted-foreground">Year-over-Year Growth</span>
+                    </div>
+                    <div>
+                      <p 
+                        className={`text-2xl font-bold ${
+                          analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-rose-600'
+                        }`}
+                      >
+                        {analytics.percentageChange >= 0 ? '+' : ''}
+                        {analytics.percentageChange.toFixed(1)}%
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Current year vs previous</p>
+                    </div>
+                  </CardContent>
+                </Card>
+                
+                {/* Current Year Card */}
+                <Card className="bg-white">
+                  <CardContent className="p-6">
+                    <div className="flex items-center justify-between mb-2">
+                      <Calendar className="h-5 w-5 text-purple-500" />
+                      <span className="text-sm text-muted-foreground">Current Year ({new Date().getFullYear()})</span>
+                    </div>
+                    <div>
+                      <p className="text-2xl font-bold text-slate-900">
+                        {formatCurrency(analytics.currentYearRevenue).replace("MYR", "RM")}
+                      </p>
+                      <p className="text-xs text-muted-foreground mt-1">Year to date</p>
+                    </div>
+                  </CardContent>
+                </Card>
+              </div>
+              
+              <div className="h-80">
                 <ResponsiveContainer width="100%" height="100%">
                   <BarChart
                     data={analytics.yearlyData.slice().reverse()}
-                    margin={{ top: 10, right: 10, left: 0, bottom: 0 }}
+                    margin={{ top: 20, right: 30, left: 20, bottom: 5 }}
                   >
-                    <CartesianGrid strokeDasharray="3 3" className="opacity-30" />
-                    <XAxis dataKey="year" tick={{ fontSize: 12 }} />
-                    <YAxis tick={{ fontSize: 12 }} tickFormatter={(v) => `${(v/1000000).toFixed(0)}M`} />
-                    <Tooltip formatter={(value) => [formatCurrency(value as number), '']} />
-                    <Legend wrapperStyle={{ fontSize: 12 }} />
-                    <Bar dataKey="totalRevenue" name="Revenue" fill="#3b82f6" radius={[4, 4, 0, 0]} />
-                    <Bar dataKey="totalProfit" name="Profit" fill="#10b981" radius={[4, 4, 0, 0]} />
+                    <CartesianGrid strokeDasharray="3 3" />
+                    <XAxis dataKey="year" />
+                    <YAxis />
+                    <Tooltip 
+                      formatter={(value) => [`${formatCurrency(value as number)}`, 'Revenue']}
+                    />
+                    <Legend />
+                    <Bar dataKey="totalRevenue" name="Total Revenue (RM)" fill="#4f46e5" />
+                    <Bar dataKey="totalProfit" name="Total Profit (RM)" fill="#10b981" />
                   </BarChart>
                 </ResponsiveContainer>
               </div>
-            </CardContent>
-          </Card>
-        )}
-
-        {/* Records Table */}
-        <div className="space-y-4">
-          <div className="flex items-center gap-2">
-            <div className="relative flex-1 max-w-sm">
+            </div>
+          )}
+        </CardContent>
+      </Card>
+      
+      {/* Yearly Sales Records */}
+      <Card className="animate-fade-in delay-100">
+        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
+          <div>
+            <CardTitle>Yearly Sales Records</CardTitle>
+            <CardDescription>View and manage yearly sales data</CardDescription>
+          </div>
+          <Button size="sm" onClick={() => setIsAddFormOpen(true)}>
+            <PlusCircle className="h-4 w-4 mr-2" />
+            Add Yearly Record
+          </Button>
+        </CardHeader>
+        <CardContent>
+          <div className="flex items-center gap-2 w-full mb-4">
+            <div className="relative flex-1">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
-                placeholder="Cari tahun..."
-                className="pl-9 h-9"
+                placeholder="Search by year..."
+                className="pl-9"
                 value={searchQuery}
                 onChange={(e) => setSearchQuery(e.target.value)}
               />
             </div>
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Filter className="h-4 w-4" />
+            </Button>
+            <Button variant="outline" size="icon" className="h-10 w-10">
+              <Download className="h-4 w-4" />
+            </Button>
           </div>
           
-          <div className="rounded-lg border bg-card overflow-hidden">
+          <div className="overflow-x-auto">
             <table className="w-full">
               <thead>
-                <tr className="border-b bg-muted/50">
-                  <th className="text-left py-2.5 px-3 font-medium text-sm">Tahun</th>
-                  <th className="text-right py-2.5 px-3 font-medium text-sm">Total Revenue</th>
-                  <th className="text-right py-2.5 px-3 font-medium text-sm">Total Profit</th>
-                  <th className="text-right py-2.5 px-3 font-medium text-sm">Tindakan</th>
+                <tr className="border-b">
+                  <th className="text-left py-3 px-4 font-medium">Year</th>
+                  <th className="text-right py-3 px-4 font-medium">Total Revenue (RM)</th>
+                  <th className="text-right py-3 px-4 font-medium">Total Profit (RM)</th>
+                  <th className="text-right py-3 px-4 font-medium">Actions</th>
                 </tr>
               </thead>
               <tbody>
                 {isLoading ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                      Memuat data...
+                      Loading yearly sales data...
                     </td>
                   </tr>
                 ) : filteredYearlySales.length === 0 ? (
                   <tr>
                     <td colSpan={4} className="py-8 text-center text-muted-foreground">
-                      Tiada rekod ditemui
+                      {searchQuery ? "No matching yearly sales records found." : "No yearly sales records found. Add your first record to get started."}
                     </td>
                   </tr>
                 ) : (
                   filteredYearlySales.map((record) => (
                     <tr key={record.id} className="border-b hover:bg-muted/30 transition-colors">
-                      <td className="py-2.5 px-3 text-sm font-medium">{record.year}</td>
-                      <td className="py-2.5 px-3 text-sm text-right">{formatCurrency(record.total_revenue)}</td>
-                      <td className="py-2.5 px-3 text-sm text-right">{formatCurrency(record.total_profit)}</td>
-                      <td className="py-2.5 px-3 text-right">
-                        <div className="flex justify-end gap-1">
-                          <Button variant="ghost" size="icon" className="h-7 w-7" onClick={() => handleEditRecord(record)}>
+                      <td className="py-3 px-4 text-sm font-medium">
+                        {record.year}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        {formatCurrency(record.total_revenue)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right font-medium">
+                        {formatCurrency(record.total_profit)}
+                      </td>
+                      <td className="py-3 px-4 text-sm text-right">
+                        <div className="flex justify-end gap-2">
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8"
+                            onClick={() => handleEditRecord(record)}
+                          >
                             <Edit className="h-4 w-4" />
                           </Button>
-                          <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive" onClick={() => handleDeleteRecord(record.id, record.year)}>
+                          <Button 
+                            variant="ghost" 
+                            size="icon" 
+                            className="h-8 w-8 text-destructive hover:text-destructive"
+                            onClick={() => handleDeleteRecord(record.id, record.year)}
+                          >
                             <Trash className="h-4 w-4" />
                           </Button>
                         </div>
@@ -304,9 +398,10 @@ export default function Sales() {
               </tbody>
             </table>
           </div>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
       
+      {/* Add Yearly Sales Record Form */}
       {isAddFormOpen && (
         <YearlySalesForm
           isOpen={isAddFormOpen}
@@ -315,6 +410,7 @@ export default function Sales() {
         />
       )}
       
+      {/* Edit Yearly Sales Record Form */}
       {isEditFormOpen && selectedRecord && (
         <YearlySalesForm
           isOpen={isEditFormOpen}
@@ -324,6 +420,7 @@ export default function Sales() {
         />
       )}
       
+      {/* Delete Confirmation Dialog */}
       {isDeleteDialogOpen && selectedRecord && (
         <DeleteYearlySalesDialog
           isOpen={isDeleteDialogOpen}

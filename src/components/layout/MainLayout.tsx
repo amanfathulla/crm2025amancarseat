@@ -1,3 +1,4 @@
+
 import { ReactNode, useEffect, useState } from "react";
 import { Outlet, useNavigate } from "react-router-dom";
 import { useAuth } from "@/hooks/useAuth";
@@ -38,9 +39,11 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
   }
 
   return (
+    // Struktur asal dikekalkan, kecuali pada padding kiri (pl-0 di mobile, lg:pl-64 di desktop)
     <div className={cn(
       "min-h-screen bg-background flex w-full h-full",
-      !isMobile && "lg:pl-64"
+      // Sidebar ambil ruang 64 (256px), pastikan content bermula selepas itu di desktop
+      !isMobile && "lg:pl-64" // space for sidebar at desktop
     )}>
       <main
         className={cn(
@@ -48,8 +51,8 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
           isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
       >
-        {/* Compact padding - no excessive left margin */}
-        <div className="w-full h-full px-3 py-4 md:px-4 md:py-5">
+        {/* Responsive, padding kiri & kanan kecil, atas bawah selesa */}
+        <div className="w-full h-full px-3 sm:px-4 md:px-8 py-6">
           {children || <Outlet />}
         </div>
       </main>
