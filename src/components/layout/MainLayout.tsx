@@ -48,8 +48,8 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
           isPageLoaded ? "opacity-100 translate-y-0" : "opacity-0 translate-y-4"
         )}
       >
-        {/* Consistent padding like Lead Management: p-4 md:p-6 */}
-        <div className="w-full h-full p-4 md:p-6">
+        {/* Compact padding - no excessive left margin */}
+        <div className="w-full h-full px-3 py-4 md:px-4 md:py-5">
           {children || <Outlet />}
         </div>
       </main>
