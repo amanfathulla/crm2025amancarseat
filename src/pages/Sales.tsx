@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { MainLayout } from "@/components/layout/MainLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle, CardFooter } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -172,10 +172,10 @@ export default function Sales() {
   });
 
   return (
-    <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-semibold mb-2">Yearly Sales</h1>
-        <p className="text-muted-foreground">Manage yearly sales records and analytics</p>
+    <div className="p-4 md:p-6 space-y-6">
+      <section className="animate-slide-up">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Yearly Sales</h1>
+        <p className="text-muted-foreground text-sm">Manage yearly sales records and analytics</p>
       </section>
       
       {/* Enhanced Sales Analytics */}
@@ -430,6 +430,6 @@ export default function Sales() {
           onSuccess={fetchYearlySalesData}
         />
       )}
-    </MainLayout>
+    </div>
   );
 }

@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
-import { MainLayout } from "@/components/layout/MainLayout";
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -459,10 +459,10 @@ function Customers() {
   };
 
   return (
-    <MainLayout>
-      <section className="mb-8 animate-slide-up">
-        <h1 className="text-3xl font-semibold mb-2">Customers</h1>
-        <p className="text-muted-foreground">Manage your customer base</p>
+    <div className="p-4 md:p-6 space-y-6">
+      <section className="animate-slide-up">
+        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Customers</h1>
+        <p className="text-muted-foreground text-sm">Manage your customer base</p>
       </section>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
@@ -840,7 +840,7 @@ function Customers() {
           }}
         />
       )}
-    </MainLayout>
+    </div>
   );
 }
 
