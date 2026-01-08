@@ -41,19 +41,15 @@ export default function Dashboard() {
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
-        // Get yearly sales data
-        const { data: yearlySalesData, error: yearlySalesError } = await supabase
-          .from("yearly_sales")
-          .select("*")
-          .order("year", { ascending: false });
-        if (yearlySalesError) throw yearlySalesError;
-
-        const calculatedTotalAllTimeRevenue = yearlySalesData
-          ? yearlySalesData.reduce((sum, item) => sum + item.total_revenue, 0)
-          : 0;
-        const calculatedTotalAllTimeProfit = yearlySalesData
-          ? yearlySalesData.reduce((sum, item) => sum + (item.total_profit || 0), 0)
-          : 0;
+        // Calculate all-time totals from customers (source of truth)
+        const calculatedTotalAllTimeRevenue = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
+          0,
+        );
+        const calculatedTotalAllTimeProfit = allCustomers.reduce(
+          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
+          0,
+        );
 
         setTotalAllTimeRevenue(calculatedTotalAllTimeRevenue);
         setTotalAllTimeProfit(calculatedTotalAllTimeProfit);
@@ -73,13 +69,11 @@ export default function Dashboard() {
         );
         setTotalProfitYearFromCustomers(totalProfitYearFromCustomersTable);
 
-        // Calculate this month data
-        const firstDayOfMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
-        const firstDayNextMonth = new Date(now.getFullYear(), now.getMonth() + 1, 1)
-          .toISOString()
-          .split("T")[0];
+        // Calculate this month data (UTC boundaries to avoid timezone date shifting)
+        const monthStartUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+        const nextMonthStartUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth() + 1, 1));
+        const firstDayOfMonth = monthStartUtc.toISOString().slice(0, 10);
+        const firstDayNextMonth = nextMonthStartUtc.toISOString().slice(0, 10);
 
         const { data: monthData, error: monthError } = await supabase
           .from("customers")
@@ -88,27 +82,20 @@ export default function Dashboard() {
           .lt("order_date", firstDayNextMonth);
         if (monthError) throw monthError;
 
-        console.log("This month query:", firstDayOfMonth, "to", firstDayNextMonth);
-        console.log("This month data:", monthData);
-
         const thisMonthRevenue = monthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
-          0
+          0,
         );
         const thisMonthProfit = monthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
-          0
+          0,
         );
-        
-        console.log("This month totals - Revenue:", thisMonthRevenue, "Profit:", thisMonthProfit);
 
-        // Calculate last month data
-        const firstDayLastMonth = new Date(lastMonthYear, lastMonth - 1, 1)
-          .toISOString()
-          .split("T")[0];
-        const firstDayCurrentMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-          .toISOString()
-          .split("T")[0];
+        // Calculate last month data (UTC boundaries to avoid timezone date shifting)
+        const lastMonthStartUtc = new Date(Date.UTC(lastMonthYear, lastMonth - 1, 1));
+        const currentMonthStartUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
+        const firstDayLastMonth = lastMonthStartUtc.toISOString().slice(0, 10);
+        const firstDayCurrentMonth = currentMonthStartUtc.toISOString().slice(0, 10);
 
         const { data: lastMonthData, error: lastMonthError } = await supabase
           .from("customers")
@@ -119,11 +106,11 @@ export default function Dashboard() {
 
         const lastMonthRevenue = lastMonthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
-          0
+          0,
         );
         const lastMonthProfit = lastMonthData.reduce(
           (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
-          0
+          0,
         );
 
         setRevenueData({

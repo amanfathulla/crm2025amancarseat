@@ -117,8 +117,10 @@ export function RevenueProfitChart({ dailyRevenueData, monthlyRevenueData, isLoa
   const totals = useMemo(() => {
     const totalRevenue = processedData.reduce((sum, item) => sum + (item.revenue || 0), 0);
     const totalProfit = processedData.reduce((sum, item) => sum + (item.profit || 0), 0);
-    return { revenue: totalRevenue, profit: totalProfit, total: totalRevenue + totalProfit };
+    // "Jumlah Keseluruhan" here refers to total sales (revenue) for the selected period
+    return { revenue: totalRevenue, profit: totalProfit, total: totalRevenue };
   }, [processedData]);
+
 
   return (
     <section className="grid grid-cols-1 gap-6 mb-8 animate-slide-up delay-600">
