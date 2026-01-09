@@ -15,8 +15,13 @@ export default function Dashboard() {
     lastMonth: { revenue: 0, profit: 0 },
   });
 
+  // Data from yearly_sales table for 2025
+  const [sales2025, setSales2025] = useState({ revenue: 0, profit: 0 });
+  
+  // Total keseluruhan = yearly_sales total + customers data
   const [totalAllTimeRevenue, setTotalAllTimeRevenue] = useState(0);
   const [totalAllTimeProfit, setTotalAllTimeProfit] = useState(0);
+  
   const [totalProfitYearFromCustomers, setTotalProfitYearFromCustomers] = useState(0);
   const [dailyRevenueData, setDailyRevenueData] = useState<any[]>([]);
   const [monthlyRevenueData, setMonthlyRevenueData] = useState<any[]>([]);
@@ -41,25 +46,32 @@ export default function Dashboard() {
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
-        // Calculate all-time totals from customers (source of truth)
-        const calculatedTotalAllTimeRevenue = allCustomers.reduce(
-          (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
-          0,
-        );
-        const calculatedTotalAllTimeProfit = allCustomers.reduce(
-          (sum, item) => sum + (parseFloat(String(item.gross_profit)) || 0),
-          0,
-        );
+        // Get yearly_sales data for 2025
+        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+          .from("yearly_sales")
+          .select("total_revenue, total_profit, year");
+        if (yearlySalesError) throw yearlySalesError;
 
-        setTotalAllTimeRevenue(calculatedTotalAllTimeRevenue);
-        setTotalAllTimeProfit(calculatedTotalAllTimeProfit);
+        // Find 2025 data from yearly_sales
+        const sales2025Data = yearlySalesData?.find(item => item.year === 2025);
+        const revenue2025 = sales2025Data?.total_revenue || 0;
+        const profit2025 = sales2025Data?.total_profit || 0;
+        setSales2025({ revenue: revenue2025, profit: profit2025 });
 
-        // Calculate current year totals
+        // Calculate total from yearly_sales (all years except current year)
+        const yearlySalesTotalRevenue = yearlySalesData
+          ?.filter(item => item.year !== currentYear)
+          .reduce((sum, item) => sum + (parseFloat(String(item.total_revenue)) || 0), 0) || 0;
+        const yearlySalesTotalProfit = yearlySalesData
+          ?.filter(item => item.year !== currentYear)
+          .reduce((sum, item) => sum + (parseFloat(String(item.total_profit)) || 0), 0) || 0;
+
+        // Calculate current year totals from customers
         const customersThisYear = allCustomers.filter((item) => {
           const orderYear = item.order_date ? new Date(item.order_date).getFullYear() : null;
           return orderYear === currentYear;
         });
-        const totalRevenueYear = customersThisYear.reduce(
+        const totalRevenueYearFromCustomers = customersThisYear.reduce(
           (sum, item) => sum + (parseFloat(String(item.sales_amount)) || 0),
           0
         );
@@ -68,6 +80,10 @@ export default function Dashboard() {
           0
         );
         setTotalProfitYearFromCustomers(totalProfitYearFromCustomersTable);
+
+        // Jumlah keseluruhan = yearly_sales total + current year customers data
+        setTotalAllTimeRevenue(yearlySalesTotalRevenue + totalRevenueYearFromCustomers);
+        setTotalAllTimeProfit(yearlySalesTotalProfit + totalProfitYearFromCustomersTable);
 
         // Calculate this month data (UTC boundaries to avoid timezone date shifting)
         const monthStartUtc = new Date(Date.UTC(now.getFullYear(), now.getMonth(), 1));
@@ -114,7 +130,7 @@ export default function Dashboard() {
         );
 
         setRevenueData({
-          currentYear: { year: currentYear, total: totalRevenueYear },
+          currentYear: { year: currentYear, total: totalRevenueYearFromCustomers },
           thisMonth: { revenue: thisMonthRevenue, profit: thisMonthProfit },
           lastMonth: { revenue: lastMonthRevenue, profit: lastMonthProfit },
         });
@@ -258,6 +274,7 @@ export default function Dashboard() {
         totalAllTimeRevenue={totalAllTimeRevenue}
         totalAllTimeProfit={totalAllTimeProfit}
         totalProfitYearFromCustomers={totalProfitYearFromCustomers}
+        sales2025={sales2025}
       />
       
       <MonthlyComparisonCards
