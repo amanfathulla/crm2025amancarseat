@@ -156,10 +156,10 @@ export function CustomerReceipt() {
                   <h3 className="font-bold mb-2">Customer Information:</h3>
                   <p><strong>Name:</strong> {customer.name}</p>
                   {customer.phone && <p><strong>Phone:</strong> {customer.phone}</p>}
-                  {customer.email && <p><strong>Email:</strong> {customer.email}</p>}
+                  {customer.email && !customer.email.includes('@temp.local') && <p><strong>Email:</strong> {customer.email}</p>}
                   {customer.address && <p><strong>Address:</strong> {customer.address}</p>}
-                  {customer.city && <p><strong>City:</strong> {customer.city}</p>}
-                  {customer.state && <p><strong>State:</strong> {customer.state}</p>}
+                  {customer.city && <p><strong>State:</strong> {customer.city}</p>}
+                  {customer.car_model && <p><strong>Car Model:</strong> {customer.car_model}</p>}
                 </div>
                 
                 <div className="mb-6">
