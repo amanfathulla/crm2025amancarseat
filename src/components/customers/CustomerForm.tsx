@@ -48,6 +48,7 @@ export function CustomerForm({
       email: "",
       phone: "",
       location: "",
+      address: "",
       car_model: "",
       product: "",
       product_variation: "",
@@ -56,6 +57,7 @@ export function CustomerForm({
       gross_profit: 0,
       paid_amount: 0,
       order_status: "processing",
+      payment_status: "fullpayment",
       order_time: new Date().toLocaleTimeString('en-US', { 
         hour: '2-digit', 
         minute: '2-digit', 
@@ -134,7 +136,7 @@ export function CustomerForm({
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
   };
@@ -210,9 +212,10 @@ export function CustomerForm({
           .from("customers")
           .update({
             name: formData.name,
-            email: formData.email,
+            email: formData.email || null,
             phone: formData.phone,
             city: formData.location,
+            address: formData.address || null,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
@@ -223,7 +226,7 @@ export function CustomerForm({
             order_status: formData.order_status,
             order_time: formData.order_time
           })
-          .eq("email", customer.email);
+          .eq("id", customer.id || "");
 
         if (error) throw error;
         toast({
@@ -234,9 +237,10 @@ export function CustomerForm({
         const { error } = await supabase.from("customers").insert([
           {
             name: formData.name,
-            email: formData.email,
+            email: formData.email || `customer_${Date.now()}@temp.local`,
             phone: formData.phone,
             city: formData.location,
+            address: formData.address || null,
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
@@ -282,6 +286,7 @@ export function CustomerForm({
             email={formData.email}
             phone={formData.phone}
             location={formData.location}
+            address={formData.address}
             carModel={formData.car_model}
             malaysianStates={malaysianStates}
             isEditing={!!customer}

@@ -7,7 +7,7 @@ import {
   AccordionTrigger,
 } from "@/components/ui/accordion";
 import { formatCurrency } from "@/lib/utils";
-import { FileText } from "lucide-react";
+import { FileText, Receipt } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
 interface CustomerDetailsProps {
@@ -54,6 +54,10 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
     navigate(`/customers/receipt?id=${customer.id}`);
   };
 
+  const handleGenerateInvoice = () => {
+    navigate(`/customers/invoice?id=${customer.id}`);
+  };
+
   return (
     <AccordionItem value={customer.id} className={`border-b ${className || ''}`}>
       <AccordionTrigger className="hover:no-underline hover:bg-muted/50 px-4">
@@ -63,18 +67,30 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             {customer.name}
           </span>
           
-          <Button
-            variant="ghost"
-            size="sm"
-            onClick={(e) => {
-              e.stopPropagation();
-              handleGenerateReceipt();
-            }}
-            title="Generate Receipt"
-            className="mr-2"
-          >
-            <FileText className="h-4 w-4 mr-1" /> Resit PDF
-          </Button>
+          <div className="flex gap-2 mr-2">
+            <Button
+              variant="ghost"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleGenerateReceipt();
+              }}
+              title="Generate Receipt"
+            >
+              <Receipt className="h-4 w-4 mr-1" /> Resit
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={(e) => {
+                e.stopPropagation();
+                handleGenerateInvoice();
+              }}
+              title="Generate Invoice"
+            >
+              <FileText className="h-4 w-4 mr-1" /> Invoice
+            </Button>
+          </div>
         </div>
       </AccordionTrigger>
       <AccordionContent>
@@ -82,9 +98,10 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <div className="font-medium mb-1">Contact Information</div>
-              <div>Email: {customer.email}</div>
+              <div>Email: {customer.email || 'N/A'}</div>
               <div>Phone: {customer.phone || 'N/A'}</div>
               <div>Location: {customer.location || 'N/A'}</div>
+              {customer.address && <div>Address: {customer.address}</div>}
             </div>
             
             <div>

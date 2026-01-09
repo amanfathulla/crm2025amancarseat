@@ -38,14 +38,14 @@ export function SummaryStatCards({
       gradient: "from-emerald-500 to-emerald-600",
     },
     {
-      title: "Jualan 2025",
-      value: sales2025.revenue,
+      title: "Total Revenue",
+      value: totalAllTimeRevenue,
       icon: Wallet,
       gradient: "from-purple-500 to-purple-600",
     },
     {
-      title: "Profit 2025",
-      value: sales2025.profit,
+      title: "Total Profit",
+      value: totalAllTimeProfit,
       icon: PiggyBank,
       gradient: "from-orange-500 to-orange-600",
     },

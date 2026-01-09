@@ -25,6 +25,7 @@ import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
 
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
+import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
 
 function App() {
   const queryClient = new QueryClient();
@@ -51,6 +52,7 @@ function App() {
                 <Route path="/leads" element={<Leads />} />
                 <Route path="/customers" element={<Customers />} />
                 <Route path="/customers/receipt" element={<CustomerReceipt />} />
+                <Route path="/customers/invoice" element={<CustomerInvoice />} />
                 <Route path="/sales" element={<Sales />} />
                 <Route path="/products" element={<Products />} />
               </Route>
