@@ -180,11 +180,11 @@ export function CustomerReceipt() {
                             {customer.car_model && ` (${customer.car_model})`}
                           </td>
                           <td className="p-2 text-right">
-                            {formatCurrency(customer.sales_amount || 0)}
+                            {formatCurrency(customer.paid_amount || customer.sales_amount || 0)}
                           </td>
                         </tr>
                         <tr className="border-t bg-gray-50">
-                          <td className="p-2 font-bold">Total</td>
+                          <td className="p-2 font-bold">Total Dibayar</td>
                           <td className="p-2 text-right font-bold">
                             {formatCurrency(customer.paid_amount || 0)}
                           </td>
