@@ -35,6 +35,22 @@ interface LeadChartsProps {
 
 const MONTHS = ["Jan", "Feb", "Mac", "Apr", "Mei", "Jun", "Jul", "Ogos", "Sep", "Okt", "Nov", "Dis"];
 
+// 12 distinct colors for each month
+const MONTH_COLORS = [
+  "hsl(0, 84%, 60%)",     // Jan - Red
+  "hsl(25, 95%, 53%)",    // Feb - Orange
+  "hsl(45, 93%, 47%)",    // Mar - Yellow
+  "hsl(120, 60%, 50%)",   // Apr - Green
+  "hsl(160, 84%, 39%)",   // May - Teal
+  "hsl(180, 70%, 45%)",   // Jun - Cyan
+  "hsl(200, 98%, 39%)",   // Jul - Sky Blue
+  "hsl(217, 91%, 60%)",   // Aug - Blue
+  "hsl(250, 80%, 60%)",   // Sep - Indigo
+  "hsl(280, 80%, 55%)",   // Oct - Purple
+  "hsl(310, 75%, 55%)",   // Nov - Pink
+  "hsl(340, 82%, 52%)",   // Dec - Rose
+];
+
 export function LeadCharts({ leads }: LeadChartsProps) {
   // Calculate monthly lead data
   const getMonthlyData = () => {
@@ -72,8 +88,26 @@ export function LeadCharts({ leads }: LeadChartsProps) {
     ];
   };
 
+  // Calculate leads by month for pie chart
+  const getMonthlyPieData = () => {
+    const currentYear = new Date().getFullYear();
+    return MONTHS.map((month, index) => {
+      const monthLeads = leads.filter((lead) => {
+        const date = new Date(lead.created_at);
+        return date.getMonth() === index && date.getFullYear() === currentYear;
+      });
+
+      return {
+        name: month,
+        value: monthLeads.length,
+        color: MONTH_COLORS[index],
+      };
+    }).filter(item => item.value > 0); // Only show months with data
+  };
+
   const monthlyData = getMonthlyData();
   const statusData = getStatusData();
+  const monthlyPieData = getMonthlyPieData();
 
   const chartConfig = {
     total: { label: "Total Lead", color: "hsl(217, 91%, 60%)" },
@@ -98,6 +132,36 @@ export function LeadCharts({ leads }: LeadChartsProps) {
               <ChartTooltip content={<ChartTooltipContent />} />
               <Bar dataKey="total" fill="hsl(217, 91%, 60%)" radius={[4, 4, 0, 0]} name="Total Lead" />
             </BarChart>
+          </ChartContainer>
+        </CardContent>
+      </Card>
+
+      {/* Lead by Month Pie Chart - NEW */}
+      <Card className="border-0 shadow-sm">
+        <CardHeader className="pb-2">
+          <CardTitle className="text-base font-semibold">🥧 Lead Mengikut Bulan (Carta Bulatan)</CardTitle>
+        </CardHeader>
+        <CardContent>
+          <ChartContainer config={chartConfig} className="h-[280px] w-full">
+            <PieChart>
+              <Pie
+                data={monthlyPieData}
+                cx="50%"
+                cy="50%"
+                innerRadius={50}
+                outerRadius={90}
+                paddingAngle={2}
+                dataKey="value"
+                label={({ name, value }) => `${name}: ${value}`}
+                labelLine={true}
+              >
+                {monthlyPieData.map((entry, index) => (
+                  <Cell key={`cell-month-${index}`} fill={entry.color} />
+                ))}
+              </Pie>
+              <ChartTooltip content={<ChartTooltipContent />} />
+              <Legend />
+            </PieChart>
           </ChartContainer>
         </CardContent>
       </Card>

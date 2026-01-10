@@ -8,6 +8,7 @@ import { formatDate, formatCurrency } from "@/lib/utils";
 import { useToast } from "@/hooks/use-toast";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Label } from "@/components/ui/label";
+import { Input } from "@/components/ui/input";
 import html2pdf from "html2pdf.js";
 
 const PAYMENT_STATUS_OPTIONS = [
@@ -21,6 +22,7 @@ export function CustomerInvoice() {
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const [paymentStatus, setPaymentStatus] = useState<string>("fullpayment");
+  const [depositAmount, setDepositAmount] = useState<number>(0);
   const [isSaving, setIsSaving] = useState(false);
   const { toast } = useToast();
   const location = useLocation();
@@ -68,26 +70,49 @@ export function CustomerInvoice() {
 
   const handlePaymentStatusChange = async (value: string) => {
     setPaymentStatus(value);
+    
+    // Reset deposit amount when changing status
+    if (value !== "deposit") {
+      setDepositAmount(0);
+    }
+    
+    // Only save immediately for non-deposit options
+    if (value !== "deposit") {
+      await savePaymentStatus(value, 0);
+    }
+  };
+
+  const handleDepositAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const value = Number(e.target.value) || 0;
+    setDepositAmount(value);
+  };
+
+  const saveDepositAmount = async () => {
+    await savePaymentStatus("deposit", depositAmount);
+  };
+
+  const savePaymentStatus = async (status: string, deposit: number) => {
     setIsSaving(true);
     
     try {
-      // Calculate new paid amount based on payment status
       let newPaidAmount = customer.sales_amount || 0;
-      if (value === "cod") {
-        newPaidAmount = (customer.sales_amount || 0) + 20; // Add RM20 for COD
+      
+      if (status === "deposit") {
+        newPaidAmount = deposit;
+      } else if (status === "cod") {
+        newPaidAmount = (customer.sales_amount || 0) + 20;
       }
       
       const { error } = await supabase
         .from('customers')
         .update({ 
-          order_status: value === 'fullpayment' ? 'completed' : 'processing',
+          order_status: status === 'fullpayment' ? 'completed' : 'processing',
           paid_amount: newPaidAmount
         })
         .eq('id', customerId);
         
       if (error) throw error;
       
-      // Update local state
       setCustomer((prev: any) => ({
         ...prev,
         paid_amount: newPaidAmount
@@ -95,7 +120,7 @@ export function CustomerInvoice() {
       
       toast({
         title: "Status Updated",
-        description: `Payment status updated to ${PAYMENT_STATUS_OPTIONS.find(o => o.value === value)?.label}`,
+        description: `Payment status updated to ${PAYMENT_STATUS_OPTIONS.find(o => o.value === status)?.label}`,
       });
     } catch (error) {
       console.error("Error updating payment status:", error);
@@ -120,6 +145,14 @@ export function CustomerInvoice() {
       return baseAmount + 20;
     }
     return baseAmount;
+  };
+
+  const calculateRemainingBalance = () => {
+    const total = calculateTotal();
+    if (paymentStatus === "deposit") {
+      return total - depositAmount;
+    }
+    return 0;
   };
   
   const generatePDF = () => {
@@ -200,24 +233,54 @@ export function CustomerInvoice() {
           {/* Payment Status Selector */}
           <Card className="w-full mb-4">
             <CardContent className="pt-6">
-              <div className="space-y-2">
-                <Label htmlFor="payment-status">Status Pembayaran</Label>
-                <Select 
-                  value={paymentStatus} 
-                  onValueChange={handlePaymentStatusChange}
-                  disabled={isSaving}
-                >
-                  <SelectTrigger id="payment-status" className="w-full">
-                    <SelectValue placeholder="Pilih status pembayaran" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {PAYMENT_STATUS_OPTIONS.map((option) => (
-                      <SelectItem key={option.value} value={option.value}>
-                        {option.label} - {option.description}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="payment-status">Status Pembayaran</Label>
+                  <Select 
+                    value={paymentStatus} 
+                    onValueChange={handlePaymentStatusChange}
+                    disabled={isSaving}
+                  >
+                    <SelectTrigger id="payment-status" className="w-full">
+                      <SelectValue placeholder="Pilih status pembayaran" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      {PAYMENT_STATUS_OPTIONS.map((option) => (
+                        <SelectItem key={option.value} value={option.value}>
+                          {option.label} - {option.description}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                </div>
+
+                {/* Deposit Amount Input */}
+                {paymentStatus === "deposit" && (
+                  <div className="space-y-2 p-4 bg-yellow-50 rounded-lg border border-yellow-200">
+                    <Label htmlFor="deposit-amount">Jumlah Deposit (RM)</Label>
+                    <div className="flex gap-2">
+                      <Input
+                        id="deposit-amount"
+                        type="number"
+                        value={depositAmount || ""}
+                        onChange={handleDepositAmountChange}
+                        placeholder="Masukkan jumlah deposit"
+                        className="flex-1"
+                      />
+                      <Button 
+                        onClick={saveDepositAmount}
+                        disabled={isSaving || depositAmount <= 0}
+                      >
+                        {isSaving ? "Saving..." : "Simpan"}
+                      </Button>
+                    </div>
+                    <div className="mt-2 text-sm">
+                      <p className="text-gray-600">Jumlah Penuh: <span className="font-semibold">{formatCurrency(calculateTotal())}</span></p>
+                      <p className="text-gray-600">Deposit: <span className="font-semibold text-green-600">{formatCurrency(depositAmount)}</span></p>
+                      <p className="text-gray-600">Baki: <span className="font-semibold text-red-600">{formatCurrency(calculateRemainingBalance())}</span></p>
+                    </div>
+                  </div>
+                )}
               </div>
             </CardContent>
           </Card>
@@ -319,10 +382,26 @@ export function CustomerInvoice() {
                     }`}>
                       {getPaymentStatusLabel()}
                     </div>
+                    
+                    {/* Show deposit details */}
+                    {paymentStatus === "deposit" && depositAmount > 0 && (
+                      <div className="mt-3 p-3 bg-yellow-50 rounded-lg border border-yellow-200">
+                        <p className="text-sm text-gray-700">Deposit Dibayar: <span className="font-bold text-green-700">{formatCurrency(depositAmount)}</span></p>
+                        <p className="text-sm text-gray-700">Baki Tertunggak: <span className="font-bold text-red-700">{formatCurrency(calculateRemainingBalance())}</span></p>
+                      </div>
+                    )}
                   </div>
                   <div className="text-right">
                     <h3 className="font-bold mb-2 text-gray-900">Total Amount:</h3>
                     <p className="text-3xl font-bold text-gray-900">{formatCurrency(calculateTotal())}</p>
+                    
+                    {/* Show paid amount for deposit */}
+                    {paymentStatus === "deposit" && depositAmount > 0 && (
+                      <div className="mt-2">
+                        <p className="text-sm text-gray-500">Telah Dibayar: {formatCurrency(depositAmount)}</p>
+                        <p className="text-lg font-bold text-red-600">Baki: {formatCurrency(calculateRemainingBalance())}</p>
+                      </div>
+                    )}
                   </div>
                 </div>
                 
