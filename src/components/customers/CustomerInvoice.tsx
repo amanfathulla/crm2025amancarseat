@@ -346,7 +346,7 @@ export function CustomerInvoice() {
                           </td>
                           <td className="p-3 text-center text-gray-700">1</td>
                           <td className="p-3 text-right text-gray-700">
-                            {formatCurrency(customer.sales_amount || 0)}
+                            {formatCurrency(customer.paid_amount || customer.sales_amount || 0)}
                           </td>
                         </tr>
                         {paymentStatus === "cod" && (
