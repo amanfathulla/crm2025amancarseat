@@ -299,10 +299,12 @@ function Customers() {
 
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer({
+      id: customer.id,
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
       location: customer.location,
+      address: customer.address,
       car_model: customer.car_model,
       product: customer.product,
       product_variation: customer.product_variation,
@@ -311,16 +313,20 @@ function Customers() {
       paid_amount: customer.paid_amount,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
+      order_time: customer.order_time,
+      payment_status: customer.payment_status,
     });
     setIsEditFormOpen(true);
   };
 
   const handleDeleteCustomer = (customer: Customer) => {
     setSelectedCustomer({
+      id: customer.id,
       name: customer.name,
       email: customer.email,
       phone: customer.phone,
       location: customer.location,
+      address: customer.address,
       car_model: customer.car_model,
       product: customer.product,
       product_variation: customer.product_variation,
@@ -329,6 +335,8 @@ function Customers() {
       paid_amount: customer.paid_amount,
       order_date: customer.order_date,
       order_status: customer.order_status || "processing",
+      order_time: customer.order_time,
+      payment_status: customer.payment_status,
     });
     setIsDeleteDialogOpen(true);
   };
