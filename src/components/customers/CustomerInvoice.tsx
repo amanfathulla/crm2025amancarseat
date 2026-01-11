@@ -139,8 +139,13 @@ export function CustomerInvoice() {
     return option?.description || "Bayaran Penuh";
   };
 
+  // Use paid_amount as the main amount (locked from customer creation)
+  const getCustomerPaidAmount = () => {
+    return customer?.paid_amount || 0;
+  };
+
   const calculateTotal = () => {
-    const baseAmount = customer?.sales_amount || 0;
+    const baseAmount = getCustomerPaidAmount();
     if (paymentStatus === "cod") {
       return baseAmount + 20;
     }
@@ -148,7 +153,7 @@ export function CustomerInvoice() {
   };
 
   const calculateRemainingBalance = () => {
-    const total = calculateTotal();
+    const total = getCustomerPaidAmount();
     if (paymentStatus === "deposit") {
       return total - depositAmount;
     }
@@ -346,7 +351,7 @@ export function CustomerInvoice() {
                           </td>
                           <td className="p-3 text-center text-gray-700">1</td>
                           <td className="p-3 text-right text-gray-700">
-                            {formatCurrency(customer.paid_amount || customer.sales_amount || 0)}
+                            {formatCurrency(getCustomerPaidAmount())}
                           </td>
                         </tr>
                         {paymentStatus === "cod" && (
@@ -362,9 +367,17 @@ export function CustomerInvoice() {
                         <tr className="border-t bg-gray-100">
                           <td colSpan={2} className="p-3 font-bold text-gray-900">Subtotal</td>
                           <td className="p-3 text-right font-bold text-gray-900">
-                            {formatCurrency(calculateTotal())}
+                            {formatCurrency(getCustomerPaidAmount())}
                           </td>
                         </tr>
+                        {paymentStatus === "cod" && (
+                          <tr className="border-t bg-gray-100">
+                            <td colSpan={2} className="p-3 font-bold text-gray-900">Jumlah + COD</td>
+                            <td className="p-3 text-right font-bold text-gray-900">
+                              {formatCurrency(calculateTotal())}
+                            </td>
+                          </tr>
+                        )}
                       </tbody>
                     </table>
                   </div>
