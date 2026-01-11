@@ -98,10 +98,11 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             <div>
               <div className="font-medium mb-1">Contact Information</div>
+              <div>Nama: {customer.name || 'N/A'}</div>
               <div>Email: {customer.email || 'N/A'}</div>
               <div>Phone: {customer.phone || 'N/A'}</div>
-              <div>Location: {customer.location || 'N/A'}</div>
-              {customer.address && <div>Address: {customer.address}</div>}
+              <div>Lokasi: {customer.location || 'N/A'}</div>
+              {customer.address && <div>Alamat Lengkap: {customer.address}</div>}
             </div>
             
             <div>
@@ -114,40 +115,38 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             <div>
               <div className="font-medium mb-1">Order Information</div>
               <div>Order Date: {formatDate(customer.order_date)}</div>
-              <div>Status: {getStatusBadge(customer.order_status || 'processing')}</div>
+              {customer.order_time && (
+                <div className="flex items-center gap-1">
+                  Masa Tempahan: 
+                  <Badge variant="secondary" className="ml-1">
+                    {customer.order_time} ({getTimePeriod(customer.order_time)})
+                  </Badge>
+                </div>
+              )}
+              <div className="mt-1">Status: {getStatusBadge(customer.order_status || 'processing')}</div>
             </div>
           </div>
           
-          <div className="grid grid-cols-3 gap-4 mt-2">
+          <div className="grid grid-cols-3 gap-4 mt-2 p-3 bg-muted rounded-lg">
             <div>
-              <div className="font-medium mb-1">Sales Amount</div>
-              <div>{formatCurrency(customer.sales_amount)}</div>
+              <div className="font-medium mb-1 text-muted-foreground">Sales Amount</div>
+              <div className="text-lg font-semibold">{formatCurrency(customer.sales_amount)}</div>
             </div>
             <div>
-              <div className="font-medium mb-1">Gross Profit</div>
-              <div>{formatCurrency(customer.gross_profit)}</div>
+              <div className="font-medium mb-1 text-muted-foreground">Jumlah Dibayar</div>
+              <div className="text-lg font-semibold text-green-600">{formatCurrency(customer.paid_amount)}</div>
             </div>
             <div>
-              <div className="font-medium mb-1">Jumlah Dibayar</div>
-              <div>{formatCurrency(customer.paid_amount)}</div>
-            </div>
-          </div>
-          
-          {customer.order_time && (
-            <div className="mt-2">
-              <div className="font-medium mb-1">Masa Tempahan</div>
-              <div className="flex items-center gap-2">
-                <Badge variant="secondary">
-                  {customer.order_time} 
-                  {` (${getTimePeriod(customer.order_time)})`}
-                </Badge>
+              <div className="font-medium mb-1 text-muted-foreground">Gross Profit</div>
+              <div className={`text-lg font-semibold ${customer.gross_profit < 0 ? 'text-destructive' : ''}`}>
+                {formatCurrency(customer.gross_profit)}
               </div>
             </div>
-          )}
+          </div>
           
           <div className="flex justify-end gap-2 mt-2">
             <Button variant="outline" size="sm" onClick={onEdit}>
-              Edit Customer
+              Edit Status
             </Button>
             <Button variant="destructive" size="sm" onClick={onDelete}>
               Delete
