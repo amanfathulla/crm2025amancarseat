@@ -6,6 +6,7 @@ import { z } from "zod";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { Card, CardContent } from "@/components/ui/card";
@@ -19,8 +20,16 @@ const productVariationSchema = z.object({
 const productSchema = z.object({
   name: z.string().min(2, { message: "Nama produk mesti sekurang-kurangnya 2 aksara" }),
   image_url: z.string().url({ message: "URL imej tidak sah" }).optional().or(z.literal('')),
+  category: z.string().min(1, { message: "Sila pilih kategori material" }),
   variations: z.array(productVariationSchema),
 });
+
+const materialCategories = [
+  "Kain Mesh",
+  "Kain Nylon", 
+  "Kain Fullsilk",
+  "Semi Leather Kalis Air"
+];
 
 export type ProductFormValues = z.infer<typeof productSchema>;
 export type ProductVariationFormValues = z.infer<typeof productVariationSchema>;
@@ -49,6 +58,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     defaultValues: initialData || {
       name: "",
       image_url: "",
+      category: "",
       variations: defaultVariations,
     },
   });
@@ -83,6 +93,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
             name: data.name,
             price: basePrice,
             image_url: data.image_url || null,
+            category: data.category,
           })
           .eq("id", initialData.id);
 
@@ -122,6 +133,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
             name: data.name,
             price: basePrice,
             image_url: data.image_url || null,
+            category: data.category,
           })
           .select();
 
@@ -172,6 +184,31 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
               <FormControl>
                 <Input placeholder="Masukkan nama produk" {...field} />
               </FormControl>
+              <FormMessage />
+            </FormItem>
+          )}
+        />
+
+        <FormField
+          control={form.control}
+          name="category"
+          render={({ field }) => (
+            <FormItem>
+              <FormLabel>Kategori Material</FormLabel>
+              <Select onValueChange={field.onChange} defaultValue={field.value}>
+                <FormControl>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih kategori material" />
+                  </SelectTrigger>
+                </FormControl>
+                <SelectContent>
+                  {materialCategories.map((category) => (
+                    <SelectItem key={category} value={category}>
+                      {category}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
               <FormMessage />
             </FormItem>
           )}
