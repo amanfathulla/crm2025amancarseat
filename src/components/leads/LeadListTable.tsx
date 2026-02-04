@@ -12,6 +12,7 @@ interface Lead {
   name: string;
   phone: string;
   status: string;
+  displayStatus?: string;
   created_at: string;
   contacted_at: string | null;
   closed_at: string | null;
@@ -132,8 +133,8 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
                     </SelectContent>
                   </Select>
                 ) : (
-                  <Badge variant={statusConfig[lead.status]?.variant || "secondary"}>
-                    {statusConfig[lead.status]?.label || lead.status}
+                  <Badge variant={statusConfig[lead.displayStatus || lead.status]?.variant || "secondary"}>
+                    {statusConfig[lead.displayStatus || lead.status]?.label || lead.status}
                   </Badge>
                 )}
               </TableCell>
