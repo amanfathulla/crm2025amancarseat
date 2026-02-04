@@ -16,6 +16,7 @@ interface Lead {
   name: string;
   phone: string;
   status: string;
+  displayStatus?: string;
   created_at: string;
   contacted_at: string | null;
   closed_at: string | null;
