@@ -1,9 +1,7 @@
-
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Save, Image, Grid3X3 } from "lucide-react";
-import { useState, useEffect } from "react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, Image, ExternalLink } from "lucide-react";
 import { supabase } from "@/integrations/supabase/client";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
@@ -22,8 +20,19 @@ import {
   DropdownMenuItem,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { AspectRatio } from "@/components/ui/aspect-ratio";
-import { Badge } from "@/components/ui/badge";
+
+interface CategoryConfig {
+  name: string;
+  gradient: string;
+  icon: string;
+}
+
+const materialCategories: CategoryConfig[] = [
+  { name: "Kain Mesh", gradient: "from-blue-500 to-blue-600", icon: "🔵" },
+  { name: "Kain Nylon", gradient: "from-emerald-500 to-emerald-600", icon: "🟢" },
+  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣" },
+  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡" },
+];
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -33,30 +42,8 @@ export default function Products() {
   const [isEditDialogOpen, setIsEditDialogOpen] = useState(false);
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
-  const [viewMode, setViewMode] = useState<'grid' | 'table'>('table');
+  const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
-
-  const materialCategories = [
-    "Kain Mesh",
-    "Kain Nylon", 
-    "Kain Fullsilk",
-    "Semi Leather Kalis Air"
-  ];
-
-  const getCategoryBadgeColor = (category: string) => {
-    switch (category) {
-      case "Kain Mesh":
-        return "bg-blue-500 text-white hover:bg-blue-600";
-      case "Kain Nylon":
-        return "bg-emerald-500 text-white hover:bg-emerald-600";
-      case "Kain Fullsilk":
-        return "bg-purple-500 text-white hover:bg-purple-600";
-      case "Semi Leather Kalis Air":
-        return "bg-amber-500 text-white hover:bg-amber-600";
-      default:
-        return "bg-gray-500 text-white hover:bg-gray-600";
-    }
-  };
 
   const fetchProducts = async () => {
     try {
@@ -110,18 +97,19 @@ export default function Products() {
     fetchProducts();
   }, []);
 
-  const filteredProducts = products.filter((product) =>
-    product.name.toLowerCase().includes(searchTerm.toLowerCase())
-  );
+  const getProductsByCategory = (categoryName: string) => {
+    return products.filter(p => p.category === categoryName);
+  };
 
-  // Group products by category
-  const groupedProducts = materialCategories.reduce((acc, category) => {
-    acc[category] = filteredProducts.filter(p => p.category === category);
-    return acc;
-  }, {} as Record<string, Product[]>);
+  const getCategoryCount = (categoryName: string) => {
+    return products.filter(p => p.category === categoryName).length;
+  };
 
-  // Products without category
-  const uncategorizedProducts = filteredProducts.filter(p => !p.category || !materialCategories.includes(p.category));
+  const filteredProducts = selectedCategory
+    ? getProductsByCategory(selectedCategory).filter(p => 
+        p.name.toLowerCase().includes(searchTerm.toLowerCase())
+      )
+    : [];
 
   const handleEditClick = (product: Product) => {
     setSelectedProduct(product);
@@ -155,292 +143,216 @@ export default function Products() {
     }).format(price);
   };
 
-  const renderGridView = () => {
-    if (filteredProducts.length === 0) {
-      return (
-        <div className="py-8 text-center text-muted-foreground">
-          {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
+  // Category Cards View
+  const renderCategoryCards = () => (
+    <div className="space-y-6">
+      {/* Header */}
+      <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Produk</h1>
+          <p className="text-muted-foreground text-sm">Pilih kategori material untuk lihat senarai produk</p>
         </div>
-      );
-    }
+        <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2">
+          <Plus className="h-4 w-4" />
+          Tambah Produk
+        </Button>
+      </div>
 
-    return (
-      <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-        {filteredProducts.map((product) => {
-          const lowestPrice = product.variations
-            ? Math.min(...product.variations.map(v => v.price))
-            : product.price;
-            
+      {/* Category Cards Grid */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+        {materialCategories.map((category) => {
+          const count = getCategoryCount(category.name);
           return (
-            <Card key={product.id} className="h-full overflow-hidden hover:shadow-md transition-shadow">
-              <div className="relative">
-                <AspectRatio ratio={4/3}>
-                  {product.image_url ? (
-                    <img 
-                      src={product.image_url} 
-                      alt={product.name}
-                      className="w-full h-full object-cover"
-                    />
-                  ) : (
-                    <div className="w-full h-full bg-muted/30 flex items-center justify-center">
-                      <Image className="h-12 w-12 text-muted-foreground/40" />
-                    </div>
-                  )}
-                </AspectRatio>
+            <button
+              key={category.name}
+              onClick={() => setSelectedCategory(category.name)}
+              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${category.gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] text-left group`}
+            >
+              {/* Background decoration */}
+              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
+              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-black/5" />
+              
+              <div className="relative z-10">
+                <span className="text-3xl mb-3 block">{category.icon}</span>
+                <h3 className="text-lg font-semibold mb-1 leading-tight">{category.name}</h3>
+                <p className="text-white/80 text-sm">{count} produk</p>
               </div>
-              <CardHeader className="pb-2">
-                <div className="flex justify-between items-start">
-                  <CardTitle className="text-lg">{product.name}</CardTitle>
-                  <DropdownMenu>
-                    <DropdownMenuTrigger asChild>
-                      <Button variant="ghost" size="icon" className="h-8 w-8">
-                        <MoreHorizontal className="h-4 w-4" />
-                      </Button>
-                    </DropdownMenuTrigger>
-                    <DropdownMenuContent align="end">
-                      <DropdownMenuItem onClick={() => handleEditClick(product)}>
-                        <Edit className="h-4 w-4 mr-2" />
-                        Edit
-                      </DropdownMenuItem>
-                      <DropdownMenuItem 
-                        onClick={() => handleDeleteClick(product)}
-                        className="text-destructive focus:text-destructive"
-                      >
-                        <Trash className="h-4 w-4 mr-2" />
-                        Buang
-                      </DropdownMenuItem>
-                    </DropdownMenuContent>
-                  </DropdownMenu>
-                </div>
-              </CardHeader>
-              <CardContent>
-                <div className="text-lg font-medium text-primary">
-                  {formatPrice(lowestPrice)}
-                </div>
-                <div className="mt-2 space-y-1">
-                  {product.variations?.map((variation) => (
-                    <div key={variation.id} className="flex justify-between text-sm">
-                      <span className="text-muted-foreground">{variation.name}</span>
-                      <span>{formatPrice(variation.price)}</span>
-                    </div>
-                  ))}
-                </div>
-              </CardContent>
-            </Card>
+            </button>
           );
         })}
       </div>
-    );
-  };
 
-  const renderProductRow = (product: Product) => {
-    const twoSeater = product.variations?.find(v => v.name === "2 Seater");
-    const fiveSeater = product.variations?.find(v => v.name === "5 Seater");
-    const sevenSeater = product.variations?.find(v => v.name === "7 Seater");
+      {/* Quick Stats */}
+      <div className="bg-card rounded-xl border p-4">
+        <div className="flex items-center justify-between">
+          <div className="flex items-center gap-3">
+            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+              <Package className="h-5 w-5 text-primary" />
+            </div>
+            <div>
+              <p className="text-sm text-muted-foreground">Jumlah Produk</p>
+              <p className="text-2xl font-bold">{products.length}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  );
+
+  // Product List View for Selected Category
+  const renderProductList = () => {
+    const categoryConfig = materialCategories.find(c => c.name === selectedCategory);
     
     return (
-      <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
-      <td className="py-3 px-4">
-          <div className="flex items-center gap-2">
-            <span className="font-medium">{product.name}</span>
-            {product.category && (
-              <Badge className={`text-xs ${getCategoryBadgeColor(product.category)}`}>
-                {product.category}
-              </Badge>
-            )}
-          </div>
-        </td>
-        
-        {/* 2 Seater */}
-        <td className="py-3 px-2 text-center">
-          {twoSeater ? formatPrice(twoSeater.price) : "-"}
-        </td>
-        <td className="py-3 px-2 text-center text-muted-foreground">
-          {twoSeater?.cost ? formatPrice(twoSeater.cost) : "-"}
-        </td>
-        
-        {/* 5 Seater */}
-        <td className="py-3 px-2 text-center">
-          {fiveSeater ? formatPrice(fiveSeater.price) : "-"}
-        </td>
-        <td className="py-3 px-2 text-center text-muted-foreground">
-          {fiveSeater?.cost ? formatPrice(fiveSeater.cost) : "-"}
-        </td>
-        
-        {/* 7 Seater */}
-        <td className="py-3 px-2 text-center">
-          {sevenSeater ? formatPrice(sevenSeater.price) : "-"}
-        </td>
-        <td className="py-3 px-2 text-center text-muted-foreground">
-          {sevenSeater?.cost ? formatPrice(sevenSeater.cost) : "-"}
-        </td>
-        
-        <td className="py-3 px-4 text-center">
-          {product.image_url ? (
-            <div className="flex justify-center">
-              <a href={product.image_url} target="_blank" rel="noopener noreferrer">
-                <Image className="h-5 w-5 text-blue-500 hover:text-blue-700" />
-              </a>
-            </div>
-          ) : "-"}
-        </td>
-        <td className="py-3 px-4 text-right">
-          <DropdownMenu>
-            <DropdownMenuTrigger asChild>
-              <Button variant="ghost" size="icon" className="h-8 w-8">
-                <MoreHorizontal className="h-4 w-4" />
-              </Button>
-            </DropdownMenuTrigger>
-            <DropdownMenuContent align="end">
-              <DropdownMenuItem onClick={() => handleEditClick(product)}>
-                <Edit className="h-4 w-4 mr-2" />
-                Edit
-              </DropdownMenuItem>
-              <DropdownMenuItem 
-                onClick={() => handleDeleteClick(product)}
-                className="text-destructive focus:text-destructive"
-              >
-                <Trash className="h-4 w-4 mr-2" />
-                Buang
-              </DropdownMenuItem>
-            </DropdownMenuContent>
-          </DropdownMenu>
-        </td>
-      </tr>
-    );
-  };
-
-  const renderTableView = () => {
-    if (filteredProducts.length === 0) {
-      return (
-        <div className="py-8 text-center text-muted-foreground">
-          {searchTerm ? "Tiada produk sepadan dengan carian anda" : "Tiada produk ditemui"}
-        </div>
-      );
-    }
-
-    const tableHeader = (
-      <>
-        <tr className="border-b">
-          <th className="text-left py-3 px-4 font-medium">Nama Produk</th>
-          <th colSpan={2} className="text-center py-3 px-4 font-medium">2 Seater</th>
-          <th colSpan={2} className="text-center py-3 px-4 font-medium">5 Seater</th>
-          <th colSpan={2} className="text-center py-3 px-4 font-medium">7 Seater</th>
-          <th className="text-right py-3 px-4 font-medium">Imej</th>
-          <th className="text-right py-3 px-4 font-medium">Tindakan</th>
-        </tr>
-        <tr className="border-b bg-muted/30">
-          <th className="text-left py-2 px-4"></th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Jualan</th>
-          <th className="text-center py-2 px-2 text-xs text-muted-foreground">Kos</th>
-          <th className="text-right py-2 px-4"></th>
-          <th className="text-right py-2 px-4"></th>
-        </tr>
-      </>
-    );
-
-    return (
-      <div className="space-y-6">
-        {materialCategories.map((category) => {
-          const categoryProducts = groupedProducts[category];
-          if (categoryProducts.length === 0) return null;
+      <div className="space-y-4">
+        {/* Header with Back Button */}
+        <div className="flex flex-col sm:flex-row sm:items-center gap-4">
+          <Button 
+            variant="ghost" 
+            onClick={() => {
+              setSelectedCategory(null);
+              setSearchTerm("");
+            }}
+            className="w-fit gap-2"
+          >
+            <ChevronLeft className="h-4 w-4" />
+            Kembali
+          </Button>
           
-          return (
-            <div key={category} className="space-y-2">
-              <h3 className="text-lg font-semibold text-primary border-l-4 border-primary pl-3">
-                {category}
-              </h3>
-              <div className="overflow-x-auto">
-                <table className="w-full">
-                  <thead>{tableHeader}</thead>
-                  <tbody>
-                    {categoryProducts.map(renderProductRow)}
-                  </tbody>
-                </table>
+          <div className="flex-1">
+            <div className="flex items-center gap-3">
+              <span className="text-2xl">{categoryConfig?.icon}</span>
+              <div>
+                <h1 className="text-xl md:text-2xl font-bold text-foreground">{selectedCategory}</h1>
+                <p className="text-muted-foreground text-sm">{filteredProducts.length} produk</p>
               </div>
             </div>
-          );
-        })}
-        
-        {uncategorizedProducts.length > 0 && (
-          <div className="space-y-2">
-            <h3 className="text-lg font-semibold text-muted-foreground border-l-4 border-muted pl-3">
-              Lain-lain
-            </h3>
-            <div className="overflow-x-auto">
-              <table className="w-full">
-                <thead>{tableHeader}</thead>
-                <tbody>
-                  {uncategorizedProducts.map(renderProductRow)}
-                </tbody>
-              </table>
-            </div>
           </div>
-        )}
+        </div>
+
+        {/* Search & Add */}
+        <div className="flex flex-col sm:flex-row gap-3">
+          <div className="relative flex-1">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
+            <Input
+              placeholder="Cari produk..."
+              className="pl-10"
+              value={searchTerm}
+              onChange={(e) => setSearchTerm(e.target.value)}
+            />
+          </div>
+          <Button onClick={() => setIsAddDialogOpen(true)} className="gap-2 shrink-0">
+            <Plus className="h-4 w-4" />
+            Tambah
+          </Button>
+        </div>
+
+        {/* Product List */}
+        <div className="bg-card rounded-xl border divide-y">
+          {filteredProducts.length === 0 ? (
+            <div className="py-12 text-center text-muted-foreground">
+              <Package className="h-12 w-12 mx-auto mb-3 opacity-30" />
+              <p>{searchTerm ? "Tiada produk dijumpai" : "Tiada produk dalam kategori ini"}</p>
+            </div>
+          ) : (
+            filteredProducts.map((product) => {
+              const twoSeater = product.variations?.find(v => v.name === "2 Seater");
+              const fiveSeater = product.variations?.find(v => v.name === "5 Seater");
+              const sevenSeater = product.variations?.find(v => v.name === "7 Seater");
+              
+              return (
+                <div 
+                  key={product.id} 
+                  className="p-4 hover:bg-muted/30 transition-colors"
+                >
+                  <div className="flex items-start justify-between gap-4">
+                    <div className="flex-1 min-w-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
+                        {product.image_url && (
+                          <a 
+                            href={product.image_url} 
+                            target="_blank" 
+                            rel="noopener noreferrer"
+                            className="text-blue-500 hover:text-blue-600"
+                          >
+                            <ExternalLink className="h-4 w-4" />
+                          </a>
+                        )}
+                      </div>
+                      
+                      {/* Price Grid - Responsive */}
+                      <div className="grid grid-cols-3 gap-2 text-sm">
+                        <div className="bg-muted/50 rounded-lg p-2 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">2 Seater</p>
+                          <p className="font-medium">{twoSeater ? formatPrice(twoSeater.price) : "-"}</p>
+                          {twoSeater?.cost ? (
+                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(twoSeater.cost)}</p>
+                          ) : null}
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-2 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">5 Seater</p>
+                          <p className="font-medium">{fiveSeater ? formatPrice(fiveSeater.price) : "-"}</p>
+                          {fiveSeater?.cost ? (
+                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(fiveSeater.cost)}</p>
+                          ) : null}
+                        </div>
+                        <div className="bg-muted/50 rounded-lg p-2 text-center">
+                          <p className="text-xs text-muted-foreground mb-1">7 Seater</p>
+                          <p className="font-medium">{sevenSeater ? formatPrice(sevenSeater.price) : "-"}</p>
+                          {sevenSeater?.cost ? (
+                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(sevenSeater.cost)}</p>
+                          ) : null}
+                        </div>
+                      </div>
+                    </div>
+                    
+                    {/* Actions */}
+                    <DropdownMenu>
+                      <DropdownMenuTrigger asChild>
+                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
+                          <MoreHorizontal className="h-4 w-4" />
+                        </Button>
+                      </DropdownMenuTrigger>
+                      <DropdownMenuContent align="end">
+                        <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                          <Edit className="h-4 w-4 mr-2" />
+                          Edit
+                        </DropdownMenuItem>
+                        <DropdownMenuItem 
+                          onClick={() => handleDeleteClick(product)}
+                          className="text-destructive focus:text-destructive"
+                        >
+                          <Trash className="h-4 w-4 mr-2" />
+                          Buang
+                        </DropdownMenuItem>
+                      </DropdownMenuContent>
+                    </DropdownMenu>
+                  </div>
+                </div>
+              );
+            })
+          )}
+        </div>
       </div>
     );
   };
 
+  if (loading) {
+    return (
+      <div className="p-4 md:p-6 flex justify-center items-center min-h-[50vh]">
+        <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
+      </div>
+    );
+  }
+
   return (
-    <div className="p-4 md:p-6 space-y-6">
-      <section className="animate-slide-up">
-        <h1 className="text-2xl md:text-3xl font-bold text-foreground">Produk</h1>
-        <p className="text-muted-foreground text-sm">Urus inventori produk anda</p>
-      </section>
-      
-      <Card className="animate-fade-in delay-100">
-        <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
-          <div>
-            <CardTitle>Semua Produk</CardTitle>
-            <CardDescription>Lihat dan urus katalog produk anda</CardDescription>
-          </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
-            <div className="relative flex-1 sm:flex-initial">
-              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
-              <Input
-                placeholder="Cari produk..."
-                className="pl-9 w-full sm:w-[260px]"
-                value={searchTerm}
-                onChange={(e) => setSearchTerm(e.target.value)}
-              />
-            </div>
-            <Button 
-              variant="outline" 
-              size="icon" 
-              onClick={() => setViewMode(viewMode === 'grid' ? 'table' : 'grid')}
-            >
-              {viewMode === 'grid' ? (
-                <Grid3X3 className="h-4 w-4" />
-              ) : (
-                <Grid3X3 className="h-4 w-4" />
-              )}
-            </Button>
-            <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddDialogOpen(true)}>
-              <Save className="h-4 w-4 mr-2" />
-              Tambah Produk
-            </Button>
-          </div>
-        </CardHeader>
-        <CardContent>
-          {loading ? (
-            <div className="flex justify-center items-center py-8">
-              <Loader2 className="h-8 w-8 animate-spin text-muted-foreground" />
-            </div>
-          ) : viewMode === 'grid' ? (
-            renderGridView()
-          ) : (
-            renderTableView()
-          )}
-        </CardContent>
-      </Card>
+    <div className="p-4 md:p-6">
+      {selectedCategory ? renderProductList() : renderCategoryCards()}
 
       {/* Add Product Dialog */}
       <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[700px]">
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tambah Produk Baru</DialogTitle>
             <DialogDescription>
@@ -457,7 +369,7 @@ export default function Products() {
       {/* Edit Product Dialog */}
       {selectedProduct && (
         <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[700px]">
+          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Produk</DialogTitle>
               <DialogDescription>
