@@ -67,13 +67,29 @@ export default function Leads() {
 
       if (error) throw error;
 
-      setLeads(data || []);
+      const now = new Date();
+      const twentyFourHoursAgo = new Date(now.getTime() - 24 * 60 * 60 * 1000);
 
-      // Calculate stats
-      const newCount = data?.filter((l) => l.status === "new").length || 0;
-      const contactedCount = data?.filter((l) => l.status === "contacted").length || 0;
-      const closedCount = data?.filter((l) => l.status === "closed").length || 0;
-      const total = data?.length || 0;
+      // Filter leads: "new" status only if created within 24 hours
+      // After 24 hours, treat as "contacted" (followup)
+      const processedLeads = (data || []).map(lead => {
+        const createdAt = new Date(lead.created_at);
+        const isWithin24Hours = createdAt > twentyFourHoursAgo;
+        
+        // If status is "new" but created more than 24 hours ago, show as "contacted" (followup)
+        if (lead.status === "new" && !isWithin24Hours) {
+          return { ...lead, displayStatus: "contacted" };
+        }
+        return { ...lead, displayStatus: lead.status };
+      });
+
+      setLeads(processedLeads);
+
+      // Calculate stats based on display status
+      const newCount = processedLeads.filter((l) => l.displayStatus === "new").length;
+      const contactedCount = processedLeads.filter((l) => l.displayStatus === "contacted").length;
+      const closedCount = processedLeads.filter((l) => l.displayStatus === "closed").length;
+      const total = processedLeads.length;
       const conversionRate = total > 0 ? Math.round((closedCount / total) * 100) : 0;
 
       setStats({
@@ -118,13 +134,13 @@ export default function Leads() {
 
   const statCards = [
     {
-      title: "Lead Baru",
+      title: "Lead Baru (24jam)",
       value: stats.new,
       icon: Users,
       gradient: "from-blue-500 to-blue-600",
     },
     {
-      title: "Dihubungi",
+      title: "Followup",
       value: stats.contacted,
       icon: Phone,
       gradient: "from-amber-500 to-amber-600",
