@@ -24,7 +24,7 @@ interface LeadListTableProps {
 
 const statusConfig: Record<string, { label: string; variant: "default" | "secondary" | "destructive" | "outline" }> = {
   new: { label: "Baru", variant: "secondary" },
-  contacted: { label: "Dihubungi", variant: "default" },
+  contacted: { label: "Followup", variant: "default" },
   closed: { label: "Closed", variant: "outline" },
 };
 
@@ -127,7 +127,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="new">Baru</SelectItem>
-                      <SelectItem value="contacted">Dihubungi</SelectItem>
+                      <SelectItem value="contacted">Followup</SelectItem>
                       <SelectItem value="closed">Closed</SelectItem>
                     </SelectContent>
                   </Select>
