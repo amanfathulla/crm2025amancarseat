@@ -19,91 +19,80 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
 
   useEffect(() => {
-    // Set up auth state listener
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(
-      (event, session) => {
-        setUser(session?.user ?? null);
-        setIsLoading(false);
+    // Check for existing admin session from localStorage
+    const checkSession = () => {
+      const storedSession = localStorage.getItem('adminSession');
+      if (storedSession) {
+        try {
+          const sessionData = JSON.parse(storedSession);
+          // Verify session is not too old (24 hours max)
+          const authenticatedAt = new Date(sessionData.authenticated_at);
+          const now = new Date();
+          const hoursDiff = (now.getTime() - authenticatedAt.getTime()) / (1000 * 60 * 60);
+          
+          if (hoursDiff < 24) {
+            setUser({
+              id: sessionData.id,
+              email: sessionData.email,
+              user_metadata: { role: 'admin' },
+              app_metadata: {},
+              aud: 'authenticated',
+              created_at: sessionData.authenticated_at,
+            } as User);
+          } else {
+            // Session expired, clear it
+            localStorage.removeItem('adminSession');
+          }
+        } catch (e) {
+          localStorage.removeItem('adminSession');
+        }
       }
-    );
-
-    // Check for existing session
-    const checkUser = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setUser(session?.user ?? null);
       setIsLoading(false);
     };
     
-    checkUser();
-
-    // Cleanup subscription
-    return () => {
-      subscription.unsubscribe();
-    };
+    checkSession();
   }, []);
 
-  // This login function now accepts either a username or email
-  const login = async (usernameOrEmail: string, password: string): Promise<boolean> => {
+  // Server-side authentication using database function
+  const login = async (email: string, password: string): Promise<boolean> => {
     try {
       setIsLoading(true);
       
-      // Check if input is an email (contains @) or a username
-      const isEmail = usernameOrEmail.includes('@');
-      
-      // If it's a simple username demo flow for admin, handle it with a simplified approach
-      if (!isEmail && usernameOrEmail === 'admin' && password === 'Muhsin@920926') {
-        // Create a demo user session
-        const { data, error } = await supabase.auth.signInWithPassword({
-          email: 'admin@example.com',
-          password: 'Muhsin@920926'
-        });
-        
-        if (error) {
-          console.log("Fallback to demo mode");
-          // If the demo user doesn't exist in Supabase, create a fake session
-          setUser({
-            id: '1',
-            email: 'admin@example.com',
-            user_metadata: { username: 'admin' },
-            app_metadata: {},
-            aud: '',
-            created_at: '',
-          } as User);
-          
-          toast({
-            title: "Login successful",
-            description: "Welcome back, admin!",
-          });
-          
-          return true;
-        }
-        
-        toast({
-          title: "Login successful",
-          description: `Welcome back, admin!`,
-        });
-        
-        return true;
-      }
-      
-      // Standard email-based authentication
-      const { data, error } = await supabase.auth.signInWithPassword({ 
-        email: isEmail ? usernameOrEmail : `${usernameOrEmail}@example.com`, 
-        password 
+      // Use database function for secure server-side password verification
+      const { data: adminId, error } = await supabase.rpc('check_admin_password', {
+        email: email,
+        password: password
       });
       
-      if (error) {
+      if (error || !adminId) {
         toast({
           title: "Login failed",
-          description: error.message,
+          description: "Invalid email or password",
           variant: "destructive",
         });
         return false;
       }
-
+      
+      // Create authenticated session with admin info
+      setUser({
+        id: adminId,
+        email: email,
+        user_metadata: { role: 'admin' },
+        app_metadata: {},
+        aud: 'authenticated',
+        created_at: new Date().toISOString(),
+      } as User);
+      
+      // Store session in localStorage for persistence
+      localStorage.setItem('adminSession', JSON.stringify({
+        id: adminId,
+        email: email,
+        authenticated_at: new Date().toISOString()
+      }));
+      
       toast({
         title: "Login successful",
-        description: `Welcome back!`,
+        description: "Welcome back, admin!",
       });
       
       return true;
@@ -172,7 +161,10 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const logout = async () => {
     try {
       setIsLoading(true);
-      await supabase.auth.signOut();
+      // Clear admin session from localStorage
+      localStorage.removeItem('adminSession');
+      localStorage.removeItem('lastLoginTime');
+      setUser(null);
       toast({
         title: "Logged out",
         description: "You have been logged out successfully",

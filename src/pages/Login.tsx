@@ -12,10 +12,11 @@ import { Card, CardContent } from "@/components/ui/card";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
 
 export default function Login() {
-  // Admin quick login dialog state
+  // Admin login dialog state
   const [showAdminLoginDialog, setShowAdminLoginDialog] = useState(false);
+  const [adminEmail, setAdminEmail] = useState("");
   const [adminPassword, setAdminPassword] = useState("");
-  const [adminPasswordError, setAdminPasswordError] = useState("");
+  const [loginError, setLoginError] = useState("");
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [lastLogin, setLastLogin] = useState<string | null>(null);
   
@@ -23,36 +24,44 @@ export default function Login() {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Get the last login time from localStorage if available
     const storedLastLogin = localStorage.getItem("lastLoginTime");
     setLastLogin(storedLastLogin);
   }, []);
 
   const openAdminLoginDialog = () => {
+    setAdminEmail("");
     setAdminPassword("");
-    setAdminPasswordError("");
+    setLoginError("");
     setShowAdminLoginDialog(true);
   };
 
   const handleAdminLogin = async () => {
-    // Check if password is correct
-    if (adminPassword !== "Muhsin@920926") {
-      setAdminPasswordError("Password is incorrect");
+    // Validate inputs
+    if (!adminEmail.trim()) {
+      setLoginError("Please enter your email");
+      return;
+    }
+    if (!adminPassword) {
+      setLoginError("Please enter your password");
       return;
     }
 
     setIsSubmitting(true);
+    setLoginError("");
     
     try {
-      const success = await login("admin", "Muhsin@920926");
+      // Server-side authentication via database function
+      const success = await login(adminEmail.trim(), adminPassword);
       if (success) {
-        // Store current login time
         const currentTime = new Date().toLocaleString();
         localStorage.setItem("lastLoginTime", currentTime);
-        
         setShowAdminLoginDialog(false);
         navigate("/dashboard");
+      } else {
+        setLoginError("Invalid email or password");
       }
+    } catch (error) {
+      setLoginError("An error occurred. Please try again.");
     } finally {
       setIsSubmitting(false);
     }
@@ -127,11 +136,22 @@ export default function Login() {
           </DialogHeader>
           <div className="space-y-4 py-4">
             <div className="space-y-2">
-              <Label htmlFor="admin-password" className="text-white/70">Admin Password</Label>
+              <Label htmlFor="admin-email" className="text-white/70">Email</Label>
+              <Input 
+                id="admin-email" 
+                type="email" 
+                placeholder="Enter admin email" 
+                value={adminEmail}
+                onChange={(e) => setAdminEmail(e.target.value)}
+                className="bg-white/5 border-white/10 text-white"
+              />
+            </div>
+            <div className="space-y-2">
+              <Label htmlFor="admin-password" className="text-white/70">Password</Label>
               <Input 
                 id="admin-password" 
                 type="password" 
-                placeholder="Enter admin password" 
+                placeholder="Enter password" 
                 value={adminPassword}
                 onChange={(e) => setAdminPassword(e.target.value)}
                 onKeyDown={(e) => {
@@ -141,10 +161,10 @@ export default function Login() {
                 }}
                 className="bg-white/5 border-white/10 text-white"
               />
-              {adminPasswordError && (
-                <p className="text-sm text-red-400">{adminPasswordError}</p>
-              )}
             </div>
+            {loginError && (
+              <p className="text-sm text-red-400">{loginError}</p>
+            )}
           </div>
           <DialogFooter>
             <Button
