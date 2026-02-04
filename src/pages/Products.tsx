@@ -1,5 +1,4 @@
 
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -24,6 +23,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Badge } from "@/components/ui/badge";
 
 export default function Products() {
   const [products, setProducts] = useState<Product[]>([]);
@@ -42,6 +42,21 @@ export default function Products() {
     "Kain Fullsilk",
     "Semi Leather Kalis Air"
   ];
+
+  const getCategoryBadgeColor = (category: string) => {
+    switch (category) {
+      case "Kain Mesh":
+        return "bg-blue-500 text-white hover:bg-blue-600";
+      case "Kain Nylon":
+        return "bg-emerald-500 text-white hover:bg-emerald-600";
+      case "Kain Fullsilk":
+        return "bg-purple-500 text-white hover:bg-purple-600";
+      case "Semi Leather Kalis Air":
+        return "bg-amber-500 text-white hover:bg-amber-600";
+      default:
+        return "bg-gray-500 text-white hover:bg-gray-600";
+    }
+  };
 
   const fetchProducts = async () => {
     try {
@@ -225,8 +240,15 @@ export default function Products() {
     
     return (
       <tr key={product.id} className="border-b hover:bg-muted/30 transition-colors">
-        <td className="py-3 px-4">
-          <div className="font-medium">{product.name}</div>
+      <td className="py-3 px-4">
+          <div className="flex items-center gap-2">
+            <span className="font-medium">{product.name}</span>
+            {product.category && (
+              <Badge className={`text-xs ${getCategoryBadgeColor(product.category)}`}>
+                {product.category}
+              </Badge>
+            )}
+          </div>
         </td>
         
         {/* 2 Seater */}
