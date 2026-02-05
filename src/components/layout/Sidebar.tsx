@@ -111,7 +111,7 @@ export function Sidebar() {
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/", icon: Home },
     { title: "Lead Management", path: "/leads", icon: Target },
-    { title: "Customers", path: "/customers", icon: Users, badge: orderCounts.processing },
+    { title: "Customers", path: "/customers", icon: Users },
     { title: "Products", path: "/products", icon: Package },
     { title: "Sales", path: "/sales", icon: BarChart3 },
   ];
