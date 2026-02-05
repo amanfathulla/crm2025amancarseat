@@ -3,9 +3,10 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { Phone, User, Calendar, Edit2, Check } from "lucide-react";
+import { Phone, User, Calendar, Edit2, Check, Trash2 } from "lucide-react";
 
 interface Lead {
   id: string;
@@ -32,6 +33,9 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
+  const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
+  const [leadToDelete, setLeadToDelete] = useState<Lead | null>(null);
+  const [isDeleting, setIsDeleting] = useState(false);
 
   const handleStatusChange = async (leadId: string, newStatus: string) => {
     setIsUpdating(true);
@@ -70,6 +74,35 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
       month: 'short',
       year: 'numeric'
     });
+  };
+
+  const handleDeleteClick = (lead: Lead) => {
+    setLeadToDelete(lead);
+    setDeleteDialogOpen(true);
+  };
+
+  const handleDeleteConfirm = async () => {
+    if (!leadToDelete) return;
+    
+    setIsDeleting(true);
+    try {
+      const { error } = await supabase
+        .from("leads")
+        .delete()
+        .eq("id", leadToDelete.id);
+
+      if (error) throw error;
+
+      toast.success("Lead berjaya dipadam!");
+      onLeadUpdated();
+    } catch (error) {
+      console.error("Error deleting lead:", error);
+      toast.error("Gagal memadam lead");
+    } finally {
+      setIsDeleting(false);
+      setDeleteDialogOpen(false);
+      setLeadToDelete(null);
+    }
   };
 
   if (leads.length === 0) {
@@ -139,29 +172,61 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
                 )}
               </TableCell>
               <TableCell className="text-right">
-                {editingId === lead.id ? (
+                <div className="flex items-center justify-end gap-1">
+                  {editingId === lead.id ? (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingId(null)}
+                      disabled={isUpdating}
+                    >
+                      <Check className="h-4 w-4" />
+                    </Button>
+                  ) : (
+                    <Button
+                      variant="ghost"
+                      size="sm"
+                      onClick={() => setEditingId(lead.id)}
+                    >
+                      <Edit2 className="h-4 w-4" />
+                    </Button>
+                  )}
                   <Button
                     variant="ghost"
                     size="sm"
-                    onClick={() => setEditingId(null)}
-                    disabled={isUpdating}
+                    onClick={() => handleDeleteClick(lead)}
+                    className="text-destructive hover:text-destructive hover:bg-destructive/10"
                   >
-                    <Check className="h-4 w-4" />
+                    <Trash2 className="h-4 w-4" />
                   </Button>
-                ) : (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setEditingId(lead.id)}
-                  >
-                    <Edit2 className="h-4 w-4" />
-                  </Button>
-                )}
+                </div>
               </TableCell>
             </TableRow>
           ))}
         </TableBody>
       </Table>
+
+      {/* Delete Confirmation Dialog */}
+      <AlertDialog open={deleteDialogOpen} onOpenChange={setDeleteDialogOpen}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Padam Lead?</AlertDialogTitle>
+            <AlertDialogDescription>
+              Adakah anda pasti mahu memadam lead "{leadToDelete?.name}"? Tindakan ini tidak boleh dibatalkan.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel disabled={isDeleting}>Batal</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={handleDeleteConfirm}
+              disabled={isDeleting}
+              className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >
+              {isDeleting ? "Memadam..." : "Padam"}
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

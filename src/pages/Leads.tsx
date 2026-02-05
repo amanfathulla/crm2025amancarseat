@@ -122,6 +122,9 @@ export default function Leads() {
 
       if (error) throw error;
 
+      // CRITICAL: Immediately refetch to update UI without waiting for realtime
+      await fetchLeads();
+      
       toast.success("Lead berjaya ditambah!");
       setNewLead({ name: "", phone: "" });
       setIsAddDialogOpen(false);
