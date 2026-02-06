@@ -10,7 +10,6 @@ import {
   Package,
   ChevronsRight,
   X,
-  Download,
   Menu,
   Target,
   Clock,
@@ -18,6 +17,7 @@ import {
   XCircle,
   TrendingUp,
   Wallet,
+  Megaphone,
 } from "lucide-react";
 import { MarketingNotesSection } from "./sidebar/MarketingNotesSection";
 
@@ -162,11 +162,8 @@ export function Sidebar() {
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/", icon: Home },
     { title: "Lead Management", path: "/leads", icon: Target },
+    { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
-  ];
-
-  const accountItems: SidebarItemType[] = [
-    { title: "Install App", path: "/install", icon: Download },
   ];
 
   const sidebarVisible = isMobile ? mobileOpen : true;
@@ -365,36 +362,6 @@ export function Sidebar() {
             showMarketingNotes={showMarketingNotes}
             setShowMarketingNotes={setShowMarketingNotes}
           />
-
-          {/* Account Section */}
-          {(expanded || (isMobile && mobileOpen)) && (
-            <div className="pt-4 mt-4 border-t border-sidebar-border">
-              <div className="px-3 py-2 text-xs font-medium text-sidebar-foreground/50 uppercase tracking-wide">
-                Account
-              </div>
-              {accountItems.map((item) => {
-                const isActive = location.pathname === item.path;
-                return (
-                  <NavLink
-                    key={item.path}
-                    to={item.path}
-                    onClick={() => isMobile && setMobileOpen(false)}
-                    className={cn(
-                      "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
-                      isActive
-                        ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                        : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                    )}
-                  >
-                    <div className="grid h-full w-12 place-content-center">
-                      <item.icon className="h-5 w-5" />
-                    </div>
-                    <span className="text-sm font-medium">{item.title}</span>
-                  </NavLink>
-                );
-              })}
-            </div>
-          )}
         </nav>
 
         {/* Toggle Button */}
