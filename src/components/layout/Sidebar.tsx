@@ -6,18 +6,18 @@ import { NavLink, useLocation } from "react-router-dom";
 import {
   Home,
   Users,
-  ShoppingCart,
   BarChart3,
   Package,
   ChevronsRight,
-  ChevronDown,
   X,
-  Notebook,
   Download,
-  Settings,
-  HelpCircle,
   Menu,
   Target,
+  Clock,
+  CheckCircle,
+  XCircle,
+  TrendingUp,
+  Wallet,
 } from "lucide-react";
 import { MarketingNotesSection } from "./sidebar/MarketingNotesSection";
 
@@ -25,7 +25,6 @@ interface SidebarItemType {
   title: string;
   path: string;
   icon: React.ElementType;
-  badge?: number;
 }
 
 export function Sidebar() {
@@ -39,6 +38,11 @@ export function Sidebar() {
     processing: 0,
     completed: 0,
     cancelled: 0,
+  });
+
+  const [salesData, setSalesData] = useState({
+    totalRevenue: 0,
+    totalProfit: 0,
   });
 
   useEffect(() => {
@@ -100,6 +104,47 @@ export function Sidebar() {
     };
   }, []);
 
+  useEffect(() => {
+    const fetchSalesData = async () => {
+      try {
+        const { data: yearlySalesData, error } = await supabase
+          .from("yearly_sales")
+          .select("total_revenue, total_profit");
+
+        if (error) throw error;
+
+        const totalRevenue = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0)
+          : 0;
+
+        const totalProfit = yearlySalesData
+          ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_profit)), 0)
+          : 0;
+
+        setSalesData({ totalRevenue, totalProfit });
+      } catch (error) {
+        console.error("Error fetching sales data:", error);
+      }
+    };
+
+    fetchSalesData();
+
+    const channel = supabase
+      .channel("sidebar-sales-updates")
+      .on("postgres_changes", {
+        event: "*",
+        schema: "public",
+        table: "yearly_sales",
+      }, () => {
+        fetchSalesData();
+      })
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, []);
+
   const toggleSidebar = () => {
     if (isMobile) {
       setMobileOpen(!mobileOpen);
@@ -108,12 +153,16 @@ export function Sidebar() {
     }
   };
 
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `RM${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `RM${(value / 1000).toFixed(0)}K`;
+    return `RM${value.toFixed(0)}`;
+  };
+
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/", icon: Home },
     { title: "Lead Management", path: "/leads", icon: Target },
-    { title: "Customers", path: "/customers", icon: Users },
     { title: "Products", path: "/products", icon: Package },
-    { title: "Sales", path: "/sales", icon: BarChart3 },
   ];
 
   const accountItems: SidebarItemType[] = [
@@ -200,14 +249,114 @@ export function Sidebar() {
                 {(expanded || (isMobile && mobileOpen)) && (
                   <span className="text-sm font-medium">{item.title}</span>
                 )}
-                {item.badge && item.badge > 0 && (expanded || (isMobile && mobileOpen)) && (
-                  <span className="absolute right-3 flex h-5 min-w-5 px-1 items-center justify-center rounded-full bg-red-500 text-xs text-white font-medium">
-                    {item.badge}
-                  </span>
-                )}
               </NavLink>
             );
           })}
+
+          {/* Customers Card */}
+          {(expanded || (isMobile && mobileOpen)) && (
+            <NavLink
+              to="/customers"
+              onClick={() => isMobile && setMobileOpen(false)}
+              className={cn(
+                "block rounded-xl p-3 mt-3 transition-all duration-200",
+                location.pathname === "/customers"
+                  ? "bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg"
+                  : "bg-gradient-to-br from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <Users className="h-4 w-4 text-blue-200" />
+                <span className="text-sm font-semibold text-white">Customers</span>
+              </div>
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-white/10 rounded-lg p-2 text-center">
+                  <Clock className="h-3 w-3 mx-auto mb-1 text-yellow-300" />
+                  <span className="block text-lg font-bold text-white">{orderCounts.processing}</span>
+                  <span className="text-[10px] text-white/70">Process</span>
+                </div>
+                <div className="bg-white/10 rounded-lg p-2 text-center">
+                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-green-300" />
+                  <span className="block text-lg font-bold text-white">{orderCounts.completed}</span>
+                  <span className="text-[10px] text-white/70">Done</span>
+                </div>
+                <div className="bg-white/10 rounded-lg p-2 text-center">
+                  <XCircle className="h-3 w-3 mx-auto mb-1 text-red-300" />
+                  <span className="block text-lg font-bold text-white">{orderCounts.cancelled}</span>
+                  <span className="text-[10px] text-white/70">Cancel</span>
+                </div>
+              </div>
+            </NavLink>
+          )}
+
+          {/* Collapsed Customers Icon */}
+          {!expanded && !isMobile && (
+            <NavLink
+              to="/customers"
+              className={cn(
+                "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
+                location.pathname === "/customers"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <div className="grid h-full w-12 place-content-center">
+                <Users className="h-5 w-5" />
+              </div>
+            </NavLink>
+          )}
+
+          {/* Sales Card */}
+          {(expanded || (isMobile && mobileOpen)) && (
+            <NavLink
+              to="/sales"
+              onClick={() => isMobile && setMobileOpen(false)}
+              className={cn(
+                "block rounded-xl p-3 mt-2 transition-all duration-200",
+                location.pathname === "/sales"
+                  ? "bg-gradient-to-br from-emerald-600 to-emerald-700 shadow-lg"
+                  : "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30"
+              )}
+            >
+              <div className="flex items-center gap-2 mb-3">
+                <BarChart3 className="h-4 w-4 text-emerald-200" />
+                <span className="text-sm font-semibold text-white">Sales</span>
+              </div>
+              <div className="grid grid-cols-2 gap-2">
+                <div className="bg-white/10 rounded-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <Wallet className="h-3 w-3 text-blue-300" />
+                    <span className="text-[10px] text-white/70">Revenue</span>
+                  </div>
+                  <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalRevenue)}</span>
+                </div>
+                <div className="bg-white/10 rounded-lg p-2">
+                  <div className="flex items-center gap-1 mb-1">
+                    <TrendingUp className="h-3 w-3 text-green-300" />
+                    <span className="text-[10px] text-white/70">Profit</span>
+                  </div>
+                  <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalProfit)}</span>
+                </div>
+              </div>
+            </NavLink>
+          )}
+
+          {/* Collapsed Sales Icon */}
+          {!expanded && !isMobile && (
+            <NavLink
+              to="/sales"
+              className={cn(
+                "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
+                location.pathname === "/sales"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+              )}
+            >
+              <div className="grid h-full w-12 place-content-center">
+                <BarChart3 className="h-5 w-5" />
+              </div>
+            </NavLink>
+          )}
 
           {/* Marketing Notes */}
           <MarketingNotesSection
