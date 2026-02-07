@@ -52,7 +52,7 @@ export function SummaryStatCards({
   ];
 
   return (
-    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6 animate-slide-up delay-200">
+    <section className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 animate-slide-up delay-200">
       {stats.map((stat, index) => (
         <div
           key={index}

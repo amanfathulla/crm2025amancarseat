@@ -1,10 +1,10 @@
-
 import { useState } from "react";
 import { toast } from "sonner";
 import { Calendar, Facebook, Instagram } from "lucide-react";
 import { Dialog, DialogContent, DialogTitle, DialogHeader, DialogFooter, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { createMarketingNote, MarketingContent, MarketingContentMedia } from "@/utils/marketingUtils";
 
@@ -12,17 +12,27 @@ interface AddMarketingNoteDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
   onNoteAdded: () => void;
+  defaultDate?: string;
 }
 
-export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddMarketingNoteDialogProps) {
+export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded, defaultDate }: AddMarketingNoteDialogProps) {
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [newNote, setNewNote] = useState<Partial<MarketingContent>>({
     title: '',
+    description: '',
     type: 'task',
-    content_date: new Date().toISOString().split('T')[0],
+    content_date: defaultDate || new Date().toISOString().split('T')[0],
     status: 'pending',
     media: 'none',
   });
+
+  // Update default date when prop changes
+  const handleOpen = (isOpen: boolean) => {
+    if (isOpen && defaultDate) {
+      setNewNote(prev => ({ ...prev, content_date: defaultDate }));
+    }
+    onOpenChange(isOpen);
+  };
 
   const handleSubmit = async () => {
     try {
@@ -39,19 +49,18 @@ export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddM
         content_date: newNote.content_date,
         status: 'pending',
         media: newNote.media as MarketingContentMedia || 'none',
-        description: null,
+        description: newNote.description || null,
         content_time: null
       });
       
-      if (!result.success) {
-        throw new Error(result.error || 'Failed to add note');
-      }
+      if (!result.success) throw new Error(result.error || 'Failed to add note');
       
       toast.success('Nota marketing baru telah ditambah');
       onNoteAdded();
       
       setNewNote({
         title: '',
+        description: '',
         type: 'task',
         content_date: new Date().toISOString().split('T')[0],
         status: 'pending',
@@ -75,8 +84,8 @@ export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddM
   ];
 
   return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="sm:max-w-md">
+    <Dialog open={open} onOpenChange={handleOpen}>
+      <DialogContent className="sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Tambah Nota Marketing</DialogTitle>
           <DialogDescription>
@@ -96,60 +105,66 @@ export function AddMarketingNoteDialog({ open, onOpenChange, onNoteAdded }: AddM
               placeholder="Contoh: Buat posting TikTok"
             />
           </div>
-          
+
           <div className="grid gap-2">
-            <label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
-              <Calendar className="h-4 w-4" />
-              <span>Tarikh</span>
+            <label htmlFor="description" className="text-sm font-medium">
+              Keterangan
             </label>
-            <Input 
-              id="date"
-              type="date"
-              value={newNote.content_date || ''}
-              onChange={(e) => setNewNote({...newNote, content_date: e.target.value})}
+            <Textarea 
+              id="description"
+              value={newNote.description || ''}
+              onChange={(e) => setNewNote({...newNote, description: e.target.value})}
+              placeholder="Tulis keterangan lengkap tugasan..."
+              rows={4}
             />
           </div>
           
-          <div className="grid gap-2">
-            <label htmlFor="media" className="text-sm font-medium">
-              Media Platform
-            </label>
-            <Select 
-              value={newNote.media as string || 'none'} 
-              onValueChange={(value: MarketingContentMedia) => setNewNote({...newNote, media: value})}
-            >
-              <SelectTrigger>
-                <SelectValue placeholder="Pilih platform media" />
-              </SelectTrigger>
-              <SelectContent>
-                {mediaOptions.map(option => (
-                  <SelectItem key={option.value} value={option.value}>
-                    <div className="flex items-center gap-2">
-                      {option.icon ? <option.icon className="h-4 w-4" /> : 
-                       option.iconText ? <span className="h-4 w-4 text-pink-400 flex items-center justify-center text-xs">{option.iconText}</span> : null}
-                      <span>{option.label}</span>
-                    </div>
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+          <div className="grid grid-cols-2 gap-4">
+            <div className="grid gap-2">
+              <label htmlFor="date" className="text-sm font-medium flex items-center gap-2">
+                <Calendar className="h-4 w-4" />
+                <span>Tarikh</span>
+              </label>
+              <Input 
+                id="date"
+                type="date"
+                value={newNote.content_date || ''}
+                onChange={(e) => setNewNote({...newNote, content_date: e.target.value})}
+              />
+            </div>
+            
+            <div className="grid gap-2">
+              <label htmlFor="media" className="text-sm font-medium">
+                Media Platform
+              </label>
+              <Select 
+                value={newNote.media as string || 'none'} 
+                onValueChange={(value: MarketingContentMedia) => setNewNote({...newNote, media: value})}
+              >
+                <SelectTrigger>
+                  <SelectValue placeholder="Pilih platform" />
+                </SelectTrigger>
+                <SelectContent>
+                  {mediaOptions.map(option => (
+                    <SelectItem key={option.value} value={option.value}>
+                      <div className="flex items-center gap-2">
+                        {option.icon ? <option.icon className="h-4 w-4" /> : 
+                         option.iconText ? <span className="h-4 w-4 text-pink-400 flex items-center justify-center text-xs font-bold">{option.iconText}</span> : null}
+                        <span>{option.label}</span>
+                      </div>
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
           </div>
         </div>
         
         <DialogFooter>
-          <Button 
-            type="button" 
-            variant="secondary" 
-            onClick={() => onOpenChange(false)}
-            disabled={isSubmitting}
-          >
+          <Button variant="secondary" onClick={() => onOpenChange(false)} disabled={isSubmitting}>
             Batal
           </Button>
-          <Button 
-            type="button" 
-            onClick={handleSubmit}
-            disabled={isSubmitting}
-          >
+          <Button onClick={handleSubmit} disabled={isSubmitting}>
             Simpan
           </Button>
         </DialogFooter>
