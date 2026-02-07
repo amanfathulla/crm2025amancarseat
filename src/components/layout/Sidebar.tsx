@@ -19,7 +19,7 @@ import {
   Wallet,
   Megaphone,
 } from "lucide-react";
-import { MarketingNotesSection } from "./sidebar/MarketingNotesSection";
+
 
 interface SidebarItemType {
   title: string;
@@ -32,7 +32,7 @@ export function Sidebar() {
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const [showMarketingNotes, setShowMarketingNotes] = useState(false);
+  
 
   const [orderCounts, setOrderCounts] = useState({
     processing: 0,
@@ -355,13 +355,6 @@ export function Sidebar() {
             </NavLink>
           )}
 
-          {/* Marketing Notes */}
-          <MarketingNotesSection
-            expanded={expanded}
-            isMobile={isMobile}
-            showMarketingNotes={showMarketingNotes}
-            setShowMarketingNotes={setShowMarketingNotes}
-          />
         </nav>
 
         {/* Toggle Button */}

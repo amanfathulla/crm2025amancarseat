@@ -201,11 +201,9 @@ export const updateMarketingNoteStatus = async (id: string, status: MarketingCon
       updated_at: now
     };
     
-    // If the note is being marked as completed, add the completed_at timestamp
     if (status === 'completed') {
       updateData.completed_at = now;
     } else {
-      // If the note is being marked as pending, clear the completed_at timestamp
       updateData.completed_at = null;
     }
     
@@ -216,21 +214,59 @@ export const updateMarketingNoteStatus = async (id: string, status: MarketingCon
     
     if (error) {
       console.error('Error updating marketing note status:', error);
-      return { 
-        success: false, 
-        error: error.message
-      };
+      return { success: false, error: error.message };
     }
     
-    return { 
-      success: true, 
-      error: null
-    };
+    return { success: true, error: null };
   } catch (error: any) {
     console.error('Unexpected error updating marketing note status:', error);
-    return { 
-      success: false, 
-      error: error?.message || 'Unknown error occurred'
-    };
+    return { success: false, error: error?.message || 'Unknown error occurred' };
+  }
+};
+
+/**
+ * Updates a marketing note's content
+ */
+export const updateMarketingNote = async (id: string, updates: Partial<MarketingContent>) => {
+  try {
+    const { error } = await supabase
+      .from('marketing_content')
+      .update({
+        ...updates,
+        updated_at: new Date().toISOString()
+      })
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error updating marketing note:', error);
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Unexpected error updating marketing note:', error);
+    return { success: false, error: error?.message || 'Unknown error occurred' };
+  }
+};
+
+/**
+ * Deletes a marketing note
+ */
+export const deleteMarketingNote = async (id: string) => {
+  try {
+    const { error } = await supabase
+      .from('marketing_content')
+      .delete()
+      .eq('id', id);
+    
+    if (error) {
+      console.error('Error deleting marketing note:', error);
+      return { success: false, error: error.message };
+    }
+    
+    return { success: true, error: null };
+  } catch (error: any) {
+    console.error('Unexpected error deleting marketing note:', error);
+    return { success: false, error: error?.message || 'Unknown error occurred' };
   }
 };

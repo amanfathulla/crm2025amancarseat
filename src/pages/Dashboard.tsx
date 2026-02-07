@@ -4,6 +4,8 @@ import { supabase } from "@/integrations/supabase/client";
 import { SummaryStatCards } from "./dashboard/SummaryStatCards";
 import { MonthlyComparisonCards } from "./dashboard/MonthlyComparisonCards";
 import { RevenueProfitChart } from "./dashboard/RevenueProfitChart";
+import { SalesTargetCard } from "./dashboard/SalesTargetCard";
+import { getDailyQuote } from "@/utils/motivationalQuotes";
 
 export default function Dashboard() {
   const [revenueData, setRevenueData] = useState({
@@ -258,24 +260,46 @@ export default function Dashboard() {
     };
   }, []);
 
+  const dailyQuote = getDailyQuote();
+
   return (
     <div className="p-4 md:p-6 space-y-6">
+      {/* Branding Header */}
       <section className="animate-slide-up">
-        <div className="flex items-center justify-between mb-2">
-          <h1 className="text-2xl md:text-3xl font-bold text-foreground">Dashboard</h1>
+        <div className="flex items-center gap-3 mb-2">
+          <img 
+            src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" 
+            alt="ACS Logo" 
+            className="h-10 w-10 object-contain"
+          />
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">ACS LEGACY AMANCARSEAT</h1>
+            <p className="text-muted-foreground text-sm md:text-base">Dashboard</p>
+          </div>
         </div>
-        <p className="text-muted-foreground text-sm md:text-base">
-          Selamat datang! Berikut adalah ringkasan prestasi perniagaan anda.
-        </p>
+        {/* Motivational Quote */}
+        <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
+          <p className="text-sm md:text-base text-foreground italic">
+            "{dailyQuote}"
+          </p>
+        </div>
       </section>
 
-      <SummaryStatCards
-        revenueData={revenueData}
-        totalAllTimeRevenue={totalAllTimeRevenue}
-        totalAllTimeProfit={totalAllTimeProfit}
-        totalProfitYearFromCustomers={totalProfitYearFromCustomers}
-        sales2025={sales2025}
-      />
+      {/* KPI Cards + Target Card */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
+        <div className="lg:col-span-4">
+          <SummaryStatCards
+            revenueData={revenueData}
+            totalAllTimeRevenue={totalAllTimeRevenue}
+            totalAllTimeProfit={totalAllTimeProfit}
+            totalProfitYearFromCustomers={totalProfitYearFromCustomers}
+            sales2025={sales2025}
+          />
+        </div>
+        <div className="lg:col-span-1">
+          <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />
+        </div>
+      </div>
       
       <MonthlyComparisonCards
         thisMonthRevenue={revenueData.thisMonth.revenue}
