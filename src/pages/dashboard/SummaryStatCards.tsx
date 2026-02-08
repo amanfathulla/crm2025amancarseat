@@ -1,4 +1,4 @@
-import { DollarSign, TrendingUp, Wallet, PiggyBank } from "lucide-react";
+import { DollarSign, TrendingUp, Wallet, BadgeDollarSign } from "lucide-react";
 import React from "react";
 
 interface SummaryStatCardsProps {
@@ -46,7 +46,7 @@ export function SummaryStatCards({
     {
       title: "Total Profit",
       value: totalAllTimeProfit,
-      icon: PiggyBank,
+      icon: BadgeDollarSign,
       gradient: "from-orange-500 to-orange-600",
     },
   ];
