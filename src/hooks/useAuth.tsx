@@ -1,7 +1,9 @@
-import { createContext, useContext, useState, useEffect, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
+
+const INACTIVITY_TIMEOUT = 10 * 60 * 1000; // 10 minutes in ms
 
 type AuthContextType = {
   user: User | null;
@@ -17,18 +19,83 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const [user, setUser] = useState<User | null>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
+
+  const performLogout = useCallback(() => {
+    localStorage.removeItem('adminSession');
+    localStorage.removeItem('lastLoginTime');
+    setUser(null);
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+      inactivityTimer.current = null;
+    }
+  }, []);
+
+  // Reset inactivity timer on user activity
+  const resetInactivityTimer = useCallback(() => {
+    if (inactivityTimer.current) {
+      clearTimeout(inactivityTimer.current);
+    }
+    // Store last activity time
+    localStorage.setItem('lastActivityTime', String(Date.now()));
+    
+    inactivityTimer.current = setTimeout(() => {
+      performLogout();
+      toast({
+        title: "Sesi tamat",
+        description: "Anda telah dilog keluar kerana tidak aktif selama 10 minit.",
+        variant: "destructive",
+      });
+    }, INACTIVITY_TIMEOUT);
+  }, [performLogout, toast]);
+
+  // Listen for user activity events
+  useEffect(() => {
+    if (!user) return;
+
+    const activityEvents = ['mousedown', 'keydown', 'scroll', 'touchstart', 'mousemove'];
+    
+    const handleActivity = () => {
+      resetInactivityTimer();
+    };
+
+    activityEvents.forEach(event => {
+      window.addEventListener(event, handleActivity, { passive: true });
+    });
+
+    // Start initial timer
+    resetInactivityTimer();
+
+    return () => {
+      activityEvents.forEach(event => {
+        window.removeEventListener(event, handleActivity);
+      });
+      if (inactivityTimer.current) {
+        clearTimeout(inactivityTimer.current);
+      }
+    };
+  }, [user, resetInactivityTimer]);
 
   useEffect(() => {
-    // Check for existing admin session from localStorage
     const checkSession = () => {
       const storedSession = localStorage.getItem('adminSession');
       if (storedSession) {
         try {
           const sessionData = JSON.parse(storedSession);
-          // Verify session is not too old (24 hours max)
           const authenticatedAt = new Date(sessionData.authenticated_at);
           const now = new Date();
           const hoursDiff = (now.getTime() - authenticatedAt.getTime()) / (1000 * 60 * 60);
+          
+          // Check inactivity
+          const lastActivity = localStorage.getItem('lastActivityTime');
+          if (lastActivity) {
+            const inactiveMs = Date.now() - parseInt(lastActivity);
+            if (inactiveMs > INACTIVITY_TIMEOUT) {
+              localStorage.removeItem('adminSession');
+              setIsLoading(false);
+              return;
+            }
+          }
           
           if (hoursDiff < 24) {
             setUser({
@@ -40,7 +107,6 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
               created_at: sessionData.authenticated_at,
             } as User);
           } else {
-            // Session expired, clear it
             localStorage.removeItem('adminSession');
           }
         } catch (e) {

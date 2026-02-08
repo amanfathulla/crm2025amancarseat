@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
+import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useLocation } from "react-router-dom";
 import {
@@ -18,8 +19,8 @@ import {
   TrendingUp,
   Wallet,
   Megaphone,
+  LogOut,
 } from "lucide-react";
-
 
 interface SidebarItemType {
   title: string;
@@ -32,7 +33,7 @@ export function Sidebar() {
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  
+  const { logout } = useAuth();
 
   const [orderCounts, setOrderCounts] = useState({
     processing: 0,
@@ -356,6 +357,24 @@ export function Sidebar() {
           )}
 
         </nav>
+
+        {/* Logout Button */}
+        <div className="border-t border-sidebar-border p-2">
+          <button
+            onClick={logout}
+            className={cn(
+              "flex h-11 w-full items-center rounded-lg transition-all duration-200",
+              "text-red-400 hover:bg-red-500/10 hover:text-red-300"
+            )}
+          >
+            <div className="grid h-full w-12 place-content-center">
+              <LogOut className="h-5 w-5" />
+            </div>
+            {(expanded || (isMobile && mobileOpen)) && (
+              <span className="text-sm font-medium">Logout</span>
+            )}
+          </button>
+        </div>
 
         {/* Toggle Button */}
         <button
