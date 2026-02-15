@@ -516,6 +516,18 @@ export type Database = {
         Args: { email: string; password: string }
         Returns: string
       }
+      update_admin_email: {
+        Args: { p_admin_id: string; p_new_email: string; p_password: string }
+        Returns: boolean
+      }
+      update_admin_password: {
+        Args: {
+          p_admin_id: string
+          p_current_password: string
+          p_new_password: string
+        }
+        Returns: boolean
+      }
     }
     Enums: {
       [_ in never]: never
