@@ -1,11 +1,14 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Settings } from "lucide-react";
+import { Button } from "@/components/ui/button";
 
 import { SummaryStatCards } from "./dashboard/SummaryStatCards";
 import { MonthlyComparisonCards } from "./dashboard/MonthlyComparisonCards";
 import { RevenueProfitChart } from "./dashboard/RevenueProfitChart";
 import { SalesTargetCard } from "./dashboard/SalesTargetCard";
 import { getDailyQuote } from "@/utils/motivationalQuotes";
+import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
 
 export default function Dashboard() {
   const [revenueData, setRevenueData] = useState({
@@ -28,6 +31,7 @@ export default function Dashboard() {
   const [dailyRevenueData, setDailyRevenueData] = useState<any[]>([]);
   const [monthlyRevenueData, setMonthlyRevenueData] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(true);
+  const [showSettings, setShowSettings] = useState(false);
 
   useEffect(() => {
     const fetchDashboardData = async () => {
@@ -272,10 +276,19 @@ export default function Dashboard() {
             alt="ACS Logo" 
             className="h-10 w-10 object-contain"
           />
-          <div>
+          <div className="flex-1">
             <h1 className="text-2xl md:text-3xl font-bold text-foreground">ACS LEGACY AMANCARSEAT</h1>
             <p className="text-muted-foreground text-sm md:text-base">Dashboard</p>
           </div>
+          <Button
+            variant="ghost"
+            size="icon"
+            onClick={() => setShowSettings(true)}
+            className="text-muted-foreground hover:text-foreground"
+            title="Tetapan Admin"
+          >
+            <Settings className="h-5 w-5" />
+          </Button>
         </div>
         {/* Motivational Quote */}
         <div className="mt-3 p-4 rounded-xl bg-gradient-to-r from-primary/10 to-primary/5 border border-primary/20">
@@ -313,6 +326,8 @@ export default function Dashboard() {
         monthlyRevenueData={monthlyRevenueData}
         isLoading={isLoading} 
       />
+
+      <AdminSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
     </div>
   );
 }
