@@ -363,22 +363,7 @@ export function Sidebar() {
 
           {/* Order Page Card */}
           {(expanded || (isMobile && mobileOpen)) && (
-            <a
-              href="/order"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => isMobile && setMobileOpen(false)}
-              className="block rounded-xl p-3 mt-2 transition-all duration-200 bg-gradient-to-br from-violet-500/20 to-violet-600/20 hover:from-violet-500/30 hover:to-violet-600/30"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="h-4 w-4 text-violet-300" />
-                  <span className="text-sm font-semibold text-white">Link Tempahan</span>
-                </div>
-                <ExternalLink className="h-3 w-3 text-violet-300" />
-              </div>
-              <p className="text-[10px] text-white/60">Halaman order awam untuk pelanggan</p>
-            </a>
+            <OrderLinkCard onClose={() => isMobile && setMobileOpen(false)} />
           )}
 
           {/* Collapsed Order Icon */}
