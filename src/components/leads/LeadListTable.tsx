@@ -87,7 +87,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("leads")
         .delete()
         .eq("id", leadToDelete.id);

@@ -95,26 +95,20 @@ export function Sidebar() {
 
     fetchOrderCounts();
 
-    const subscription = supabase
+    const subscription = authClient
       .channel("public:customers")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "customers" },
-        () => {
-          fetchOrderCounts();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+        fetchOrderCounts();
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
+    return () => { authClient.removeChannel(subscription); };
+  }, [authClient]);
 
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        const { data: yearlySalesData, error } = await supabase
+        const { data: yearlySalesData, error } = await authClient
           .from("yearly_sales")
           .select("total_revenue, total_profit");
 
@@ -136,21 +130,15 @@ export function Sidebar() {
 
     fetchSalesData();
 
-    const channel = supabase
+    const channel = authClient
       .channel("sidebar-sales-updates")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "yearly_sales",
-      }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "yearly_sales" }, () => {
         fetchSalesData();
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { authClient.removeChannel(channel); };
+  }, [authClient]);
 
   const toggleSidebar = () => {
     if (isMobile) {
