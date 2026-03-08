@@ -103,7 +103,7 @@ function Customers() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      let countQuery = supabase
+      let countQuery = authClient
         .from("customers")
         .select("id", { count: "exact" });
       
