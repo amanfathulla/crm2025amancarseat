@@ -165,7 +165,7 @@ export default function Products() {
         {materialCategories.map((category) => {
           const count = getCategoryCount(category.name);
           return (
-            <button
+        <button
               key={category.name}
               onClick={() => setSelectedCategory(category.name)}
               className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${category.gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] text-left group`}
@@ -173,6 +173,13 @@ export default function Products() {
               {/* Background decoration */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
               <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-black/5" />
+              
+              {/* Hot Selling Badge */}
+              {category.hotSelling && (
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
+                  🔥 Paling Hot
+                </div>
+              )}
               
               <div className="relative z-10">
                 <span className="text-3xl mb-3 block">{category.icon}</span>
