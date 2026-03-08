@@ -245,7 +245,7 @@ export function CustomerForm({
       
       if (isEditing) {
         // Only update order_status when editing
-        const { error } = await supabase
+        const { error } = await authClient
           .from("customers")
           .update({
             order_status: formData.order_status,
@@ -259,7 +259,7 @@ export function CustomerForm({
         });
       } else {
         // Insert new customer with all data
-        const { error } = await supabase.from("customers").insert([
+        const { error } = await authClient.from("customers").insert([
           {
             name: formData.name,
             email: formData.email || `customer_${Date.now()}@temp.local`,

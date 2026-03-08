@@ -29,11 +29,12 @@ const DeleteProductDialog = ({
   onSuccess,
 }: DeleteProductDialogProps) => {
   const { toast } = useToast();
+  const { authClient } = useAuth();
 
   const handleDelete = async () => {
     try {
       // First, delete the product variations
-      const { error: variationsError } = await supabase
+      const { error: variationsError } = await authClient
         .from("product_variations")
         .delete()
         .eq("product_id", productId);
@@ -41,7 +42,7 @@ const DeleteProductDialog = ({
       if (variationsError) throw variationsError;
 
       // Then delete the product
-      const { error } = await supabase
+      const { error } = await authClient
         .from("products")
         .delete()
         .eq("id", productId);

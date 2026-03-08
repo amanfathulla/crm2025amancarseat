@@ -91,7 +91,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
     setIsUpdatingEmail(true);
     try {
-      const { data, error } = await supabase.rpc("update_admin_email", {
+      const { data, error } = await authClient.rpc("update_admin_email", {
         p_admin_id: user?.id,
         p_password: password,
         p_new_email: newEmail.trim(),
