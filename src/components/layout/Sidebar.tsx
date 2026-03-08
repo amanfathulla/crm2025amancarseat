@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useLocation, Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import {
   Home,
   Users,
@@ -23,6 +24,7 @@ import {
   ShoppingBag,
   CreditCard,
   ExternalLink,
+  Copy,
 } from "lucide-react";
 
 interface SidebarItemType {
