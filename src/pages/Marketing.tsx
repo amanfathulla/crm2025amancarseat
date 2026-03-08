@@ -35,7 +35,7 @@ const Marketing = () => {
   const fetchMarketingNotes = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from('marketing_content')
         .select('*')
         .order('content_date', { ascending: true });
