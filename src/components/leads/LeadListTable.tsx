@@ -31,6 +31,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
+  const { authClient } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
