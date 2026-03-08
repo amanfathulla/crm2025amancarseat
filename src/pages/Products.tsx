@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, Image, ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/products/ProductForm";

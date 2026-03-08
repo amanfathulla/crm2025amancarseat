@@ -7,7 +7,7 @@ import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, Trending
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { DeleteYearlySalesDialog } from "@/components/sales/DeleteYearlySalesDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { YearlySalesRecord, YearlySalesFormData, YearlyAnalytics } from "@/types/sales";
 import {

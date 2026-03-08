@@ -8,7 +8,7 @@ import {
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
   Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialog";
