@@ -151,6 +151,9 @@ function Customers() {
         phone: record.phone || "",
         location: record.city || "",
         address: record.address || "",
+        city: record.city || "",
+        state: record.state || "",
+        zip_code: record.zip_code || "",
         car_model: record.car_model || "",  
         product: record.product || "",
         product_variation: record.product_variation || "",
@@ -164,6 +167,7 @@ function Customers() {
         total_spent: record.total_spent || 0,
         created_at: record.created_at || "",
         updated_at: record.updated_at || "",
+        order_number: (record as any).order_number || null,
       })) || [];
       
       const sortedCustomers = [...mappedCustomers].sort((a, b) => 
