@@ -51,7 +51,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
         updateData.closed_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error } = await authClient
         .from("leads")
         .update(updateData)
         .eq("id", leadId);
