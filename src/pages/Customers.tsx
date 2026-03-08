@@ -170,11 +170,7 @@ function Customers() {
         order_number: (record as any).order_number || null,
       })) || [];
       
-      const sortedCustomers = [...mappedCustomers].sort((a, b) => 
-        compareDates(a.order_date, b.order_date)
-      );
-      
-      setCustomers(sortedCustomers);
+      setCustomers(mappedCustomers);
       
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
