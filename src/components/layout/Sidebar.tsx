@@ -3,7 +3,7 @@ import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
-import { NavLink, useLocation } from "react-router-dom";
+import { NavLink, useLocation, Link } from "react-router-dom";
 import {
   Home,
   Users,
@@ -20,6 +20,9 @@ import {
   Wallet,
   Megaphone,
   LogOut,
+  ShoppingBag,
+  CreditCard,
+  ExternalLink,
 } from "lucide-react";
 
 interface SidebarItemType {
