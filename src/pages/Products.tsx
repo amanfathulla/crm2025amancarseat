@@ -25,13 +25,14 @@ interface CategoryConfig {
   name: string;
   gradient: string;
   icon: string;
+  hotSelling?: boolean;
 }
 
 const materialCategories: CategoryConfig[] = [
   { name: "Kain Mesh", gradient: "from-blue-500 to-blue-600", icon: "🔵" },
   { name: "Kain Nylon", gradient: "from-emerald-500 to-emerald-600", icon: "🟢" },
-  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣" },
-  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡" },
+  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣", hotSelling: true },
+  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡", hotSelling: true },
 ];
 
 export default function Products() {
@@ -164,7 +165,7 @@ export default function Products() {
         {materialCategories.map((category) => {
           const count = getCategoryCount(category.name);
           return (
-            <button
+        <button
               key={category.name}
               onClick={() => setSelectedCategory(category.name)}
               className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${category.gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] text-left group`}
@@ -172,6 +173,13 @@ export default function Products() {
               {/* Background decoration */}
               <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
               <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-black/5" />
+              
+              {/* Hot Selling Badge */}
+              {category.hotSelling && (
+                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
+                  🔥 Paling Hot
+                </div>
+              )}
               
               <div className="relative z-10">
                 <span className="text-3xl mb-3 block">{category.icon}</span>
@@ -184,8 +192,9 @@ export default function Products() {
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-card rounded-xl border p-4">
-        <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Total Products */}
+        <div className="bg-card rounded-xl border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Package className="h-5 w-5 text-primary" />
@@ -193,6 +202,26 @@ export default function Products() {
             <div>
               <p className="text-sm text-muted-foreground">Jumlah Produk</p>
               <p className="text-2xl font-bold">{products.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Postage Info */}
+        <div className="bg-card rounded-xl border p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <span className="text-lg">📦</span>
+            </div>
+            <p className="text-sm font-semibold text-foreground">Kos Penghantaran</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+              <span className="text-sm text-muted-foreground">Semenanjung Malaysia</span>
+              <span className="text-sm font-bold text-foreground">RM 10.00</span>
+            </div>
+            <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+              <span className="text-sm text-muted-foreground">Sabah & Sarawak</span>
+              <span className="text-sm font-bold text-foreground">RM 50.00</span>
             </div>
           </div>
         </div>
