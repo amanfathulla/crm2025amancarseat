@@ -267,6 +267,55 @@ export default function OrderPage() {
               </div>
             )}
 
+            {/* Product Detail Card — image, description, youtube */}
+            {selectedProduct && (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                {/* Gambar Produk */}
+                {selectedProduct.image_url && (
+                  <div className="w-full aspect-video overflow-hidden">
+                    <img
+                      src={selectedProduct.image_url}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Description */}
+                {selectedProduct.description && (
+                  <div className="p-4 flex gap-3">
+                    <Info className="h-4 w-4 text-white/40 shrink-0 mt-0.5" />
+                    <p className="text-white/70 text-sm leading-relaxed">{selectedProduct.description}</p>
+                  </div>
+                )}
+
+                {/* YouTube Video */}
+                {selectedProduct.youtube_url && (() => {
+                  const match = selectedProduct.youtube_url.match(
+                    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/
+                  );
+                  const ytId = match ? match[1] : null;
+                  return ytId ? (
+                    <div className="p-4 pt-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Youtube className="h-4 w-4 text-red-400" />
+                        <span className="text-white/60 text-xs font-medium">Video Produk</span>
+                      </div>
+                      <div className="aspect-video rounded-xl overflow-hidden">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="Video produk"
+                        />
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
+              </div>
+            )}
+
             {/* Variations */}
             {selectedProduct && selectedProduct.variations.length > 0 && (
               <div className="mb-6">
