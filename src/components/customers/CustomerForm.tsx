@@ -121,7 +121,7 @@ export function CustomerForm({
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const { data, error } = await supabase
+        const { data, error } = await authClient
           .from("products")
           .select("*")
           .order("name");
