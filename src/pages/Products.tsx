@@ -192,8 +192,9 @@ export default function Products() {
       </div>
 
       {/* Quick Stats */}
-      <div className="bg-card rounded-xl border p-4">
-        <div className="flex items-center justify-between">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+        {/* Total Products */}
+        <div className="bg-card rounded-xl border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
               <Package className="h-5 w-5 text-primary" />
@@ -201,6 +202,26 @@ export default function Products() {
             <div>
               <p className="text-sm text-muted-foreground">Jumlah Produk</p>
               <p className="text-2xl font-bold">{products.length}</p>
+            </div>
+          </div>
+        </div>
+
+        {/* Postage Info */}
+        <div className="bg-card rounded-xl border p-4">
+          <div className="flex items-center gap-3 mb-3">
+            <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
+              <span className="text-lg">📦</span>
+            </div>
+            <p className="text-sm font-semibold text-foreground">Kos Penghantaran</p>
+          </div>
+          <div className="space-y-2">
+            <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+              <span className="text-sm text-muted-foreground">Semenanjung Malaysia</span>
+              <span className="text-sm font-bold text-foreground">RM 10.00</span>
+            </div>
+            <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2">
+              <span className="text-sm text-muted-foreground">Sabah & Sarawak</span>
+              <span className="text-sm font-bold text-foreground">RM 50.00</span>
             </div>
           </div>
         </div>
