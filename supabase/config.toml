@@ -150,3 +150,9 @@ backend = "postgres"
 
 [experimental]
 tooling_db_schemas = ["public", "core", "marketing", "application"]
+
+[functions.billplz-create-bill]
+verify_jwt = false
+
+[functions.billplz-callback]
+verify_jwt = false
