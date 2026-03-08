@@ -64,11 +64,11 @@ const Marketing = () => {
 
   useEffect(() => {
     fetchMarketingNotes();
-    const subscription = supabase
+    const subscription = authClient
       .channel('marketing_content_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'marketing_content' }, fetchMarketingNotes)
       .subscribe();
-    return () => { supabase.removeChannel(subscription); };
+    return () => { authClient.removeChannel(subscription); };
   }, []);
 
   const getNotesForDate = (date: Date) => {

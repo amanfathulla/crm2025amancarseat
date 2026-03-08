@@ -115,7 +115,7 @@ export default function Leads() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert({
+      const { error } = await authClient.from("leads").insert({
         name: newLead.name.trim(),
         phone: newLead.phone.trim(),
         status: "new",

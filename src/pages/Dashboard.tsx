@@ -249,7 +249,7 @@ export default function Dashboard() {
 
     fetchDashboardData();
 
-    const channel = supabase
+    const channel = authClient
       .channel("public:customers")
       .on(
         "postgres_changes",
@@ -261,7 +261,7 @@ export default function Dashboard() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      authClient.removeChannel(channel);
     };
   }, []);
 

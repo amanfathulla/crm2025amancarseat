@@ -49,14 +49,14 @@ export default function Products() {
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data: productsData, error: productsError } = await supabase
+      const { data: productsData, error: productsError } = await authClient
         .from("products")
         .select("*")
         .order("name");
 
       if (productsError) throw productsError;
       
-      const { data: variationsData, error: variationsError } = await supabase
+      const { data: variationsData, error: variationsError } = await authClient
         .from("product_variations")
         .select("*");
 

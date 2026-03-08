@@ -40,7 +40,7 @@ export default function Sales() {
     setIsLoading(true);
     try {
       // Fetch yearly sales records
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("yearly_sales")
         .select("*")
         .order("year", { ascending: false });

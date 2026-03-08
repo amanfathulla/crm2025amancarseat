@@ -199,7 +199,7 @@ function Customers() {
       
       for (let i = 0; i < malaysianStates.length; i++) {
         const state = malaysianStates[i];
-        const { data, error } = await supabase
+        const { data, error } = await authClient
           .from("customers")
           .select("id, sales_amount")
           .eq("city", state);
