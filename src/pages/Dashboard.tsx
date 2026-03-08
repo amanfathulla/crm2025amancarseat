@@ -48,13 +48,13 @@ export default function Dashboard() {
         const lastMonthYear = lastMonthDate.getFullYear();
 
         // Get all customers
-        const { data: allCustomers, error: allCustomersError } = await supabase
+        const { data: allCustomers, error: allCustomersError } = await authClient
           .from("customers")
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
         // Get yearly_sales data for 2025
-        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+        const { data: yearlySalesData, error: yearlySalesError } = await authClient
           .from("yearly_sales")
           .select("total_revenue, total_profit, year");
         if (yearlySalesError) throw yearlySalesError;
