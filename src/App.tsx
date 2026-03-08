@@ -41,6 +41,8 @@ function App() {
               {/* Routes without sidebar */}
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
+              <Route path="/order" element={<Order />} />
+              <Route path="/order/thank-you" element={<OrderThankYou />} />
               
               {/* Routes with sidebar and authenticated layout */}
               <Route path="/" element={
