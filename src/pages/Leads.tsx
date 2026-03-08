@@ -62,7 +62,7 @@ export default function Leads() {
 
   const fetchLeads = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("leads")
         .select("*")
         .order("created_at", { ascending: false });
