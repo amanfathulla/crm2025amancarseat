@@ -4,6 +4,7 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
 import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useLocation, Link } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
 import {
   Home,
   Users,
@@ -23,6 +24,7 @@ import {
   ShoppingBag,
   CreditCard,
   ExternalLink,
+  Copy,
 } from "lucide-react";
 
 interface SidebarItemType {
@@ -32,7 +34,9 @@ interface SidebarItemType {
 }
 
 export function Sidebar() {
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -363,22 +367,40 @@ export function Sidebar() {
 
           {/* Order Page Card */}
           {(expanded || (isMobile && mobileOpen)) && (
-            <a
-              href="/order"
-              target="_blank"
-              rel="noopener noreferrer"
-              onClick={() => isMobile && setMobileOpen(false)}
-              className="block rounded-xl p-3 mt-2 transition-all duration-200 bg-gradient-to-br from-violet-500/20 to-violet-600/20 hover:from-violet-500/30 hover:to-violet-600/30"
-            >
+            <div className="block rounded-xl p-3 mt-2 transition-all duration-200 bg-gradient-to-br from-violet-500/20 to-violet-600/20">
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <ShoppingBag className="h-4 w-4 text-violet-300" />
                   <span className="text-sm font-semibold text-white">Link Tempahan</span>
                 </div>
-                <ExternalLink className="h-3 w-3 text-violet-300" />
+                <a
+                  href={`${window.location.origin}/order`}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  onClick={() => isMobile && setMobileOpen(false)}
+                  className="text-violet-300 hover:text-violet-100"
+                >
+                  <ExternalLink className="h-3 w-3" />
+                </a>
               </div>
-              <p className="text-[10px] text-white/60">Halaman order awam untuk pelanggan</p>
-            </a>
+              <div className="flex items-center gap-1 mt-2 bg-white/10 rounded-lg px-2 py-1">
+                <span className="text-[10px] text-white/70 flex-1 truncate">
+                  {window.location.origin}/order
+                </span>
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(`${window.location.origin}/order`);
+                    setCopied(true);
+                    toast({ title: "✅ Link disalin!", description: `${window.location.origin}/order` });
+                    setTimeout(() => setCopied(false), 2000);
+                  }}
+                  className="shrink-0 text-violet-300 hover:text-white transition-colors"
+                  title="Salin link"
+                >
+                  {copied ? <CheckCircle className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
+                </button>
+              </div>
+            </div>
           )}
 
           {/* Collapsed Order Icon */}
