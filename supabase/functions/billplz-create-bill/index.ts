@@ -12,13 +12,28 @@ serve(async (req) => {
   }
 
   try {
-    const BILLPLZ_API_KEY = Deno.env.get('BILLPLZ_API_KEY');
-    const BILLPLZ_COLLECTION_ID = Deno.env.get('BILLPLZ_COLLECTION_ID');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
+    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Load Billplz credentials from DB (admin-configurable)
+    const { data: settings, error: settingsError } = await supabase
+      .from('billplz_settings')
+      .select('api_key, collection_id')
+      .limit(1)
+      .single();
+
+    // Fall back to env vars if DB row is empty
+    const BILLPLZ_API_KEY = (settings?.api_key && settings.api_key.trim()) 
+      ? settings.api_key.trim() 
+      : Deno.env.get('BILLPLZ_API_KEY');
+    const BILLPLZ_COLLECTION_ID = (settings?.collection_id && settings.collection_id.trim())
+      ? settings.collection_id.trim()
+      : Deno.env.get('BILLPLZ_COLLECTION_ID');
+
     if (!BILLPLZ_API_KEY || !BILLPLZ_COLLECTION_ID) {
-      throw new Error('BillPlz credentials not configured');
+      throw new Error('BillPlz credentials not configured. Sila kemaskini tetapan Billplz dalam Admin Settings.');
     }
 
     const body = await req.json();
@@ -32,7 +47,6 @@ serve(async (req) => {
     }
 
     // Create customer record first
-    const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .insert({
@@ -62,7 +76,6 @@ serve(async (req) => {
     // Determine redirect URL
     const origin = req.headers.get('origin') || 'https://crm2025amancarseat.lovable.app';
     const callbackUrl = `${origin}/order/thank-you?customer_id=${customer.id}`;
-    const callbackUrlX = `${origin}/order/thank-you?customer_id=${customer.id}&status=failed`;
 
     // Create BillPlz bill
     const amountCents = Math.round(parseFloat(sales_amount) * 100);
@@ -72,7 +85,7 @@ serve(async (req) => {
     formData.append('mobile', phone.replace(/[^0-9]/g, ''));
     formData.append('name', name);
     formData.append('amount', String(amountCents));
-    formData.append('callback_url', `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-callback`);
+    formData.append('callback_url', `https://${Deno.env.get('SUPABASE_URL')?.split('//')[1]}/functions/v1/billplz-callback`);
     formData.append('redirect_url', callbackUrl);
     formData.append('description', `Tempahan ${product} - ${product_variation || ''} | ${car_model || ''}`);
     formData.append('reference_1', customer.id);
@@ -90,7 +103,6 @@ serve(async (req) => {
 
     if (!billplzRes.ok) {
       console.error('BillPlz error:', billData);
-      // Rollback customer if bill creation failed
       await supabase.from('customers').delete().eq('id', customer.id);
       throw new Error(billData.error?.message || 'Failed to create BillPlz bill');
     }
@@ -98,7 +110,7 @@ serve(async (req) => {
     // Update customer with bill ID
     await supabase
       .from('customers')
-      .update({ zip_code: billData.id }) // reuse zip_code temporarily to store bill_id
+      .update({ zip_code: billData.id })
       .eq('id', customer.id);
 
     return new Response(JSON.stringify({
