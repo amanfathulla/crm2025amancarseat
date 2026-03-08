@@ -154,7 +154,7 @@ export function CustomerForm({
   const fetchProductVariations = async (productId: string) => {
     try {
       setLoadingVariations(true);
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("product_variations")
         .select("*")
         .eq("product_id", productId)
