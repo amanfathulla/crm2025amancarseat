@@ -1,6 +1,6 @@
-import { useState, useEffect } from "react";
+import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -8,10 +8,10 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { useToast } from "@/hooks/use-toast";
 
 const MATERIAL_CATEGORIES = [
-  { id: "kain-mesh",     label: "Kain Mesh",               emoji: "🔵", gradient: "from-blue-500 to-blue-700",     badge: "bg-blue-100 text-blue-700",     desc: "Bahan mesh berjalur, selesa & sejuk" },
-  { id: "kain-nylon",   label: "Kain Nylon",               emoji: "🟢", gradient: "from-green-500 to-green-700",   badge: "bg-green-100 text-green-700",   desc: "Tahan lama, mudah dicuci" },
-  { id: "kain-fullsilk",label: "Kain Fullsilk",            emoji: "🟣", gradient: "from-purple-500 to-purple-700", badge: "bg-purple-100 text-purple-700", desc: "Mewah, lembut & tahan panas" },
-  { id: "semi-leather", label: "Semi Leather Kalis Air",   emoji: "🟡", gradient: "from-amber-500 to-amber-700",   badge: "bg-amber-100 text-amber-700",   desc: "Kalis air, mudah dibersihkan" },
+  { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
+  { id: "kain-nylon",     label: "Kain Nylon",             emoji: "🟢", gradient: "from-green-500 to-green-700",   border: "border-green-500/40",  glow: "shadow-green-500/20",  desc: "Tahan lama, mudah dicuci" },
+  { id: "kain-fullsilk",  label: "Kain Fullsilk",          emoji: "🟣", gradient: "from-purple-500 to-purple-700", border: "border-purple-500/40", glow: "shadow-purple-500/20", desc: "Mewah, lembut & tahan panas" },
+  { id: "semi-leather",   label: "Semi Leather Kalis Air", emoji: "🟡", gradient: "from-amber-500 to-amber-700",   border: "border-amber-500/40",  glow: "shadow-amber-500/20",  desc: "Kalis air, mudah dibersihkan" },
 ];
 
 const STATES_MY = [
@@ -20,24 +20,22 @@ const STATES_MY = [
   "Terengganu","W.P. Kuala Lumpur","W.P. Labuan","W.P. Putrajaya"
 ];
 
-interface ProductVariation {
-  id: string;
-  name: string;
-  price: number;
-}
-
+interface ProductVariation { id: string; name: string; price: number; }
 interface Product {
-  id: string;
-  name: string;
-  price: number;
-  category: string | null;
-  image_url: string | null;
-  description: string | null;
-  youtube_url: string | null;
+  id: string; name: string; price: number;
+  category: string | null; image_url: string | null;
+  description: string | null; youtube_url: string | null;
   variations: ProductVariation[];
 }
-
 type Step = "category" | "product" | "form" | "loading";
+
+// ── Breadcrumb steps ──────────────────────────────────────────────────
+const STEP_LABELS: Record<Step, string> = {
+  category: "Jenis Material",
+  product:  "Pilih Produk",
+  form:     "Maklumat",
+  loading:  "Memproses",
+};
 
 export default function OrderPage() {
   const { toast } = useToast();
@@ -54,52 +52,30 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
-  // Fetch products for selected category
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
       const { data: prods, error } = await supabase
-        .from("products")
-        .select("id, name, price, category, image_url, description")
-        .eq("status", "active")
-        .eq("category", categoryLabel)
-        .order("name", { ascending: true })
-        .limit(200);
-
+        .from("products").select("id, name, price, category, image_url, description")
+        .eq("status", "active").eq("category", categoryLabel)
+        .order("name", { ascending: true }).limit(200);
       if (error) throw error;
 
-      const productIds = (prods || []).map(p => p.id);
-      let variations: any[] = [];
-      if (productIds.length > 0) {
-        const { data: vars } = await supabase
-          .from("product_variations")
-          .select("id, product_id, name, price")
-          .in("product_id", productIds)
-          .order("price", { ascending: true });
-        variations = vars || [];
-      }
+      const ids = (prods || []).map(p => p.id);
+      const [varsRes, ytRes] = await Promise.all([
+        ids.length > 0 ? supabase.from("product_variations").select("id, product_id, name, price").in("product_id", ids).order("price") : { data: [] },
+        ids.length > 0 ? (supabase.from("products").select("id, youtube_url").in("id", ids) as any) : { data: [] },
+      ]);
+      const vars = varsRes.data || [];
+      const ytMap: Record<string, string | null> = {};
+      (ytRes.data || []).forEach((p: any) => { ytMap[p.id] = p.youtube_url || null; });
 
-      // Fetch youtube_url separately (new column)
-      let youtubeMap: Record<string, string | null> = {};
-      if (productIds.length > 0) {
-        const { data: ytData } = await supabase
-          .from("products")
-          .select("id, youtube_url")
-          .in("id", productIds) as any;
-        (ytData || []).forEach((p: any) => { youtubeMap[p.id] = p.youtube_url || null; });
-      }
-
-      const enriched: Product[] = (prods || []).map(p => ({
-        ...p,
-        image_url: p.image_url || null,
-        description: p.description || null,
-        youtube_url: youtubeMap[p.id] || null,
-        variations: variations.filter(v => v.product_id === p.id),
-      }));
-
-      setProducts(enriched);
+      setProducts((prods || []).map(p => ({
+        ...p, youtube_url: ytMap[p.id] || null,
+        variations: vars.filter((v: any) => v.product_id === p.id),
+      })));
     } catch (err) {
-      console.error("Error fetching products:", err);
+      console.error(err);
     } finally {
       setLoadingProducts(false);
     }
@@ -107,64 +83,32 @@ export default function OrderPage() {
 
   const handleSelectCategory = (cat: typeof MATERIAL_CATEGORIES[0]) => {
     setSelectedCategory(cat);
-    setSelectedProduct(null);
-    setSelectedVariation(null);
+    setSelectedProduct(null); setSelectedVariation(null);
     fetchProducts(cat.label);
     setStep("product");
   };
 
-  const handleSelectProduct = (product: Product) => {
-    setSelectedProduct(product);
-    setSelectedVariation(null);
-  };
+  const finalPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
 
   const handleProceedToForm = () => {
-    if (!selectedProduct) {
-      toast({ title: "Sila pilih produk", variant: "destructive" });
-      return;
-    }
-    if (selectedProduct.variations.length > 0 && !selectedVariation) {
-      toast({ title: "Sila pilih saiz / variasi", variant: "destructive" });
-      return;
-    }
+    if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
+    if (selectedProduct.variations.length > 0 && !selectedVariation) { toast({ title: "Sila pilih saiz / variasi", variant: "destructive" }); return; }
     setStep("form");
   };
 
-  const finalPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
-
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.name || !form.phone) {
-      toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" });
-      return;
-    }
-    if (finalPrice <= 0) {
-      toast({ title: "Harga tidak sah", variant: "destructive" });
-      return;
-    }
+    if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
+    if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     setStep("loading");
-
     try {
-      const projectId = "ywjblrnqygowfixxmigw";
       const res = await fetch(
-        `https://${projectId}.supabase.co/functions/v1/billplz-create-bill`,
-        {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({
-            ...form,
-            product: selectedProduct?.name,
-            product_variation: selectedVariation?.name || "",
-            sales_amount: finalPrice.toString(),
-          }),
-        }
+        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
+        { method: "POST", headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString() }) }
       );
-
       const data = await res.json();
-      if (!res.ok || !data.bill_url) {
-        throw new Error(data.error || "Gagal cipta bil");
-      }
-
+      if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
       window.location.href = data.bill_url;
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
@@ -172,43 +116,78 @@ export default function OrderPage() {
     }
   };
 
+  const getYoutubeId = (url: string | null) => {
+    if (!url) return null;
+    const m = url.match(/(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/);
+    return m ? m[1] : null;
+  };
+
   return (
-    <div className="min-h-screen bg-gradient-to-br from-gray-950 via-gray-900 to-gray-950">
-      {/* Header */}
-      <div className="bg-gray-900/80 border-b border-white/10 sticky top-0 z-10 backdrop-blur-md">
-        <div className="max-w-2xl mx-auto px-4 py-4 flex items-center gap-3">
-          <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-8 w-8 object-contain" />
-          <div>
-            <span className="text-white font-bold text-sm">ACS Legacy AmancarseatCover</span>
-            <p className="text-white/50 text-xs">Tempahan Cover Kerusi Kereta</p>
-          </div>
-        </div>
+    /* Full-screen fixed background — covers everything */
+    <div className="fixed inset-0 bg-[#0a0a0f] overflow-y-auto">
+      {/* Ambient glow top */}
+      <div className="pointer-events-none fixed inset-0 overflow-hidden">
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-blue-600/10 blur-[120px]" />
+        <div className="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full bg-purple-600/8 blur-[100px]" />
       </div>
 
-      <div className="max-w-2xl mx-auto px-4 py-8">
+      {/* ── Sticky Header ─────────────────────────────────── */}
+      <header className="sticky top-0 z-20 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/8">
+        <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
+          <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
+          <div className="flex-1 min-w-0">
+            <p className="text-white font-bold text-sm leading-none truncate">ACS Legacy</p>
+            <p className="text-white/40 text-[10px] leading-tight">Cover Kerusi Kereta</p>
+          </div>
+          {/* Step indicator pills */}
+          <div className="hidden sm:flex items-center gap-1">
+            {(["category","product","form"] as Step[]).map((s, i) => {
+              const steps: Step[] = ["category","product","form"];
+              const idx = steps.indexOf(step);
+              const done = steps.indexOf(s) < idx;
+              const active = s === step || (step === "loading" && s === "form");
+              return (
+                <div key={s} className="flex items-center gap-1">
+                  {i > 0 && <div className={`w-4 h-px ${done || active ? "bg-blue-500/60" : "bg-white/10"}`} />}
+                  <span className={`text-[10px] px-2 py-0.5 rounded-full transition-colors ${active ? "bg-blue-600 text-white font-semibold" : done ? "bg-white/10 text-white/60" : "text-white/25"}`}>
+                    {i + 1}. {STEP_LABELS[s]}
+                  </span>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </header>
 
-        {/* Step: Category */}
+      {/* ── Main Content ───────────────────────────────────── */}
+      <main className="max-w-3xl mx-auto px-4 py-8 pb-16">
+
+        {/* ── STEP: Category ── */}
         {step === "category" && (
-          <div>
-            <div className="text-center mb-8">
-              <h1 className="text-2xl font-bold text-white mb-2">Pilih Jenis Material</h1>
-              <p className="text-white/60 text-sm">Semua cover jahitan kemas & tahan lama</p>
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <div className="text-center mb-10">
+              <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-4">
+                <ShoppingBag className="h-7 w-7 text-white/70" />
+              </div>
+              <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Pilih Jenis Material</h1>
+              <p className="text-white/50 text-sm max-w-xs mx-auto">Semua cover jahitan kemas, tahan lama & berkualiti tinggi</p>
             </div>
+
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
               {MATERIAL_CATEGORIES.map((cat) => (
                 <button
                   key={cat.id}
                   onClick={() => handleSelectCategory(cat)}
-                  className="group relative overflow-hidden rounded-2xl p-6 text-left transition-all hover:scale-105 active:scale-100 shadow-xl"
+                  className={`group relative overflow-hidden rounded-2xl border ${cat.border} text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] shadow-xl ${cat.glow}`}
                 >
-                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-90`} />
-                  <div className="relative z-10">
-                    <span className="text-3xl mb-3 block">{cat.emoji}</span>
+                  <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-85`} />
+                  <div className="absolute inset-0 bg-black/20" />
+                  <div className="relative z-10 p-6">
+                    <span className="text-4xl mb-4 block">{cat.emoji}</span>
                     <h3 className="text-white font-bold text-lg mb-1">{cat.label}</h3>
-                    <p className="text-white/80 text-sm">{cat.desc}</p>
-                    <div className="mt-4 flex items-center gap-1 text-white/90 text-xs font-medium">
-                      <span>Lihat produk</span>
-                      <ChevronRight className="h-3 w-3" />
+                    <p className="text-white/75 text-sm">{cat.desc}</p>
+                    <div className="mt-5 flex items-center gap-1 text-white text-xs font-semibold bg-white/20 w-fit px-3 py-1.5 rounded-full">
+                      Lihat Produk <ChevronRight className="h-3 w-3" />
                     </div>
                   </div>
                 </button>
@@ -217,246 +196,274 @@ export default function OrderPage() {
           </div>
         )}
 
-        {/* Step: Product selection */}
+        {/* ── STEP: Product ── */}
         {step === "product" && selectedCategory && (
-          <div>
-            <button onClick={() => setStep("category")} className="flex items-center gap-2 text-white/60 hover:text-white mb-6 text-sm">
-              <ArrowLeft className="h-4 w-4" />Balik
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <button onClick={() => setStep("category")}
+              className="flex items-center gap-1.5 text-white/50 hover:text-white mb-6 text-sm transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Tukar material
             </button>
-            <div className="mb-6">
-              <div className={`inline-flex items-center gap-2 px-3 py-1 rounded-full text-sm font-medium ${selectedCategory.badge}`}>
-                {selectedCategory.emoji} {selectedCategory.label}
+
+            {/* Category badge */}
+            <div className="flex items-center gap-3 mb-6">
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${selectedCategory.gradient} text-lg`}>{selectedCategory.emoji}</div>
+              <div>
+                <p className="text-white/50 text-xs">Kategori dipilih</p>
+                <h2 className="text-white font-bold text-lg">{selectedCategory.label}</h2>
               </div>
-              <h2 className="text-xl font-bold text-white mt-3">Pilih Produk</h2>
             </div>
 
             {loadingProducts ? (
-              <div className="flex items-center justify-center py-16">
-                <Loader2 className="h-8 w-8 animate-spin text-white/50" />
+              <div className="flex flex-col items-center justify-center py-20 gap-3">
+                <Loader2 className="h-8 w-8 animate-spin text-white/30" />
+                <p className="text-white/40 text-sm">Memuatkan produk...</p>
               </div>
             ) : products.length === 0 ? (
-              <div className="text-center py-16">
-                <p className="text-white/50">Tiada produk untuk kategori ini.</p>
+              <div className="text-center py-20 bg-white/3 rounded-2xl border border-white/8">
+                <p className="text-white/40 text-sm">Tiada produk untuk kategori ini.</p>
               </div>
             ) : (
-              <div className="space-y-3 mb-6">
-                {products.map((product) => (
-                  <button
-                    key={product.id}
-                    onClick={() => handleSelectProduct(product)}
-                    className={`w-full flex items-center justify-between p-4 rounded-xl border transition-all text-left ${
-                      selectedProduct?.id === product.id
-                        ? "border-white bg-white/10 text-white"
-                        : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10 hover:text-white"
-                    }`}
-                  >
-                    <div>
-                      <span className="font-semibold block">{product.name}</span>
-                      {product.variations.length === 0 && (
-                        <span className="text-sm text-green-400 font-bold">RM{product.price.toFixed(0)}</span>
-                      )}
-                      {product.variations.length > 0 && (
-                        <span className="text-xs text-white/50">
-                          Dari RM{Math.min(...product.variations.map(v => v.price)).toFixed(0)}
+              <div className="space-y-2.5 mb-6">
+                <p className="text-white/50 text-xs uppercase tracking-widest font-medium mb-3">Pilih Produk</p>
+                {products.map((product) => {
+                  const isSelected = selectedProduct?.id === product.id;
+                  return (
+                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); }}
+                      className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-150 ${
+                        isSelected
+                          ? "border-blue-500/60 bg-blue-500/10 text-white ring-1 ring-blue-500/30"
+                          : "border-white/8 bg-white/4 text-white/65 hover:bg-white/8 hover:text-white hover:border-white/15"
+                      }`}>
+                      <div className="flex-1 min-w-0">
+                        <span className="font-semibold block truncate">{product.name}</span>
+                        <span className={`text-sm font-bold mt-0.5 block ${isSelected ? "text-blue-300" : "text-white/45"}`}>
+                          {product.variations.length > 0
+                            ? `Dari RM${Math.min(...product.variations.map(v => v.price)).toFixed(0)}`
+                            : `RM${product.price.toFixed(0)}`}
                         </span>
+                      </div>
+                      {isSelected && (
+                        <div className="ml-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
+                          <CheckCircle className="h-3.5 w-3.5 text-white" />
+                        </div>
                       )}
-                    </div>
-                    {selectedProduct?.id === product.id && <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />}
-                  </button>
-                ))}
+                    </button>
+                  );
+                })}
               </div>
             )}
 
-            {/* Product Detail Card — image, description, youtube */}
+            {/* Product detail card */}
             {selectedProduct && (
-              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
-                {/* Gambar Produk */}
+              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
                 {selectedProduct.image_url && (
-                  <div className="w-full aspect-video overflow-hidden">
-                    <img
-                      src={selectedProduct.image_url}
-                      alt={selectedProduct.name}
-                      className="w-full h-full object-cover"
-                    />
+                  <div className="w-full aspect-video overflow-hidden bg-black/40">
+                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
                   </div>
                 )}
-
-                {/* Description */}
                 {selectedProduct.description && (
-                  <div className="p-4 flex gap-3">
-                    <Info className="h-4 w-4 text-white/40 shrink-0 mt-0.5" />
-                    <p className="text-white/70 text-sm leading-relaxed">{selectedProduct.description}</p>
+                  <div className="p-4 flex gap-3 border-t border-white/8">
+                    <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
+                    <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
                   </div>
                 )}
-
-                {/* YouTube Video */}
-                {selectedProduct.youtube_url && (() => {
-                  const match = selectedProduct.youtube_url.match(
-                    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/
-                  );
-                  const ytId = match ? match[1] : null;
-                  return ytId ? (
-                    <div className="p-4 pt-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Youtube className="h-4 w-4 text-red-400" />
-                        <span className="text-white/60 text-xs font-medium">Video Produk</span>
-                      </div>
-                      <div className="aspect-video rounded-xl overflow-hidden">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${ytId}`}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen
-                          title="Video produk"
-                        />
-                      </div>
+                {getYoutubeId(selectedProduct.youtube_url) && (
+                  <div className="p-4 pt-0">
+                    <div className="flex items-center gap-2 mb-2">
+                      <Youtube className="h-4 w-4 text-red-400" />
+                      <span className="text-white/50 text-xs font-medium">Video Produk</span>
                     </div>
-                  ) : null;
-                })()}
+                    <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
+                      <iframe
+                        src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
+                        className="w-full h-full"
+                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                        allowFullScreen title="Video produk"
+                      />
+                    </div>
+                  </div>
+                )}
               </div>
             )}
 
             {/* Variations */}
-            {selectedProduct && selectedProduct.variations.length > 0 && (
+            {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
               <div className="mb-6">
-                <h3 className="text-white font-semibold mb-3">Pilih Saiz / Variasi</h3>
-                <div className="grid grid-cols-1 gap-2">
-                  {selectedProduct.variations.map((v) => (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedVariation(v)}
-                      className={`flex items-center justify-between p-3 rounded-xl border text-sm font-medium transition-all ${
-                        selectedVariation?.id === v.id
-                          ? "border-white bg-white text-black"
-                          : "border-white/10 bg-white/5 text-white/70 hover:bg-white/10"
-                      }`}
-                    >
-                      <span>{v.name}</span>
-                      <span className="font-bold">RM{v.price.toFixed(0)}</span>
-                    </button>
-                  ))}
+                <p className="text-white/50 text-xs uppercase tracking-widest font-medium mb-3">Pilih Saiz / Variasi</p>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                  {selectedProduct.variations.map((v) => {
+                    const sel = selectedVariation?.id === v.id;
+                    return (
+                      <button key={v.id} onClick={() => setSelectedVariation(v)}
+                        className={`flex items-center justify-between p-3.5 rounded-xl border text-sm font-medium transition-all ${
+                          sel ? "border-white bg-white text-black shadow-lg" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white"
+                        }`}>
+                        <span>{v.name}</span>
+                        <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
+                      </button>
+                    );
+                  })}
                 </div>
               </div>
             )}
 
-            {selectedProduct && selectedProduct.variations.length === 0 && (
-              <div className="mb-6 p-4 rounded-xl bg-green-500/10 border border-green-500/30">
-                <p className="text-green-400 font-semibold text-center text-lg">RM{selectedProduct.price.toFixed(0)}</p>
+            {selectedProduct?.variations.length === 0 && selectedProduct && (
+              <div className="mb-6 p-4 rounded-xl bg-green-500/8 border border-green-500/20 text-center">
+                <p className="text-white/50 text-xs mb-1">Harga</p>
+                <p className="text-green-400 font-bold text-2xl">RM{selectedProduct.price.toFixed(0)}</p>
               </div>
             )}
 
-            <Button
-              onClick={handleProceedToForm}
-              disabled={!selectedProduct}
-              className="w-full h-12 bg-gradient-to-r from-green-500 to-green-600 hover:from-green-600 hover:to-green-700 text-white font-semibold rounded-xl disabled:opacity-40"
-            >
+            <Button onClick={handleProceedToForm} disabled={!selectedProduct}
+              className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/40 disabled:opacity-30 transition-all">
               Teruskan Tempahan <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
           </div>
         )}
 
-        {/* Step: Order form */}
+        {/* ── STEP: Form ── */}
         {step === "form" && (
-          <div>
-            <button onClick={() => setStep("product")} className="flex items-center gap-2 text-white/60 hover:text-white mb-6 text-sm">
-              <ArrowLeft className="h-4 w-4" />Balik
+          <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
+            <button onClick={() => setStep("product")}
+              className="flex items-center gap-1.5 text-white/50 hover:text-white mb-6 text-sm transition-colors">
+              <ArrowLeft className="h-4 w-4" /> Tukar produk
             </button>
-            <h2 className="text-xl font-bold text-white mb-1">Maklumat Tempahan</h2>
-            <p className="text-white/50 text-sm mb-1">
-              {selectedProduct?.name}{selectedVariation ? ` — ${selectedVariation.name}` : ""}
-            </p>
-            <p className="text-green-400 font-bold text-lg mb-6">RM{finalPrice.toFixed(0)}</p>
 
-            <form onSubmit={handleSubmit} className="space-y-4">
-              <div className="bg-white/5 rounded-2xl p-5 space-y-4 border border-white/10">
-                <h3 className="text-white font-semibold text-sm uppercase tracking-wide">Maklumat Pembeli</h3>
-                <div>
-                  <Label className="text-white/70 text-sm">Nama Penuh *</Label>
-                  <Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                    placeholder="Nama penuh" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" required />
-                </div>
-                <div>
-                  <Label className="text-white/70 text-sm">No. Telefon *</Label>
-                  <Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
-                    placeholder="0123456789" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" required />
-                </div>
-                <div>
-                  <Label className="text-white/70 text-sm">Email (opsional)</Label>
-                  <Input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                    placeholder="email@contoh.com" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" />
-                </div>
-                <div>
-                  <Label className="text-white/70 text-sm">Model Kereta *</Label>
-                  <Input value={form.car_model} onChange={e => setForm(f => ({...f, car_model: e.target.value}))}
-                    placeholder="Contoh: Perodua Myvi 2022" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" required />
-                </div>
+            {/* Selected product summary pill */}
+            <div className="flex items-center gap-3 mb-8 p-4 rounded-2xl bg-white/4 border border-white/8">
+              <div className={`p-2 rounded-xl bg-gradient-to-br ${selectedCategory?.gradient || "from-blue-500 to-blue-700"} text-base shrink-0`}>
+                {selectedCategory?.emoji}
               </div>
+              <div className="flex-1 min-w-0">
+                <p className="text-white font-semibold truncate">{selectedProduct?.name}</p>
+                {selectedVariation && <p className="text-white/50 text-xs truncate">{selectedVariation.name}</p>}
+              </div>
+              <div className="text-right shrink-0">
+                <p className="text-green-400 font-bold text-xl">RM{finalPrice.toFixed(0)}</p>
+              </div>
+            </div>
 
-              <div className="bg-white/5 rounded-2xl p-5 space-y-4 border border-white/10">
-                <h3 className="text-white font-semibold text-sm uppercase tracking-wide">Alamat Penghantaran</h3>
+            <form onSubmit={handleSubmit} className="space-y-5">
+              {/* Buyer Info */}
+              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <User className="h-4 w-4 text-blue-400" />
+                  <h3 className="text-white font-semibold text-sm">Maklumat Pembeli</h3>
+                </div>
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <div>
+                    <Label className="text-white/60 text-xs mb-1.5 block">Nama Penuh *</Label>
+                    <Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
+                      placeholder="Nama penuh" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                  </div>
+                  <div>
+                    <Label className="text-white/60 text-xs mb-1.5 block">No. Telefon *</Label>
+                    <Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
+                      placeholder="0123456789" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                  </div>
+                </div>
                 <div>
-                  <Label className="text-white/70 text-sm">Alamat</Label>
+                  <Label className="text-white/60 text-xs mb-1.5 block">Email (opsional)</Label>
+                  <Input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
+                    placeholder="email@contoh.com" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                </div>
+                <div>
+                  <Label className="text-white/60 text-xs mb-1.5 block flex items-center gap-1.5">
+                    <Car className="h-3 w-3" /> Model Kereta *
+                  </Label>
+                  <Input value={form.car_model} onChange={e => setForm(f => ({...f, car_model: e.target.value}))}
+                    placeholder="Contoh: Perodua Myvi 2022" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                </div>
+              </section>
+
+              {/* Delivery Address */}
+              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <MapPin className="h-4 w-4 text-purple-400" />
+                  <h3 className="text-white font-semibold text-sm">Alamat Penghantaran</h3>
+                </div>
+                <div>
+                  <Label className="text-white/60 text-xs mb-1.5 block">Alamat</Label>
                   <Input value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}
-                    placeholder="No, Jalan..." className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" />
+                    placeholder="No, Jalan..." className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-white/70 text-sm">Bandar</Label>
+                    <Label className="text-white/60 text-xs mb-1.5 block">Bandar</Label>
                     <Input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
-                      placeholder="Bandar" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" />
+                      placeholder="Bandar" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
                   </div>
                   <div>
-                    <Label className="text-white/70 text-sm">Poskod</Label>
+                    <Label className="text-white/60 text-xs mb-1.5 block">Poskod</Label>
                     <Input value={form.zip_code} onChange={e => setForm(f => ({...f, zip_code: e.target.value}))}
-                      placeholder="50000" className="mt-1 bg-white/10 border-white/20 text-white placeholder:text-white/30" />
+                      placeholder="50000" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/70 text-sm">Negeri</Label>
+                  <Label className="text-white/60 text-xs mb-1.5 block">Negeri</Label>
                   <Select onValueChange={val => setForm(f => ({...f, state: val}))}>
-                    <SelectTrigger className="mt-1 bg-white/10 border-white/20 text-white">
+                    <SelectTrigger className="bg-white/8 border-white/12 text-white h-10 focus:border-blue-500/50">
                       <SelectValue placeholder="Pilih negeri" />
                     </SelectTrigger>
-                    <SelectContent>
-                      {STATES_MY.map(s => <SelectItem key={s} value={s}>{s}</SelectItem>)}
+                    <SelectContent className="bg-gray-900 border-white/10">
+                      {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-white focus:bg-white/10">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
-              </div>
+              </section>
 
               {/* Order Summary */}
-              <div className="bg-white/5 rounded-2xl p-5 border border-white/10">
-                <h3 className="text-white font-semibold text-sm uppercase tracking-wide mb-3">Ringkasan Tempahan</h3>
-                <div className="flex justify-between text-sm mb-1">
-                  <span className="text-white/60">{selectedProduct?.name}</span>
-                  <span className="text-white">{selectedVariation?.name || "-"}</span>
+              <section className="bg-white/4 rounded-2xl p-5 border border-white/8">
+                <h3 className="text-white/60 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
+                <div className="space-y-2 text-sm">
+                  <div className="flex justify-between">
+                    <span className="text-white/55">Produk</span>
+                    <span className="text-white font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
+                  </div>
+                  {selectedVariation && (
+                    <div className="flex justify-between">
+                      <span className="text-white/55">Saiz/Variasi</span>
+                      <span className="text-white">{selectedVariation.name}</span>
+                    </div>
+                  )}
+                  <div className="flex justify-between pt-3 border-t border-white/10 font-bold text-base">
+                    <span className="text-white">Jumlah Bayar</span>
+                    <span className="text-green-400">RM{finalPrice.toFixed(2)}</span>
+                  </div>
                 </div>
-                <div className="flex justify-between font-bold text-base border-t border-white/10 pt-3 mt-3">
-                  <span className="text-white">Jumlah Bayar</span>
-                  <span className="text-green-400">RM{finalPrice.toFixed(2)}</span>
-                </div>
-              </div>
+              </section>
 
-              <Button type="submit" className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-lg">
+              <Button type="submit"
+                className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                 <ShoppingBag className="h-5 w-5 mr-2" />
                 Bayar Dengan BillPlz
               </Button>
-              <p className="text-center text-white/40 text-xs">Pembayaran selamat melalui BillPlz Malaysia</p>
+              <p className="text-center text-white/30 text-xs pb-4">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
             </form>
           </div>
         )}
 
-        {/* Step: Loading */}
+        {/* ── STEP: Loading ── */}
         {step === "loading" && (
-          <div className="flex flex-col items-center justify-center py-24 gap-6">
-            <Loader2 className="h-12 w-12 animate-spin text-blue-400" />
+          <div className="flex flex-col items-center justify-center min-h-[60vh] gap-6 animate-in fade-in duration-300">
+            <div className="relative">
+              <div className="w-20 h-20 rounded-full bg-blue-500/10 border border-blue-500/30 flex items-center justify-center">
+                <Loader2 className="h-10 w-10 animate-spin text-blue-400" />
+              </div>
+              <div className="absolute inset-0 rounded-full bg-blue-500/5 animate-ping" />
+            </div>
             <div className="text-center">
-              <p className="text-white font-semibold text-lg">Sedang memproses...</p>
-              <p className="text-white/50 text-sm mt-1">Anda akan diarahkan ke halaman pembayaran</p>
+              <p className="text-white font-bold text-xl mb-1">Sedang memproses...</p>
+              <p className="text-white/40 text-sm">Anda akan diarahkan ke halaman pembayaran</p>
             </div>
           </div>
         )}
-      </div>
+      </main>
+
+      {/* Footer */}
+      <footer className="border-t border-white/5 py-4 text-center">
+        <p className="text-white/20 text-xs">© 2025 ACS Legacy AmancarseatCover · Semua hak terpelihara</p>
+      </footer>
     </div>
   );
 }
