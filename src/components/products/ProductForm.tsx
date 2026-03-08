@@ -98,13 +98,13 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       const ext = file.name.split(".").pop();
       const fileName = `product-${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await authClient.storage
         .from("product-images")
         .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = authClient.storage
         .from("product-images")
         .getPublicUrl(fileName);
 
