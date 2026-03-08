@@ -22,6 +22,7 @@ interface SalesRecordFormProps {
 
 export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: SalesRecordFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const today = new Date();
   
   const [formData, setFormData] = useState<SalesRecordFormData>(
