@@ -124,7 +124,7 @@ function Customers() {
         setTotalPages(Math.ceil(count / CUSTOMERS_PER_PAGE));
       }
       
-      let query = supabase
+      let query = authClient
         .from("customers")
         .select("*");
       
