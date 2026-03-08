@@ -73,7 +73,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         });
       } else {
         // Check if record for this year already exists
-        const { data: existingRecords, error: checkError } = await supabase
+        const { data: existingRecords, error: checkError } = await authClient
           .from("yearly_sales")
           .select("*")
           .eq("year", formData.year);
