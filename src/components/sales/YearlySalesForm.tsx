@@ -17,6 +17,7 @@ interface YearlySalesFormProps {
 
 export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: YearlySalesFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const currentYear = new Date().getFullYear();
   
   const [formData, setFormData] = useState<YearlySalesFormData>(
