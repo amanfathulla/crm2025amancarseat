@@ -4,8 +4,11 @@ export interface Customer {
   name: string;
   email: string;
   phone: string;
-  location: string; // This will map to city or address in the database
-  address?: string; // Full address
+  location: string; // maps to city or address in DB
+  address?: string;
+  city?: string;
+  state?: string;
+  zip_code?: string;
   car_model: string;
   product: string;
   product_variation: string;
@@ -20,15 +23,16 @@ export interface Customer {
   total_spent: number;
   created_at: string;
   updated_at: string;
+  order_number?: number;
 }
 
 export interface CustomerFormData {
-  id?: string; // Optional for new customers
+  id?: string;
   name: string;
   email: string;
   phone: string;
   location: string;
-  address?: string; // Full address
+  address?: string;
   car_model: string;
   product: string;
   product_variation: string;
@@ -38,5 +42,5 @@ export interface CustomerFormData {
   order_date: string;
   order_status: string;
   order_time?: string;
-  payment_status?: string; // deposit, fullpayment, cod
+  payment_status?: string;
 }
