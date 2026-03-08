@@ -60,6 +60,7 @@ const getYoutubeId = (url: string) => {
 
 const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const isEditing = !!initialData;
   const [variations, setVariations] = useState<ProductVariationFormValues[]>(
     initialData?.variations || defaultVariations
