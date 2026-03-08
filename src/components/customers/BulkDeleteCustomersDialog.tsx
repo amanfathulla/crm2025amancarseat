@@ -27,12 +27,13 @@ export function BulkDeleteCustomersDialog({
   onSuccess,
 }: BulkDeleteCustomersDialogProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("customers")
         .delete()
         .in("id", selectedCustomers);

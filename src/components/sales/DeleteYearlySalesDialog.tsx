@@ -30,12 +30,13 @@ export function DeleteYearlySalesDialog({
   onSuccess,
 }: DeleteYearlySalesDialogProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("yearly_sales")
         .delete()
         .eq("id", salesRecordId);

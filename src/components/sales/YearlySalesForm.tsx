@@ -94,7 +94,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         }
 
         // Add new sales record
-        const { error: insertError } = await supabase
+        const { error: insertError } = await authClient
           .from("yearly_sales")
           .insert([
             {

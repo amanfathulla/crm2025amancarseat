@@ -33,11 +33,12 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
   const [fileFormat, setFileFormat] = useState<"csv" | "excel">("csv");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { authClient } = useAuth();
 
   const downloadData = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = authClient
         .from("customers")
         .select("name, phone, email, created_at, total_orders, city");
 

@@ -90,7 +90,7 @@ export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: Sal
         });
       } else {
         // Add new sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("sales_records")
           .insert([{
             date: formData.date,
