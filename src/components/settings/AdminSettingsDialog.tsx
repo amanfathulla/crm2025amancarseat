@@ -14,7 +14,7 @@ interface AdminSettingsDialogProps {
 }
 
 export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogProps) {
-  const { user } = useAuth();
+  const { user, authClient } = useAuth();
   const { toast } = useToast();
 
   // Password form
