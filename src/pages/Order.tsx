@@ -58,10 +58,9 @@ export default function OrderPage() {
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
-      // Exact match by category
       const { data: prods, error } = await supabase
         .from("products")
-        .select("id, name, price, category")
+        .select("id, name, price, category, image_url, description")
         .eq("status", "active")
         .eq("category", categoryLabel)
         .order("name", { ascending: true })
@@ -69,7 +68,6 @@ export default function OrderPage() {
 
       if (error) throw error;
 
-      // Fetch variations for each product
       const productIds = (prods || []).map(p => p.id);
       let variations: any[] = [];
       if (productIds.length > 0) {
@@ -81,8 +79,21 @@ export default function OrderPage() {
         variations = vars || [];
       }
 
+      // Fetch youtube_url separately (new column)
+      let youtubeMap: Record<string, string | null> = {};
+      if (productIds.length > 0) {
+        const { data: ytData } = await supabase
+          .from("products")
+          .select("id, youtube_url")
+          .in("id", productIds) as any;
+        (ytData || []).forEach((p: any) => { youtubeMap[p.id] = p.youtube_url || null; });
+      }
+
       const enriched: Product[] = (prods || []).map(p => ({
         ...p,
+        image_url: p.image_url || null,
+        description: p.description || null,
+        youtube_url: youtubeMap[p.id] || null,
         variations: variations.filter(v => v.product_id === p.id),
       }));
 
