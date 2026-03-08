@@ -48,7 +48,7 @@ export default function Leads() {
   useEffect(() => {
     fetchLeads();
 
-    const subscription = supabase
+    const subscription = authClient
       .channel("leads_changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, () => {
         fetchLeads();
@@ -56,7 +56,7 @@ export default function Leads() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      authClient.removeChannel(subscription);
     };
   }, []);
 
