@@ -31,6 +31,9 @@ interface Product {
   name: string;
   price: number;
   category: string | null;
+  image_url: string | null;
+  description: string | null;
+  youtube_url: string | null;
   variations: ProductVariation[];
 }
 
