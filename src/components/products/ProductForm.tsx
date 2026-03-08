@@ -142,7 +142,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       let basePrice = variations.length > 0 ? variations[0].price : 0;
 
       if (isEditing && initialData) {
-        const { error } = await supabase
+        const { error } = await authClient
           .from("products")
           .update({
             name: data.name,
@@ -156,20 +156,20 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
 
         if (error) throw error;
 
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await authClient
           .from("product_variations")
           .delete()
           .eq("product_id", initialData.id);
         if (deleteError) throw deleteError;
 
-        const { error: variationsError } = await supabase
+        const { error: variationsError } = await authClient
           .from("product_variations")
           .insert(variations.map(v => ({ product_id: initialData.id, name: v.name, price: v.price, cost: v.cost })));
         if (variationsError) throw variationsError;
 
         toast({ title: "Produk dikemaskini", description: "Produk telah berjaya dikemaskini" });
       } else {
-        const { data: newProduct, error } = await supabase
+        const { data: newProduct, error } = await authClient
           .from("products")
           .insert({
             name: data.name,
@@ -184,7 +184,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
         if (error) throw error;
 
         if (newProduct && newProduct[0]) {
-          const { error: variationsError } = await supabase
+          const { error: variationsError } = await authClient
             .from("product_variations")
             .insert(variations.map(v => ({ product_id: newProduct[0].id, name: v.name, price: v.price, cost: v.cost })));
           if (variationsError) throw variationsError;
