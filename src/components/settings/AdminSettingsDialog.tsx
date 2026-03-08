@@ -58,7 +58,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
     setIsUpdatingPassword(true);
     try {
-      const { data, error } = await supabase.rpc("update_admin_password", {
+      const { data, error } = await authClient.rpc("update_admin_password", {
         p_admin_id: user?.id,
         p_current_password: currentPassword,
         p_new_password: newPassword,
