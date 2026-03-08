@@ -175,7 +175,7 @@ export default function Dashboard() {
                   .toString()
                   .padStart(2, "0")}`;
 
-          const { data, error } = await supabase
+          const { data, error } = await authClient
             .from("customers")
             .select("sales_amount, gross_profit")
             .gte("order_date", dateStr)
