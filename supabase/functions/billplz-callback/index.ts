@@ -13,11 +13,21 @@ serve(async (req) => {
   }
 
   try {
-    const BILLPLZ_X_SIGNATURE_KEY = Deno.env.get('BILLPLZ_X_SIGNATURE_KEY');
     const SUPABASE_URL = Deno.env.get('SUPABASE_URL');
     const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY');
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
+
+    // Load X-Signature key from DB (admin-configurable), fall back to env var
+    const { data: settings } = await supabase
+      .from('billplz_settings')
+      .select('x_signature_key')
+      .limit(1)
+      .single();
+
+    const BILLPLZ_X_SIGNATURE_KEY = (settings?.x_signature_key && settings.x_signature_key.trim())
+      ? settings.x_signature_key.trim()
+      : Deno.env.get('BILLPLZ_X_SIGNATURE_KEY');
 
     const contentType = req.headers.get('content-type') || '';
     let params: Record<string, string> = {};
@@ -52,7 +62,6 @@ serve(async (req) => {
     }
 
     if (paid === 'true' && billId) {
-      // Find customer by reference (customer_id stored in reference_1)
       const customerId = params['reference_1'];
       if (customerId) {
         await supabase
