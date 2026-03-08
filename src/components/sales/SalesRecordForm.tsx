@@ -73,7 +73,7 @@ export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: Sal
     try {
       if (salesRecord?.id) {
         // Update existing sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("sales_records")
           .update({
             date: formData.date,
