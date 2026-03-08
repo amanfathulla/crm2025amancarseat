@@ -216,7 +216,7 @@ export default function Dashboard() {
             ? `${year + 1}-01-01`
             : `${year}-${(month + 1).toString().padStart(2, "0")}-01`;
 
-          const { data, error } = await supabase
+          const { data, error } = await authClient
             .from("customers")
             .select("sales_amount, gross_profit")
             .gte("order_date", firstDayOfMonth)
