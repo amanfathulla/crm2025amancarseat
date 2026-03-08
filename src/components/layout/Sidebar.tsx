@@ -39,7 +39,7 @@ export function Sidebar() {
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
-  const { logout } = useAuth();
+  const { logout, authClient } = useAuth();
 
   const [orderCounts, setOrderCounts] = useState({
     processing: 0,
