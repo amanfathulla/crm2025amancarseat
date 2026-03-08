@@ -68,17 +68,17 @@ export function Sidebar() {
   useEffect(() => {
     const fetchOrderCounts = async () => {
       try {
-        const { data: processingData } = await supabase
+        const { data: processingData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "processing");
 
-        const { data: completedData } = await supabase
+        const { data: completedData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "completed");
 
-        const { data: cancelledData } = await supabase
+        const { data: cancelledData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "cancelled");
