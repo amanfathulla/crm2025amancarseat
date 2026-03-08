@@ -55,6 +55,7 @@ export function CustomerForm({
   malaysianStates = defaultMalaysianStates 
 }: CustomerFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const isEditing = !!customer;
   
   const [formData, setFormData] = useState<CustomerFormData>(
