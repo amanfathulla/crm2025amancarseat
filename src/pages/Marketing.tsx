@@ -22,6 +22,7 @@ import { DeleteMarketingNoteDialog } from '@/components/marketing/DeleteMarketin
 import { cn } from '@/lib/utils';
 
 const Marketing = () => {
+  const { authClient } = useAuth();
   const [notes, setNotes] = useState<MarketingContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');

@@ -60,6 +60,7 @@ const CUSTOMERS_PER_PAGE = 20;
 
 function Customers() {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);

@@ -24,6 +24,7 @@ import { format } from "date-fns";
 
 export default function Sales() {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [yearlySales, setYearlySales] = useState<YearlySalesRecord[]>([]);
   const [analytics, setAnalytics] = useState<YearlyAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);

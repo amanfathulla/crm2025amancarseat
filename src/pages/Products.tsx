@@ -44,6 +44,7 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
+  const { authClient } = useAuth();
 
   const fetchProducts = async () => {
     try {

@@ -11,6 +11,7 @@ import { getDailyQuote } from "@/utils/motivationalQuotes";
 import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
 
 export default function Dashboard() {
+  const { authClient } = useAuth();
   const [revenueData, setRevenueData] = useState({
     currentYear: {
       year: new Date().getFullYear(),

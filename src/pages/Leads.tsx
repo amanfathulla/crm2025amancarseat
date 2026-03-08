@@ -31,6 +31,7 @@ interface LeadStats {
 }
 
 export default function Leads() {
+  const { authClient } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats>({
     new: 0,
