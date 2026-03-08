@@ -170,6 +170,8 @@ export function Sidebar() {
     { title: "Products", path: "/products", icon: Package },
   ];
 
+  const orderPageUrl = "/order";
+
   const sidebarVisible = isMobile ? mobileOpen : true;
   const sidebarWidth = expanded && !isMobile ? "w-64" : "w-16";
 
