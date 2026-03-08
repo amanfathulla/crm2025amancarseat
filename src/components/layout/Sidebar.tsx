@@ -34,7 +34,9 @@ interface SidebarItemType {
 }
 
 export function Sidebar() {
+  const { toast } = useToast();
   const [expanded, setExpanded] = useState(true);
+  const [copied, setCopied] = useState(false);
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
