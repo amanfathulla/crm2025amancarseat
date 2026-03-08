@@ -81,8 +81,8 @@ function Customers() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCustomers, setTotalCustomers] = useState(0);
   
-  const [sortBy, setSortBy] = useState<string>("order_date");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<string>("order_number");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
@@ -170,11 +170,7 @@ function Customers() {
         order_number: (record as any).order_number || null,
       })) || [];
       
-      const sortedCustomers = [...mappedCustomers].sort((a, b) => 
-        compareDates(a.order_date, b.order_date)
-      );
-      
-      setCustomers(sortedCustomers);
+      setCustomers(mappedCustomers);
       
       const stats = calculateCustomerStats(mappedCustomers);
       setCustomerStats(stats);
