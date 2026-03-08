@@ -411,6 +411,7 @@ export type Database = {
           sku: string | null
           status: string | null
           updated_at: string | null
+          youtube_url: string | null
         }
         Insert: {
           category?: string | null
@@ -426,6 +427,7 @@ export type Database = {
           sku?: string | null
           status?: string | null
           updated_at?: string | null
+          youtube_url?: string | null
         }
         Update: {
           category?: string | null
@@ -441,6 +443,7 @@ export type Database = {
           sku?: string | null
           status?: string | null
           updated_at?: string | null
+          youtube_url?: string | null
         }
         Relationships: []
       }
