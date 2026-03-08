@@ -1,7 +1,7 @@
 
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -17,6 +17,7 @@ interface YearlySalesFormProps {
 
 export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: YearlySalesFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const currentYear = new Date().getFullYear();
   
   const [formData, setFormData] = useState<YearlySalesFormData>(
@@ -52,7 +53,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
     try {
       if (salesRecord) {
         // Update existing sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("yearly_sales")
           .update({
             year: formData.year,
@@ -72,7 +73,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         });
       } else {
         // Check if record for this year already exists
-        const { data: existingRecords, error: checkError } = await supabase
+        const { data: existingRecords, error: checkError } = await authClient
           .from("yearly_sales")
           .select("*")
           .eq("year", formData.year);
@@ -93,7 +94,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
         }
 
         // Add new sales record
-        const { error: insertError } = await supabase
+        const { error: insertError } = await authClient
           .from("yearly_sales")
           .insert([
             {

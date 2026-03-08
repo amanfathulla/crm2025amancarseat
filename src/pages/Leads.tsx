@@ -5,7 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Plus, Users, Phone, CheckCircle, Target, TrendingUp, BarChart3, List } from "lucide-react";
 import { LeadCharts } from "@/components/leads/LeadCharts";
@@ -31,6 +31,7 @@ interface LeadStats {
 }
 
 export default function Leads() {
+  const { authClient } = useAuth();
   const [leads, setLeads] = useState<Lead[]>([]);
   const [stats, setStats] = useState<LeadStats>({
     new: 0,
@@ -47,7 +48,7 @@ export default function Leads() {
   useEffect(() => {
     fetchLeads();
 
-    const subscription = supabase
+    const subscription = authClient
       .channel("leads_changes")
       .on("postgres_changes", { event: "*", schema: "public", table: "leads" }, () => {
         fetchLeads();
@@ -55,13 +56,13 @@ export default function Leads() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(subscription);
+      authClient.removeChannel(subscription);
     };
   }, []);
 
   const fetchLeads = async () => {
     try {
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("leads")
         .select("*")
         .order("created_at", { ascending: false });
@@ -114,7 +115,7 @@ export default function Leads() {
 
     setIsLoading(true);
     try {
-      const { error } = await supabase.from("leads").insert({
+      const { error } = await authClient.from("leads").insert({
         name: newLead.name.trim(),
         phone: newLead.phone.trim(),
         status: "new",

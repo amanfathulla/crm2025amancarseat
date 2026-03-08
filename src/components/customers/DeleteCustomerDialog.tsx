@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -29,12 +29,13 @@ export function DeleteCustomerDialog({
   onSuccess,
 }: DeleteCustomerDialogProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("customers")
         .delete()
         .eq("email", customerEmail);

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, Image, ExternalLink } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/products/ProductForm";
@@ -44,18 +44,19 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const { toast } = useToast();
+  const { authClient } = useAuth();
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data: productsData, error: productsError } = await supabase
+      const { data: productsData, error: productsError } = await authClient
         .from("products")
         .select("*")
         .order("name");
 
       if (productsError) throw productsError;
       
-      const { data: variationsData, error: variationsError } = await supabase
+      const { data: variationsData, error: variationsError } = await authClient
         .from("product_variations")
         .select("*");
 

@@ -7,7 +7,7 @@ import { Search, Filter, Download, Edit, Trash, PlusCircle, TrendingUp, Trending
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { YearlySalesForm } from "@/components/sales/YearlySalesForm";
 import { DeleteYearlySalesDialog } from "@/components/sales/DeleteYearlySalesDialog";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { YearlySalesRecord, YearlySalesFormData, YearlyAnalytics } from "@/types/sales";
 import {
@@ -24,6 +24,7 @@ import { format } from "date-fns";
 
 export default function Sales() {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [yearlySales, setYearlySales] = useState<YearlySalesRecord[]>([]);
   const [analytics, setAnalytics] = useState<YearlyAnalytics | null>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -39,7 +40,7 @@ export default function Sales() {
     setIsLoading(true);
     try {
       // Fetch yearly sales records
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("yearly_sales")
         .select("*")
         .order("year", { ascending: false });

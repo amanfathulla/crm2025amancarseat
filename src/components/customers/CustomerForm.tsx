@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { CustomerFormData } from "@/types/customer";
 import { Product, ProductVariation } from "@/types/product";
@@ -55,6 +55,7 @@ export function CustomerForm({
   malaysianStates = defaultMalaysianStates 
 }: CustomerFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const isEditing = !!customer;
   
   const [formData, setFormData] = useState<CustomerFormData>(
@@ -120,7 +121,7 @@ export function CustomerForm({
     const fetchProducts = async () => {
       try {
         setLoadingProducts(true);
-        const { data, error } = await supabase
+        const { data, error } = await authClient
           .from("products")
           .select("*")
           .order("name");
@@ -153,7 +154,7 @@ export function CustomerForm({
   const fetchProductVariations = async (productId: string) => {
     try {
       setLoadingVariations(true);
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("product_variations")
         .select("*")
         .eq("product_id", productId)
@@ -244,7 +245,7 @@ export function CustomerForm({
       
       if (isEditing) {
         // Only update order_status when editing
-        const { error } = await supabase
+        const { error } = await authClient
           .from("customers")
           .update({
             order_status: formData.order_status,
@@ -258,7 +259,7 @@ export function CustomerForm({
         });
       } else {
         // Insert new customer with all data
-        const { error } = await supabase.from("customers").insert([
+        const { error } = await authClient.from("customers").insert([
           {
             name: formData.name,
             email: formData.email || `customer_${Date.now()}@temp.local`,

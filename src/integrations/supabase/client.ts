@@ -9,3 +9,17 @@ const SUPABASE_PUBLISHABLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiO
 // import { supabase } from "@/integrations/supabase/client";
 
 export const supabase = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY);
+
+/**
+ * Returns a Supabase client that includes the admin session token
+ * in the request headers so RLS policies can validate the session.
+ */
+export function getAuthenticatedClient(sessionToken: string) {
+  return createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+    global: {
+      headers: {
+        'x-admin-session': sessionToken,
+      },
+    },
+  });
+}

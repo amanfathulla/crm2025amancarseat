@@ -8,7 +8,7 @@ import {
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
   Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText
 } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { CustomerForm } from "@/components/customers/CustomerForm";
 import { DeleteCustomerDialog } from "@/components/customers/DeleteCustomerDialog";
@@ -60,6 +60,7 @@ const CUSTOMERS_PER_PAGE = 20;
 
 function Customers() {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const navigate = useNavigate();
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
@@ -102,7 +103,7 @@ function Customers() {
   const fetchCustomers = async () => {
     setIsLoading(true);
     try {
-      let countQuery = supabase
+      let countQuery = authClient
         .from("customers")
         .select("id", { count: "exact" });
       
@@ -123,7 +124,7 @@ function Customers() {
         setTotalPages(Math.ceil(count / CUSTOMERS_PER_PAGE));
       }
       
-      let query = supabase
+      let query = authClient
         .from("customers")
         .select("*");
       
@@ -198,7 +199,7 @@ function Customers() {
       
       for (let i = 0; i < malaysianStates.length; i++) {
         const state = malaysianStates[i];
-        const { data, error } = await supabase
+        const { data, error } = await authClient
           .from("customers")
           .select("id, sales_amount")
           .eq("city", state);

@@ -4,7 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
 import { Phone, User, Calendar, Edit2, Check, Trash2 } from "lucide-react";
 
@@ -31,6 +31,7 @@ const statusConfig: Record<string, { label: string; variant: "default" | "second
 };
 
 export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
+  const { authClient } = useAuth();
   const [editingId, setEditingId] = useState<string | null>(null);
   const [isUpdating, setIsUpdating] = useState(false);
   const [deleteDialogOpen, setDeleteDialogOpen] = useState(false);
@@ -50,7 +51,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
         updateData.closed_at = new Date().toISOString();
       }
 
-      const { error } = await supabase
+      const { error } = await authClient
         .from("leads")
         .update(updateData)
         .eq("id", leadId);
@@ -86,7 +87,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
     
     setIsDeleting(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("leads")
         .delete()
         .eq("id", leadToDelete.id);

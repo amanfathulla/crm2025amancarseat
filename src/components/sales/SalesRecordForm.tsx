@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -22,6 +22,7 @@ interface SalesRecordFormProps {
 
 export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: SalesRecordFormProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const today = new Date();
   
   const [formData, setFormData] = useState<SalesRecordFormData>(
@@ -72,7 +73,7 @@ export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: Sal
     try {
       if (salesRecord?.id) {
         // Update existing sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("sales_records")
           .update({
             date: formData.date,
@@ -89,7 +90,7 @@ export function SalesRecordForm({ isOpen, onClose, salesRecord, onSuccess }: Sal
         });
       } else {
         // Add new sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("sales_records")
           .insert([{
             date: formData.date,

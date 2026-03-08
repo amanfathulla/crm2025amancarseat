@@ -1,5 +1,5 @@
 import { useState, useEffect, useMemo } from 'react';
-import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
@@ -22,6 +22,7 @@ import { DeleteMarketingNoteDialog } from '@/components/marketing/DeleteMarketin
 import { cn } from '@/lib/utils';
 
 const Marketing = () => {
+  const { authClient } = useAuth();
   const [notes, setNotes] = useState<MarketingContent[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState('');
@@ -34,7 +35,7 @@ const Marketing = () => {
   const fetchMarketingNotes = async () => {
     try {
       setIsLoading(true);
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from('marketing_content')
         .select('*')
         .order('content_date', { ascending: true });
@@ -63,11 +64,11 @@ const Marketing = () => {
 
   useEffect(() => {
     fetchMarketingNotes();
-    const subscription = supabase
+    const subscription = authClient
       .channel('marketing_content_changes')
       .on('postgres_changes', { event: '*', schema: 'public', table: 'marketing_content' }, fetchMarketingNotes)
       .subscribe();
-    return () => { supabase.removeChannel(subscription); };
+    return () => { authClient.removeChannel(subscription); };
   }, []);
 
   const getNotesForDate = (date: Date) => {

@@ -6,7 +6,6 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { LoaderCircle, Mail, Lock, Eye, EyeOff } from "lucide-react";
 
 interface AdminSettingsDialogProps {
@@ -15,7 +14,7 @@ interface AdminSettingsDialogProps {
 }
 
 export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogProps) {
-  const { user } = useAuth();
+  const { user, authClient } = useAuth();
   const { toast } = useToast();
 
   // Password form
@@ -59,7 +58,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
     setIsUpdatingPassword(true);
     try {
-      const { data, error } = await supabase.rpc("update_admin_password", {
+      const { data, error } = await authClient.rpc("update_admin_password", {
         p_admin_id: user?.id,
         p_current_password: currentPassword,
         p_new_password: newPassword,
@@ -92,7 +91,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
     setIsUpdatingEmail(true);
     try {
-      const { data, error } = await supabase.rpc("update_admin_email", {
+      const { data, error } = await authClient.rpc("update_admin_email", {
         p_admin_id: user?.id,
         p_password: password,
         p_new_email: newEmail.trim(),

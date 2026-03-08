@@ -5,7 +5,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Button } from "@/components/ui/button";
 import { FileDown } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { format as formatDate } from "date-fns";
 
 interface DownloadCustomersDialogProps {
@@ -37,11 +37,12 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
   const [fileFormat, setFileFormat] = useState<"csv" | "excel">("csv");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
+  const { authClient } = useAuth();
 
   const downloadData = async () => {
     setIsLoading(true);
     try {
-      let query = supabase
+      let query = authClient
         .from("customers")
         .select("name, phone, email, created_at, total_orders, city");
 

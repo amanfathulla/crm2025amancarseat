@@ -1,5 +1,5 @@
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Settings } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
@@ -11,6 +11,7 @@ import { getDailyQuote } from "@/utils/motivationalQuotes";
 import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
 
 export default function Dashboard() {
+  const { authClient } = useAuth();
   const [revenueData, setRevenueData] = useState({
     currentYear: {
       year: new Date().getFullYear(),
@@ -47,13 +48,13 @@ export default function Dashboard() {
         const lastMonthYear = lastMonthDate.getFullYear();
 
         // Get all customers
-        const { data: allCustomers, error: allCustomersError } = await supabase
+        const { data: allCustomers, error: allCustomersError } = await authClient
           .from("customers")
           .select("sales_amount, gross_profit, order_status, order_date");
         if (allCustomersError) throw allCustomersError;
 
         // Get yearly_sales data for 2025
-        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+        const { data: yearlySalesData, error: yearlySalesError } = await authClient
           .from("yearly_sales")
           .select("total_revenue, total_profit, year");
         if (yearlySalesError) throw yearlySalesError;
@@ -97,7 +98,7 @@ export default function Dashboard() {
         const firstDayOfMonth = monthStartUtc.toISOString().slice(0, 10);
         const firstDayNextMonth = nextMonthStartUtc.toISOString().slice(0, 10);
 
-        const { data: monthData, error: monthError } = await supabase
+        const { data: monthData, error: monthError } = await authClient
           .from("customers")
           .select("sales_amount, gross_profit, order_date")
           .gte("order_date", firstDayOfMonth)
@@ -119,7 +120,7 @@ export default function Dashboard() {
         const firstDayLastMonth = lastMonthStartUtc.toISOString().slice(0, 10);
         const firstDayCurrentMonth = currentMonthStartUtc.toISOString().slice(0, 10);
 
-        const { data: lastMonthData, error: lastMonthError } = await supabase
+        const { data: lastMonthData, error: lastMonthError } = await authClient
           .from("customers")
           .select("sales_amount, gross_profit, order_date")
           .gte("order_date", firstDayLastMonth)
@@ -174,7 +175,7 @@ export default function Dashboard() {
                   .toString()
                   .padStart(2, "0")}`;
 
-          const { data, error } = await supabase
+          const { data, error } = await authClient
             .from("customers")
             .select("sales_amount, gross_profit")
             .gte("order_date", dateStr)
@@ -215,7 +216,7 @@ export default function Dashboard() {
             ? `${year + 1}-01-01`
             : `${year}-${(month + 1).toString().padStart(2, "0")}-01`;
 
-          const { data, error } = await supabase
+          const { data, error } = await authClient
             .from("customers")
             .select("sales_amount, gross_profit")
             .gte("order_date", firstDayOfMonth)
@@ -248,7 +249,7 @@ export default function Dashboard() {
 
     fetchDashboardData();
 
-    const channel = supabase
+    const channel = authClient
       .channel("public:customers")
       .on(
         "postgres_changes",
@@ -260,7 +261,7 @@ export default function Dashboard() {
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      authClient.removeChannel(channel);
     };
   }, []);
 

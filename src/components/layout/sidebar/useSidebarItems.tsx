@@ -1,8 +1,7 @@
-
 import { useNavigate } from "react-router-dom";
 import { Users, ShoppingCart, Package, LayoutDashboard } from "lucide-react";
 import { useState, useEffect } from "react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 
 export function useSidebarItems(orderCounts: {
   processing: number;
@@ -10,6 +9,7 @@ export function useSidebarItems(orderCounts: {
   cancelled: number;
 }) {
   const navigate = useNavigate();
+  const { authClient } = useAuth();
   const [salesData, setSalesData] = useState({
     totalRevenue: 0,
     totalProfit: 0
@@ -18,14 +18,12 @@ export function useSidebarItems(orderCounts: {
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        // Fetch from yearly_sales table to match dashboard's "Jumlah Jualan Keseluruhan" 
-        const { data: yearlySalesData, error: yearlySalesError } = await supabase
+        const { data: yearlySalesData, error: yearlySalesError } = await authClient
           .from('yearly_sales')
           .select('total_revenue, total_profit');
         
         if (yearlySalesError) throw yearlySalesError;
         
-        // Calculate total revenue and profit from yearly_sales (same as dashboard)
         const totalRevenue = yearlySalesData
           ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_revenue)), 0)
           : 0;
@@ -34,10 +32,7 @@ export function useSidebarItems(orderCounts: {
           ? yearlySalesData.reduce((sum, item) => sum + parseFloat(String(item.total_profit)), 0)
           : 0;
         
-        setSalesData({
-          totalRevenue,
-          totalProfit
-        });
+        setSalesData({ totalRevenue, totalProfit });
       } catch (error) {
         console.error("Error fetching sales data for sidebar:", error);
       }
@@ -45,22 +40,15 @@ export function useSidebarItems(orderCounts: {
     
     fetchSalesData();
     
-    // Set up realtime subscription to update sidebar when yearly_sales data changes
-    const channel = supabase
+    const channel = authClient
       .channel('sidebar-sales-updates')
-      .on('postgres_changes', {
-        event: '*',
-        schema: 'public',
-        table: 'yearly_sales'
-      }, () => {
+      .on('postgres_changes', { event: '*', schema: 'public', table: 'yearly_sales' }, () => {
         fetchSalesData();
       })
       .subscribe();
     
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { authClient.removeChannel(channel); };
+  }, [authClient]);
   
   const handleOrderFilter = (status: string) => {
     navigate(`/customers?status=${status}`);

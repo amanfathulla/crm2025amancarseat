@@ -2,7 +2,6 @@ import { useState, useEffect } from "react";
 import { cn } from "@/lib/utils";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { useAuth } from "@/hooks/useAuth";
-import { supabase } from "@/integrations/supabase/client";
 import { NavLink, useLocation, Link } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import {
@@ -69,17 +68,17 @@ export function Sidebar() {
   useEffect(() => {
     const fetchOrderCounts = async () => {
       try {
-        const { data: processingData } = await supabase
+        const { data: processingData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "processing");
 
-        const { data: completedData } = await supabase
+        const { data: completedData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "completed");
 
-        const { data: cancelledData } = await supabase
+        const { data: cancelledData } = await authClient
           .from("customers")
           .select("id")
           .eq("order_status", "cancelled");
@@ -96,26 +95,20 @@ export function Sidebar() {
 
     fetchOrderCounts();
 
-    const subscription = supabase
+    const subscription = authClient
       .channel("public:customers")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "customers" },
-        () => {
-          fetchOrderCounts();
-        }
-      )
+      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+        fetchOrderCounts();
+      })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(subscription);
-    };
-  }, []);
+    return () => { authClient.removeChannel(subscription); };
+  }, [authClient]);
 
   useEffect(() => {
     const fetchSalesData = async () => {
       try {
-        const { data: yearlySalesData, error } = await supabase
+        const { data: yearlySalesData, error } = await authClient
           .from("yearly_sales")
           .select("total_revenue, total_profit");
 
@@ -137,21 +130,15 @@ export function Sidebar() {
 
     fetchSalesData();
 
-    const channel = supabase
+    const channel = authClient
       .channel("sidebar-sales-updates")
-      .on("postgres_changes", {
-        event: "*",
-        schema: "public",
-        table: "yearly_sales",
-      }, () => {
+      .on("postgres_changes", { event: "*", schema: "public", table: "yearly_sales" }, () => {
         fetchSalesData();
       })
       .subscribe();
 
-    return () => {
-      supabase.removeChannel(channel);
-    };
-  }, []);
+    return () => { authClient.removeChannel(channel); };
+  }, [authClient]);
 
   const toggleSidebar = () => {
     if (isMobile) {

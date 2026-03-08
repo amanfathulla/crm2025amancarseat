@@ -1,7 +1,7 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Button } from "@/components/ui/button";
 import {
   AlertDialog,
@@ -30,12 +30,13 @@ export function DeleteYearlySalesDialog({
   onSuccess,
 }: DeleteYearlySalesDialogProps) {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDelete = async () => {
     setIsLoading(true);
     try {
-      const { error } = await supabase
+      const { error } = await authClient
         .from("yearly_sales")
         .delete()
         .eq("id", salesRecordId);

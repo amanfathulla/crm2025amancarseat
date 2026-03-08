@@ -9,7 +9,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from "@/components/ui/form";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Youtube, Image as ImageIcon, Loader2 } from "lucide-react";
 
@@ -60,6 +60,7 @@ const getYoutubeId = (url: string) => {
 
 const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const isEditing = !!initialData;
   const [variations, setVariations] = useState<ProductVariationFormValues[]>(
     initialData?.variations || defaultVariations
@@ -97,13 +98,13 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       const ext = file.name.split(".").pop();
       const fileName = `product-${Date.now()}.${ext}`;
 
-      const { error: uploadError } = await supabase.storage
+      const { error: uploadError } = await authClient.storage
         .from("product-images")
         .upload(fileName, file, { upsert: true });
 
       if (uploadError) throw uploadError;
 
-      const { data: urlData } = supabase.storage
+      const { data: urlData } = authClient.storage
         .from("product-images")
         .getPublicUrl(fileName);
 
@@ -141,7 +142,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       let basePrice = variations.length > 0 ? variations[0].price : 0;
 
       if (isEditing && initialData) {
-        const { error } = await supabase
+        const { error } = await authClient
           .from("products")
           .update({
             name: data.name,
@@ -155,20 +156,20 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
 
         if (error) throw error;
 
-        const { error: deleteError } = await supabase
+        const { error: deleteError } = await authClient
           .from("product_variations")
           .delete()
           .eq("product_id", initialData.id);
         if (deleteError) throw deleteError;
 
-        const { error: variationsError } = await supabase
+        const { error: variationsError } = await authClient
           .from("product_variations")
           .insert(variations.map(v => ({ product_id: initialData.id, name: v.name, price: v.price, cost: v.cost })));
         if (variationsError) throw variationsError;
 
         toast({ title: "Produk dikemaskini", description: "Produk telah berjaya dikemaskini" });
       } else {
-        const { data: newProduct, error } = await supabase
+        const { data: newProduct, error } = await authClient
           .from("products")
           .insert({
             name: data.name,
@@ -183,7 +184,7 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
         if (error) throw error;
 
         if (newProduct && newProduct[0]) {
-          const { error: variationsError } = await supabase
+          const { error: variationsError } = await authClient
             .from("product_variations")
             .insert(variations.map(v => ({ product_id: newProduct[0].id, name: v.name, price: v.price, cost: v.cost })));
           if (variationsError) throw variationsError;
