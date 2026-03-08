@@ -53,7 +53,7 @@ export function YearlySalesForm({ isOpen, onClose, salesRecord, onSuccess }: Yea
     try {
       if (salesRecord) {
         // Update existing sales record
-        const { error } = await supabase
+        const { error } = await authClient
           .from("yearly_sales")
           .update({
             year: formData.year,
