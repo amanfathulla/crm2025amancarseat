@@ -26,6 +26,8 @@ import { Sidebar } from "@/components/layout/Sidebar";
 
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
 import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
+import Order from "@/pages/Order";
+import OrderThankYou from "@/pages/OrderThankYou";
 
 function App() {
   const queryClient = new QueryClient();
