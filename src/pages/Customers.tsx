@@ -81,8 +81,8 @@ function Customers() {
   const [totalPages, setTotalPages] = useState(1);
   const [totalCustomers, setTotalCustomers] = useState(0);
   
-  const [sortBy, setSortBy] = useState<string>("order_date");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
+  const [sortBy, setSortBy] = useState<string>("order_number");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
   
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
