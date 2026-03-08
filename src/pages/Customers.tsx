@@ -82,7 +82,7 @@ function Customers() {
   const [totalCustomers, setTotalCustomers] = useState(0);
   
   const [sortBy, setSortBy] = useState<string>("order_number");
-  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("asc");
+  const [sortDirection, setSortDirection] = useState<"asc" | "desc">("desc");
   
   const [isAddFormOpen, setIsAddFormOpen] = useState(false);
   const [isEditFormOpen, setIsEditFormOpen] = useState(false);
