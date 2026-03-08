@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -31,6 +31,9 @@ interface Product {
   name: string;
   price: number;
   category: string | null;
+  image_url: string | null;
+  description: string | null;
+  youtube_url: string | null;
   variations: ProductVariation[];
 }
 
@@ -55,10 +58,9 @@ export default function OrderPage() {
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
-      // Exact match by category
       const { data: prods, error } = await supabase
         .from("products")
-        .select("id, name, price, category")
+        .select("id, name, price, category, image_url, description")
         .eq("status", "active")
         .eq("category", categoryLabel)
         .order("name", { ascending: true })
@@ -66,7 +68,6 @@ export default function OrderPage() {
 
       if (error) throw error;
 
-      // Fetch variations for each product
       const productIds = (prods || []).map(p => p.id);
       let variations: any[] = [];
       if (productIds.length > 0) {
@@ -78,8 +79,21 @@ export default function OrderPage() {
         variations = vars || [];
       }
 
+      // Fetch youtube_url separately (new column)
+      let youtubeMap: Record<string, string | null> = {};
+      if (productIds.length > 0) {
+        const { data: ytData } = await supabase
+          .from("products")
+          .select("id, youtube_url")
+          .in("id", productIds) as any;
+        (ytData || []).forEach((p: any) => { youtubeMap[p.id] = p.youtube_url || null; });
+      }
+
       const enriched: Product[] = (prods || []).map(p => ({
         ...p,
+        image_url: p.image_url || null,
+        description: p.description || null,
+        youtube_url: youtubeMap[p.id] || null,
         variations: variations.filter(v => v.product_id === p.id),
       }));
 
@@ -250,6 +264,55 @@ export default function OrderPage() {
                     {selectedProduct?.id === product.id && <CheckCircle className="h-5 w-5 text-green-400 flex-shrink-0" />}
                   </button>
                 ))}
+              </div>
+            )}
+
+            {/* Product Detail Card — image, description, youtube */}
+            {selectedProduct && (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/5">
+                {/* Gambar Produk */}
+                {selectedProduct.image_url && (
+                  <div className="w-full aspect-video overflow-hidden">
+                    <img
+                      src={selectedProduct.image_url}
+                      alt={selectedProduct.name}
+                      className="w-full h-full object-cover"
+                    />
+                  </div>
+                )}
+
+                {/* Description */}
+                {selectedProduct.description && (
+                  <div className="p-4 flex gap-3">
+                    <Info className="h-4 w-4 text-white/40 shrink-0 mt-0.5" />
+                    <p className="text-white/70 text-sm leading-relaxed">{selectedProduct.description}</p>
+                  </div>
+                )}
+
+                {/* YouTube Video */}
+                {selectedProduct.youtube_url && (() => {
+                  const match = selectedProduct.youtube_url.match(
+                    /(?:youtu\.be\/|youtube\.com\/(?:watch\?v=|embed\/|shorts\/))([a-zA-Z0-9_-]{11})/
+                  );
+                  const ytId = match ? match[1] : null;
+                  return ytId ? (
+                    <div className="p-4 pt-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Youtube className="h-4 w-4 text-red-400" />
+                        <span className="text-white/60 text-xs font-medium">Video Produk</span>
+                      </div>
+                      <div className="aspect-video rounded-xl overflow-hidden">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${ytId}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen
+                          title="Video produk"
+                        />
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
               </div>
             )}
 
