@@ -25,6 +25,7 @@ interface CategoryConfig {
   name: string;
   gradient: string;
   icon: string;
+  hotSelling?: boolean;
 }
 
 const materialCategories: CategoryConfig[] = [
