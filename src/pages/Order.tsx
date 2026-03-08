@@ -55,12 +55,14 @@ export default function OrderPage() {
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
-      // Match by category containing the material label (case-insensitive)
+      // Exact match by category
       const { data: prods, error } = await supabase
         .from("products")
         .select("id, name, price, category")
         .eq("status", "active")
-        .ilike("category", `%${categoryLabel}%`);
+        .eq("category", categoryLabel)
+        .order("name", { ascending: true })
+        .limit(200);
 
       if (error) throw error;
 
@@ -71,7 +73,8 @@ export default function OrderPage() {
         const { data: vars } = await supabase
           .from("product_variations")
           .select("id, product_id, name, price")
-          .in("product_id", productIds);
+          .in("product_id", productIds)
+          .order("price", { ascending: true });
         variations = vars || [];
       }
 
