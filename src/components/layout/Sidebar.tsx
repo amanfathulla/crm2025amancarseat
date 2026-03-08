@@ -23,12 +23,63 @@ import {
   ShoppingBag,
   CreditCard,
   ExternalLink,
+  Copy,
+  Check,
 } from "lucide-react";
+import { useToast } from "@/hooks/use-toast";
 
 interface SidebarItemType {
   title: string;
   path: string;
   icon: React.ElementType;
+}
+
+function OrderLinkCard({ onClose }: { onClose: () => void }) {
+  const [copied, setCopied] = useState(false);
+  const orderUrl = `${window.location.origin}/order`;
+
+  const handleCopy = (e: React.MouseEvent) => {
+    e.preventDefault();
+    e.stopPropagation();
+    navigator.clipboard.writeText(orderUrl).then(() => {
+      setCopied(true);
+      setTimeout(() => setCopied(false), 2000);
+    });
+  };
+
+  return (
+    <div className="rounded-xl p-3 mt-2 bg-gradient-to-br from-violet-500/20 to-violet-600/20 border border-violet-500/20">
+      <div className="flex items-center justify-between mb-2">
+        <div className="flex items-center gap-2">
+          <ShoppingBag className="h-4 w-4 text-violet-300" />
+          <span className="text-sm font-semibold text-white">Link Tempahan</span>
+        </div>
+        <a href="/order" target="_blank" rel="noopener noreferrer" onClick={onClose}>
+          <ExternalLink className="h-3 w-3 text-violet-300 hover:text-white transition-colors" />
+        </a>
+      </div>
+      {/* URL display */}
+      <div className="flex items-center gap-1 bg-black/30 rounded-lg px-2 py-1.5 mb-2">
+        <span className="text-[10px] text-white/60 truncate flex-1 font-mono">{orderUrl}</span>
+      </div>
+      {/* Copy button */}
+      <button
+        onClick={handleCopy}
+        className={cn(
+          "w-full flex items-center justify-center gap-2 rounded-lg py-1.5 text-xs font-semibold transition-all",
+          copied
+            ? "bg-green-500/30 text-green-300 border border-green-500/40"
+            : "bg-violet-500/30 text-violet-200 border border-violet-500/30 hover:bg-violet-500/50"
+        )}
+      >
+        {copied ? (
+          <><Check className="h-3 w-3" /> Disalin!</>
+        ) : (
+          <><Copy className="h-3 w-3" /> Salin Link</>
+        )}
+      </button>
+    </div>
+  );
 }
 
 export function Sidebar() {
