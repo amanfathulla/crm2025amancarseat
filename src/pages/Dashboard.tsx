@@ -98,7 +98,7 @@ export default function Dashboard() {
         const firstDayOfMonth = monthStartUtc.toISOString().slice(0, 10);
         const firstDayNextMonth = nextMonthStartUtc.toISOString().slice(0, 10);
 
-        const { data: monthData, error: monthError } = await supabase
+        const { data: monthData, error: monthError } = await authClient
           .from("customers")
           .select("sales_amount, gross_profit, order_date")
           .gte("order_date", firstDayOfMonth)
