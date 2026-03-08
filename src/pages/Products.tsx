@@ -30,8 +30,8 @@ interface CategoryConfig {
 const materialCategories: CategoryConfig[] = [
   { name: "Kain Mesh", gradient: "from-blue-500 to-blue-600", icon: "🔵" },
   { name: "Kain Nylon", gradient: "from-emerald-500 to-emerald-600", icon: "🟢" },
-  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣" },
-  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡" },
+  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣", hotSelling: true },
+  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡", hotSelling: true },
 ];
 
 export default function Products() {
