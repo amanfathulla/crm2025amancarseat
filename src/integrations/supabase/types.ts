@@ -14,6 +14,41 @@ export type Database = {
   }
   public: {
     Tables: {
+      admin_sessions: {
+        Row: {
+          admin_id: string
+          created_at: string
+          expires_at: string
+          id: string
+          last_activity: string
+          token: string
+        }
+        Insert: {
+          admin_id: string
+          created_at?: string
+          expires_at: string
+          id?: string
+          last_activity?: string
+          token: string
+        }
+        Update: {
+          admin_id?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          last_activity?: string
+          token?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "admin_sessions_admin_id_fkey"
+            columns: ["admin_id"]
+            isOneToOne: false
+            referencedRelation: "admins"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       admins: {
         Row: {
           created_at: string
@@ -167,6 +202,30 @@ export type Database = {
           phone?: string
           status?: string
           updated_at?: string
+        }
+        Relationships: []
+      }
+      login_attempts: {
+        Row: {
+          attempted_at: string
+          email: string
+          id: string
+          success: boolean
+          user_agent: string | null
+        }
+        Insert: {
+          attempted_at?: string
+          email: string
+          id?: string
+          success?: boolean
+          user_agent?: string | null
+        }
+        Update: {
+          attempted_at?: string
+          email?: string
+          id?: string
+          success?: boolean
+          user_agent?: string | null
         }
         Relationships: []
       }
@@ -518,10 +577,21 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      check_admin_password: {
-        Args: { email: string; password: string }
+      check_admin_password:
+        | { Args: { email: string; password: string }; Returns: string }
+        | {
+            Args: { email: string; p_user_agent?: string; password: string }
+            Returns: string
+          }
+      create_admin_session: {
+        Args: { p_admin_id: string; p_user_agent?: string }
         Returns: string
       }
+      invalidate_admin_session: {
+        Args: { p_token: string }
+        Returns: undefined
+      }
+      is_valid_admin_session: { Args: never; Returns: boolean }
       update_admin_email: {
         Args: { p_admin_id: string; p_new_email: string; p_password: string }
         Returns: boolean
@@ -534,6 +604,7 @@ export type Database = {
         }
         Returns: boolean
       }
+      validate_admin_session: { Args: { p_token: string }; Returns: string }
     }
     Enums: {
       [_ in never]: never
