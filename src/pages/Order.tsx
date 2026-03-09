@@ -102,7 +102,38 @@ export default function OrderPage() {
     return EAST_MALAYSIA.includes(state) ? 50 : 10;
   };
   const postageCost = getPostageCost(form.state);
-  const finalPrice = productPrice + postageCost;
+
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.discount_type === "percentage"
+      ? Math.round((productPrice + postageCost) * appliedCoupon.discount_amount / 100)
+      : appliedCoupon.discount_amount
+    : 0;
+  const finalPrice = Math.max(0, productPrice + postageCost - couponDiscount);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponError("Sila masukkan kod kupon"); return; }
+    setIsValidatingCoupon(true); setCouponError("");
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", code)
+        .eq("is_active", true)
+        .single();
+      if (error || !data) { setCouponError("Kod kupon tidak sah"); return; }
+      if (new Date(data.valid_until) < new Date()) { setCouponError("Kupon telah tamat tempoh"); return; }
+      if (data.usage_count >= data.usage_limit) { setCouponError("Kupon telah habis digunakan"); return; }
+      setAppliedCoupon({ code: data.code, discount_amount: data.discount_amount, discount_type: data.discount_type });
+      setCouponError("");
+      toast({ title: "Kupon berjaya!", description: `Diskaun ${data.discount_type === "fixed" ? `RM${data.discount_amount}` : `${data.discount_amount}%`} telah diaplikasikan` });
+    } catch { setCouponError("Gagal mengesahkan kupon"); }
+    finally { setIsValidatingCoupon(false); }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null); setCouponInput(""); setCouponError("");
+  };
 
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
