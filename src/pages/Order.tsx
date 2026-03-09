@@ -107,6 +107,7 @@ export default function OrderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
+    if (!form.state) { toast({ title: "Sila pilih negeri untuk kira kos postage", variant: "destructive" }); return; }
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     setStep("loading");
     try {
