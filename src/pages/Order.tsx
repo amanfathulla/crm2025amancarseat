@@ -52,6 +52,12 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
