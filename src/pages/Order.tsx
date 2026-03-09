@@ -88,7 +88,15 @@ export default function OrderPage() {
     setStep("product");
   };
 
-  const finalPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
+  const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
+
+  const EAST_MALAYSIA = ["Sabah", "Sarawak", "W.P. Labuan"];
+  const getPostageCost = (state: string) => {
+    if (!state) return 0;
+    return EAST_MALAYSIA.includes(state) ? 50 : 10;
+  };
+  const postageCost = getPostageCost(form.state);
+  const finalPrice = productPrice + postageCost;
 
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
