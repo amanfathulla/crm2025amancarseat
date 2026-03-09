@@ -73,6 +73,11 @@ serve(async (req) => {
       throw new Error('Failed to create customer record');
     }
 
+    // Increment coupon usage if coupon was applied
+    if (coupon_code && coupon_code.trim()) {
+      await supabase.rpc('increment_coupon_usage', { p_code: coupon_code.trim().toUpperCase() }).catch(() => {});
+    }
+
     // Determine redirect URL
     const origin = req.headers.get('origin') || 'https://crm2025amancarseat.lovable.app';
     const callbackUrl = `${origin}/order/thank-you?customer_id=${customer.id}`;
