@@ -385,7 +385,7 @@ export default function OrderPage() {
               </section>
 
               {/* Delivery Address */}
-              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="h-4 w-4 text-purple-400" />
                   <h3 className="text-white font-semibold text-sm">Alamat Penghantaran</h3>
