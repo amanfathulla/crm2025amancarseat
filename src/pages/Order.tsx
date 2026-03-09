@@ -354,34 +354,34 @@ export default function OrderPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Buyer Info */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <User className="h-4 w-4 text-blue-400" />
-                  <h3 className="text-white font-semibold text-sm">Maklumat Pembeli</h3>
+                  <User className="h-4 w-4 text-blue-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Maklumat Pembeli</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Nama Penuh *</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Nama Penuh *</Label>
                     <Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                      placeholder="Nama penuh" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                      placeholder="Nama penuh" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">No. Telefon *</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">No. Telefon *</Label>
                     <Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
-                      placeholder="0123456789" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                      placeholder="0123456789" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Email (opsional)</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Email (opsional)</Label>
                   <Input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                    placeholder="email@contoh.com" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                    placeholder="email@contoh.com" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block flex items-center gap-1.5">
+                  <Label className="text-gray-600 text-xs mb-1.5 block flex items-center gap-1.5">
                     <Car className="h-3 w-3" /> Model Kereta *
                   </Label>
                   <Input value={form.car_model} onChange={e => setForm(f => ({...f, car_model: e.target.value}))}
-                    placeholder="Contoh: Perodua Myvi 2022" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                    placeholder="Contoh: Perodua Myvi 2022" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                 </div>
               </section>
 
