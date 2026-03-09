@@ -422,37 +422,37 @@ export default function OrderPage() {
               </section>
 
               {/* Order Summary */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06]">
-                <h3 className="text-white/60 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
+                <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/55">Produk</span>
-                    <span className="text-white font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
+                    <span className="text-gray-500">Produk</span>
+                    <span className="text-gray-900 font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
                   </div>
                   {selectedVariation && (
                     <div className="flex justify-between">
-                      <span className="text-white/55">Saiz/Variasi</span>
-                      <span className="text-white">{selectedVariation.name}</span>
+                      <span className="text-gray-500">Saiz/Variasi</span>
+                      <span className="text-gray-900">{selectedVariation.name}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-white/55">Harga Produk</span>
-                    <span className="text-white">RM{productPrice.toFixed(2)}</span>
+                    <span className="text-gray-500">Harga Produk</span>
+                    <span className="text-gray-900">RM{productPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/55">Kos Postage {form.state ? `(${form.state})` : ""}</span>
-                    <span className={`font-medium ${form.state ? "text-white" : "text-white/30"}`}>
+                    <span className="text-gray-500">Kos Postage {form.state ? `(${form.state})` : ""}</span>
+                    <span className={`font-medium ${form.state ? "text-gray-900" : "text-gray-400"}`}>
                       {form.state ? `RM${postageCost.toFixed(2)}` : "Pilih negeri"}
                     </span>
                   </div>
                   {!form.state && (
-                    <p className="text-amber-400/80 text-xs flex items-center gap-1">
+                    <p className="text-amber-600 text-xs flex items-center gap-1">
                       <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
                     </p>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-white/10 font-bold text-base">
-                    <span className="text-white">Jumlah Bayar</span>
-                    <span className="text-green-400">RM{finalPrice.toFixed(2)}</span>
+                  <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
+                    <span className="text-gray-900">Jumlah Bayar</span>
+                    <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               </section>
