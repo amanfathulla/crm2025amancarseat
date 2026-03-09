@@ -121,6 +121,48 @@ export type Database = {
         }
         Relationships: []
       }
+      coupons: {
+        Row: {
+          code: string
+          created_at: string | null
+          discount_amount: number
+          discount_type: string
+          id: string
+          is_active: boolean
+          updated_at: string | null
+          usage_count: number
+          usage_limit: number
+          valid_from: string
+          valid_until: string
+        }
+        Insert: {
+          code: string
+          created_at?: string | null
+          discount_amount?: number
+          discount_type?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string | null
+          usage_count?: number
+          usage_limit?: number
+          valid_from?: string
+          valid_until: string
+        }
+        Update: {
+          code?: string
+          created_at?: string | null
+          discount_amount?: number
+          discount_type?: string
+          id?: string
+          is_active?: boolean
+          updated_at?: string | null
+          usage_count?: number
+          usage_limit?: number
+          valid_from?: string
+          valid_until?: string
+        }
+        Relationships: []
+      }
       customers: {
         Row: {
           address: string | null
@@ -611,6 +653,7 @@ export type Database = {
         Args: { p_admin_id: string; p_user_agent?: string }
         Returns: string
       }
+      increment_coupon_usage: { Args: { p_code: string }; Returns: undefined }
       invalidate_admin_session: {
         Args: { p_token: string }
         Returns: undefined

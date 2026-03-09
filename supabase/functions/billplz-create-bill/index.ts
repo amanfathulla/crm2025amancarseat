@@ -37,7 +37,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code } = body;
+    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
 
     if (!name || !phone || !product || !sales_amount) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
@@ -71,6 +71,11 @@ serve(async (req) => {
     if (customerError) {
       console.error('Customer insert error:', customerError);
       throw new Error('Failed to create customer record');
+    }
+
+    // Increment coupon usage if coupon was applied
+    if (coupon_code && coupon_code.trim()) {
+      await supabase.rpc('increment_coupon_usage', { p_code: coupon_code.trim().toUpperCase() }).catch(() => {});
     }
 
     // Determine redirect URL

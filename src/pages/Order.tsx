@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -52,6 +52,12 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
+  // Coupon state
+  const [couponInput, setCouponInput] = useState("");
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
+  const [couponError, setCouponError] = useState("");
+  const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
@@ -96,7 +102,38 @@ export default function OrderPage() {
     return EAST_MALAYSIA.includes(state) ? 50 : 10;
   };
   const postageCost = getPostageCost(form.state);
-  const finalPrice = productPrice + postageCost;
+
+  const couponDiscount = appliedCoupon
+    ? appliedCoupon.discount_type === "percentage"
+      ? Math.round((productPrice + postageCost) * appliedCoupon.discount_amount / 100)
+      : appliedCoupon.discount_amount
+    : 0;
+  const finalPrice = Math.max(0, productPrice + postageCost - couponDiscount);
+
+  const handleApplyCoupon = async () => {
+    const code = couponInput.trim().toUpperCase();
+    if (!code) { setCouponError("Sila masukkan kod kupon"); return; }
+    setIsValidatingCoupon(true); setCouponError("");
+    try {
+      const { data, error } = await supabase
+        .from("coupons")
+        .select("*")
+        .eq("code", code)
+        .eq("is_active", true)
+        .single();
+      if (error || !data) { setCouponError("Kod kupon tidak sah"); return; }
+      if (new Date(data.valid_until) < new Date()) { setCouponError("Kupon telah tamat tempoh"); return; }
+      if (data.usage_count >= data.usage_limit) { setCouponError("Kupon telah habis digunakan"); return; }
+      setAppliedCoupon({ code: data.code, discount_amount: data.discount_amount, discount_type: data.discount_type });
+      setCouponError("");
+      toast({ title: "Kupon berjaya!", description: `Diskaun ${data.discount_type === "fixed" ? `RM${data.discount_amount}` : `${data.discount_amount}%`} telah diaplikasikan` });
+    } catch { setCouponError("Gagal mengesahkan kupon"); }
+    finally { setIsValidatingCoupon(false); }
+  };
+
+  const handleRemoveCoupon = () => {
+    setAppliedCoupon(null); setCouponInput(""); setCouponError("");
+  };
 
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
@@ -114,7 +151,7 @@ export default function OrderPage() {
       const res = await fetch(
         `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString() }) }
+          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "" }) }
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
@@ -450,11 +487,51 @@ export default function OrderPage() {
                       <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
                     </p>
                   )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Diskaun ({appliedCoupon.code})</span>
+                      <span>-RM{couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
                     <span className="text-gray-900">Jumlah Bayar</span>
                     <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
                   </div>
                 </div>
+              </section>
+
+              {/* Coupon Section */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag className="h-4 w-4 text-orange-500" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Ada Kod Kupon?</h3>
+                </div>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-50 border border-green-200">
+                    <div>
+                      <p className="text-green-700 font-bold text-sm">{appliedCoupon.code}</p>
+                      <p className="text-green-600 text-xs">
+                        Diskaun {appliedCoupon.discount_type === "fixed" ? `RM${appliedCoupon.discount_amount}` : `${appliedCoupon.discount_amount}%`} diaplikasikan
+                      </p>
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleRemoveCoupon}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs">
+                      Buang
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input value={couponInput} onChange={e => setCouponInput(e.target.value)}
+                      placeholder="Masukkan kod kupon"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 h-10 uppercase"
+                      onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())} />
+                    <Button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon}
+                      variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 h-10 px-4 shrink-0">
+                      {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guna"}
+                    </Button>
+                  </div>
+                )}
+                {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
               </section>
 
               <Button type="submit"

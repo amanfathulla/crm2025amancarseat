@@ -6,11 +6,23 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CreditCard, CheckCircle2 } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CreditCard, CheckCircle2, Tag, Trash2, Plus } from "lucide-react";
 
 interface AdminSettingsDialogProps {
   open: boolean;
   onOpenChange: (open: boolean) => void;
+}
+
+interface Coupon {
+  id: string;
+  code: string;
+  discount_amount: number;
+  discount_type: string;
+  usage_limit: number;
+  usage_count: number;
+  valid_from: string;
+  valid_until: string;
+  is_active: boolean;
 }
 
 export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogProps) {
@@ -42,171 +54,332 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   const [billplzRowId, setBillplzRowId] = useState<string | null>(null);
   const [billplzSaved, setBillplzSaved] = useState(false);
 
-  // Load Billplz settings when dialog opens
+  // Coupon form
+  const [coupons, setCoupons] = useState<Coupon[]>([]);
+  const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+  const [isSavingCoupon, setIsSavingCoupon] = useState(false);
+  const [couponCode, setCouponCode] = useState("");
+  const [couponAmount, setCouponAmount] = useState("");
+  const [couponType, setCouponType] = useState<"fixed" | "percentage">("fixed");
+  const [couponLimit, setCouponLimit] = useState("100");
+  const [couponValidUntil, setCouponValidUntil] = useState("");
+
+  // Load data when dialog opens
   useEffect(() => {
     if (!open) return;
-    const fetchBillplz = async () => {
-      setIsLoadingBillplz(true);
-      try {
-        const { data, error } = await authClient
-          .from("billplz_settings")
-          .select("id, api_key, x_signature_key, collection_id")
-          .limit(1)
-          .single();
-        if (data) {
-          setBillplzRowId(data.id);
-          setBillplzApiKey(data.api_key || "");
-          setBillplzXSig(data.x_signature_key || "");
-          setBillplzCollection(data.collection_id || "");
-        }
-      } catch (_) {
-        // table may not have a row yet
-      } finally {
-        setIsLoadingBillplz(false);
-      }
-    };
     fetchBillplz();
+    fetchCoupons();
   }, [open, authClient]);
+
+  const fetchBillplz = async () => {
+    setIsLoadingBillplz(true);
+    try {
+      const { data } = await authClient
+        .from("billplz_settings")
+        .select("id, api_key, x_signature_key, collection_id")
+        .limit(1)
+        .single();
+      if (data) {
+        setBillplzRowId(data.id);
+        setBillplzApiKey(data.api_key || "");
+        setBillplzXSig(data.x_signature_key || "");
+        setBillplzCollection(data.collection_id || "");
+      }
+    } catch (_) {}
+    finally { setIsLoadingBillplz(false); }
+  };
+
+  const fetchCoupons = async () => {
+    setIsLoadingCoupons(true);
+    try {
+      const { data, error } = await authClient
+        .from("coupons")
+        .select("*")
+        .order("created_at", { ascending: false });
+      if (error) throw error;
+      setCoupons(data || []);
+    } catch (_) {}
+    finally { setIsLoadingCoupons(false); }
+  };
 
   const resetForms = () => {
     setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     setPassword(""); setNewEmail("");
     setShowCurrentPw(false); setShowNewPw(false); setShowEmailPw(false);
     setBillplzSaved(false);
+    setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
   };
 
   // ---- Password ----
   const handleUpdatePassword = async () => {
-    if (!currentPassword) {
-      toast({ title: "Error", description: "Sila masukkan password semasa", variant: "destructive" }); return;
-    }
-    if (newPassword.length < 6) {
-      toast({ title: "Error", description: "Password baru mestilah sekurang-kurangnya 6 aksara", variant: "destructive" }); return;
-    }
-    if (newPassword !== confirmPassword) {
-      toast({ title: "Error", description: "Password baru tidak sepadan", variant: "destructive" }); return;
-    }
+    if (!currentPassword) { toast({ title: "Error", description: "Sila masukkan password semasa", variant: "destructive" }); return; }
+    if (newPassword.length < 6) { toast({ title: "Error", description: "Password baru mestilah sekurang-kurangnya 6 aksara", variant: "destructive" }); return; }
+    if (newPassword !== confirmPassword) { toast({ title: "Error", description: "Password baru tidak sepadan", variant: "destructive" }); return; }
     setIsUpdatingPassword(true);
     try {
       const { data, error } = await authClient.rpc("update_admin_password", {
-        p_admin_id: user?.id,
-        p_current_password: currentPassword,
-        p_new_password: newPassword,
+        p_admin_id: user?.id, p_current_password: currentPassword, p_new_password: newPassword,
       });
       if (error) throw error;
-      if (data) {
-        toast({ title: "Berjaya!", description: "Password telah dikemaskini" });
-        resetForms();
-      } else {
-        toast({ title: "Gagal", description: "Password semasa tidak betul", variant: "destructive" });
-      }
-    } catch {
-      toast({ title: "Error", description: "Gagal kemaskini password", variant: "destructive" });
-    } finally {
-      setIsUpdatingPassword(false);
-    }
+      if (data) { toast({ title: "Berjaya!", description: "Password telah dikemaskini" }); resetForms(); }
+      else { toast({ title: "Gagal", description: "Password semasa tidak betul", variant: "destructive" }); }
+    } catch { toast({ title: "Error", description: "Gagal kemaskini password", variant: "destructive" }); }
+    finally { setIsUpdatingPassword(false); }
   };
 
   // ---- Email ----
   const handleUpdateEmail = async () => {
-    if (!password) {
-      toast({ title: "Error", description: "Sila masukkan password untuk pengesahan", variant: "destructive" }); return;
-    }
-    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) {
-      toast({ title: "Error", description: "Sila masukkan email yang sah", variant: "destructive" }); return;
-    }
+    if (!password) { toast({ title: "Error", description: "Sila masukkan password untuk pengesahan", variant: "destructive" }); return; }
+    if (!newEmail || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(newEmail)) { toast({ title: "Error", description: "Sila masukkan email yang sah", variant: "destructive" }); return; }
     setIsUpdatingEmail(true);
     try {
       const { data, error } = await authClient.rpc("update_admin_email", {
-        p_admin_id: user?.id,
-        p_password: password,
-        p_new_email: newEmail.trim(),
+        p_admin_id: user?.id, p_password: password, p_new_email: newEmail.trim(),
       });
       if (error) throw error;
-      if (data) {
-        toast({ title: "Berjaya!", description: "Email telah dikemaskini. Sila login semula dengan email baru." });
-        resetForms();
-        onOpenChange(false);
-      } else {
-        toast({ title: "Gagal", description: "Password tidak betul", variant: "destructive" });
-      }
-    } catch {
-      toast({ title: "Error", description: "Gagal kemaskini email", variant: "destructive" });
-    } finally {
-      setIsUpdatingEmail(false);
-    }
+      if (data) { toast({ title: "Berjaya!", description: "Email telah dikemaskini." }); resetForms(); onOpenChange(false); }
+      else { toast({ title: "Gagal", description: "Password tidak betul", variant: "destructive" }); }
+    } catch { toast({ title: "Error", description: "Gagal kemaskini email", variant: "destructive" }); }
+    finally { setIsUpdatingEmail(false); }
   };
 
   // ---- Billplz ----
   const handleSaveBillplz = async () => {
-    if (!billplzApiKey.trim()) {
-      toast({ title: "Error", description: "API Key tidak boleh kosong", variant: "destructive" }); return;
-    }
-    if (!billplzCollection.trim()) {
-      toast({ title: "Error", description: "Collection ID tidak boleh kosong", variant: "destructive" }); return;
-    }
+    if (!billplzApiKey.trim()) { toast({ title: "Error", description: "API Key tidak boleh kosong", variant: "destructive" }); return; }
+    if (!billplzCollection.trim()) { toast({ title: "Error", description: "Collection ID tidak boleh kosong", variant: "destructive" }); return; }
     setIsSavingBillplz(true);
     try {
       if (billplzRowId) {
-        // Update existing row
-        const { error } = await authClient
-          .from("billplz_settings")
-          .update({
-            api_key: billplzApiKey.trim(),
-            x_signature_key: billplzXSig.trim(),
-            collection_id: billplzCollection.trim(),
-            updated_at: new Date().toISOString(),
-          })
-          .eq("id", billplzRowId);
+        const { error } = await authClient.from("billplz_settings").update({
+          api_key: billplzApiKey.trim(), x_signature_key: billplzXSig.trim(),
+          collection_id: billplzCollection.trim(), updated_at: new Date().toISOString(),
+        }).eq("id", billplzRowId);
         if (error) throw error;
       } else {
-        // Insert new row
-        const { data, error } = await authClient
-          .from("billplz_settings")
-          .insert({
-            api_key: billplzApiKey.trim(),
-            x_signature_key: billplzXSig.trim(),
-            collection_id: billplzCollection.trim(),
-          })
-          .select("id")
-          .single();
+        const { data, error } = await authClient.from("billplz_settings").insert({
+          api_key: billplzApiKey.trim(), x_signature_key: billplzXSig.trim(), collection_id: billplzCollection.trim(),
+        }).select("id").single();
         if (error) throw error;
         if (data) setBillplzRowId(data.id);
       }
       setBillplzSaved(true);
       toast({ title: "Berjaya!", description: "Tetapan Billplz telah disimpan" });
       setTimeout(() => setBillplzSaved(false), 3000);
-    } catch {
-      toast({ title: "Error", description: "Gagal simpan tetapan Billplz", variant: "destructive" });
-    } finally {
-      setIsSavingBillplz(false);
-    }
+    } catch { toast({ title: "Error", description: "Gagal simpan tetapan Billplz", variant: "destructive" }); }
+    finally { setIsSavingBillplz(false); }
   };
 
-  const maskValue = (val: string) => val ? `${val.slice(0, 4)}${"•".repeat(Math.min(val.length - 4, 16))}` : "";
+  // ---- Coupons ----
+  const handleAddCoupon = async () => {
+    if (!couponCode.trim()) { toast({ title: "Error", description: "Sila masukkan kod kupon", variant: "destructive" }); return; }
+    if (!couponAmount || parseFloat(couponAmount) <= 0) { toast({ title: "Error", description: "Sila masukkan jumlah diskaun", variant: "destructive" }); return; }
+    if (!couponValidUntil) { toast({ title: "Error", description: "Sila pilih tarikh tamat", variant: "destructive" }); return; }
+    setIsSavingCoupon(true);
+    try {
+      const { error } = await authClient.from("coupons").insert({
+        code: couponCode.trim().toUpperCase(),
+        discount_amount: parseFloat(couponAmount),
+        discount_type: couponType,
+        usage_limit: parseInt(couponLimit) || 100,
+        valid_until: new Date(couponValidUntil).toISOString(),
+        is_active: true,
+      });
+      if (error) throw error;
+      toast({ title: "Berjaya!", description: "Kupon telah ditambah" });
+      setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
+      fetchCoupons();
+    } catch (err: any) {
+      const msg = err?.message?.includes("duplicate") ? "Kod kupon sudah wujud" : "Gagal tambah kupon";
+      toast({ title: "Error", description: msg, variant: "destructive" });
+    } finally { setIsSavingCoupon(false); }
+  };
+
+  const handleToggleCoupon = async (coupon: Coupon) => {
+    try {
+      const { error } = await authClient.from("coupons").update({ is_active: !coupon.is_active }).eq("id", coupon.id);
+      if (error) throw error;
+      fetchCoupons();
+    } catch { toast({ title: "Error", description: "Gagal kemaskini kupon", variant: "destructive" }); }
+  };
+
+  const handleDeleteCoupon = async (id: string) => {
+    try {
+      const { error } = await authClient.from("coupons").delete().eq("id", id);
+      if (error) throw error;
+      toast({ title: "Berjaya!", description: "Kupon telah dipadam" });
+      fetchCoupons();
+    } catch { toast({ title: "Error", description: "Gagal padam kupon", variant: "destructive" }); }
+  };
 
   return (
     <Dialog open={open} onOpenChange={(val) => { onOpenChange(val); if (!val) resetForms(); }}>
-      <DialogContent className="sm:max-w-md">
+      <DialogContent className="sm:max-w-lg max-h-[90vh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle className="text-lg font-semibold">Tetapan Admin</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="password" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
-            <TabsTrigger value="password" className="flex items-center gap-1.5 text-xs">
-              <Lock className="h-3.5 w-3.5" />
-              Password
-            </TabsTrigger>
-            <TabsTrigger value="email" className="flex items-center gap-1.5 text-xs">
-              <Mail className="h-3.5 w-3.5" />
-              Email
-            </TabsTrigger>
-            <TabsTrigger value="billplz" className="flex items-center gap-1.5 text-xs">
+        <Tabs defaultValue="billplz" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
+            <TabsTrigger value="billplz" className="flex items-center gap-1 text-xs">
               <CreditCard className="h-3.5 w-3.5" />
               Billplz
             </TabsTrigger>
+            <TabsTrigger value="coupon" className="flex items-center gap-1 text-xs">
+              <Tag className="h-3.5 w-3.5" />
+              Kupon
+            </TabsTrigger>
+            <TabsTrigger value="password" className="flex items-center gap-1 text-xs">
+              <Lock className="h-3.5 w-3.5" />
+              Password
+            </TabsTrigger>
+            <TabsTrigger value="email" className="flex items-center gap-1 text-xs">
+              <Mail className="h-3.5 w-3.5" />
+              Email
+            </TabsTrigger>
           </TabsList>
+
+          {/* ── Billplz Tab ── */}
+          <TabsContent value="billplz" className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">
+              Kemaskini kelayakan pembayaran Billplz. Nilai disimpan dengan selamat dalam pangkalan data.
+            </p>
+            {isLoadingBillplz ? (
+              <div className="flex items-center justify-center py-6">
+                <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>API Key (Secret Key)</Label>
+                  <div className="relative">
+                    <Input type={showApiKey ? "text" : "password"} value={billplzApiKey}
+                      onChange={(e) => setBillplzApiKey(e.target.value)} placeholder="Masukkan Billplz API Key"
+                      className="pr-10 font-mono text-sm" />
+                    <button type="button" onClick={() => setShowApiKey(!showApiKey)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Settings → API</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>X-Signature Key</Label>
+                  <div className="relative">
+                    <Input type={showXSig ? "text" : "password"} value={billplzXSig}
+                      onChange={(e) => setBillplzXSig(e.target.value)} placeholder="Masukkan X-Signature Key"
+                      className="pr-10 font-mono text-sm" />
+                    <button type="button" onClick={() => setShowXSig(!showXSig)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showXSig ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Settings → API → XSignature Key</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Collection ID</Label>
+                  <Input type="text" value={billplzCollection} onChange={(e) => setBillplzCollection(e.target.value)}
+                    placeholder="cth: abc123xyz" className="font-mono text-sm" />
+                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Collections → pilih koleksi anda</p>
+                </div>
+                <Button onClick={handleSaveBillplz} disabled={isSavingBillplz} className="w-full"
+                  variant={billplzSaved ? "outline" : "default"}>
+                  {isSavingBillplz ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Menyimpan...</>
+                    : billplzSaved ? <><CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />Tersimpan!</>
+                    : "Simpan Tetapan Billplz"}
+                </Button>
+              </>
+            )}
+          </TabsContent>
+
+          {/* ── Coupon Tab ── */}
+          <TabsContent value="coupon" className="space-y-4 pt-2">
+            <p className="text-sm text-muted-foreground">Cipta kupon diskaun untuk pelanggan.</p>
+
+            {/* Add coupon form */}
+            <div className="space-y-3 p-4 rounded-xl border bg-muted/30">
+              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
+                <Plus className="h-3.5 w-3.5" /> Tambah Kupon Baru
+              </p>
+              <div className="grid grid-cols-2 gap-3">
+                <div>
+                  <Label className="text-xs">Kod Kupon</Label>
+                  <Input value={couponCode} onChange={e => setCouponCode(e.target.value)}
+                    placeholder="cth: DISKAUN10" className="text-sm uppercase" />
+                </div>
+                <div>
+                  <Label className="text-xs">Jenis Diskaun</Label>
+                  <select value={couponType} onChange={e => setCouponType(e.target.value as "fixed" | "percentage")}
+                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
+                    <option value="fixed">RM (Tetap)</option>
+                    <option value="percentage">% (Peratus)</option>
+                  </select>
+                </div>
+              </div>
+              <div className="grid grid-cols-3 gap-3">
+                <div>
+                  <Label className="text-xs">Jumlah</Label>
+                  <Input type="number" value={couponAmount} onChange={e => setCouponAmount(e.target.value)}
+                    placeholder={couponType === "fixed" ? "10" : "5"} className="text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs">Had Guna</Label>
+                  <Input type="number" value={couponLimit} onChange={e => setCouponLimit(e.target.value)}
+                    placeholder="100" className="text-sm" />
+                </div>
+                <div>
+                  <Label className="text-xs">Sah Sehingga</Label>
+                  <Input type="date" value={couponValidUntil} onChange={e => setCouponValidUntil(e.target.value)}
+                    className="text-sm" />
+                </div>
+              </div>
+              <Button onClick={handleAddCoupon} disabled={isSavingCoupon} size="sm" className="w-full">
+                {isSavingCoupon ? <><LoaderCircle className="mr-2 h-3.5 w-3.5 animate-spin" />Menambah...</> : "Tambah Kupon"}
+              </Button>
+            </div>
+
+            {/* Coupon list */}
+            {isLoadingCoupons ? (
+              <div className="flex justify-center py-4"><LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" /></div>
+            ) : coupons.length === 0 ? (
+              <p className="text-center text-muted-foreground text-sm py-4">Tiada kupon lagi.</p>
+            ) : (
+              <div className="space-y-2 max-h-52 overflow-y-auto">
+                {coupons.map(c => {
+                  const expired = new Date(c.valid_until) < new Date();
+                  const exhausted = c.usage_count >= c.usage_limit;
+                  return (
+                    <div key={c.id} className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
+                      !c.is_active || expired || exhausted ? "opacity-50 bg-muted/20" : "bg-background"
+                    }`}>
+                      <div className="flex-1 min-w-0">
+                        <div className="flex items-center gap-2">
+                          <span className="font-mono font-bold text-foreground">{c.code}</span>
+                          <span className={`text-xs px-1.5 py-0.5 rounded ${c.is_active && !expired && !exhausted ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"}`}>
+                            {expired ? "Tamat" : exhausted ? "Habis" : c.is_active ? "Aktif" : "Tidak Aktif"}
+                          </span>
+                        </div>
+                        <p className="text-xs text-muted-foreground mt-0.5">
+                          {c.discount_type === "fixed" ? `RM${c.discount_amount}` : `${c.discount_amount}%`} · 
+                          {c.usage_count}/{c.usage_limit} diguna · 
+                          Sah: {new Date(c.valid_until).toLocaleDateString("ms-MY")}
+                        </p>
+                      </div>
+                      <div className="flex items-center gap-1 ml-2">
+                        <Button variant="ghost" size="icon" className="h-7 w-7"
+                          onClick={() => handleToggleCoupon(c)} title={c.is_active ? "Nyahaktif" : "Aktifkan"}>
+                          {c.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
+                        </Button>
+                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
+                          onClick={() => handleDeleteCoupon(c.id)} title="Padam">
+                          <Trash2 className="h-3.5 w-3.5" />
+                        </Button>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+            )}
+          </TabsContent>
 
           {/* ── Password Tab ── */}
           <TabsContent value="password" className="space-y-4 pt-2">
@@ -235,10 +408,8 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
             </div>
             <div className="space-y-2">
               <Label>Sahkan Password Baru</Label>
-              <Input type="password" value={confirmPassword}
-                onChange={(e) => setConfirmPassword(e.target.value)}
-                placeholder="Masukkan semula password baru"
-                onKeyDown={(e) => e.key === "Enter" && handleUpdatePassword()} />
+              <Input type="password" value={confirmPassword} onChange={(e) => setConfirmPassword(e.target.value)}
+                placeholder="Masukkan semula password baru" onKeyDown={(e) => e.key === "Enter" && handleUpdatePassword()} />
             </div>
             <Button onClick={handleUpdatePassword} disabled={isUpdatingPassword} className="w-full">
               {isUpdatingPassword ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Mengemaskini...</> : "Kemaskini Password"}
@@ -252,15 +423,13 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
             </p>
             <div className="space-y-2">
               <Label>Email Baru</Label>
-              <Input type="email" value={newEmail}
-                onChange={(e) => setNewEmail(e.target.value)} placeholder="Masukkan email baru" />
+              <Input type="email" value={newEmail} onChange={(e) => setNewEmail(e.target.value)} placeholder="Masukkan email baru" />
             </div>
             <div className="space-y-2">
               <Label>Password (untuk pengesahan)</Label>
               <div className="relative">
                 <Input type={showEmailPw ? "text" : "password"} value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  placeholder="Masukkan password anda"
+                  onChange={(e) => setPassword(e.target.value)} placeholder="Masukkan password anda"
                   onKeyDown={(e) => e.key === "Enter" && handleUpdateEmail()} />
                 <button type="button" onClick={() => setShowEmailPw(!showEmailPw)}
                   className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
@@ -271,93 +440,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
             <Button onClick={handleUpdateEmail} disabled={isUpdatingEmail} className="w-full">
               {isUpdatingEmail ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Mengemaskini...</> : "Kemaskini Email"}
             </Button>
-          </TabsContent>
-
-          {/* ── Billplz Tab ── */}
-          <TabsContent value="billplz" className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Kemaskini kelayakan pembayaran Billplz. Nilai disimpan dengan selamat dalam pangkalan data.
-            </p>
-
-            {isLoadingBillplz ? (
-              <div className="flex items-center justify-center py-6">
-                <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <>
-                {/* API Key */}
-                <div className="space-y-2">
-                  <Label>API Key (Secret Key)</Label>
-                  <div className="relative">
-                    <Input
-                      type={showApiKey ? "text" : "password"}
-                      value={billplzApiKey}
-                      onChange={(e) => setBillplzApiKey(e.target.value)}
-                      placeholder="Masukkan Billplz API Key"
-                      className="pr-10 font-mono text-sm"
-                    />
-                    <button type="button" onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Ditemui di: Billplz Dashboard → Settings → API
-                  </p>
-                </div>
-
-                {/* X-Signature Key */}
-                <div className="space-y-2">
-                  <Label>X-Signature Key</Label>
-                  <div className="relative">
-                    <Input
-                      type={showXSig ? "text" : "password"}
-                      value={billplzXSig}
-                      onChange={(e) => setBillplzXSig(e.target.value)}
-                      placeholder="Masukkan X-Signature Key"
-                      className="pr-10 font-mono text-sm"
-                    />
-                    <button type="button" onClick={() => setShowXSig(!showXSig)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showXSig ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Ditemui di: Billplz Dashboard → Settings → API → XSignature Key
-                  </p>
-                </div>
-
-                {/* Collection ID */}
-                <div className="space-y-2">
-                  <Label>Collection ID</Label>
-                  <Input
-                    type="text"
-                    value={billplzCollection}
-                    onChange={(e) => setBillplzCollection(e.target.value)}
-                    placeholder="cth: abc123xyz"
-                    className="font-mono text-sm"
-                  />
-                  <p className="text-xs text-muted-foreground">
-                    Ditemui di: Billplz Dashboard → Collections → pilih koleksi anda
-                  </p>
-                </div>
-
-                <Button
-                  onClick={handleSaveBillplz}
-                  disabled={isSavingBillplz}
-                  className="w-full"
-                  variant={billplzSaved ? "outline" : "default"}
-                >
-                  {isSavingBillplz ? (
-                    <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Menyimpan...</>
-                  ) : billplzSaved ? (
-                    <><CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />Tersimpan!</>
-                  ) : (
-                    "Simpan Tetapan Billplz"
-                  )}
-                </Button>
-              </>
-            )}
           </TabsContent>
         </Tabs>
       </DialogContent>
