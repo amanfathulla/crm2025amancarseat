@@ -153,7 +153,6 @@ export default function OrderPage() {
         { method: "POST", headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "" }) }
       );
-      );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
       window.location.href = data.bill_url;
