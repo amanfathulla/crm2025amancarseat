@@ -88,7 +88,15 @@ export default function OrderPage() {
     setStep("product");
   };
 
-  const finalPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
+  const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
+
+  const EAST_MALAYSIA = ["Sabah", "Sarawak", "W.P. Labuan"];
+  const getPostageCost = (state: string) => {
+    if (!state) return 0;
+    return EAST_MALAYSIA.includes(state) ? 50 : 10;
+  };
+  const postageCost = getPostageCost(form.state);
+  const finalPrice = productPrice + postageCost;
 
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
@@ -99,6 +107,7 @@ export default function OrderPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
+    if (!form.state) { toast({ title: "Sila pilih negeri untuk kira kos postage", variant: "destructive" }); return; }
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     setStep("loading");
     try {
@@ -339,13 +348,13 @@ export default function OrderPage() {
                 {selectedVariation && <p className="text-white/50 text-xs truncate">{selectedVariation.name}</p>}
               </div>
               <div className="text-right shrink-0">
-                <p className="text-green-400 font-bold text-xl">RM{finalPrice.toFixed(0)}</p>
+                <p className="text-green-400 font-bold text-xl">RM{productPrice.toFixed(0)}</p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Buyer Info */}
-              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <User className="h-4 w-4 text-blue-400" />
                   <h3 className="text-white font-semibold text-sm">Maklumat Pembeli</h3>
@@ -377,7 +386,7 @@ export default function OrderPage() {
               </section>
 
               {/* Delivery Address */}
-              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <MapPin className="h-4 w-4 text-purple-400" />
                   <h3 className="text-white font-semibold text-sm">Alamat Penghantaran</h3>
@@ -413,7 +422,7 @@ export default function OrderPage() {
               </section>
 
               {/* Order Summary */}
-              <section className="bg-white/4 rounded-2xl p-5 border border-white/8">
+              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06]">
                 <h3 className="text-white/60 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
@@ -425,6 +434,21 @@ export default function OrderPage() {
                       <span className="text-white/55">Saiz/Variasi</span>
                       <span className="text-white">{selectedVariation.name}</span>
                     </div>
+                  )}
+                  <div className="flex justify-between">
+                    <span className="text-white/55">Harga Produk</span>
+                    <span className="text-white">RM{productPrice.toFixed(2)}</span>
+                  </div>
+                  <div className="flex justify-between">
+                    <span className="text-white/55">Kos Postage {form.state ? `(${form.state})` : ""}</span>
+                    <span className={`font-medium ${form.state ? "text-white" : "text-white/30"}`}>
+                      {form.state ? `RM${postageCost.toFixed(2)}` : "Pilih negeri"}
+                    </span>
+                  </div>
+                  {!form.state && (
+                    <p className="text-amber-400/80 text-xs flex items-center gap-1">
+                      <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
+                    </p>
                   )}
                   <div className="flex justify-between pt-3 border-t border-white/10 font-bold text-base">
                     <span className="text-white">Jumlah Bayar</span>
