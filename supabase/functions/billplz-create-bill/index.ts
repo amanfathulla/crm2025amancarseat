@@ -37,7 +37,7 @@ serve(async (req) => {
     }
 
     const body = await req.json();
-    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code } = body;
+    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
 
     if (!name || !phone || !product || !sales_amount) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
