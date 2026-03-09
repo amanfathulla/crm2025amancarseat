@@ -527,7 +527,7 @@ export default function OrderPage() {
                       onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())} />
                     <Button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon}
                       variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 h-10 px-4 shrink-0">
-                      {isValidatingCoupon ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "Guna"}
+                      {isValidatingCoupon ? <Loader2 className="h-4 w-4 animate-spin" /> : "Guna"}
                     </Button>
                   </div>
                 )}
