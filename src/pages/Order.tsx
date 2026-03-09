@@ -386,36 +386,36 @@ export default function OrderPage() {
               </section>
 
               {/* Delivery Address */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="h-4 w-4 text-purple-400" />
-                  <h3 className="text-white font-semibold text-sm">Alamat Penghantaran</h3>
+                  <MapPin className="h-4 w-4 text-purple-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Alamat Penghantaran</h3>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Alamat</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Alamat</Label>
                   <Input value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}
-                    placeholder="No, Jalan..." className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                    placeholder="No, Jalan..." className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Bandar</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Bandar</Label>
                     <Input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
-                      placeholder="Bandar" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                      placeholder="Bandar" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Poskod</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Poskod</Label>
                     <Input value={form.zip_code} onChange={e => setForm(f => ({...f, zip_code: e.target.value}))}
-                      placeholder="50000" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                      placeholder="50000" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Negeri</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Negeri *</Label>
                   <Select onValueChange={val => setForm(f => ({...f, state: val}))}>
-                    <SelectTrigger className="bg-white/8 border-white/12 text-white h-10 focus:border-blue-500/50">
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-10 focus:border-blue-500">
                       <SelectValue placeholder="Pilih negeri" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/10">
-                      {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-white focus:bg-white/10">{s}</SelectItem>)}
+                    <SelectContent className="bg-white border-gray-200">
+                      {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-gray-900 focus:bg-gray-100">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
