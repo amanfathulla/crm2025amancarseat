@@ -354,105 +354,105 @@ export default function OrderPage() {
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Buyer Info */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <User className="h-4 w-4 text-blue-400" />
-                  <h3 className="text-white font-semibold text-sm">Maklumat Pembeli</h3>
+                  <User className="h-4 w-4 text-blue-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Maklumat Pembeli</h3>
                 </div>
                 <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Nama Penuh *</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Nama Penuh *</Label>
                     <Input value={form.name} onChange={e => setForm(f => ({...f, name: e.target.value}))}
-                      placeholder="Nama penuh" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                      placeholder="Nama penuh" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">No. Telefon *</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">No. Telefon *</Label>
                     <Input value={form.phone} onChange={e => setForm(f => ({...f, phone: e.target.value}))}
-                      placeholder="0123456789" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                      placeholder="0123456789" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Email (opsional)</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Email (opsional)</Label>
                   <Input type="email" value={form.email} onChange={e => setForm(f => ({...f, email: e.target.value}))}
-                    placeholder="email@contoh.com" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                    placeholder="email@contoh.com" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block flex items-center gap-1.5">
+                  <Label className="text-gray-600 text-xs mb-1.5 block flex items-center gap-1.5">
                     <Car className="h-3 w-3" /> Model Kereta *
                   </Label>
                   <Input value={form.car_model} onChange={e => setForm(f => ({...f, car_model: e.target.value}))}
-                    placeholder="Contoh: Perodua Myvi 2022" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" required />
+                    placeholder="Contoh: Perodua Myvi 2022" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" required />
                 </div>
               </section>
 
               {/* Delivery Address */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
-                  <MapPin className="h-4 w-4 text-purple-400" />
-                  <h3 className="text-white font-semibold text-sm">Alamat Penghantaran</h3>
+                  <MapPin className="h-4 w-4 text-purple-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Alamat Penghantaran</h3>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Alamat</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Alamat</Label>
                   <Input value={form.address} onChange={e => setForm(f => ({...f, address: e.target.value}))}
-                    placeholder="No, Jalan..." className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                    placeholder="No, Jalan..." className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                 </div>
                 <div className="grid grid-cols-2 gap-3">
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Bandar</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Bandar</Label>
                     <Input value={form.city} onChange={e => setForm(f => ({...f, city: e.target.value}))}
-                      placeholder="Bandar" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                      placeholder="Bandar" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                   </div>
                   <div>
-                    <Label className="text-white/60 text-xs mb-1.5 block">Poskod</Label>
+                    <Label className="text-gray-600 text-xs mb-1.5 block">Poskod</Label>
                     <Input value={form.zip_code} onChange={e => setForm(f => ({...f, zip_code: e.target.value}))}
-                      placeholder="50000" className="bg-white/8 border-white/12 text-white placeholder:text-white/25 focus:border-blue-500/50 h-10" />
+                      placeholder="50000" className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-blue-500 h-10" />
                   </div>
                 </div>
                 <div>
-                  <Label className="text-white/60 text-xs mb-1.5 block">Negeri</Label>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Negeri *</Label>
                   <Select onValueChange={val => setForm(f => ({...f, state: val}))}>
-                    <SelectTrigger className="bg-white/8 border-white/12 text-white h-10 focus:border-blue-500/50">
+                    <SelectTrigger className="bg-white border-gray-300 text-gray-900 h-10 focus:border-blue-500">
                       <SelectValue placeholder="Pilih negeri" />
                     </SelectTrigger>
-                    <SelectContent className="bg-gray-900 border-white/10">
-                      {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-white focus:bg-white/10">{s}</SelectItem>)}
+                    <SelectContent className="bg-white border-gray-200">
+                      {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-gray-900 focus:bg-gray-100">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
                 </div>
               </section>
 
               {/* Order Summary */}
-              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06]">
-                <h3 className="text-white/60 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
+                <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
                 <div className="space-y-2 text-sm">
                   <div className="flex justify-between">
-                    <span className="text-white/55">Produk</span>
-                    <span className="text-white font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
+                    <span className="text-gray-500">Produk</span>
+                    <span className="text-gray-900 font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
                   </div>
                   {selectedVariation && (
                     <div className="flex justify-between">
-                      <span className="text-white/55">Saiz/Variasi</span>
-                      <span className="text-white">{selectedVariation.name}</span>
+                      <span className="text-gray-500">Saiz/Variasi</span>
+                      <span className="text-gray-900">{selectedVariation.name}</span>
                     </div>
                   )}
                   <div className="flex justify-between">
-                    <span className="text-white/55">Harga Produk</span>
-                    <span className="text-white">RM{productPrice.toFixed(2)}</span>
+                    <span className="text-gray-500">Harga Produk</span>
+                    <span className="text-gray-900">RM{productPrice.toFixed(2)}</span>
                   </div>
                   <div className="flex justify-between">
-                    <span className="text-white/55">Kos Postage {form.state ? `(${form.state})` : ""}</span>
-                    <span className={`font-medium ${form.state ? "text-white" : "text-white/30"}`}>
+                    <span className="text-gray-500">Kos Postage {form.state ? `(${form.state})` : ""}</span>
+                    <span className={`font-medium ${form.state ? "text-gray-900" : "text-gray-400"}`}>
                       {form.state ? `RM${postageCost.toFixed(2)}` : "Pilih negeri"}
                     </span>
                   </div>
                   {!form.state && (
-                    <p className="text-amber-400/80 text-xs flex items-center gap-1">
+                    <p className="text-amber-600 text-xs flex items-center gap-1">
                       <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
                     </p>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-white/10 font-bold text-base">
-                    <span className="text-white">Jumlah Bayar</span>
-                    <span className="text-green-400">RM{finalPrice.toFixed(2)}</span>
+                  <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
+                    <span className="text-gray-900">Jumlah Bayar</span>
+                    <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
                   </div>
                 </div>
               </section>
