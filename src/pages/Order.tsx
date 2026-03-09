@@ -487,11 +487,51 @@ export default function OrderPage() {
                       <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
                     </p>
                   )}
+                  {appliedCoupon && (
+                    <div className="flex justify-between text-green-600">
+                      <span>Diskaun ({appliedCoupon.code})</span>
+                      <span>-RM{couponDiscount.toFixed(2)}</span>
+                    </div>
+                  )}
                   <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
                     <span className="text-gray-900">Jumlah Bayar</span>
                     <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
                   </div>
                 </div>
+              </section>
+
+              {/* Coupon Section */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
+                <div className="flex items-center gap-2 mb-3">
+                  <Tag className="h-4 w-4 text-orange-500" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Ada Kod Kupon?</h3>
+                </div>
+                {appliedCoupon ? (
+                  <div className="flex items-center justify-between p-3 rounded-xl bg-green-50 border border-green-200">
+                    <div>
+                      <p className="text-green-700 font-bold text-sm">{appliedCoupon.code}</p>
+                      <p className="text-green-600 text-xs">
+                        Diskaun {appliedCoupon.discount_type === "fixed" ? `RM${appliedCoupon.discount_amount}` : `${appliedCoupon.discount_amount}%`} diaplikasikan
+                      </p>
+                    </div>
+                    <Button type="button" variant="ghost" size="sm" onClick={handleRemoveCoupon}
+                      className="text-red-500 hover:text-red-700 hover:bg-red-50 text-xs">
+                      Buang
+                    </Button>
+                  </div>
+                ) : (
+                  <div className="flex gap-2">
+                    <Input value={couponInput} onChange={e => setCouponInput(e.target.value)}
+                      placeholder="Masukkan kod kupon"
+                      className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 h-10 uppercase"
+                      onKeyDown={e => e.key === "Enter" && (e.preventDefault(), handleApplyCoupon())} />
+                    <Button type="button" onClick={handleApplyCoupon} disabled={isValidatingCoupon}
+                      variant="outline" className="border-gray-300 text-gray-700 hover:bg-gray-100 h-10 px-4 shrink-0">
+                      {isValidatingCoupon ? <LoaderCircle className="h-4 w-4 animate-spin" /> : "Guna"}
+                    </Button>
+                  </div>
+                )}
+                {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
               </section>
 
               <Button type="submit"
