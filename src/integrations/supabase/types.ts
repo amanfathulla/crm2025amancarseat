@@ -653,6 +653,7 @@ export type Database = {
         Args: { p_admin_id: string; p_user_agent?: string }
         Returns: string
       }
+      increment_coupon_usage: { Args: { p_code: string }; Returns: undefined }
       invalidate_admin_session: {
         Args: { p_token: string }
         Returns: undefined
