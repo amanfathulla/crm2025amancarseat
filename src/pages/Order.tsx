@@ -347,13 +347,13 @@ export default function OrderPage() {
                 {selectedVariation && <p className="text-white/50 text-xs truncate">{selectedVariation.name}</p>}
               </div>
               <div className="text-right shrink-0">
-                <p className="text-green-400 font-bold text-xl">RM{finalPrice.toFixed(0)}</p>
+                <p className="text-green-400 font-bold text-xl">RM{productPrice.toFixed(0)}</p>
               </div>
             </div>
 
             <form onSubmit={handleSubmit} className="space-y-5">
               {/* Buyer Info */}
-              <section className="bg-white/4 rounded-2xl p-5 border border-white/8 space-y-4">
+              <section className="backdrop-blur-xl bg-white/[0.03] rounded-2xl p-5 border border-white/[0.06] space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <User className="h-4 w-4 text-blue-400" />
                   <h3 className="text-white font-semibold text-sm">Maklumat Pembeli</h3>
