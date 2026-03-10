@@ -20,6 +20,7 @@ import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
 import Leads from "@/pages/Leads";
 import Marketing from "@/pages/Marketing";
+import SystemStatus from "@/pages/SystemStatus";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
