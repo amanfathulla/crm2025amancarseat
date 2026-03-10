@@ -408,41 +408,6 @@ export function Sidebar() {
             </a>
           )}
 
-          {/* BillPlz / Payment Card */}
-          {(expanded || (isMobile && mobileOpen)) && (
-            <a
-              href="https://www.billplz.com/enterprise/dashboard"
-              target="_blank"
-              rel="noopener noreferrer"
-              className="block rounded-xl p-3 mt-2 transition-all duration-200 bg-gradient-to-br from-orange-500/20 to-orange-600/20 hover:from-orange-500/30 hover:to-orange-600/30"
-            >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <CreditCard className="h-4 w-4 text-orange-300" />
-                  <span className="text-sm font-semibold text-white">BillPlz</span>
-                </div>
-                <ExternalLink className="h-3 w-3 text-orange-300" />
-              </div>
-              <p className="text-[10px] text-white/60">Dashboard pembayaran Malaysia</p>
-            </a>
-          )}
-
-          {/* Collapsed BillPlz Icon */}
-          {!expanded && !isMobile && (
-            <a
-              href="https://www.billplz.com/enterprise/dashboard"
-              target="_blank"
-              rel="noopener noreferrer"
-              className={cn(
-                "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
-                "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-              )}
-            >
-              <div className="grid h-full w-12 place-content-center">
-                <CreditCard className="h-5 w-5" />
-              </div>
-            </a>
-          )}
 
         </nav>
 
