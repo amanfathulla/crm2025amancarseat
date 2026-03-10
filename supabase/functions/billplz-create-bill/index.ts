@@ -18,7 +18,7 @@ serve(async (req) => {
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
     // Load Billplz credentials from DB (admin-configurable)
-    const { data: settings, error: settingsError } = await supabase
+    const { data: settings } = await supabase
       .from('billplz_settings')
       .select('api_key, collection_id')
       .limit(1)
@@ -75,12 +75,17 @@ serve(async (req) => {
 
     if (customerError) {
       console.error('Customer insert error:', customerError);
-      throw new Error('Failed to create customer record');
+      throw new Error(`Failed to create customer record: ${customerError.message}`);
     }
 
-    // Increment coupon usage if coupon was applied
+    // Increment coupon usage if coupon was applied - fixed: use try/catch instead of .catch()
     if (coupon_code && coupon_code.trim()) {
-      await supabase.rpc('increment_coupon_usage', { p_code: coupon_code.trim().toUpperCase() }).catch(() => {});
+      try {
+        await supabase.rpc('increment_coupon_usage', { p_code: coupon_code.trim().toUpperCase() });
+      } catch (rpcErr) {
+        console.warn('Could not increment coupon usage:', rpcErr);
+        // Non-fatal, continue with order
+      }
     }
 
     // Determine redirect URL
