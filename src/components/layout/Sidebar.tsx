@@ -21,9 +21,9 @@ import {
   Megaphone,
   LogOut,
   ShoppingBag,
-  CreditCard,
   ExternalLink,
   Copy,
+  Activity,
 } from "lucide-react";
 
 interface SidebarItemType {
