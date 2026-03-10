@@ -47,11 +47,16 @@ serve(async (req) => {
     }
 
     // Create customer record first
+    // Use a unique email to avoid duplicate constraint (phone + timestamp suffix)
+    const uniqueEmail = email && email.trim()
+      ? email.trim()
+      : `${phone.replace(/[^0-9]/g, '')}+${Date.now()}@noemail.com`;
+
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .insert({
         name,
-        email: email || `${phone}@noemail.com`,
+        email: uniqueEmail,
         phone,
         product,
         product_variation: product_variation || '',
