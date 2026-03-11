@@ -7,7 +7,6 @@ import {
 } from "@/components/ui/accordion";
 import { formatCurrency } from "@/lib/utils";
 import {
-  FileText,
   Receipt,
   Phone,
   Mail,
@@ -20,6 +19,9 @@ import {
   Pencil,
   Trash2,
   MessageCircle,
+  CheckCircle2,
+  XCircle,
+  Clock3,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -46,6 +48,24 @@ const statusConfig: Record<string, { label: string; className: string }> = {
   cancelled:  { label: "Cancelled",  className: "bg-red-500/15 text-red-500 border-red-500/30" },
 };
 
+const paymentBadge: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
+  completed: {
+    label: "Berjaya",
+    icon: <CheckCircle2 className="h-3 w-3" />,
+    className: "bg-green-500/15 text-green-600 border-green-500/30",
+  },
+  cancelled: {
+    label: "Gagal",
+    icon: <XCircle className="h-3 w-3" />,
+    className: "bg-red-500/15 text-red-500 border-red-500/30",
+  },
+  processing: {
+    label: "Pending",
+    icon: <Clock3 className="h-3 w-3" />,
+    className: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",
+  },
+};
+
 export function CustomerDetails({ customer, onEdit, onDelete, index, className }: CustomerDetailsProps) {
   const navigate = useNavigate();
 
@@ -57,10 +77,11 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
   };
 
   const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground" };
+  const payment = paymentBadge[customer.order_status] ?? paymentBadge.processing;
 
   const location = [customer.city, customer.state].filter(Boolean).join(", ") || customer.location || "—";
 
-  // Build WhatsApp message with full order info
+  // Build WhatsApp message
   const orderNum = customer.order_number ? `#${customer.order_number}` : `#${index}`;
   const waMessage = encodeURIComponent(
     `Assalamualaikum, ini adalah makluman tempahan daripada *ACS Legacy AmancarseatCover* 🚗\n\n` +
@@ -80,8 +101,8 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
   return (
     <AccordionItem value={customer.id} className={`border-b ${className || ""}`}>
       {/* ── Trigger ── */}
-      <AccordionTrigger className="hover:no-underline hover:bg-muted/30 px-3 py-3">
-        <div className="flex items-center gap-2 w-full min-w-0">
+      <AccordionTrigger className="hover:no-underline hover:bg-muted/30 px-3 py-3 [&>svg]:shrink-0">
+        <div className="flex items-center gap-2 w-full min-w-0 pr-1">
           {/* Order badge */}
           <div className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
             <span className="text-[9px] text-primary/60 font-medium leading-none">No.</span>
@@ -90,18 +111,18 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </span>
           </div>
 
-          {/* Name + product */}
-          <div className="flex-1 min-w-0 text-left">
-            <p className="font-semibold text-foreground text-sm truncate">{customer.name}</p>
-            <p className="text-xs text-muted-foreground truncate">{customer.product || "—"}</p>
+          {/* Name + product — truncate properly */}
+          <div className="flex-1 min-w-0 text-left overflow-hidden">
+            <p className="font-semibold text-foreground text-sm truncate leading-tight">{customer.name}</p>
+            <p className="text-xs text-muted-foreground truncate leading-tight">{customer.product || "—"}</p>
           </div>
 
-          {/* Right: status + amount */}
-          <div className="shrink-0 flex flex-col items-end gap-1 mr-1">
-            <span className={`text-[10px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap ${status.className}`}>
+          {/* Right: status + amount — fixed width, no overflow */}
+          <div className="shrink-0 flex flex-col items-end gap-1 ml-1 min-w-[80px]">
+            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap ${status.className}`}>
               {status.label}
             </span>
-            <span className="text-xs font-bold text-green-600">{formatCurrency(customer.paid_amount)}</span>
+            <span className="text-xs font-bold text-green-600 whitespace-nowrap">{formatCurrency(customer.paid_amount)}</span>
           </div>
         </div>
       </AccordionTrigger>
@@ -110,7 +131,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
       <AccordionContent>
         <div className="px-3 pb-4 space-y-3">
 
-          {/* Top bar: order number + date — stack on mobile */}
+          {/* Top bar: order number + date */}
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 bg-muted/50 rounded-xl px-3 py-2.5">
             <div className="flex items-center gap-2">
               <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
@@ -130,7 +151,16 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </div>
           </div>
 
-          {/* Info Grid — full width on mobile, 2-col on sm+ */}
+          {/* Payment Status Banner */}
+          <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${payment.className}`}>
+            {payment.icon}
+            <span className="text-xs font-semibold">
+              Status Bayaran Billplz:&nbsp;
+              <span className="font-bold">{payment.label}</span>
+            </span>
+          </div>
+
+          {/* Info Grid */}
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             {/* Maklumat Pembeli */}
             <div className="rounded-xl border bg-card p-3 space-y-2">
@@ -167,8 +197,8 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             />
           </div>
 
-          {/* Action Buttons — responsive wrapping */}
-          <div className="grid grid-cols-2 sm:flex sm:flex-wrap gap-2 pt-1">
+          {/* Action Buttons */}
+          <div className="grid grid-cols-2 gap-2 pt-1">
             <Button
               variant="ghost"
               size="sm"
@@ -177,16 +207,8 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             >
               <Receipt className="h-3.5 w-3.5 mr-1" /> Resit
             </Button>
-            <Button
-              variant="outline"
-              size="sm"
-              className="text-xs justify-center"
-              onClick={() => navigate(`/customers/invoice?id=${customer.id}`)}
-            >
-              <FileText className="h-3.5 w-3.5 mr-1" /> Invoice
-            </Button>
             {waLink && (
-              <a href={waLink} target="_blank" rel="noopener noreferrer" className="col-span-2 sm:col-span-1">
+              <a href={waLink} target="_blank" rel="noopener noreferrer">
                 <Button
                   variant="outline"
                   size="sm"
@@ -210,7 +232,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
               className="text-xs justify-center"
               onClick={onDelete}
             >
-              <Trash2 className="h-3.5 w-3.5" />
+              <Trash2 className="h-3.5 w-3.5 mr-1" /> Padam
             </Button>
           </div>
         </div>
@@ -229,7 +251,7 @@ function InfoRow({
       <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
       <div className="min-w-0 flex-1">
         {label && <span className="text-xs text-muted-foreground">{label}: </span>}
-        <span className={`${small ? "text-xs text-muted-foreground" : "text-sm font-medium"} break-all`}>
+        <span className={`${small ? "text-xs text-muted-foreground" : "text-sm font-medium"} break-words`}>
           {value}
         </span>
       </div>
