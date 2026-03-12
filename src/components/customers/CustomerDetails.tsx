@@ -111,10 +111,10 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </span>
           </div>
 
-          {/* Name + product — truncate properly */}
+          {/* Name only — product shown in expanded detail */}
           <div className="flex-1 min-w-0 text-left overflow-hidden">
             <p className="font-semibold text-foreground text-sm truncate leading-tight">{customer.name}</p>
-            <p className="text-xs text-muted-foreground truncate leading-tight">{customer.product || "—"}</p>
+            <p className="text-xs text-muted-foreground truncate leading-tight">{customer.phone || "—"}</p>
           </div>
 
           {/* Right: status + amount — fixed width, no overflow */}

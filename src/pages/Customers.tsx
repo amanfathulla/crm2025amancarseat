@@ -737,10 +737,6 @@ function Customers() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddFormOpen(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Customer
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="px-3 sm:px-6">
