@@ -178,6 +178,7 @@ export type Database = {
           order_status: string
           order_time: string | null
           paid_amount: number | null
+          payment_source: string | null
           phone: string | null
           product: string | null
           product_variation: string | null
@@ -202,6 +203,7 @@ export type Database = {
           order_status?: string
           order_time?: string | null
           paid_amount?: number | null
+          payment_source?: string | null
           phone?: string | null
           product?: string | null
           product_variation?: string | null
@@ -226,6 +228,7 @@ export type Database = {
           order_status?: string
           order_time?: string | null
           paid_amount?: number | null
+          payment_source?: string | null
           phone?: string | null
           product?: string | null
           product_variation?: string | null

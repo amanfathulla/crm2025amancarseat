@@ -141,6 +141,8 @@ export default function OrderPage() {
     setStep("form");
   };
 
+  const [whatsappCustomerId, setWhatsappCustomerId] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
@@ -159,6 +161,44 @@ export default function OrderPage() {
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
       setStep("form");
+    }
+  };
+
+  // Save WhatsApp order to DB and return customer id
+  const handleWhatsappPayment = async (): Promise<string | null> => {
+    if (!form.name || !form.phone || !form.car_model || !form.state) {
+      toast({ title: "Isi maklumat dahulu", description: "Sila lengkapkan nama, telefon, model kereta dan negeri terlebih dahulu.", variant: "destructive" });
+      return null;
+    }
+    try {
+      const email = form.email?.trim() || `${form.phone.replace(/[^0-9]/g, "")}@noemail.com`;
+      const { data, error } = await supabase.from("customers").insert({
+        name: form.name,
+        phone: form.phone,
+        email,
+        address: form.address,
+        city: form.city || form.state,
+        state: form.state,
+        zip_code: form.zip_code,
+        car_model: form.car_model,
+        product: selectedProduct?.name || "",
+        product_variation: selectedVariation?.name || "",
+        sales_amount: finalPrice,
+        paid_amount: finalPrice,
+        gross_profit: 0,
+        order_status: "processing",
+        payment_source: "whatsapp",
+        order_date: new Date().toISOString(),
+      }).select("id").single();
+      if (error) throw error;
+      if (appliedCoupon?.code) {
+        await supabase.rpc("increment_coupon_usage", { p_code: appliedCoupon.code });
+      }
+      return data?.id || null;
+    } catch (err: any) {
+      console.error("WhatsApp order save error:", err);
+      // Non-blocking: still allow opening WhatsApp even if save fails
+      return null;
     }
   };
 
@@ -569,28 +609,28 @@ export default function OrderPage() {
                       </div>
                     </div>
                   </div>
-                  <a
-                    href={`https://wa.me/60194503184?text=${encodeURIComponent(
-                      `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
-                      `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
-                      `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
-                      `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
-                      `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
-                      `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
-                    )}`}
-                    target="_blank"
-                    rel="noopener noreferrer"
+                  <button
+                    type="button"
                     className="flex items-center justify-center gap-2 w-full h-12 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-green-900/30"
-                    onClick={(e) => {
-                      if (!form.name || !form.phone || !form.car_model || !form.state) {
-                        e.preventDefault();
-                        toast({ title: "Isi maklumat dahulu", description: "Sila lengkapkan nama, telefon, model kereta dan negeri terlebih dahulu.", variant: "destructive" });
+                    onClick={async () => {
+                      const savedId = await handleWhatsappPayment();
+                      const waMsg = encodeURIComponent(
+                        `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
+                        `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
+                        `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
+                        `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
+                        `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n` +
+                        (savedId ? `No. Tempahan: #${savedId.slice(-6).toUpperCase()}\n` : "") +
+                        `\nSila sahkan penerimaan bayaran. Terima kasih! 🙏`
+                      );
+                      if (savedId !== undefined) {
+                        window.open(`https://wa.me/60194503184?text=${waMsg}`, "_blank");
                       }
                     }}
                   >
                     <span className="text-base">📱</span>
                     Hubungi & Bayar Via WhatsApp
-                  </a>
+                  </button>
                   <p className="text-white/25 text-xs text-center">Transfer dulu, kemudian hantar bukti bayaran via WhatsApp</p>
                 </div>
               </div>
