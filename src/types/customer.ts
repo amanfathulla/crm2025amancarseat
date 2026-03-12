@@ -19,6 +19,7 @@ export interface Customer {
   order_status: string;
   order_time?: string;
   payment_status?: string; // deposit, fullpayment, cod
+  payment_source?: string; // billplz | whatsapp
   total_orders: number;
   total_spent: number;
   created_at: string;
