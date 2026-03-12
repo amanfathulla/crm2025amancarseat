@@ -164,6 +164,7 @@ function Customers() {
         order_date: record.order_date || "",
         order_status: record.order_status || "processing",
         order_time: record.order_time || "",
+        payment_source: (record as any).payment_source || "billplz",
         total_orders: record.total_orders || 0,
         total_spent: record.total_spent || 0,
         created_at: record.created_at || "",
