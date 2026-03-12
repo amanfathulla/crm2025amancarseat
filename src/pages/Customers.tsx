@@ -590,6 +590,18 @@ function Customers() {
           </div>
         </CardContent>
       </Card>
+
+      {/* ── Add Customer Section ── */}
+      <div className="flex items-center justify-between bg-muted/40 border border-border rounded-xl px-4 py-3 animate-fade-in">
+        <div>
+          <p className="font-semibold text-foreground text-sm">Tambah Pelanggan Baru</p>
+          <p className="text-muted-foreground text-xs">Rekod pesanan baharu secara manual</p>
+        </div>
+        <Button size="sm" onClick={() => setIsAddFormOpen(true)} className="shrink-0">
+          <UserPlus className="h-4 w-4 mr-2" />
+          Add Customer
+        </Button>
+      </div>
       
       <Card className="animate-fade-in delay-100 shadow-soft">
         <CardHeader className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 pb-4">
@@ -725,10 +737,6 @@ function Customers() {
               </DropdownMenuContent>
             </DropdownMenu>
             
-            <Button size="sm" className="whitespace-nowrap" onClick={() => setIsAddFormOpen(true)}>
-              <UserPlus className="h-4 w-4 mr-2" />
-              Add Customer
-            </Button>
           </div>
         </CardHeader>
         <CardContent className="px-3 sm:px-6">

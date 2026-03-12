@@ -534,12 +534,66 @@ export default function OrderPage() {
                 {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
               </section>
 
-              <Button type="submit"
-                className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
-                <ShoppingBag className="h-5 w-5 mr-2" />
-                Bayar Dengan BillPlz
-              </Button>
-              <p className="text-center text-white/30 text-xs pb-4">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
+              {/* Payment Options */}
+              <div className="space-y-3">
+                <p className="text-white/40 text-xs uppercase tracking-widest text-center font-medium">Pilih Kaedah Pembayaran</p>
+
+                {/* BillPlz */}
+                <Button type="submit"
+                  className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
+                  <ShoppingBag className="h-5 w-5 mr-2" />
+                  Bayar Dengan BillPlz
+                </Button>
+                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
+
+                {/* Divider */}
+                <div className="flex items-center gap-3 py-1">
+                  <div className="flex-1 h-px bg-white/10" />
+                  <span className="text-white/30 text-xs">atau</span>
+                  <div className="flex-1 h-px bg-white/10" />
+                </div>
+
+                {/* WhatsApp Payment */}
+                <div className="rounded-2xl border border-green-500/25 bg-green-500/5 p-4 space-y-3">
+                  <div className="flex items-center gap-2 mb-1">
+                    <span className="text-lg">💬</span>
+                    <h3 className="text-white font-semibold text-sm">Bayar Melalui WhatsApp</h3>
+                  </div>
+                  <div className="rounded-xl bg-white/5 border border-white/10 p-3 space-y-1.5">
+                    <p className="text-white/50 text-xs uppercase tracking-wide font-medium">Nombor Akaun Pembayaran</p>
+                    <div className="flex items-center gap-2">
+                      <span className="text-xl">🏦</span>
+                      <div>
+                        <p className="text-white font-bold text-sm">Maybank – ACS LEGACY</p>
+                        <p className="text-green-400 font-bold text-lg tracking-widest">553038596454</p>
+                      </div>
+                    </div>
+                  </div>
+                  <a
+                    href={`https://wa.me/60194503184?text=${encodeURIComponent(
+                      `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
+                      `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
+                      `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
+                      `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
+                      `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
+                      `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
+                    )}`}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    className="flex items-center justify-center gap-2 w-full h-12 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-green-900/30"
+                    onClick={(e) => {
+                      if (!form.name || !form.phone || !form.car_model || !form.state) {
+                        e.preventDefault();
+                        toast({ title: "Isi maklumat dahulu", description: "Sila lengkapkan nama, telefon, model kereta dan negeri terlebih dahulu.", variant: "destructive" });
+                      }
+                    }}
+                  >
+                    <span className="text-base">📱</span>
+                    Hubungi & Bayar Via WhatsApp
+                  </a>
+                  <p className="text-white/25 text-xs text-center">Transfer dulu, kemudian hantar bukti bayaran via WhatsApp</p>
+                </div>
+              </div>
             </form>
           </div>
         )}
