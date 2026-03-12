@@ -22,6 +22,7 @@ import {
   CheckCircle2,
   XCircle,
   Clock3,
+  CreditCard,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -66,6 +67,20 @@ const paymentBadge: Record<string, { label: string; icon: React.ReactNode; class
   },
 };
 
+// Payment source config
+const sourceConfig = {
+  billplz: {
+    label: "BillPlz",
+    icon: <CreditCard className="h-3 w-3" />,
+    className: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  },
+  whatsapp: {
+    label: "WhatsApp",
+    icon: <MessageCircle className="h-3 w-3" />,
+    className: "bg-green-500/15 text-green-600 border-green-500/30",
+  },
+};
+
 export function CustomerDetails({ customer, onEdit, onDelete, index, className }: CustomerDetailsProps) {
   const navigate = useNavigate();
 
@@ -78,10 +93,14 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
 
   const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground" };
   const payment = paymentBadge[customer.order_status] ?? paymentBadge.processing;
+  const source = sourceConfig[(customer.payment_source as keyof typeof sourceConfig) ?? "billplz"] ?? sourceConfig.billplz;
 
   const location = [customer.city, customer.state].filter(Boolean).join(", ") || customer.location || "—";
 
-  // Build WhatsApp message
+  // Is BillPlz & pending → show follow-up WA button
+  const isBillplzPending = (!customer.payment_source || customer.payment_source === "billplz") && customer.order_status === "processing";
+
+  // Build customer WhatsApp message
   const orderNum = customer.order_number ? `#${customer.order_number}` : `#${index}`;
   const waMessage = encodeURIComponent(
     `Assalamualaikum, ini adalah makluman tempahan daripada *ACS Legacy AmancarseatCover* 🚗\n\n` +
@@ -95,8 +114,21 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
     `🔖 Status: ${status.label}\n\n` +
     `Terima kasih kerana memilih ACS Legacy! 🙏`
   );
+
+  // Follow-up reminder WA (for pending BillPlz)
+  const waFollowupMessage = encodeURIComponent(
+    `Assalamualaikum ${customer.name} 😊\n\n` +
+    `Ini peringatan mesra dari *ACS Legacy AmancarseatCover* 🚗\n\n` +
+    `Kami perasan tempahan anda ${orderNum} masih belum selesai pembayaran melalui BillPlz.\n\n` +
+    `📦 Produk: ${customer.product || "—"}${customer.product_variation ? ` (${customer.product_variation})` : ""}\n` +
+    `💰 Jumlah: RM ${Number(customer.paid_amount || 0).toFixed(2)}\n\n` +
+    `Jika ada sebarang masalah dengan pembayaran, boleh hubungi kami ya! 🙏\n` +
+    `Atau bayar melalui:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454`
+  );
+
   const waPhone = customer.phone ? customer.phone.replace(/[^0-9]/g, "").replace(/^0/, "60") : "";
   const waLink = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : null;
+  const waFollowupLink = waPhone ? `https://wa.me/${waPhone}?text=${waFollowupMessage}` : null;
 
   return (
     <AccordionItem value={customer.id} className={`border-b ${className || ""}`}>
@@ -111,17 +143,25 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </span>
           </div>
 
-          {/* Name only — product shown in expanded detail */}
+          {/* Name + phone */}
           <div className="flex-1 min-w-0 text-left overflow-hidden">
             <p className="font-semibold text-foreground text-sm truncate leading-tight">{customer.name}</p>
             <p className="text-xs text-muted-foreground truncate leading-tight">{customer.phone || "—"}</p>
           </div>
 
-          {/* Right: status + amount — fixed width, no overflow */}
-          <div className="shrink-0 flex flex-col items-end gap-1 ml-1 min-w-[80px]">
-            <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap ${status.className}`}>
-              {status.label}
-            </span>
+          {/* Right: payment source icon + status + amount */}
+          <div className="shrink-0 flex flex-col items-end gap-1 ml-1 min-w-[90px]">
+            <div className="flex items-center gap-1">
+              {/* Payment source badge */}
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex items-center gap-0.5 whitespace-nowrap ${source.className}`}>
+                {source.icon}
+                {source.label}
+              </span>
+              {/* Order status badge */}
+              <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap ${status.className}`}>
+                {status.label}
+              </span>
+            </div>
             <span className="text-xs font-bold text-green-600 whitespace-nowrap">{formatCurrency(customer.paid_amount)}</span>
           </div>
         </div>
@@ -151,13 +191,25 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </div>
           </div>
 
-          {/* Payment Status Banner */}
-          <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${payment.className}`}>
-            {payment.icon}
-            <span className="text-xs font-semibold">
-              Status Bayaran Billplz:&nbsp;
-              <span className="font-bold">{payment.label}</span>
-            </span>
+          {/* Payment Status Banners */}
+          <div className="flex flex-col gap-2">
+            {/* Billplz payment status */}
+            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${payment.className}`}>
+              {payment.icon}
+              <span className="text-xs font-semibold">
+                Status Bayaran BillPlz:&nbsp;
+                <span className="font-bold">{payment.label}</span>
+              </span>
+            </div>
+
+            {/* Payment source banner */}
+            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${source.className}`}>
+              {source.icon}
+              <span className="text-xs font-semibold">
+                Sumber Bayaran:&nbsp;
+                <span className="font-bold">{source.label === "WhatsApp" ? "WhatsApp (Manual)" : "BillPlz (Online)"}</span>
+              </span>
+            </div>
           </div>
 
           {/* Info Grid */}
@@ -235,6 +287,20 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
               <Trash2 className="h-3.5 w-3.5 mr-1" /> Padam
             </Button>
           </div>
+
+          {/* BillPlz Pending Follow-up Button */}
+          {isBillplzPending && waFollowupLink && (
+            <a href={waFollowupLink} target="_blank" rel="noopener noreferrer" className="block">
+              <Button
+                variant="outline"
+                size="sm"
+                className="w-full text-xs justify-center border-yellow-500/40 text-yellow-600 hover:bg-yellow-500/10 hover:text-yellow-700 gap-1.5"
+              >
+                <MessageCircle className="h-3.5 w-3.5" />
+                Peringatan Bayaran BillPlz (Pending)
+              </Button>
+            </a>
+          )}
         </div>
       </AccordionContent>
     </AccordionItem>
