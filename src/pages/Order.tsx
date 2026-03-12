@@ -141,6 +141,8 @@ export default function OrderPage() {
     setStep("form");
   };
 
+  const [whatsappCustomerId, setWhatsappCustomerId] = useState<string | null>(null);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
@@ -159,6 +161,44 @@ export default function OrderPage() {
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
       setStep("form");
+    }
+  };
+
+  // Save WhatsApp order to DB and return customer id
+  const handleWhatsappPayment = async (): Promise<string | null> => {
+    if (!form.name || !form.phone || !form.car_model || !form.state) {
+      toast({ title: "Isi maklumat dahulu", description: "Sila lengkapkan nama, telefon, model kereta dan negeri terlebih dahulu.", variant: "destructive" });
+      return null;
+    }
+    try {
+      const email = form.email?.trim() || `${form.phone.replace(/[^0-9]/g, "")}@noemail.com`;
+      const { data, error } = await supabase.from("customers").insert({
+        name: form.name,
+        phone: form.phone,
+        email,
+        address: form.address,
+        city: form.city || form.state,
+        state: form.state,
+        zip_code: form.zip_code,
+        car_model: form.car_model,
+        product: selectedProduct?.name || "",
+        product_variation: selectedVariation?.name || "",
+        sales_amount: finalPrice,
+        paid_amount: finalPrice,
+        gross_profit: 0,
+        order_status: "processing",
+        payment_source: "whatsapp",
+        order_date: new Date().toISOString(),
+      }).select("id").single();
+      if (error) throw error;
+      if (appliedCoupon?.code) {
+        await supabase.rpc("increment_coupon_usage", { p_code: appliedCoupon.code });
+      }
+      return data?.id || null;
+    } catch (err: any) {
+      console.error("WhatsApp order save error:", err);
+      // Non-blocking: still allow opening WhatsApp even if save fails
+      return null;
     }
   };
 
