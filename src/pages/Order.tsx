@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const MATERIAL_CATEGORIES = [
+const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
   { id: "kain-nylon",     label: "Kain Nylon",             emoji: "🟢", gradient: "from-green-500 to-green-700",   border: "border-green-500/40",  glow: "shadow-green-500/20",  desc: "Tahan lama, mudah dicuci" },
   { id: "kain-fullsilk",  label: "Kain Fullsilk",          emoji: "🟣", gradient: "from-purple-500 to-purple-700", border: "border-purple-500/40", glow: "shadow-purple-500/20", desc: "Mewah, lembut & tahan panas" },
