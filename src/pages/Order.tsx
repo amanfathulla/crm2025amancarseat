@@ -23,13 +23,12 @@ const STATES_MY = [
 interface ProductVariation { id: string; name: string; price: number; }
 interface Product {
   id: string; name: string; price: number;
-  category: string | null; image_url: string | null;
+  category: string | null; image_url: string | null; image_urls?: string[] | null;
   description: string | null; youtube_url: string | null;
   variations: ProductVariation[];
 }
 type Step = "category" | "product" | "form" | "loading";
 
-// ── Breadcrumb steps ──────────────────────────────────────────────────
 const STEP_LABELS: Record<Step, string> = {
   category: "Jenis Material",
   product:  "Pilih Produk",
@@ -42,8 +41,10 @@ export default function OrderPage() {
   const [step, setStep] = useState<Step>("category");
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
+  const [imageIndex, setImageIndex] = useState(0);
 
-  const [selectedCategory, setSelectedCategory] = useState<typeof MATERIAL_CATEGORIES[0] | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<typeof ALL_MATERIAL_CATEGORIES[0] | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
 
@@ -52,11 +53,26 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
-  // Coupon state
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
+  // Fetch enabled categories on mount
+  useEffect(() => {
+    supabase.from("category_settings" as any).select("name, is_enabled").then(({ data }) => {
+      if (data) {
+        const enabled = (data as any[]).filter(r => r.is_enabled).map(r => r.name);
+        setEnabledCategories(enabled);
+      } else {
+        setEnabledCategories(ALL_MATERIAL_CATEGORIES.map(c => c.label));
+      }
+    });
+  }, []);
+
+  const MATERIAL_CATEGORIES = enabledCategories
+    ? ALL_MATERIAL_CATEGORIES.filter(c => enabledCategories.includes(c.label))
+    : ALL_MATERIAL_CATEGORIES;
 
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
@@ -68,16 +84,20 @@ export default function OrderPage() {
       if (error) throw error;
 
       const ids = (prods || []).map(p => p.id);
-      const [varsRes, ytRes] = await Promise.all([
+      const [varsRes, detailRes] = await Promise.all([
         ids.length > 0 ? supabase.from("product_variations").select("id, product_id, name, price").in("product_id", ids).order("price") : { data: [] },
-        ids.length > 0 ? (supabase.from("products").select("id, youtube_url").in("id", ids) as any) : { data: [] },
+        ids.length > 0 ? (supabase.from("products").select("id, youtube_url, image_urls").in("id", ids) as any) : { data: [] },
       ]);
       const vars = varsRes.data || [];
-      const ytMap: Record<string, string | null> = {};
-      (ytRes.data || []).forEach((p: any) => { ytMap[p.id] = p.youtube_url || null; });
+      const detailMap: Record<string, { youtube_url: string | null; image_urls: string[] | null }> = {};
+      (detailRes.data || []).forEach((p: any) => {
+        detailMap[p.id] = { youtube_url: p.youtube_url || null, image_urls: p.image_urls || null };
+      });
 
       setProducts((prods || []).map(p => ({
-        ...p, youtube_url: ytMap[p.id] || null,
+        ...p,
+        youtube_url: detailMap[p.id]?.youtube_url || null,
+        image_urls: detailMap[p.id]?.image_urls || null,
         variations: vars.filter((v: any) => v.product_id === p.id),
       })));
     } catch (err) {
@@ -87,7 +107,7 @@ export default function OrderPage() {
     }
   };
 
-  const handleSelectCategory = (cat: typeof MATERIAL_CATEGORIES[0]) => {
+  const handleSelectCategory = (cat: typeof ALL_MATERIAL_CATEGORIES[0]) => {
     setSelectedCategory(cat);
     setSelectedProduct(null); setSelectedVariation(null);
     fetchProducts(cat.label);
