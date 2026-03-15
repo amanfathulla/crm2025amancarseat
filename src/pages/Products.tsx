@@ -1,7 +1,8 @@
 import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, Image, ExternalLink } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
@@ -44,52 +45,53 @@ export default function Products() {
   const [isDeleteDialogOpen, setIsDeleteDialogOpen] = useState(false);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
+  const [categoryEnabled, setCategoryEnabled] = useState<Record<string, boolean>>({});
+  const [togglingCategory, setTogglingCategory] = useState<string | null>(null);
   const { toast } = useToast();
   const { authClient } = useAuth();
 
   const fetchProducts = async () => {
     try {
       setLoading(true);
-      const { data: productsData, error: productsError } = await authClient
-        .from("products")
-        .select("*")
-        .order("name");
+      const [productsRes, variationsRes, categorySettingsRes] = await Promise.all([
+        authClient.from("products").select("*").order("name"),
+        authClient.from("product_variations").select("*"),
+        authClient.from("category_settings" as any).select("*"),
+      ]);
 
-      if (productsError) throw productsError;
-      
-      const { data: variationsData, error: variationsError } = await authClient
-        .from("product_variations")
-        .select("*");
+      if (productsRes.error) throw productsRes.error;
+      if (variationsRes.error) throw variationsRes.error;
 
-      if (variationsError) throw variationsError;
-      
-      const productsWithVariations: Product[] = productsData.map(product => {
-        const productVariations: ProductVariation[] = variationsData
-          ? variationsData
-              .filter(variation => variation.product_id === product.id)
-              .map(v => ({
-                id: v.id,
-                product_id: v.product_id,
-                name: v.name,
-                price: v.price,
-                cost: v.cost || 0
-              }))
-          : [];
-        
+      const productsWithVariations: Product[] = (productsRes.data || []).map(product => {
+        const productVariations: ProductVariation[] = (variationsRes.data || [])
+          .filter((v: any) => v.product_id === product.id)
+          .map((v: any) => ({
+            id: v.id,
+            product_id: v.product_id,
+            name: v.name,
+            price: v.price,
+            cost: v.cost || 0
+          }));
+
         return {
           ...product,
+          image_urls: (product as any).image_urls || [],
           variations: productVariations.length > 0 ? productVariations : undefined
         };
       });
-      
+
       setProducts(productsWithVariations);
+
+      // Build category enabled map
+      const enabledMap: Record<string, boolean> = {};
+      materialCategories.forEach(c => { enabledMap[c.name] = true; }); // default all enabled
+      (categorySettingsRes.data || []).forEach((row: any) => {
+        enabledMap[row.name] = row.is_enabled;
+      });
+      setCategoryEnabled(enabledMap);
     } catch (error) {
       console.error("Error fetching products:", error);
-      toast({
-        title: "Ralat",
-        description: "Terdapat masalah semasa mengambil produk",
-        variant: "destructive",
-      });
+      toast({ title: "Ralat", description: "Terdapat masalah semasa mengambil produk", variant: "destructive" });
     } finally {
       setLoading(false);
     }
@@ -99,16 +101,33 @@ export default function Products() {
     fetchProducts();
   }, []);
 
-  const getProductsByCategory = (categoryName: string) => {
-    return products.filter(p => p.category === categoryName);
+  const handleToggleCategory = async (categoryName: string, newValue: boolean) => {
+    setTogglingCategory(categoryName);
+    try {
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: categoryName, is_enabled: newValue }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryEnabled(prev => ({ ...prev, [categoryName]: newValue }));
+      toast({
+        title: newValue ? "✅ Kategori diaktifkan" : "🔕 Kategori dilumpuhkan",
+        description: `${categoryName} ${newValue ? "akan terlihat" : "tidak akan terlihat"} dalam laman tempahan`,
+      });
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setTogglingCategory(null);
+    }
   };
 
-  const getCategoryCount = (categoryName: string) => {
-    return products.filter(p => p.category === categoryName).length;
-  };
+  const getProductsByCategory = (categoryName: string) =>
+    products.filter(p => p.category === categoryName);
+
+  const getCategoryCount = (categoryName: string) =>
+    products.filter(p => p.category === categoryName).length;
 
   const filteredProducts = selectedCategory
-    ? getProductsByCategory(selectedCategory).filter(p => 
+    ? getProductsByCategory(selectedCategory).filter(p =>
         p.name.toLowerCase().includes(searchTerm.toLowerCase())
       )
     : [];
@@ -123,27 +142,12 @@ export default function Products() {
     setIsDeleteDialogOpen(true);
   };
 
-  const handleAddSuccess = () => {
-    fetchProducts();
-    setIsAddDialogOpen(false);
-  };
+  const handleAddSuccess = () => { fetchProducts(); setIsAddDialogOpen(false); };
+  const handleEditSuccess = () => { fetchProducts(); setIsEditDialogOpen(false); };
+  const handleDeleteSuccess = () => { fetchProducts(); setSelectedProduct(null); };
 
-  const handleEditSuccess = () => {
-    fetchProducts();
-    setIsEditDialogOpen(false);
-  };
-
-  const handleDeleteSuccess = () => {
-    fetchProducts();
-    setSelectedProduct(null);
-  };
-
-  const formatPrice = (price: number) => {
-    return new Intl.NumberFormat('en-MY', {
-      style: 'currency',
-      currency: 'MYR',
-    }).format(price);
-  };
+  const formatPrice = (price: number) =>
+    new Intl.NumberFormat('en-MY', { style: 'currency', currency: 'MYR' }).format(price);
 
   // Category Cards View
   const renderCategoryCards = () => (
@@ -160,40 +164,70 @@ export default function Products() {
         </Button>
       </div>
 
+      {/* Enable/Disable info banner */}
+      <div className="flex items-start gap-2 bg-muted/40 rounded-xl px-4 py-3 border text-sm text-muted-foreground">
+        <Eye className="h-4 w-4 shrink-0 mt-0.5 text-primary" />
+        <span>Toggle <strong>Enable/Disable</strong> pada setiap kad untuk tunjuk atau sembunyikan kategori dalam <strong>laman tempahan pelanggan</strong>.</span>
+      </div>
+
       {/* Category Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
         {materialCategories.map((category) => {
           const count = getCategoryCount(category.name);
+          const isEnabled = categoryEnabled[category.name] !== false;
+          const isToggling = togglingCategory === category.name;
+
           return (
-        <button
-              key={category.name}
-              onClick={() => setSelectedCategory(category.name)}
-              className={`relative overflow-hidden rounded-2xl bg-gradient-to-br ${category.gradient} p-6 text-white shadow-lg hover:shadow-xl transition-all duration-300 hover:-translate-y-1 hover:scale-[1.02] text-left group`}
-            >
-              {/* Background decoration */}
-              <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
-              <div className="absolute bottom-0 left-0 -mb-8 -ml-8 w-32 h-32 rounded-full bg-black/5" />
-              
-              {/* Hot Selling Badge */}
-              {category.hotSelling && (
-                <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
-                  🔥 Paling Hot
+            <div key={category.name} className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${isEnabled ? "" : "opacity-60"}`}>
+              {/* Card clickable area */}
+              <button
+                onClick={() => setSelectedCategory(category.name)}
+                className={`w-full relative overflow-hidden bg-gradient-to-br ${category.gradient} p-5 text-white text-left group`}
+              >
+                {/* Background decoration */}
+                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
+
+                {/* Hot Selling Badge */}
+                {category.hotSelling && isEnabled && (
+                  <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
+                    🔥 Paling Hot
+                  </div>
+                )}
+
+                <div className="relative z-10">
+                  <span className="text-3xl mb-2 block">{category.icon}</span>
+                  <h3 className="text-lg font-semibold mb-0.5 leading-tight">{category.name}</h3>
+                  <p className="text-white/80 text-sm">{count} produk</p>
                 </div>
-              )}
-              
-              <div className="relative z-10">
-                <span className="text-3xl mb-3 block">{category.icon}</span>
-                <h3 className="text-lg font-semibold mb-1 leading-tight">{category.name}</h3>
-                <p className="text-white/80 text-sm">{count} produk</p>
+              </button>
+
+              {/* Enable/Disable Toggle bar */}
+              <div className={`flex items-center justify-between px-4 py-2.5 bg-card border-t`}>
+                <div className="flex items-center gap-2">
+                  {isEnabled
+                    ? <Eye className="h-4 w-4 text-primary" />
+                    : <EyeOff className="h-4 w-4 text-muted-foreground" />
+                  }
+                  <span className={`text-sm font-medium ${isEnabled ? "text-foreground" : "text-muted-foreground"}`}>
+                    {isEnabled ? "Aktif dalam laman tempahan" : "Disembunyikan"}
+                  </span>
+                </div>
+                <div className="flex items-center gap-2">
+                  {isToggling && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
+                  <Switch
+                    checked={isEnabled}
+                    onCheckedChange={(val) => handleToggleCategory(category.name, val)}
+                    disabled={isToggling}
+                  />
+                </div>
               </div>
-            </button>
+            </div>
           );
         })}
       </div>
 
       {/* Quick Stats */}
       <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
-        {/* Total Products */}
         <div className="bg-card rounded-xl border p-4">
           <div className="flex items-center gap-3">
             <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -206,7 +240,6 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Postage Info */}
         <div className="bg-card rounded-xl border p-4">
           <div className="flex items-center gap-3 mb-3">
             <div className="w-10 h-10 rounded-full bg-orange-500/10 flex items-center justify-center">
@@ -232,23 +265,19 @@ export default function Products() {
   // Product List View for Selected Category
   const renderProductList = () => {
     const categoryConfig = materialCategories.find(c => c.name === selectedCategory);
-    
+
     return (
       <div className="space-y-4">
-        {/* Header with Back Button */}
         <div className="flex flex-col sm:flex-row sm:items-center gap-4">
-          <Button 
-            variant="ghost" 
-            onClick={() => {
-              setSelectedCategory(null);
-              setSearchTerm("");
-            }}
+          <Button
+            variant="ghost"
+            onClick={() => { setSelectedCategory(null); setSearchTerm(""); }}
             className="w-fit gap-2"
           >
             <ChevronLeft className="h-4 w-4" />
             Kembali
           </Button>
-          
+
           <div className="flex-1">
             <div className="flex items-center gap-3">
               <span className="text-2xl">{categoryConfig?.icon}</span>
@@ -260,7 +289,6 @@ export default function Products() {
           </div>
         </div>
 
-        {/* Search & Add */}
         <div className="flex flex-col sm:flex-row gap-3">
           <div className="relative flex-1">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
@@ -277,7 +305,6 @@ export default function Products() {
           </Button>
         </div>
 
-        {/* Product List */}
         <div className="bg-card rounded-xl border divide-y">
           {filteredProducts.length === 0 ? (
             <div className="py-12 text-center text-muted-foreground">
@@ -289,55 +316,48 @@ export default function Products() {
               const twoSeater = product.variations?.find(v => v.name === "2 Seater");
               const fiveSeater = product.variations?.find(v => v.name === "5 Seater");
               const sevenSeater = product.variations?.find(v => v.name === "7 Seater");
-              
+              const images = (product.image_urls && product.image_urls.length > 0)
+                ? product.image_urls
+                : product.image_url ? [product.image_url] : [];
+
               return (
-                <div 
-                  key={product.id} 
-                  className="p-4 hover:bg-muted/30 transition-colors"
-                >
+                <div key={product.id} className="p-4 hover:bg-muted/30 transition-colors">
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
-                      <div className="flex items-center gap-2 mb-2">
+                      <div className="flex items-center gap-2 mb-2 flex-wrap">
                         <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
-                        {product.image_url && (
-                          <a 
-                            href={product.image_url} 
-                            target="_blank" 
-                            rel="noopener noreferrer"
-                            className="text-blue-500 hover:text-blue-600"
-                          >
-                            <ExternalLink className="h-4 w-4" />
+                        {images.length > 0 && (
+                          <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
+                            📷 {images.length}
+                          </span>
+                        )}
+                        {product.youtube_url && (
+                          <a href={product.youtube_url} target="_blank" rel="noopener noreferrer"
+                            className="text-red-500 hover:text-red-600 shrink-0">
+                            <ExternalLink className="h-3.5 w-3.5" />
                           </a>
                         )}
                       </div>
-                      
-                      {/* Price Grid - Responsive */}
+
                       <div className="grid grid-cols-3 gap-2 text-sm">
                         <div className="bg-muted/50 rounded-lg p-2 text-center">
                           <p className="text-xs text-muted-foreground mb-1">2 Seater</p>
                           <p className="font-medium">{twoSeater ? formatPrice(twoSeater.price) : "-"}</p>
-                          {twoSeater?.cost ? (
-                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(twoSeater.cost)}</p>
-                          ) : null}
+                          {twoSeater?.cost ? <p className="text-xs text-muted-foreground">Kos: {formatPrice(twoSeater.cost)}</p> : null}
                         </div>
                         <div className="bg-muted/50 rounded-lg p-2 text-center">
                           <p className="text-xs text-muted-foreground mb-1">5 Seater</p>
                           <p className="font-medium">{fiveSeater ? formatPrice(fiveSeater.price) : "-"}</p>
-                          {fiveSeater?.cost ? (
-                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(fiveSeater.cost)}</p>
-                          ) : null}
+                          {fiveSeater?.cost ? <p className="text-xs text-muted-foreground">Kos: {formatPrice(fiveSeater.cost)}</p> : null}
                         </div>
                         <div className="bg-muted/50 rounded-lg p-2 text-center">
                           <p className="text-xs text-muted-foreground mb-1">7 Seater</p>
                           <p className="font-medium">{sevenSeater ? formatPrice(sevenSeater.price) : "-"}</p>
-                          {sevenSeater?.cost ? (
-                            <p className="text-xs text-muted-foreground">Kos: {formatPrice(sevenSeater.cost)}</p>
-                          ) : null}
+                          {sevenSeater?.cost ? <p className="text-xs text-muted-foreground">Kos: {formatPrice(sevenSeater.cost)}</p> : null}
                         </div>
                       </div>
                     </div>
-                    
-                    {/* Actions */}
+
                     <DropdownMenu>
                       <DropdownMenuTrigger asChild>
                         <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
@@ -349,7 +369,7 @@ export default function Products() {
                           <Edit className="h-4 w-4 mr-2" />
                           Edit
                         </DropdownMenuItem>
-                        <DropdownMenuItem 
+                        <DropdownMenuItem
                           onClick={() => handleDeleteClick(product)}
                           className="text-destructive focus:text-destructive"
                         >
@@ -385,13 +405,11 @@ export default function Products() {
         <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Tambah Produk Baru</DialogTitle>
-            <DialogDescription>
-              Isi maklumat untuk membuat produk baru.
-            </DialogDescription>
+            <DialogDescription>Isi maklumat untuk membuat produk baru.</DialogDescription>
           </DialogHeader>
-          <ProductForm 
-            onSuccess={handleAddSuccess} 
-            onCancel={() => setIsAddDialogOpen(false)} 
+          <ProductForm
+            onSuccess={handleAddSuccess}
+            onCancel={() => setIsAddDialogOpen(false)}
           />
         </DialogContent>
       </Dialog>
@@ -402,19 +420,20 @@ export default function Products() {
           <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>Edit Produk</DialogTitle>
-              <DialogDescription>
-                Kemaskini maklumat produk {selectedProduct.name}.
-              </DialogDescription>
+              <DialogDescription>Kemaskini maklumat produk {selectedProduct.name}.</DialogDescription>
             </DialogHeader>
-            <ProductForm 
-              onSuccess={handleEditSuccess} 
+            <ProductForm
+              onSuccess={handleEditSuccess}
               onCancel={() => setIsEditDialogOpen(false)}
               initialData={{
                 id: selectedProduct.id,
                 name: selectedProduct.name,
                 image_url: selectedProduct.image_url || "",
+                image_urls: selectedProduct.image_urls || [],
                 category: selectedProduct.category || "",
-                variations: selectedProduct.variations || []
+                description: selectedProduct.description || "",
+                youtube_url: selectedProduct.youtube_url || "",
+                variations: selectedProduct.variations || [],
               }}
             />
           </DialogContent>
