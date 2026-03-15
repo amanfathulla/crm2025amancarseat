@@ -334,7 +334,7 @@ export default function OrderPage() {
                 {products.map((product) => {
                   const isSelected = selectedProduct?.id === product.id;
                   return (
-                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); }}
+                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0); }}
                       className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-150 ${
                         isSelected
                           ? "border-blue-500/60 bg-blue-500/10 text-white ring-1 ring-blue-500/30"
