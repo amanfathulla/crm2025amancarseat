@@ -360,37 +360,82 @@ export default function OrderPage() {
             )}
 
             {/* Product detail card */}
-            {selectedProduct && (
-              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
-                {selectedProduct.image_url && (
-                  <div className="w-full aspect-video overflow-hidden bg-black/40">
-                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                {selectedProduct.description && (
-                  <div className="p-4 flex gap-3 border-t border-white/8">
-                    <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
-                    <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
-                  </div>
-                )}
-                {getYoutubeId(selectedProduct.youtube_url) && (
-                  <div className="p-4 pt-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Youtube className="h-4 w-4 text-red-400" />
-                      <span className="text-white/50 text-xs font-medium">Video Produk</span>
-                    </div>
-                    <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen title="Video produk"
+            {selectedProduct && (() => {
+              const imgs = (selectedProduct.image_urls && selectedProduct.image_urls.length > 0)
+                ? selectedProduct.image_urls
+                : selectedProduct.image_url ? [selectedProduct.image_url] : [];
+              return (
+                <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
+                  {/* Multi-image carousel */}
+                  {imgs.length > 0 && (
+                    <div className="relative w-full aspect-video overflow-hidden bg-black/40">
+                      <img
+                        src={imgs[imageIndex] || imgs[0]}
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover transition-opacity duration-200"
                       />
+                      {imgs.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setImageIndex(i => (i - 1 + imgs.length) % imgs.length)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setImageIndex(i => (i + 1) % imgs.length)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                          >
+                            <ChevronRightIcon className="h-4 w-4" />
+                          </button>
+                          {/* Dots indicator */}
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                            {imgs.map((_, i) => (
+                              <button key={i} onClick={() => setImageIndex(i)}
+                                className={`w-1.5 h-1.5 rounded-full transition-all ${i === imageIndex ? "bg-white w-4" : "bg-white/40"}`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                  {/* Thumbnail strip */}
+                  {imgs.length > 1 && (
+                    <div className="flex gap-2 p-3 overflow-x-auto">
+                      {imgs.map((url, i) => (
+                        <button key={i} onClick={() => setImageIndex(i)}
+                          className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === imageIndex ? "border-white/60" : "border-transparent opacity-50 hover:opacity-75"}`}>
+                          <img src={url} alt={`Gambar ${i+1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {selectedProduct.description && (
+                    <div className="p-4 flex gap-3 border-t border-white/8">
+                      <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
+                      <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
+                    </div>
+                  )}
+                  {getYoutubeId(selectedProduct.youtube_url) && (
+                    <div className="p-4 pt-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Youtube className="h-4 w-4 text-red-400" />
+                        <span className="text-white/50 text-xs font-medium">Video Produk</span>
+                      </div>
+                      <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen title="Video produk"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Variations */}
             {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
