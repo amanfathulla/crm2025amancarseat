@@ -121,6 +121,30 @@ export type Database = {
         }
         Relationships: []
       }
+      category_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          name: string
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          name: string
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          name?: string
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       coupons: {
         Row: {
           code: string
@@ -535,6 +559,7 @@ export type Database = {
           description: string | null
           id: string
           image_url: string | null
+          image_urls: string[] | null
           inventory: number | null
           name: string
           price: number
@@ -551,6 +576,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           inventory?: number | null
           name: string
           price: number
@@ -567,6 +593,7 @@ export type Database = {
           description?: string | null
           id?: string
           image_url?: string | null
+          image_urls?: string[] | null
           inventory?: number | null
           name?: string
           price?: number

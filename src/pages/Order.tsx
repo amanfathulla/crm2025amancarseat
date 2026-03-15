@@ -1,13 +1,13 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
 
-const MATERIAL_CATEGORIES = [
+const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
   { id: "kain-nylon",     label: "Kain Nylon",             emoji: "🟢", gradient: "from-green-500 to-green-700",   border: "border-green-500/40",  glow: "shadow-green-500/20",  desc: "Tahan lama, mudah dicuci" },
   { id: "kain-fullsilk",  label: "Kain Fullsilk",          emoji: "🟣", gradient: "from-purple-500 to-purple-700", border: "border-purple-500/40", glow: "shadow-purple-500/20", desc: "Mewah, lembut & tahan panas" },
@@ -23,13 +23,12 @@ const STATES_MY = [
 interface ProductVariation { id: string; name: string; price: number; }
 interface Product {
   id: string; name: string; price: number;
-  category: string | null; image_url: string | null;
+  category: string | null; image_url: string | null; image_urls?: string[] | null;
   description: string | null; youtube_url: string | null;
   variations: ProductVariation[];
 }
 type Step = "category" | "product" | "form" | "loading";
 
-// ── Breadcrumb steps ──────────────────────────────────────────────────
 const STEP_LABELS: Record<Step, string> = {
   category: "Jenis Material",
   product:  "Pilih Produk",
@@ -42,8 +41,10 @@ export default function OrderPage() {
   const [step, setStep] = useState<Step>("category");
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
+  const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
+  const [imageIndex, setImageIndex] = useState(0);
 
-  const [selectedCategory, setSelectedCategory] = useState<typeof MATERIAL_CATEGORIES[0] | null>(null);
+  const [selectedCategory, setSelectedCategory] = useState<typeof ALL_MATERIAL_CATEGORIES[0] | null>(null);
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedVariation, setSelectedVariation] = useState<ProductVariation | null>(null);
 
@@ -52,11 +53,26 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
-  // Coupon state
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
+  // Fetch enabled categories on mount
+  useEffect(() => {
+    supabase.from("category_settings" as any).select("name, is_enabled").then(({ data }) => {
+      if (data) {
+        const enabled = (data as any[]).filter(r => r.is_enabled).map(r => r.name);
+        setEnabledCategories(enabled);
+      } else {
+        setEnabledCategories(ALL_MATERIAL_CATEGORIES.map(c => c.label));
+      }
+    });
+  }, []);
+
+  const MATERIAL_CATEGORIES = enabledCategories
+    ? ALL_MATERIAL_CATEGORIES.filter(c => enabledCategories.includes(c.label))
+    : ALL_MATERIAL_CATEGORIES;
 
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
@@ -68,16 +84,20 @@ export default function OrderPage() {
       if (error) throw error;
 
       const ids = (prods || []).map(p => p.id);
-      const [varsRes, ytRes] = await Promise.all([
+      const [varsRes, detailRes] = await Promise.all([
         ids.length > 0 ? supabase.from("product_variations").select("id, product_id, name, price").in("product_id", ids).order("price") : { data: [] },
-        ids.length > 0 ? (supabase.from("products").select("id, youtube_url").in("id", ids) as any) : { data: [] },
+        ids.length > 0 ? (supabase.from("products").select("id, youtube_url, image_urls").in("id", ids) as any) : { data: [] },
       ]);
       const vars = varsRes.data || [];
-      const ytMap: Record<string, string | null> = {};
-      (ytRes.data || []).forEach((p: any) => { ytMap[p.id] = p.youtube_url || null; });
+      const detailMap: Record<string, { youtube_url: string | null; image_urls: string[] | null }> = {};
+      (detailRes.data || []).forEach((p: any) => {
+        detailMap[p.id] = { youtube_url: p.youtube_url || null, image_urls: p.image_urls || null };
+      });
 
       setProducts((prods || []).map(p => ({
-        ...p, youtube_url: ytMap[p.id] || null,
+        ...p,
+        youtube_url: detailMap[p.id]?.youtube_url || null,
+        image_urls: detailMap[p.id]?.image_urls || null,
         variations: vars.filter((v: any) => v.product_id === p.id),
       })));
     } catch (err) {
@@ -87,7 +107,7 @@ export default function OrderPage() {
     }
   };
 
-  const handleSelectCategory = (cat: typeof MATERIAL_CATEGORIES[0]) => {
+  const handleSelectCategory = (cat: typeof ALL_MATERIAL_CATEGORIES[0]) => {
     setSelectedCategory(cat);
     setSelectedProduct(null); setSelectedVariation(null);
     fetchProducts(cat.label);
@@ -314,7 +334,7 @@ export default function OrderPage() {
                 {products.map((product) => {
                   const isSelected = selectedProduct?.id === product.id;
                   return (
-                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); }}
+                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0); }}
                       className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-150 ${
                         isSelected
                           ? "border-blue-500/60 bg-blue-500/10 text-white ring-1 ring-blue-500/30"
@@ -340,37 +360,82 @@ export default function OrderPage() {
             )}
 
             {/* Product detail card */}
-            {selectedProduct && (
-              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
-                {selectedProduct.image_url && (
-                  <div className="w-full aspect-video overflow-hidden bg-black/40">
-                    <img src={selectedProduct.image_url} alt={selectedProduct.name} className="w-full h-full object-cover" />
-                  </div>
-                )}
-                {selectedProduct.description && (
-                  <div className="p-4 flex gap-3 border-t border-white/8">
-                    <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
-                    <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
-                  </div>
-                )}
-                {getYoutubeId(selectedProduct.youtube_url) && (
-                  <div className="p-4 pt-0">
-                    <div className="flex items-center gap-2 mb-2">
-                      <Youtube className="h-4 w-4 text-red-400" />
-                      <span className="text-white/50 text-xs font-medium">Video Produk</span>
-                    </div>
-                    <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
-                      <iframe
-                        src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
-                        className="w-full h-full"
-                        allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                        allowFullScreen title="Video produk"
+            {selectedProduct && (() => {
+              const imgs = (selectedProduct.image_urls && selectedProduct.image_urls.length > 0)
+                ? selectedProduct.image_urls
+                : selectedProduct.image_url ? [selectedProduct.image_url] : [];
+              return (
+                <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
+                  {/* Multi-image carousel */}
+                  {imgs.length > 0 && (
+                    <div className="relative w-full aspect-video overflow-hidden bg-black/40">
+                      <img
+                        src={imgs[imageIndex] || imgs[0]}
+                        alt={selectedProduct.name}
+                        className="w-full h-full object-cover transition-opacity duration-200"
                       />
+                      {imgs.length > 1 && (
+                        <>
+                          <button
+                            onClick={() => setImageIndex(i => (i - 1 + imgs.length) % imgs.length)}
+                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                          >
+                            <ChevronLeft className="h-4 w-4" />
+                          </button>
+                          <button
+                            onClick={() => setImageIndex(i => (i + 1) % imgs.length)}
+                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
+                          >
+                            <ChevronRightIcon className="h-4 w-4" />
+                          </button>
+                          {/* Dots indicator */}
+                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
+                            {imgs.map((_, i) => (
+                              <button key={i} onClick={() => setImageIndex(i)}
+                                className={`w-1.5 h-1.5 rounded-full transition-all ${i === imageIndex ? "bg-white w-4" : "bg-white/40"}`}
+                              />
+                            ))}
+                          </div>
+                        </>
+                      )}
                     </div>
-                  </div>
-                )}
-              </div>
-            )}
+                  )}
+                  {/* Thumbnail strip */}
+                  {imgs.length > 1 && (
+                    <div className="flex gap-2 p-3 overflow-x-auto">
+                      {imgs.map((url, i) => (
+                        <button key={i} onClick={() => setImageIndex(i)}
+                          className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === imageIndex ? "border-white/60" : "border-transparent opacity-50 hover:opacity-75"}`}>
+                          <img src={url} alt={`Gambar ${i+1}`} className="w-full h-full object-cover" />
+                        </button>
+                      ))}
+                    </div>
+                  )}
+                  {selectedProduct.description && (
+                    <div className="p-4 flex gap-3 border-t border-white/8">
+                      <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
+                      <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
+                    </div>
+                  )}
+                  {getYoutubeId(selectedProduct.youtube_url) && (
+                    <div className="p-4 pt-0">
+                      <div className="flex items-center gap-2 mb-2">
+                        <Youtube className="h-4 w-4 text-red-400" />
+                        <span className="text-white/50 text-xs font-medium">Video Produk</span>
+                      </div>
+                      <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
+                        <iframe
+                          src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
+                          className="w-full h-full"
+                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
+                          allowFullScreen title="Video produk"
+                        />
+                      </div>
+                    </div>
+                  )}
+                </div>
+              );
+            })()}
 
             {/* Variations */}
             {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
