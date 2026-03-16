@@ -704,21 +704,7 @@ export default function OrderPage() {
                   <button
                     type="button"
                     className="flex items-center justify-center gap-2 w-full h-12 bg-green-500 hover:bg-green-600 text-white font-bold text-sm rounded-xl transition-all shadow-lg shadow-green-900/30"
-                    onClick={async () => {
-                      const savedId = await handleWhatsappPayment();
-                      const waMsg = encodeURIComponent(
-                        `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
-                        `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
-                        `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
-                        `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
-                        `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n` +
-                        (savedId ? `No. Tempahan: #${savedId.slice(-6).toUpperCase()}\n` : "") +
-                        `\nSila sahkan penerimaan bayaran. Terima kasih! 🙏`
-                      );
-                      if (savedId !== undefined) {
-                        window.open(`https://wa.me/60194503184?text=${waMsg}`, "_blank");
-                      }
-                    }}
+                    onClick={handleWhatsappPayment}
                   >
                     <span className="text-base">📱</span>
                     Hubungi & Bayar Via WhatsApp
