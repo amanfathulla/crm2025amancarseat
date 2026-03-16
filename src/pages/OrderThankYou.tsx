@@ -41,7 +41,7 @@ export default function OrderThankYou() {
     if (customerId) {
       supabase
         .from("customers")
-        .select("name, phone, email, car_model, product, product_variation, sales_amount, paid_amount, address, city, state, order_number, order_date, order_status")
+        .select("name, phone, email, car_model, product, product_variation, sales_amount, paid_amount, address, city, state, order_number, order_date, order_status, payment_source")
         .eq("id", customerId)
         .single()
         .then(({ data }) => {
