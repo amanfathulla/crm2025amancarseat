@@ -19,6 +19,7 @@ interface CustomerData {
   order_number: number;
   order_date: string;
   order_status: string;
+  payment_source: string;
 }
 
 const WA_NUMBER = "60194503184";
