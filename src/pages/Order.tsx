@@ -184,12 +184,13 @@ export default function OrderPage() {
     }
   };
 
-  // Save WhatsApp order to DB and return customer id
-  const handleWhatsappPayment = async (): Promise<string | null> => {
+  // Save WhatsApp order to DB, send Telegram notification, redirect to thank-you, then open WhatsApp
+  const handleWhatsappPayment = async () => {
     if (!form.name || !form.phone || !form.car_model || !form.state) {
       toast({ title: "Isi maklumat dahulu", description: "Sila lengkapkan nama, telefon, model kereta dan negeri terlebih dahulu.", variant: "destructive" });
-      return null;
+      return;
     }
+    setStep("loading");
     try {
       const email = form.email?.trim() || `${form.phone.replace(/[^0-9]/g, "")}@noemail.com`;
       const { data, error } = await supabase.from("customers").insert({
@@ -209,16 +210,42 @@ export default function OrderPage() {
         order_status: "processing",
         payment_source: "whatsapp",
         order_date: new Date().toISOString(),
-      }).select("id").single();
+      }).select("id, order_number").single();
       if (error) throw error;
+
       if (appliedCoupon?.code) {
         await supabase.rpc("increment_coupon_usage", { p_code: appliedCoupon.code });
       }
-      return data?.id || null;
+
+      const customerId = data?.id;
+      const orderNum = data?.order_number;
+
+      // Send Telegram notification (non-blocking)
+      fetch(`https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/telegram-notify`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ customer_id: customerId, payment_source: "whatsapp" }),
+      }).catch(() => {});
+
+      // Build WhatsApp message
+      const waMsg = encodeURIComponent(
+        `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
+        `📋 No. Tempahan: #${orderNum || customerId?.slice(-6).toUpperCase() || "—"}\n` +
+        `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
+        `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
+        `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
+        `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
+        `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
+      );
+
+      // Open WhatsApp in new tab
+      window.open(`https://wa.me/60194503184?text=${waMsg}`, "_blank");
+
+      // Redirect to thank-you page
+      window.location.href = `/order/thank-you?customer_id=${customerId}&paid=true&source=whatsapp`;
     } catch (err: any) {
-      console.error("WhatsApp order save error:", err);
-      // Non-blocking: still allow opening WhatsApp even if save fails
-      return null;
+      toast({ title: "Ralat", description: "Gagal simpan tempahan. Sila cuba lagi.", variant: "destructive" });
+      setStep("form");
     }
   };
 
