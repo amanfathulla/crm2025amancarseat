@@ -632,6 +632,36 @@ export type Database = {
         }
         Relationships: []
       }
+      telegram_settings: {
+        Row: {
+          bot_token: string
+          chat_id: string
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          notify_new_order: boolean
+          updated_at: string | null
+        }
+        Insert: {
+          bot_token?: string
+          chat_id?: string
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          notify_new_order?: boolean
+          updated_at?: string | null
+        }
+        Update: {
+          bot_token?: string
+          chat_id?: string
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          notify_new_order?: boolean
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       yearly_sales: {
         Row: {
           created_at: string | null
