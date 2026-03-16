@@ -33,7 +33,9 @@ export default function OrderThankYou() {
   const [customer, setCustomer] = useState<CustomerData | null>(null);
   const [loading, setLoading] = useState(true);
 
+  const sourceParam = params.get("source");
   const isPaid = paidParam === "true" || (!statusParam && !paidParam) || (statusParam !== "failed" && paidParam !== "false");
+  const isWhatsapp = sourceParam === "whatsapp" || customer?.payment_source === "whatsapp";
 
   useEffect(() => {
     if (customerId) {
