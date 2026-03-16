@@ -128,6 +128,14 @@ serve(async (req) => {
       .update({ zip_code: billData.id })
       .eq('id', customer.id);
 
+    // Fire Telegram notification (non-blocking)
+    const supabaseProjectUrl = Deno.env.get('SUPABASE_URL') || '';
+    fetch(`${supabaseProjectUrl}/functions/v1/telegram-notify`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ customer_id: customer.id, payment_source: 'billplz' }),
+    }).catch(() => {});
+
     return new Response(JSON.stringify({
       bill_url: billData.url,
       bill_id: billData.id,
