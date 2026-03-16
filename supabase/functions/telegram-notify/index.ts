@@ -24,11 +24,10 @@ Deno.serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     const body = await req.json();
-    const { customer_id, payment_source } = body;
 
     // Fetch Telegram settings
     const { data: settings, error: settingsErr } = await supabase
-      .from("telegram_settings")
+      .from("telegram_settings" as any)
       .select("bot_token, chat_id, is_enabled, notify_new_order")
       .limit(1)
       .single();
@@ -39,17 +38,43 @@ Deno.serve(async (req) => {
       });
     }
 
+    if (!settings.chat_id) {
+      return new Response(JSON.stringify({ ok: false, reason: "No chat_id configured" }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    let message: string;
+
+    // Test message mode
+    if (body._test) {
+      message = body._message || "🧪 *Ujian Notifikasi ACS Legacy CRM*\n\nTetapan Telegram berjaya disambungkan! ✅";
+      const chatId = body._chat_id || settings.chat_id;
+
+      const response = await fetch(`${GATEWAY_URL}/sendMessage`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": TELEGRAM_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ chat_id: chatId, text: message, parse_mode: "Markdown" }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(`Telegram API failed [${response.status}]: ${JSON.stringify(result)}`);
+      return new Response(JSON.stringify({ ok: true, test: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // Normal order notification
     if (!settings.is_enabled || !settings.notify_new_order) {
       return new Response(JSON.stringify({ ok: false, reason: "Notifications disabled" }), {
         headers: { ...corsHeaders, "Content-Type": "application/json" },
       });
     }
 
-    if (!settings.chat_id) {
-      return new Response(JSON.stringify({ ok: false, reason: "No chat_id configured" }), {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
-      });
-    }
+    const { customer_id, payment_source } = body;
 
     // Fetch customer data
     const { data: customer, error: custErr } = await supabase
@@ -64,19 +89,19 @@ Deno.serve(async (req) => {
       });
     }
 
-    const src = (customer.payment_source || payment_source || "billplz").toLowerCase();
-    const srcLabel = src === "whatsapp" ? "💬 WhatsApp" : "💳 BillPlz";
-    const amount = `RM${Number(customer.sales_amount || 0).toFixed(2)}`;
-    const variation = customer.product_variation ? ` (${customer.product_variation})` : "";
+    const src = ((customer as any).payment_source || payment_source || "billplz").toLowerCase();
+    const srcLabel = src === "whatsapp" ? "💬 WhatsApp (Manual)" : "💳 BillPlz (Online)";
+    const amount = `RM${Number((customer as any).sales_amount || 0).toFixed(2)}`;
+    const variation = (customer as any).product_variation ? ` (${(customer as any).product_variation})` : "";
 
-    const message =
+    message =
       `🛒 *TEMPAHAN BARU DITERIMA!*\n\n` +
-      `📋 No. Tempahan: *#${customer.order_number || "—"}*\n` +
-      `👤 Nama: ${customer.name}\n` +
-      `📱 Telefon: ${customer.phone}\n` +
-      `🚗 Kereta: ${customer.car_model || "—"}\n` +
-      `📦 Produk: ${customer.product || "—"}${variation}\n` +
-      `📍 Negeri: ${customer.state || "—"}\n` +
+      `📋 No. Tempahan: *#${(customer as any).order_number || "—"}*\n` +
+      `👤 Nama: ${(customer as any).name}\n` +
+      `📱 Telefon: ${(customer as any).phone}\n` +
+      `🚗 Kereta: ${(customer as any).car_model || "—"}\n` +
+      `📦 Produk: ${(customer as any).product || "—"}${variation}\n` +
+      `📍 Negeri: ${(customer as any).state || "—"}\n` +
       `💰 Jumlah: *${amount}*\n` +
       `💳 Kaedah Bayar: ${srcLabel}\n\n` +
       `_Sila semak CRM untuk maklumat lanjut._`;
