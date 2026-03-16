@@ -6,7 +6,8 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CreditCard, CheckCircle2, Tag, Trash2, Plus } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CreditCard, CheckCircle2, Tag, Trash2, Plus, Send } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 interface AdminSettingsDialogProps {
   open: boolean;
@@ -23,6 +24,14 @@ interface Coupon {
   valid_from: string;
   valid_until: string;
   is_active: boolean;
+}
+
+interface TelegramSettings {
+  id: string;
+  bot_token: string;
+  chat_id: string;
+  is_enabled: boolean;
+  notify_new_order: boolean;
 }
 
 export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogProps) {
@@ -64,11 +73,25 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   const [couponLimit, setCouponLimit] = useState("100");
   const [couponValidUntil, setCouponValidUntil] = useState("");
 
+  // Telegram form
+  const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);
+  const [telegramRowId, setTelegramRowId] = useState<string | null>(null);
+  const [telegramBotToken, setTelegramBotToken] = useState("");
+  const [telegramChatId, setTelegramChatId] = useState("");
+  const [telegramEnabled, setTelegramEnabled] = useState(false);
+  const [telegramNotifyOrder, setTelegramNotifyOrder] = useState(true);
+  const [showBotToken, setShowBotToken] = useState(false);
+  const [isLoadingTelegram, setIsLoadingTelegram] = useState(false);
+  const [isSavingTelegram, setIsSavingTelegram] = useState(false);
+  const [telegramSaved, setTelegramSaved] = useState(false);
+  const [isSendingTest, setIsSendingTest] = useState(false);
+
   // Load data when dialog opens
   useEffect(() => {
     if (!open) return;
     fetchBillplz();
     fetchCoupons();
+    fetchTelegram();
   }, [open, authClient]);
 
   const fetchBillplz = async () => {
@@ -102,11 +125,31 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     finally { setIsLoadingCoupons(false); }
   };
 
+  const fetchTelegram = async () => {
+    setIsLoadingTelegram(true);
+    try {
+      const { data } = await (authClient as any)
+        .from("telegram_settings")
+        .select("id, bot_token, chat_id, is_enabled, notify_new_order")
+        .limit(1)
+        .single();
+      if (data) {
+        setTelegramRowId(data.id);
+        setTelegramBotToken(data.bot_token || "");
+        setTelegramChatId(data.chat_id || "");
+        setTelegramEnabled(data.is_enabled ?? false);
+        setTelegramNotifyOrder(data.notify_new_order ?? true);
+        setTelegramSettings(data);
+      }
+    } catch (_) {}
+    finally { setIsLoadingTelegram(false); }
+  };
+
   const resetForms = () => {
     setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     setPassword(""); setNewEmail("");
     setShowCurrentPw(false); setShowNewPw(false); setShowEmailPw(false);
-    setBillplzSaved(false);
+    setBillplzSaved(false); setTelegramSaved(false);
     setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
   };
 
@@ -169,6 +212,60 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     finally { setIsSavingBillplz(false); }
   };
 
+  // ---- Telegram ----
+  const handleSaveTelegram = async () => {
+    setIsSavingTelegram(true);
+    try {
+      const payload = {
+        bot_token: telegramBotToken.trim(),
+        chat_id: telegramChatId.trim(),
+        is_enabled: telegramEnabled,
+        notify_new_order: telegramNotifyOrder,
+        updated_at: new Date().toISOString(),
+      };
+      if (telegramRowId) {
+        const { error } = await (authClient as any).from("telegram_settings").update(payload).eq("id", telegramRowId);
+        if (error) throw error;
+      } else {
+        const { data, error } = await (authClient as any).from("telegram_settings").insert(payload).select("id").single();
+        if (error) throw error;
+        if (data) setTelegramRowId(data.id);
+      }
+      setTelegramSaved(true);
+      toast({ title: "Berjaya!", description: "Tetapan Telegram telah disimpan" });
+      setTimeout(() => setTelegramSaved(false), 3000);
+    } catch { toast({ title: "Error", description: "Gagal simpan tetapan Telegram", variant: "destructive" }); }
+    finally { setIsSavingTelegram(false); }
+  };
+
+  const handleTestTelegram = async () => {
+    if (!telegramChatId.trim()) { toast({ title: "Error", description: "Sila masukkan Chat ID dahulu", variant: "destructive" }); return; }
+    setIsSendingTest(true);
+    try {
+      // Save first then test
+      await handleSaveTelegram();
+      const res = await fetch(
+        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/telegram-notify`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            customer_id: "test",
+            _test: true,
+            _message: "🧪 *Ujian Notifikasi ACS Legacy CRM*\n\nTetapan Telegram berjaya disambungkan! ✅\n\n_Anda akan menerima notifikasi setiap kali ada tempahan baru._",
+            _chat_id: telegramChatId.trim(),
+          }),
+        }
+      );
+      if (res.ok) {
+        toast({ title: "Berjaya!", description: "Mesej ujian telah dihantar ke Telegram" });
+      } else {
+        toast({ title: "Gagal", description: "Periksa Bot Token dan Chat ID", variant: "destructive" });
+      }
+    } catch { toast({ title: "Error", description: "Gagal hantar mesej ujian", variant: "destructive" }); }
+    finally { setIsSendingTest(false); }
+  };
+
   // ---- Coupons ----
   const handleAddCoupon = async () => {
     if (!couponCode.trim()) { toast({ title: "Error", description: "Sila masukkan kod kupon", variant: "destructive" }); return; }
@@ -219,22 +316,26 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         </DialogHeader>
 
         <Tabs defaultValue="billplz" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="billplz" className="flex items-center gap-1 text-xs">
               <CreditCard className="h-3.5 w-3.5" />
-              Billplz
+              <span className="hidden sm:inline">Billplz</span>
+            </TabsTrigger>
+            <TabsTrigger value="telegram" className="flex items-center gap-1 text-xs">
+              <Send className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Telegram</span>
             </TabsTrigger>
             <TabsTrigger value="coupon" className="flex items-center gap-1 text-xs">
               <Tag className="h-3.5 w-3.5" />
-              Kupon
+              <span className="hidden sm:inline">Kupon</span>
             </TabsTrigger>
             <TabsTrigger value="password" className="flex items-center gap-1 text-xs">
               <Lock className="h-3.5 w-3.5" />
-              Password
+              <span className="hidden sm:inline">Password</span>
             </TabsTrigger>
             <TabsTrigger value="email" className="flex items-center gap-1 text-xs">
               <Mail className="h-3.5 w-3.5" />
-              Email
+              <span className="hidden sm:inline">Email</span>
             </TabsTrigger>
           </TabsList>
 
@@ -287,6 +388,84 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                     : billplzSaved ? <><CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />Tersimpan!</>
                     : "Simpan Tetapan Billplz"}
                 </Button>
+              </>
+            )}
+          </TabsContent>
+
+          {/* ── Telegram Tab ── */}
+          <TabsContent value="telegram" className="space-y-4 pt-2">
+            <div className="flex items-start gap-3 p-3 rounded-xl bg-blue-500/10 border border-blue-500/20">
+              <Send className="h-4 w-4 text-blue-500 mt-0.5 shrink-0" />
+              <div className="text-xs text-muted-foreground space-y-1">
+                <p className="font-semibold text-foreground">Cara setup Telegram Bot:</p>
+                <ol className="list-decimal ml-3 space-y-0.5">
+                  <li>Buka Telegram, cari <span className="font-mono font-bold">@BotFather</span></li>
+                  <li>Hantar <span className="font-mono">/newbot</span> dan ikut arahan</li>
+                  <li>Salin <strong>Bot Token</strong> yang diberikan</li>
+                  <li>Hantar mesej ke bot anda, kemudian buka: <br/><span className="font-mono text-[10px] break-all">api.telegram.org/bot&lt;TOKEN&gt;/getUpdates</span></li>
+                  <li>Salin <strong>chat.id</strong> dari hasil JSON</li>
+                </ol>
+              </div>
+            </div>
+
+            {isLoadingTelegram ? (
+              <div className="flex items-center justify-center py-6">
+                <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
+              </div>
+            ) : (
+              <>
+                <div className="space-y-2">
+                  <Label>Bot Token</Label>
+                  <div className="relative">
+                    <Input type={showBotToken ? "text" : "password"} value={telegramBotToken}
+                      onChange={(e) => setTelegramBotToken(e.target.value)}
+                      placeholder="1234567890:ABCdefGHIjklMNOpqrsTUVwxyz"
+                      className="pr-10 font-mono text-sm" />
+                    <button type="button" onClick={() => setShowBotToken(!showBotToken)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
+                      {showBotToken ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                </div>
+
+                <div className="space-y-2">
+                  <Label>Chat ID</Label>
+                  <Input type="text" value={telegramChatId}
+                    onChange={(e) => setTelegramChatId(e.target.value)}
+                    placeholder="cth: -1001234567890 atau 123456789"
+                    className="font-mono text-sm" />
+                  <p className="text-xs text-muted-foreground">ID kumpulan Telegram atau chat peribadi anda</p>
+                </div>
+
+                <div className="space-y-3 p-3 rounded-xl border bg-muted/20">
+                  <p className="text-xs font-semibold text-foreground">Tetapan Notifikasi</p>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Aktifkan Notifikasi</p>
+                      <p className="text-xs text-muted-foreground">Hantar notifikasi ke Telegram</p>
+                    </div>
+                    <Switch checked={telegramEnabled} onCheckedChange={setTelegramEnabled} />
+                  </div>
+                  <div className="flex items-center justify-between">
+                    <div>
+                      <p className="text-sm font-medium">Tempahan Baru</p>
+                      <p className="text-xs text-muted-foreground">Notifikasi setiap ada order masuk</p>
+                    </div>
+                    <Switch checked={telegramNotifyOrder} onCheckedChange={setTelegramNotifyOrder} />
+                  </div>
+                </div>
+
+                <div className="flex gap-2">
+                  <Button onClick={handleSaveTelegram} disabled={isSavingTelegram} className="flex-1"
+                    variant={telegramSaved ? "outline" : "default"}>
+                    {isSavingTelegram ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Menyimpan...</>
+                      : telegramSaved ? <><CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />Tersimpan!</>
+                      : "Simpan Tetapan"}
+                  </Button>
+                  <Button onClick={handleTestTelegram} disabled={isSendingTest} variant="outline" className="shrink-0">
+                    {isSendingTest ? <LoaderCircle className="h-4 w-4 animate-spin" /> : <><Send className="h-4 w-4 mr-1.5" />Uji</>}
+                  </Button>
+                </div>
               </>
             )}
           </TabsContent>
