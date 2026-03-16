@@ -115,15 +115,36 @@ export default function OrderThankYou() {
 
             {isPaid ? (
               <>
-                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">Pembayaran Berjaya!</h1>
+                <h1 className="text-2xl md:text-3xl font-bold text-white mb-2">
+                  {isWhatsapp ? "Tempahan Berjaya Dihantar! 📱" : "Pembayaran Berjaya!"}
+                </h1>
                 {customer && (
                   <p className="text-white/65 mb-2 text-sm">
                     Terima kasih, <span className="text-white font-semibold">{customer.name}</span>! 🎉
                   </p>
                 )}
-                <p className="text-white/45 text-sm leading-relaxed mb-8">
-                  Tempahan anda telah diterima dan sedang diproses. Kami akan menghubungi anda tidak lama lagi untuk pengesahan.
-                </p>
+                {isWhatsapp ? (
+                  <div className="text-left mb-8 space-y-3">
+                    <p className="text-white/50 text-sm leading-relaxed">
+                      Tempahan anda telah <strong className="text-white">berjaya disimpan</strong> dalam sistem kami. Sila lengkapkan pembayaran melalui WhatsApp.
+                    </p>
+                    <div className="rounded-xl bg-green-500/10 border border-green-500/25 p-3 space-y-1.5">
+                      <p className="text-white/60 text-xs uppercase tracking-wide font-semibold">Nombor Akaun Pembayaran</p>
+                      <div className="flex items-center gap-2">
+                        <span className="text-xl">🏦</span>
+                        <div>
+                          <p className="text-white font-bold text-sm">Maybank – ACS LEGACY</p>
+                          <p className="text-green-400 font-bold text-lg tracking-widest">553038596454</p>
+                        </div>
+                      </div>
+                    </div>
+                    <p className="text-white/40 text-xs">Setelah bayaran dibuat, hantar bukti bayaran kepada kami via WhatsApp untuk pengesahan. ✅</p>
+                  </div>
+                ) : (
+                  <p className="text-white/45 text-sm leading-relaxed mb-8">
+                    Tempahan anda telah diterima dan sedang diproses. Kami akan menghubungi anda tidak lama lagi untuk pengesahan.
+                  </p>
+                )}
               </>
             ) : (
               <>
