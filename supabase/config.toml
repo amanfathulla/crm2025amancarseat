@@ -156,3 +156,6 @@ verify_jwt = false
 
 [functions.billplz-callback]
 verify_jwt = false
+
+[functions.telegram-notify]
+verify_jwt = false
