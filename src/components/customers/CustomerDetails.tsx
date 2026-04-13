@@ -43,31 +43,12 @@ const getTimePeriod = (timeString: string) => {
   return "Lewat Malam";
 };
 
-const statusConfig: Record<string, { label: string; className: string }> = {
-  processing: { label: "In Process", className: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30" },
-  completed:  { label: "Completed",  className: "bg-green-500/15 text-green-600 border-green-500/30" },
-  cancelled:  { label: "Cancelled",  className: "bg-red-500/15 text-red-500 border-red-500/30" },
+const statusConfig: Record<string, { label: string; className: string; bgRow: string }> = {
+  processing: { label: "In Process", className: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30", bgRow: "bg-yellow-50 dark:bg-yellow-500/5" },
+  completed:  { label: "Completed",  className: "bg-green-500/15 text-green-600 border-green-500/30", bgRow: "bg-green-50 dark:bg-green-500/5" },
+  cancelled:  { label: "Cancelled",  className: "bg-red-500/15 text-red-500 border-red-500/30", bgRow: "bg-red-50 dark:bg-red-500/5" },
 };
 
-const paymentBadge: Record<string, { label: string; icon: React.ReactNode; className: string }> = {
-  completed: {
-    label: "Berjaya",
-    icon: <CheckCircle2 className="h-3 w-3" />,
-    className: "bg-green-500/15 text-green-600 border-green-500/30",
-  },
-  cancelled: {
-    label: "Gagal",
-    icon: <XCircle className="h-3 w-3" />,
-    className: "bg-red-500/15 text-red-500 border-red-500/30",
-  },
-  processing: {
-    label: "Pending",
-    icon: <Clock3 className="h-3 w-3" />,
-    className: "bg-yellow-500/15 text-yellow-600 border-yellow-500/30",
-  },
-};
-
-// Payment source config
 const sourceConfig = {
   billplz: {
     label: "BillPlz",
@@ -91,16 +72,12 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
     });
   };
 
-  const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground" };
-  const payment = paymentBadge[customer.order_status] ?? paymentBadge.processing;
+  const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground", bgRow: "bg-muted/30" };
   const source = sourceConfig[(customer.payment_source as keyof typeof sourceConfig) ?? "billplz"] ?? sourceConfig.billplz;
 
   const location = [customer.city, customer.state].filter(Boolean).join(", ") || customer.location || "—";
-
-  // Is BillPlz & pending → show follow-up WA button
   const isBillplzPending = (!customer.payment_source || customer.payment_source === "billplz") && customer.order_status === "processing";
 
-  // Build customer WhatsApp message
   const orderNum = customer.order_number ? `#${customer.order_number}` : `#${index}`;
   const waMessage = encodeURIComponent(
     `Assalamualaikum, ini adalah makluman tempahan daripada *ACS Legacy AmancarseatCover* 🚗\n\n` +
@@ -115,7 +92,6 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
     `Terima kasih kerana memilih ACS Legacy! 🙏`
   );
 
-  // Follow-up reminder WA (for pending BillPlz)
   const waFollowupMessage = encodeURIComponent(
     `Assalamualaikum ${customer.name} 😊\n\n` +
     `Ini peringatan mesra dari *ACS Legacy AmancarseatCover* 🚗\n\n` +
@@ -130,34 +106,28 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
   const waLink = waPhone ? `https://wa.me/${waPhone}?text=${waMessage}` : null;
   const waFollowupLink = waPhone ? `https://wa.me/${waPhone}?text=${waFollowupMessage}` : null;
 
+  const showEmail = customer.email && !customer.email.includes("@noemail") && !customer.email.includes("@temp.local");
+
   return (
     <AccordionItem value={customer.id} className={`border-b ${className || ""}`}>
       {/* ── Trigger ── */}
       <AccordionTrigger className="hover:no-underline hover:bg-muted/30 px-3 py-3 [&>svg]:shrink-0">
         <div className="flex items-center gap-2 w-full min-w-0 pr-1">
-          {/* Order badge */}
           <div className="shrink-0 flex flex-col items-center justify-center w-10 h-10 rounded-xl bg-primary/10 border border-primary/20">
             <span className="text-[9px] text-primary/60 font-medium leading-none">No.</span>
             <span className="text-xs font-bold text-primary leading-tight">
               {customer.order_number ? customer.order_number.toLocaleString() : index}
             </span>
           </div>
-
-          {/* Name + phone */}
           <div className="flex-1 min-w-0 text-left overflow-hidden">
             <p className="font-semibold text-foreground text-sm truncate leading-tight">{customer.name}</p>
             <p className="text-xs text-muted-foreground truncate leading-tight">{customer.phone || "—"}</p>
           </div>
-
-          {/* Right: payment source icon + status + amount */}
           <div className="shrink-0 flex flex-col items-end gap-1 ml-1 min-w-[90px]">
             <div className="flex items-center gap-1">
-              {/* Payment source badge */}
               <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium flex items-center gap-0.5 whitespace-nowrap ${source.className}`}>
-                {source.icon}
-                {source.label}
+                {source.icon} {source.label}
               </span>
-              {/* Order status badge */}
               <span className={`text-[9px] px-1.5 py-0.5 rounded-full border font-medium whitespace-nowrap ${status.className}`}>
                 {status.label}
               </span>
@@ -171,88 +141,100 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
       <AccordionContent>
         <div className="px-3 pb-4 space-y-3">
 
-          {/* Top bar: order number + date */}
-          <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-1.5 bg-muted/50 rounded-xl px-3 py-2.5">
+          {/* Status Banner */}
+          <div className={`rounded-xl border px-4 py-3 flex items-center justify-between ${status.bgRow}`}>
             <div className="flex items-center gap-2">
-              <Hash className="h-3.5 w-3.5 text-muted-foreground shrink-0" />
-              <span className="text-sm font-bold text-foreground">
-                No. Tempahan {customer.order_number ? customer.order_number.toLocaleString() : "—"}
-              </span>
+              <Hash className="h-4 w-4 text-muted-foreground" />
+              <span className="text-sm font-bold">No. Tempahan {customer.order_number ? customer.order_number.toLocaleString() : "—"}</span>
             </div>
-            <div className="flex items-center gap-1.5 text-xs text-muted-foreground flex-wrap">
-              <Calendar className="h-3 w-3 shrink-0" />
-              <span>{formatDate(customer.order_date)}</span>
-              {customer.order_time && (
-                <>
-                  <Clock className="h-3 w-3 shrink-0" />
-                  <span>{customer.order_time} ({getTimePeriod(customer.order_time)})</span>
-                </>
-              )}
-            </div>
+            <span className={`text-xs px-2.5 py-1 rounded-full border font-bold ${status.className}`}>
+              {status.label}
+            </span>
           </div>
 
-          {/* Payment Status Banners */}
-          <div className="flex flex-col gap-2">
-            {/* Billplz payment status */}
-            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${payment.className}`}>
-              {payment.icon}
-              <span className="text-xs font-semibold">
-                Status Bayaran BillPlz:&nbsp;
-                <span className="font-bold">{payment.label}</span>
-              </span>
+          {/* ── Detail Table: Maklumat Pesanan ── */}
+          <div className="rounded-xl border overflow-hidden">
+            <div className="bg-primary/10 px-4 py-2">
+              <p className="text-xs font-bold text-primary uppercase tracking-wider">📋 Maklumat Pesanan</p>
             </div>
-
-            {/* Payment source banner */}
-            <div className={`flex items-center gap-2 rounded-xl border px-3 py-2 ${source.className}`}>
-              {source.icon}
-              <span className="text-xs font-semibold">
-                Sumber Bayaran:&nbsp;
-                <span className="font-bold">{source.label === "WhatsApp" ? "WhatsApp (Manual)" : "BillPlz (Online)"}</span>
-              </span>
-            </div>
+            <table className="w-full text-sm">
+              <tbody>
+                <DetailTableRow label="Tarikh" value={formatDate(customer.order_date)} icon={<Calendar className="h-3.5 w-3.5" />} />
+                {customer.order_time && (
+                  <DetailTableRow label="Masa" value={`${customer.order_time} (${getTimePeriod(customer.order_time)})`} icon={<Clock className="h-3.5 w-3.5" />} odd />
+                )}
+                <DetailTableRow label="Sumber Bayaran" odd={!customer.order_time}>
+                  <span className={`text-xs px-2 py-0.5 rounded-full border font-medium inline-flex items-center gap-1 ${source.className}`}>
+                    {source.icon} {source.label === "WhatsApp" ? "WhatsApp (Manual)" : "BillPlz (Online)"}
+                  </span>
+                </DetailTableRow>
+              </tbody>
+            </table>
           </div>
 
-          {/* Info Grid */}
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            {/* Maklumat Pembeli */}
-            <div className="rounded-xl border bg-card p-3 space-y-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Maklumat Pembeli</p>
-              <InfoRow icon={<Phone className="h-3.5 w-3.5" />} label="Telefon" value={customer.phone || "—"} />
-              <InfoRow icon={<Mail className="h-3.5 w-3.5" />} label="Email" value={
-                customer.email?.includes("@noemail") ? "—" : (customer.email || "—")
-              } />
-              <InfoRow icon={<MapPin className="h-3.5 w-3.5" />} label="Lokasi" value={location} />
-              {customer.address && (
-                <InfoRow icon={<MapPin className="h-3.5 w-3.5 opacity-0" />} label="" value={customer.address} small />
-              )}
+          {/* ── Detail Table: Maklumat Pembeli ── */}
+          <div className="rounded-xl border overflow-hidden">
+            <div className="bg-blue-500/10 px-4 py-2">
+              <p className="text-xs font-bold text-blue-600 uppercase tracking-wider">👤 Maklumat Pembeli</p>
             </div>
-
-            {/* Maklumat Produk */}
-            <div className="rounded-xl border bg-card p-3 space-y-2">
-              <p className="text-[10px] font-semibold text-muted-foreground uppercase tracking-wide">Maklumat Produk</p>
-              <InfoRow icon={<Car className="h-3.5 w-3.5" />} label="Model Kereta" value={customer.car_model || "—"} />
-              <InfoRow icon={<Package className="h-3.5 w-3.5" />} label="Produk" value={customer.product || "—"} />
-              {customer.product_variation && (
-                <InfoRow icon={<Package className="h-3.5 w-3.5 opacity-0" />} label="Saiz" value={customer.product_variation} />
-              )}
-            </div>
+            <table className="w-full text-sm">
+              <tbody>
+                <DetailTableRow label="Nama" value={customer.name} icon={<Hash className="h-3.5 w-3.5" />} />
+                <DetailTableRow label="Telefon" value={customer.phone || "—"} icon={<Phone className="h-3.5 w-3.5" />} odd />
+                {showEmail && <DetailTableRow label="Emel" value={customer.email} icon={<Mail className="h-3.5 w-3.5" />} />}
+                <DetailTableRow label="Lokasi" value={location} icon={<MapPin className="h-3.5 w-3.5" />} odd={!!showEmail} />
+                {customer.address && (
+                  <DetailTableRow label="Alamat Penuh" value={customer.address} icon={<MapPin className="h-3.5 w-3.5 opacity-50" />} odd={!showEmail} />
+                )}
+              </tbody>
+            </table>
           </div>
 
-          {/* Kewangan */}
-          <div className="grid grid-cols-3 gap-2">
-            <FinanceCard label="Harga" value={formatCurrency(customer.sales_amount)} />
-            <FinanceCard label="Dibayar" value={formatCurrency(customer.paid_amount)} highlight />
-            <FinanceCard
-              label="Untung"
-              value={formatCurrency(customer.gross_profit)}
-              negative={customer.gross_profit < 0}
-            />
+          {/* ── Detail Table: Maklumat Produk ── */}
+          <div className="rounded-xl border overflow-hidden">
+            <div className="bg-amber-500/10 px-4 py-2">
+              <p className="text-xs font-bold text-amber-600 uppercase tracking-wider">📦 Maklumat Produk</p>
+            </div>
+            <table className="w-full text-sm">
+              <tbody>
+                <DetailTableRow label="Produk" value={customer.product || "—"} icon={<Package className="h-3.5 w-3.5" />} />
+                {customer.product_variation && (
+                  <DetailTableRow label="Variasi/Saiz" value={customer.product_variation} icon={<Package className="h-3.5 w-3.5 opacity-50" />} odd />
+                )}
+                <DetailTableRow label="Model Kereta" value={customer.car_model || "—"} icon={<Car className="h-3.5 w-3.5" />} odd={!customer.product_variation} />
+              </tbody>
+            </table>
+          </div>
+
+          {/* ── Kewangan ── */}
+          <div className="rounded-xl border overflow-hidden">
+            <div className="bg-green-500/10 px-4 py-2">
+              <p className="text-xs font-bold text-green-600 uppercase tracking-wider">💰 Kewangan</p>
+            </div>
+            <table className="w-full text-sm">
+              <tbody>
+                <tr className="border-b border-border/50">
+                  <td className="px-4 py-2.5 text-muted-foreground font-medium w-[40%]">Harga Jualan</td>
+                  <td className="px-4 py-2.5 font-semibold">{formatCurrency(customer.sales_amount)}</td>
+                </tr>
+                <tr className="border-b border-border/50 bg-green-50 dark:bg-green-500/5">
+                  <td className="px-4 py-2.5 text-muted-foreground font-medium">Jumlah Dibayar</td>
+                  <td className="px-4 py-2.5 font-bold text-green-600">{formatCurrency(customer.paid_amount)}</td>
+                </tr>
+                <tr>
+                  <td className="px-4 py-2.5 text-muted-foreground font-medium">Untung Kasar</td>
+                  <td className={`px-4 py-2.5 font-bold ${customer.gross_profit < 0 ? "text-destructive" : "text-foreground"}`}>
+                    {formatCurrency(customer.gross_profit)}
+                  </td>
+                </tr>
+              </tbody>
+            </table>
           </div>
 
           {/* Action Buttons */}
           <div className="grid grid-cols-2 gap-2 pt-1">
             <Button
-              variant="ghost"
+              variant="default"
               size="sm"
               className="text-xs justify-center"
               onClick={() => navigate(`/customers/receipt?id=${customer.id}`)}
@@ -288,7 +270,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </Button>
           </div>
 
-          {/* BillPlz Pending Follow-up Button */}
+          {/* BillPlz Pending Follow-up */}
           {isBillplzPending && waFollowupLink && (
             <a href={waFollowupLink} target="_blank" rel="noopener noreferrer" className="block">
               <Button
@@ -309,31 +291,30 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
 
 /* ── Sub-components ── */
 
-function InfoRow({
-  icon, label, value, small,
-}: { icon: React.ReactNode; label: string; value: string; small?: boolean }) {
+function DetailTableRow({
+  label,
+  value,
+  icon,
+  odd,
+  children,
+}: {
+  label: string;
+  value?: string;
+  icon?: React.ReactNode;
+  odd?: boolean;
+  children?: React.ReactNode;
+}) {
   return (
-    <div className="flex items-start gap-2">
-      <span className="text-muted-foreground mt-0.5 shrink-0">{icon}</span>
-      <div className="min-w-0 flex-1">
-        {label && <span className="text-xs text-muted-foreground">{label}: </span>}
-        <span className={`${small ? "text-xs text-muted-foreground" : "text-sm font-medium"} break-words`}>
-          {value}
-        </span>
-      </div>
-    </div>
-  );
-}
-
-function FinanceCard({
-  label, value, highlight, negative,
-}: { label: string; value: string; highlight?: boolean; negative?: boolean }) {
-  return (
-    <div className="rounded-xl bg-muted/50 border p-2.5 text-center">
-      <p className="text-[9px] text-muted-foreground uppercase tracking-wide mb-1">{label}</p>
-      <p className={`text-xs font-bold ${highlight ? "text-green-600" : negative ? "text-destructive" : "text-foreground"}`}>
-        {value}
-      </p>
-    </div>
+    <tr className={`border-b border-border/50 last:border-b-0 ${odd ? "bg-muted/30" : ""}`}>
+      <td className="px-4 py-2.5 w-[40%]">
+        <div className="flex items-center gap-2 text-muted-foreground">
+          {icon && <span className="shrink-0">{icon}</span>}
+          <span className="text-xs font-medium">{label}</span>
+        </div>
+      </td>
+      <td className="px-4 py-2.5 font-medium text-foreground">
+        {children || value || "—"}
+      </td>
+    </tr>
   );
 }
