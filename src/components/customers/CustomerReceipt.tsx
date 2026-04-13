@@ -124,7 +124,7 @@ export function CustomerReceipt() {
     );
   }
 
-  const orderNo = customer.order_number || customer.id.slice(0, 8);
+  const orderNo = customer.order_number || "N/A";
   const orderDate = fmtDate(customer.order_date || customer.created_at);
   const isCompleted = customer.order_status === "completed";
   const isProcessing = customer.order_status === "processing";
