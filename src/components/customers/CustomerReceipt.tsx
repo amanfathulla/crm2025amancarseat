@@ -69,23 +69,34 @@ export function CustomerReceipt() {
   };
 
   const handleShare = async () => {
-    const orderNo = customer?.order_number || customer?.id?.slice(0, 8);
+    const orderNo = customer?.order_number || "N/A";
+    const statusText = customer?.order_status === "completed" ? "✅ Selesai" : customer?.order_status === "processing" ? "⏳ Dalam Proses" : "❌ Dibatalkan";
     const text =
-      `📄 *RESIT RASMI ACS LEGACY*\n\n` +
-      `No. Pesanan: #${orderNo}\n` +
-      `Tarikh: ${fmtDate(customer?.order_date || customer?.created_at)}\n\n` +
-      `👤 *Maklumat Pelanggan*\n` +
-      `Nama: ${customer?.name}\n` +
-      `Telefon: ${customer?.phone || "-"}\n` +
-      `Alamat: ${customer?.address || "-"}\n` +
-      `Negeri: ${customer?.city || customer?.state || "-"}\n\n` +
-      `📦 *Pesanan*\n` +
-      `Produk: ${customer?.product || "-"}${customer?.product_variation ? ` (${customer.product_variation})` : ""}\n` +
-      `Model Kereta: ${customer?.car_model || "-"}\n` +
-      `Jumlah: ${fmtCurrency(customer?.sales_amount)}\n` +
-      `Dibayar: ${fmtCurrency(customer?.paid_amount)}\n` +
-      `Status: ${customer?.order_status === "completed" ? "✅ Selesai" : customer?.order_status === "processing" ? "⏳ Dalam Proses" : "❌ Dibatalkan"}\n\n` +
-      `Terima kasih kerana memilih ACS Legacy! 🙏`;
+      `📄 *RESIT PEMBAYARAN*\n` +
+      `*Sarung Kusyen AMANCARSEAT*\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n\n` +
+      `📋 *No. Pesanan:* #${orderNo}\n` +
+      `📅 *Tarikh:* ${fmtDate(customer?.order_date || customer?.created_at)}\n` +
+      `📌 *Status:* ${statusText}\n\n` +
+      `👤 *MAKLUMAT PELANGGAN*\n` +
+      `┌─────────────────────\n` +
+      `│ Nama: ${customer?.name}\n` +
+      `│ Telefon: ${customer?.phone || "-"}\n` +
+      `│ Alamat: ${customer?.address || "-"}\n` +
+      `│ Negeri: ${customer?.city || customer?.state || "-"}\n` +
+      `└─────────────────────\n\n` +
+      `📦 *BUTIRAN PESANAN*\n` +
+      `┌─────────────────────\n` +
+      `│ Produk: ${customer?.product || "-"}${customer?.product_variation ? ` (${customer.product_variation})` : ""}\n` +
+      `│ Model Kereta: ${customer?.car_model || "-"}\n` +
+      `│ Jumlah: ${fmtCurrency(customer?.sales_amount)}\n` +
+      `│ Dibayar: ${fmtCurrency(customer?.paid_amount)}\n` +
+      `└─────────────────────\n\n` +
+      `━━━━━━━━━━━━━━━━━━━━\n` +
+      `Sila sahkan penerimaan bayaran.\n` +
+      `Terima kasih! 🙏\n\n` +
+      `Di bawah saya sertakan resit pembayaran.\n` +
+      `━━━━━━━━━━━━━━━━━━━━`;
     const waUrl = `https://wa.me/${customer?.phone?.replace(/[^0-9]/g, "")}?text=${encodeURIComponent(text)}`;
     window.open(waUrl, "_blank");
   };
