@@ -46,8 +46,78 @@ serve(async (req) => {
       });
     }
 
+    // --- SERVER-SIDE PRICE VALIDATION ---
+    // Look up the canonical price from the database instead of trusting client
+    let canonicalPrice = parseFloat(sales_amount);
+    
+    // Find the product by name
+    const { data: dbProduct } = await supabase
+      .from('products')
+      .select('id, price, name')
+      .eq('name', product)
+      .limit(1)
+      .single();
+
+    if (dbProduct) {
+      if (product_variation) {
+        // Look up variation price
+        const { data: dbVariation } = await supabase
+          .from('product_variations')
+          .select('price')
+          .eq('product_id', dbProduct.id)
+          .eq('name', product_variation)
+          .limit(1)
+          .single();
+
+        if (dbVariation) {
+          canonicalPrice = dbVariation.price;
+        }
+      } else {
+        canonicalPrice = dbProduct.price;
+      }
+    }
+
+    // Apply coupon discount if applicable
+    let discountAmount = 0;
+    if (coupon_code && coupon_code.trim()) {
+      const { data: coupon } = await supabase
+        .from('coupons')
+        .select('discount_amount, discount_type, is_active, usage_count, usage_limit, valid_from, valid_until')
+        .eq('code', coupon_code.trim().toUpperCase())
+        .eq('is_active', true)
+        .limit(1)
+        .single();
+
+      if (coupon) {
+        const now = new Date();
+        const validFrom = new Date(coupon.valid_from);
+        const validUntil = new Date(coupon.valid_until);
+        if (now >= validFrom && now <= validUntil && coupon.usage_count < coupon.usage_limit) {
+          if (coupon.discount_type === 'percentage') {
+            discountAmount = canonicalPrice * (coupon.discount_amount / 100);
+          } else {
+            discountAmount = coupon.discount_amount;
+          }
+        }
+      }
+    }
+
+    const validatedPrice = Math.max(canonicalPrice - discountAmount, 0.01);
+
+    // Reject if client price differs significantly from server price (tolerance for rounding)
+    const clientPrice = parseFloat(sales_amount);
+    if (Math.abs(clientPrice - validatedPrice) > 1.0) {
+      console.error(`Price mismatch: client=${clientPrice}, server=${validatedPrice}`);
+      return new Response(JSON.stringify({ error: 'Harga tidak sah. Sila muat semula halaman dan cuba lagi.' }), {
+        status: 400,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
+    // Use the validated (server-side) price
+    const finalPrice = validatedPrice;
+
     // Create customer record first
-    // Use a unique email to avoid duplicate constraint (phone + timestamp suffix)
     const uniqueEmail = email && email.trim()
       ? email.trim()
       : `${phone.replace(/[^0-9]/g, '')}+${Date.now()}@noemail.com`;
@@ -55,18 +125,18 @@ serve(async (req) => {
     const { data: customer, error: customerError } = await supabase
       .from('customers')
       .insert({
-        name,
+        name: String(name).slice(0, 200),
         email: uniqueEmail,
-        phone,
+        phone: String(phone).slice(0, 20),
         product,
         product_variation: product_variation || '',
-        car_model: car_model || '',
-        sales_amount: parseFloat(sales_amount),
-        paid_amount: parseFloat(sales_amount),
-        address: address || '',
-        city: city || '',
-        state: state || '',
-        zip_code: zip_code || '',
+        car_model: car_model ? String(car_model).slice(0, 100) : '',
+        sales_amount: finalPrice,
+        paid_amount: finalPrice,
+        address: address ? String(address).slice(0, 500) : '',
+        city: city ? String(city).slice(0, 100) : '',
+        state: state ? String(state).slice(0, 100) : '',
+        zip_code: zip_code ? String(zip_code).slice(0, 10) : '',
         order_status: 'processing',
         order_date: new Date().toISOString(),
       })
@@ -78,13 +148,12 @@ serve(async (req) => {
       throw new Error(`Failed to create customer record: ${customerError.message}`);
     }
 
-    // Increment coupon usage if coupon was applied - fixed: use try/catch instead of .catch()
-    if (coupon_code && coupon_code.trim()) {
+    // Increment coupon usage if coupon was applied
+    if (coupon_code && coupon_code.trim() && discountAmount > 0) {
       try {
         await supabase.rpc('increment_coupon_usage', { p_code: coupon_code.trim().toUpperCase() });
       } catch (rpcErr) {
         console.warn('Could not increment coupon usage:', rpcErr);
-        // Non-fatal, continue with order
       }
     }
 
@@ -93,7 +162,7 @@ serve(async (req) => {
     const callbackUrl = `${origin}/order/thank-you?customer_id=${customer.id}`;
 
     // Create BillPlz bill
-    const amountCents = Math.round(parseFloat(sales_amount) * 100);
+    const amountCents = Math.round(finalPrice * 100);
     const formData = new FormData();
     formData.append('collection_id', BILLPLZ_COLLECTION_ID);
     formData.append('email', email || `${phone}@noemail.com`);
