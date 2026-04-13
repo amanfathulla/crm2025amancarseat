@@ -3,7 +3,7 @@ import { useLocation, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardFooter } from "@/components/ui/card";
 import { Download, ArrowLeft, Share2, Printer } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import html2pdf from "html2pdf.js";
 
@@ -20,6 +20,7 @@ export function CustomerReceipt() {
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const location = useLocation();
   const navigate = useNavigate();
 
@@ -35,11 +36,11 @@ export function CustomerReceipt() {
   const fetchCustomer = async (id: string) => {
     setIsLoading(true);
     try {
-      const { data, error } = await supabase
+      const { data, error } = await authClient
         .from("customers")
         .select("*")
         .eq("id", id)
-        .single();
+        .maybeSingle();
       if (error) throw error;
       setCustomer(data);
     } catch {
