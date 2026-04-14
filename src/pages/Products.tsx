@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
@@ -325,7 +326,10 @@ export default function Products() {
                   <div className="flex items-start justify-between gap-4">
                     <div className="flex-1 min-w-0">
                       <div className="flex items-center gap-2 mb-2 flex-wrap">
-                        <h3 className="font-semibold text-foreground truncate">{product.name}</h3>
+                        <h3 className={cn("font-semibold truncate", product.status === "inactive" ? "text-muted-foreground line-through" : "text-foreground")}>{product.name}</h3>
+                        {product.status === "inactive" && (
+                          <span className="text-[10px] bg-red-500/15 text-red-400 px-1.5 py-0.5 rounded-full font-medium">Habis Stok</span>
+                        )}
                         {images.length > 0 && (
                           <span className="text-xs bg-muted px-1.5 py-0.5 rounded text-muted-foreground shrink-0">
                             📷 {images.length}
@@ -339,7 +343,7 @@ export default function Products() {
                         )}
                       </div>
 
-                      <div className="grid grid-cols-3 gap-2 text-sm">
+                      <div className={cn("grid grid-cols-3 gap-2 text-sm", product.status === "inactive" && "opacity-50")}>
                         <div className="bg-muted/50 rounded-lg p-2 text-center">
                           <p className="text-xs text-muted-foreground mb-1">2 Seater</p>
                           <p className="font-medium">{twoSeater ? formatPrice(twoSeater.price) : "-"}</p>
@@ -358,26 +362,42 @@ export default function Products() {
                       </div>
                     </div>
 
-                    <DropdownMenu>
-                      <DropdownMenuTrigger asChild>
-                        <Button variant="ghost" size="icon" className="h-8 w-8 shrink-0">
-                          <MoreHorizontal className="h-4 w-4" />
-                        </Button>
-                      </DropdownMenuTrigger>
-                      <DropdownMenuContent align="end">
-                        <DropdownMenuItem onClick={() => handleEditClick(product)}>
-                          <Edit className="h-4 w-4 mr-2" />
-                          Edit
-                        </DropdownMenuItem>
-                        <DropdownMenuItem
-                          onClick={() => handleDeleteClick(product)}
-                          className="text-destructive focus:text-destructive"
-                        >
-                          <Trash className="h-4 w-4 mr-2" />
-                          Buang
-                        </DropdownMenuItem>
-                      </DropdownMenuContent>
-                    </DropdownMenu>
+                    <div className="flex flex-col items-end gap-2 shrink-0">
+                      <Switch
+                        checked={product.status !== "inactive"}
+                        onCheckedChange={async (val) => {
+                          const newStatus = val ? "active" : "inactive";
+                          try {
+                            const { error } = await authClient.from("products").update({ status: newStatus }).eq("id", product.id);
+                            if (error) throw error;
+                            setProducts(prev => prev.map(p => p.id === product.id ? { ...p, status: newStatus } : p));
+                            toast({ title: val ? "✅ Produk diaktifkan" : "🔕 Produk dilumpuhkan (Habis Stok)" });
+                          } catch (err: any) {
+                            toast({ title: "Ralat", description: err.message, variant: "destructive" });
+                          }
+                        }}
+                      />
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button variant="ghost" size="icon" className="h-8 w-8">
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuItem onClick={() => handleEditClick(product)}>
+                            <Edit className="h-4 w-4 mr-2" />
+                            Edit
+                          </DropdownMenuItem>
+                          <DropdownMenuItem
+                            onClick={() => handleDeleteClick(product)}
+                            className="text-destructive focus:text-destructive"
+                          >
+                            <Trash className="h-4 w-4 mr-2" />
+                            Buang
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </div>
                   </div>
                 </div>
               );

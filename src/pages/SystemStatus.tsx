@@ -16,10 +16,14 @@ import {
   Activity,
   Wifi,
   WifiOff,
+  ShoppingBag,
+  MessageSquare,
+  TrendingUp,
+  Wallet,
+  Clock,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
-import { supabase } from "@/integrations/supabase/client";
 
 type StatusType = "ok" | "error" | "checking" | "warn";
 
@@ -31,91 +35,50 @@ interface SystemCheck {
   status: StatusType;
   message: string;
   responseTime?: number;
+  gradient?: string;
+  extra?: Record<string, string | number>;
 }
 
-const INITIAL_CHECKS: Omit<SystemCheck, "status" | "message" | "responseTime">[] = [
-  {
-    id: "database",
-    name: "Database Supabase",
-    description: "Sambungan utama ke pangkalan data",
-    icon: Activity,
-  },
-  {
-    id: "dashboard",
-    name: "Dashboard",
-    description: "Data jualan & statistik pelanggan",
-    icon: LayoutDashboard,
-  },
-  {
-    id: "customers",
-    name: "Customers",
-    description: "Rekod & status pesanan pelanggan",
-    icon: Users,
-  },
-  {
-    id: "leads",
-    name: "Lead Management",
-    description: "Pengurusan prospek & leads",
-    icon: Target,
-  },
-  {
-    id: "marketing",
-    name: "Marketing",
-    description: "Nota & tugas pemasaran",
-    icon: Megaphone,
-  },
-  {
-    id: "products",
-    name: "Products",
-    description: "Katalog produk & variasi",
-    icon: Package,
-  },
-  {
-    id: "sales",
-    name: "Sales Records",
-    description: "Data rekod jualan tahunan",
-    icon: BarChart3,
-  },
-  {
-    id: "settings",
-    name: "Settings (Admin)",
-    description: "Tetapan admin & konfigurasi",
-    icon: Settings,
-  },
-  {
-    id: "billplz",
-    name: "Billplz Payment",
-    description: "Konfigurasi & kelayakan Billplz",
-    icon: CreditCard,
-  },
-  {
-    id: "coupons",
-    name: "Sistem Kupon",
-    description: "Urus kod diskaun pelanggan",
-    icon: Activity,
-  },
+const INITIAL_CHECKS: Omit<SystemCheck, "status" | "message" | "responseTime" | "extra">[] = [
+  { id: "database", name: "Database Supabase", description: "Sambungan utama ke pangkalan data", icon: Activity, gradient: "from-violet-500 to-violet-600" },
+  { id: "dashboard", name: "Dashboard", description: "Data jualan & statistik pelanggan", icon: LayoutDashboard, gradient: "from-blue-500 to-blue-600" },
+  { id: "customers", name: "Customers", description: "Rekod & status pesanan pelanggan", icon: Users, gradient: "from-cyan-500 to-cyan-600" },
+  { id: "order-flow", name: "Link Tempahan", description: "Aliran pesanan WhatsApp & BillPlz", icon: ShoppingBag, gradient: "from-pink-500 to-pink-600" },
+  { id: "leads", name: "Lead Management", description: "Pengurusan prospek & leads", icon: Target, gradient: "from-orange-500 to-orange-600" },
+  { id: "marketing", name: "Marketing", description: "Nota & tugas pemasaran", icon: Megaphone, gradient: "from-rose-500 to-rose-600" },
+  { id: "products", name: "Products", description: "Katalog produk & variasi", icon: Package, gradient: "from-emerald-500 to-emerald-600" },
+  { id: "sales", name: "Sales Records", description: "Data rekod jualan tahunan", icon: BarChart3, gradient: "from-teal-500 to-teal-600" },
+  { id: "settings", name: "Settings (Admin)", description: "Tetapan admin & konfigurasi", icon: Settings, gradient: "from-slate-500 to-slate-600" },
+  { id: "billplz", name: "Billplz Payment", description: "Konfigurasi & kelayakan Billplz", icon: CreditCard, gradient: "from-indigo-500 to-indigo-600" },
+  { id: "coupons", name: "Sistem Kupon", description: "Urus kod diskaun pelanggan", icon: Activity, gradient: "from-amber-500 to-amber-600" },
 ];
 
 export default function SystemStatus() {
   const { authClient } = useAuth();
   const [checks, setChecks] = useState<SystemCheck[]>(
-    INITIAL_CHECKS.map((c) => ({ ...c, status: "checking", message: "Memeriksa..." }))
+    INITIAL_CHECKS.map((c) => ({ ...c, status: "checking" as StatusType, message: "Memeriksa..." }))
   );
   const [lastChecked, setLastChecked] = useState<Date | null>(null);
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [overallStatus, setOverallStatus] = useState<StatusType>("checking");
 
-  const updateCheck = (id: string, status: StatusType, message: string, responseTime?: number) => {
+  const updateCheck = (id: string, status: StatusType, message: string, responseTime?: number, extra?: Record<string, string | number>) => {
     setChecks((prev) =>
-      prev.map((c) => (c.id === id ? { ...c, status, message, responseTime } : c))
+      prev.map((c) => (c.id === id ? { ...c, status, message, responseTime, extra } : c))
     );
+  };
+
+  const formatCurrency = (value: number) => {
+    if (value >= 1000000) return `RM${(value / 1000000).toFixed(1)}M`;
+    if (value >= 1000) return `RM${(value / 1000).toFixed(0)}K`;
+    return `RM${value.toFixed(0)}`;
   };
 
   const runChecks = useCallback(async () => {
     setIsRefreshing(true);
-    setChecks((prev) => prev.map((c) => ({ ...c, status: "checking", message: "Memeriksa..." })));
+    setChecks((prev) => prev.map((c) => ({ ...c, status: "checking" as StatusType, message: "Memeriksa...", extra: undefined })));
 
-    // 1. Database connectivity
+    // 1. Database
     const dbStart = Date.now();
     try {
       const { error } = await authClient.from("customers").select("id").limit(1);
@@ -125,7 +88,7 @@ export default function SystemStatus() {
       updateCheck("database", "error", "Gagal sambung ke database");
     }
 
-    // 2. Dashboard data (customers + yearly_sales)
+    // 2. Dashboard
     const dashStart = Date.now();
     try {
       const [r1, r2] = await Promise.all([
@@ -138,17 +101,52 @@ export default function SystemStatus() {
       updateCheck("dashboard", "error", "Gagal muatkan data dashboard");
     }
 
-    // 3. Customers table
+    // 3. Customers with stats
     const custStart = Date.now();
     try {
-      const { error, count } = await authClient.from("customers").select("id", { count: "exact", head: true });
-      if (error) throw error;
-      updateCheck("customers", "ok", `${count ?? 0} rekod pelanggan`, Date.now() - custStart);
+      const [totalRes, procRes, compRes, cancelRes, revenueRes] = await Promise.all([
+        authClient.from("customers").select("id", { count: "exact", head: true }),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("order_status", "processing"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("order_status", "completed"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("order_status", "cancelled"),
+        authClient.from("customers").select("sales_amount, paid_amount"),
+      ]);
+      if (totalRes.error) throw totalRes.error;
+      const totalSales = (revenueRes.data || []).reduce((s, r) => s + parseFloat(String(r.sales_amount || 0)), 0);
+      updateCheck("customers", "ok", `${totalRes.count ?? 0} pelanggan`, Date.now() - custStart, {
+        processing: procRes.count ?? 0,
+        completed: compRes.count ?? 0,
+        cancelled: cancelRes.count ?? 0,
+        totalSales,
+      });
     } catch {
       updateCheck("customers", "error", "Gagal akses jadual customers");
     }
 
-    // 4. Leads table
+    // 4. Order Flow (WhatsApp & BillPlz tracking)
+    const orderStart = Date.now();
+    try {
+      const [wpRes, bpRes, wpCompRes, bpCompRes] = await Promise.all([
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "whatsapp"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "billplz"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "whatsapp").eq("order_status", "completed"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "billplz").eq("order_status", "completed"),
+      ]);
+      const wpTotal = wpRes.count ?? 0;
+      const bpTotal = bpRes.count ?? 0;
+      const wpDone = wpCompRes.count ?? 0;
+      const bpDone = bpCompRes.count ?? 0;
+      updateCheck("order-flow", "ok", `${wpTotal + bpTotal} jumlah tempahan`, Date.now() - orderStart, {
+        whatsappTotal: wpTotal,
+        whatsappCompleted: wpDone,
+        billplzTotal: bpTotal,
+        billplzCompleted: bpDone,
+      });
+    } catch {
+      updateCheck("order-flow", "error", "Gagal semak aliran pesanan");
+    }
+
+    // 5. Leads
     const leadsStart = Date.now();
     try {
       const { error, count } = await authClient.from("leads").select("id", { count: "exact", head: true });
@@ -158,78 +156,76 @@ export default function SystemStatus() {
       updateCheck("leads", "error", "Gagal akses jadual leads");
     }
 
-    // 5. Marketing
+    // 6. Marketing
     const mktStart = Date.now();
     try {
-      const { error } = await authClient.from("marketing_content").select("id").limit(1);
+      const { error, count } = await authClient.from("marketing_content").select("id", { count: "exact", head: true });
       if (error) throw error;
-      updateCheck("marketing", "ok", "Modul pemasaran berfungsi", Date.now() - mktStart);
+      updateCheck("marketing", "ok", `${count ?? 0} kandungan pemasaran`, Date.now() - mktStart);
     } catch {
       updateCheck("marketing", "error", "Gagal akses data pemasaran");
     }
 
-    // 6. Products
+    // 7. Products
     const prodStart = Date.now();
     try {
-      const { error, count } = await authClient.from("products").select("id", { count: "exact", head: true });
-      if (error) throw error;
-      updateCheck("products", "ok", `${count ?? 0} produk aktif`, Date.now() - prodStart);
+      const [totalRes, activeRes, inactiveRes] = await Promise.all([
+        authClient.from("products").select("id", { count: "exact", head: true }),
+        authClient.from("products").select("id", { count: "exact", head: true }).eq("status", "active"),
+        authClient.from("products").select("id", { count: "exact", head: true }).eq("status", "inactive"),
+      ]);
+      if (totalRes.error) throw totalRes.error;
+      updateCheck("products", "ok", `${totalRes.count ?? 0} produk`, Date.now() - prodStart, {
+        active: activeRes.count ?? 0,
+        inactive: inactiveRes.count ?? 0,
+      });
     } catch {
       updateCheck("products", "error", "Gagal akses jadual produk");
     }
 
-    // 7. Sales records
+    // 8. Sales
     const salesStart = Date.now();
     try {
-      const { error } = await authClient.from("yearly_sales").select("id").limit(1);
+      const { data, error } = await authClient.from("yearly_sales").select("total_revenue, total_profit");
       if (error) throw error;
-      updateCheck("sales", "ok", "Data jualan boleh diakses", Date.now() - salesStart);
+      const rev = (data || []).reduce((s, r) => s + parseFloat(String(r.total_revenue)), 0);
+      const prof = (data || []).reduce((s, r) => s + parseFloat(String(r.total_profit)), 0);
+      updateCheck("sales", "ok", "Data jualan boleh diakses", Date.now() - salesStart, {
+        totalRevenue: rev,
+        totalProfit: prof,
+      });
     } catch {
       updateCheck("sales", "error", "Gagal akses rekod jualan");
     }
 
-    // 8. Settings (billplz_settings)
+    // 9. Settings
     const settingsStart = Date.now();
     try {
-      const { data, error } = await authClient
-        .from("billplz_settings")
-        .select("api_key, collection_id, x_signature_key")
-        .limit(1)
-        .single();
+      const { error } = await authClient.from("billplz_settings").select("api_key").limit(1).single();
       if (error) throw error;
       updateCheck("settings", "ok", "Tetapan admin boleh diakses", Date.now() - settingsStart);
     } catch {
       updateCheck("settings", "error", "Gagal akses tetapan admin");
     }
 
-    // 9. Billplz configuration
+    // 10. Billplz
     const billplzStart = Date.now();
     try {
-      const { data, error } = await authClient
-        .from("billplz_settings")
-        .select("api_key, collection_id, x_signature_key")
-        .limit(1)
-        .single();
+      const { data, error } = await authClient.from("billplz_settings").select("api_key, collection_id, x_signature_key").limit(1).single();
       if (error) throw error;
-      const hasApiKey = data?.api_key && data.api_key.trim() !== "";
-      const hasCollectionId = data?.collection_id && data.collection_id.trim() !== "";
-      const hasXSig = data?.x_signature_key && data.x_signature_key.trim() !== "";
-
-      if (!hasApiKey || !hasCollectionId) {
-        updateCheck(
-          "billplz",
-          "warn",
-          `⚠️ ${!hasApiKey ? "API Key " : ""}${!hasCollectionId ? "Collection ID " : ""}${!hasXSig ? "X-Signature " : ""}belum dikonfigurasi`,
-          Date.now() - billplzStart
-        );
+      const hasApiKey = data?.api_key?.trim();
+      const hasCol = data?.collection_id?.trim();
+      const hasSig = data?.x_signature_key?.trim();
+      if (!hasApiKey || !hasCol) {
+        updateCheck("billplz", "warn", `⚠️ ${!hasApiKey ? "API Key " : ""}${!hasCol ? "Collection ID " : ""}belum dikonfigurasi`, Date.now() - billplzStart);
       } else {
-        updateCheck("billplz", "ok", `API Key ✓ | Collection ID ✓ | X-Sig ${hasXSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
+        updateCheck("billplz", "ok", `API Key ✓ | Collection ✓ | X-Sig ${hasSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
       }
     } catch {
       updateCheck("billplz", "error", "Gagal semak konfigurasi Billplz");
     }
 
-    // 10. Coupons
+    // 11. Coupons
     const couponStart = Date.now();
     try {
       const { error, count } = await authClient.from("coupons").select("id", { count: "exact", head: true });
@@ -243,91 +239,136 @@ export default function SystemStatus() {
     setIsRefreshing(false);
   }, [authClient]);
 
-  // Compute overall status when checks update
   useEffect(() => {
     const allDone = checks.every((c) => c.status !== "checking");
-    if (!allDone) {
-      setOverallStatus("checking");
-      return;
-    }
-    if (checks.some((c) => c.status === "error")) {
-      setOverallStatus("error");
-    } else if (checks.some((c) => c.status === "warn")) {
-      setOverallStatus("warn");
-    } else {
-      setOverallStatus("ok");
-    }
+    if (!allDone) { setOverallStatus("checking"); return; }
+    if (checks.some((c) => c.status === "error")) setOverallStatus("error");
+    else if (checks.some((c) => c.status === "warn")) setOverallStatus("warn");
+    else setOverallStatus("ok");
   }, [checks]);
 
-  useEffect(() => {
-    runChecks();
-  }, [runChecks]);
-
-  const statusIcon = {
-    ok: <CheckCircle className="h-5 w-5 text-green-400" />,
-    error: <XCircle className="h-5 w-5 text-red-400" />,
-    warn: <AlertCircle className="h-5 w-5 text-yellow-400" />,
-    checking: <RefreshCw className="h-4 w-4 text-blue-400 animate-spin" />,
-  };
-
-  const statusBadge = {
-    ok: "bg-green-500/20 text-green-300 border-green-500/30",
-    error: "bg-red-500/20 text-red-300 border-red-500/30",
-    warn: "bg-yellow-500/20 text-yellow-300 border-yellow-500/30",
-    checking: "bg-blue-500/20 text-blue-300 border-blue-500/30",
-  };
-
-  const statusLabel = {
-    ok: "Berfungsi",
-    error: "Ralat",
-    warn: "Amaran",
-    checking: "Memeriksa...",
-  };
+  useEffect(() => { runChecks(); }, [runChecks]);
 
   const okCount = checks.filter((c) => c.status === "ok").length;
   const errCount = checks.filter((c) => c.status === "error").length;
   const warnCount = checks.filter((c) => c.status === "warn").length;
 
+  const renderExtraContent = (check: SystemCheck) => {
+    if (!check.extra) return null;
+
+    if (check.id === "customers") {
+      return (
+        <div className="grid grid-cols-3 gap-1.5 mt-3">
+          <div className="bg-yellow-500/10 rounded-lg p-2 text-center">
+            <Clock className="h-3 w-3 mx-auto mb-0.5 text-yellow-400" />
+            <span className="block text-sm font-bold text-yellow-300">{check.extra.processing}</span>
+            <span className="text-[9px] text-yellow-400/70">Process</span>
+          </div>
+          <div className="bg-green-500/10 rounded-lg p-2 text-center">
+            <CheckCircle className="h-3 w-3 mx-auto mb-0.5 text-green-400" />
+            <span className="block text-sm font-bold text-green-300">{check.extra.completed}</span>
+            <span className="text-[9px] text-green-400/70">Selesai</span>
+          </div>
+          <div className="bg-red-500/10 rounded-lg p-2 text-center">
+            <XCircle className="h-3 w-3 mx-auto mb-0.5 text-red-400" />
+            <span className="block text-sm font-bold text-red-300">{check.extra.cancelled}</span>
+            <span className="text-[9px] text-red-400/70">Batal</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (check.id === "order-flow") {
+      return (
+        <div className="grid grid-cols-2 gap-2 mt-3">
+          <div className="bg-green-500/10 rounded-lg p-2">
+            <div className="flex items-center gap-1.5 mb-1">
+              <MessageSquare className="h-3 w-3 text-green-400" />
+              <span className="text-[10px] text-green-400/80">WhatsApp</span>
+            </div>
+            <span className="text-sm font-bold text-green-300">{check.extra.whatsappCompleted}/{check.extra.whatsappTotal}</span>
+            <span className="text-[9px] text-muted-foreground ml-1">selesai</span>
+          </div>
+          <div className="bg-blue-500/10 rounded-lg p-2">
+            <div className="flex items-center gap-1.5 mb-1">
+              <CreditCard className="h-3 w-3 text-blue-400" />
+              <span className="text-[10px] text-blue-400/80">BillPlz</span>
+            </div>
+            <span className="text-sm font-bold text-blue-300">{check.extra.billplzCompleted}/{check.extra.billplzTotal}</span>
+            <span className="text-[9px] text-muted-foreground ml-1">selesai</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (check.id === "products") {
+      return (
+        <div className="grid grid-cols-2 gap-1.5 mt-3">
+          <div className="bg-green-500/10 rounded-lg p-2 text-center">
+            <span className="block text-sm font-bold text-green-300">{check.extra.active}</span>
+            <span className="text-[9px] text-green-400/70">Aktif</span>
+          </div>
+          <div className="bg-red-500/10 rounded-lg p-2 text-center">
+            <span className="block text-sm font-bold text-red-300">{check.extra.inactive}</span>
+            <span className="text-[9px] text-red-400/70">Habis Stok</span>
+          </div>
+        </div>
+      );
+    }
+
+    if (check.id === "sales") {
+      return (
+        <div className="grid grid-cols-2 gap-1.5 mt-3">
+          <div className="bg-blue-500/10 rounded-lg p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <Wallet className="h-3 w-3 text-blue-400" />
+              <span className="text-[9px] text-blue-400/70">Revenue</span>
+            </div>
+            <span className="text-sm font-bold text-blue-300">{formatCurrency(Number(check.extra.totalRevenue))}</span>
+          </div>
+          <div className="bg-green-500/10 rounded-lg p-2">
+            <div className="flex items-center gap-1 mb-0.5">
+              <TrendingUp className="h-3 w-3 text-green-400" />
+              <span className="text-[9px] text-green-400/70">Profit</span>
+            </div>
+            <span className="text-sm font-bold text-green-300">{formatCurrency(Number(check.extra.totalProfit))}</span>
+          </div>
+        </div>
+      );
+    }
+
+    return null;
+  };
+
   return (
     <div className="p-4 md:p-6 space-y-6">
       {/* Header */}
-      <section className="animate-slide-up">
-        <div className="flex items-center justify-between gap-3 mb-2">
-          <div className="flex items-center gap-3">
-            <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg">
-              <Activity className="h-5 w-5 text-white" />
-            </div>
-            <div>
-              <h1 className="text-2xl md:text-3xl font-bold text-foreground">Sistem Monitor</h1>
-              <p className="text-muted-foreground text-sm">
-                {lastChecked
-                  ? `Semakan terakhir: ${lastChecked.toLocaleTimeString("ms-MY")}`
-                  : "Memeriksa sistem..."}
-              </p>
-            </div>
+      <div className="flex items-center justify-between gap-3">
+        <div className="flex items-center gap-3">
+          <div className="h-10 w-10 rounded-xl bg-gradient-to-br from-purple-500 to-purple-700 flex items-center justify-center shadow-lg">
+            <Activity className="h-5 w-5 text-white" />
           </div>
-          <Button
-            onClick={runChecks}
-            disabled={isRefreshing}
-            variant="outline"
-            className="gap-2"
-          >
-            <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
-            {isRefreshing ? "Memeriksa..." : "Semak Semula"}
-          </Button>
+          <div>
+            <h1 className="text-2xl md:text-3xl font-bold text-foreground">Sistem Monitor</h1>
+            <p className="text-muted-foreground text-sm">
+              {lastChecked ? `Semakan terakhir: ${lastChecked.toLocaleTimeString("ms-MY")}` : "Memeriksa sistem..."}
+            </p>
+          </div>
         </div>
-      </section>
+        <Button onClick={runChecks} disabled={isRefreshing} variant="outline" className="gap-2">
+          <RefreshCw className={cn("h-4 w-4", isRefreshing && "animate-spin")} />
+          {isRefreshing ? "Memeriksa..." : "Semak Semula"}
+        </Button>
+      </div>
 
       {/* Overall Status Banner */}
-      <div
-        className={cn(
-          "rounded-2xl p-5 border flex items-center gap-4 transition-all",
-          overallStatus === "ok" && "bg-green-500/10 border-green-500/30",
-          overallStatus === "error" && "bg-red-500/10 border-red-500/30",
-          overallStatus === "warn" && "bg-yellow-500/10 border-yellow-500/30",
-          overallStatus === "checking" && "bg-blue-500/10 border-blue-500/30"
-        )}
-      >
+      <div className={cn(
+        "rounded-2xl p-5 border flex items-center gap-4",
+        overallStatus === "ok" && "bg-gradient-to-r from-green-500/10 to-emerald-500/10 border-green-500/30",
+        overallStatus === "error" && "bg-gradient-to-r from-red-500/10 to-rose-500/10 border-red-500/30",
+        overallStatus === "warn" && "bg-gradient-to-r from-yellow-500/10 to-amber-500/10 border-yellow-500/30",
+        overallStatus === "checking" && "bg-gradient-to-r from-blue-500/10 to-cyan-500/10 border-blue-500/30"
+      )}>
         <div className="h-14 w-14 rounded-full flex items-center justify-center bg-white/10 shrink-0">
           {overallStatus === "ok" && <Wifi className="h-7 w-7 text-green-400" />}
           {overallStatus === "error" && <WifiOff className="h-7 w-7 text-red-400" />}
@@ -342,30 +383,27 @@ export default function SystemStatus() {
             {overallStatus === "checking" && "🔍 Sedang Memeriksa Sistem..."}
           </h2>
           <p className="text-sm text-muted-foreground mt-1">
-            {okCount} berfungsi
-            {errCount > 0 && ` · ${errCount} ralat`}
-            {warnCount > 0 && ` · ${warnCount} amaran`}
-            {" "} daripada {checks.length} sistem
+            {okCount} berfungsi{errCount > 0 && ` · ${errCount} ralat`}{warnCount > 0 && ` · ${warnCount} amaran`} daripada {checks.length} sistem
           </p>
         </div>
       </div>
 
       {/* Summary Stats */}
-      <div className="grid grid-cols-3 gap-4">
-        <div className="rounded-xl p-4 bg-green-500/10 border border-green-500/20 text-center">
-          <CheckCircle className="h-6 w-6 text-green-400 mx-auto mb-2" />
+      <div className="grid grid-cols-3 gap-3">
+        <div className="rounded-xl p-4 bg-gradient-to-br from-green-500/15 to-emerald-500/10 border border-green-500/20 text-center">
+          <CheckCircle className="h-6 w-6 text-green-400 mx-auto mb-1" />
           <span className="text-2xl font-bold text-green-400">{okCount}</span>
-          <p className="text-xs text-muted-foreground mt-1">Berfungsi</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Berfungsi</p>
         </div>
-        <div className="rounded-xl p-4 bg-yellow-500/10 border border-yellow-500/20 text-center">
-          <AlertCircle className="h-6 w-6 text-yellow-400 mx-auto mb-2" />
+        <div className="rounded-xl p-4 bg-gradient-to-br from-yellow-500/15 to-amber-500/10 border border-yellow-500/20 text-center">
+          <AlertCircle className="h-6 w-6 text-yellow-400 mx-auto mb-1" />
           <span className="text-2xl font-bold text-yellow-400">{warnCount}</span>
-          <p className="text-xs text-muted-foreground mt-1">Amaran</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Amaran</p>
         </div>
-        <div className="rounded-xl p-4 bg-red-500/10 border border-red-500/20 text-center">
-          <XCircle className="h-6 w-6 text-red-400 mx-auto mb-2" />
+        <div className="rounded-xl p-4 bg-gradient-to-br from-red-500/15 to-rose-500/10 border border-red-500/20 text-center">
+          <XCircle className="h-6 w-6 text-red-400 mx-auto mb-1" />
           <span className="text-2xl font-bold text-red-400">{errCount}</span>
-          <p className="text-xs text-muted-foreground mt-1">Ralat</p>
+          <p className="text-xs text-muted-foreground mt-0.5">Ralat</p>
         </div>
       </div>
 
@@ -373,61 +411,56 @@ export default function SystemStatus() {
       <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
         {checks.map((check) => {
           const Icon = check.icon;
+          const gradient = (check as any).gradient || "from-gray-500 to-gray-600";
           return (
             <div
               key={check.id}
               className={cn(
-                "rounded-xl p-4 border transition-all",
-                check.status === "ok" && "bg-card border-border hover:border-green-500/30",
-                check.status === "error" && "bg-red-500/5 border-red-500/30",
-                check.status === "warn" && "bg-yellow-500/5 border-yellow-500/30",
-                check.status === "checking" && "bg-card border-border opacity-70"
+                "rounded-xl overflow-hidden border transition-all",
+                check.status === "ok" && "border-border hover:border-green-500/30",
+                check.status === "error" && "border-red-500/30",
+                check.status === "warn" && "border-yellow-500/30",
+                check.status === "checking" && "border-border opacity-70"
               )}
             >
-              <div className="flex items-start justify-between gap-3">
-                <div className="flex items-center gap-3 min-w-0">
-                  <div
-                    className={cn(
-                      "h-10 w-10 rounded-lg flex items-center justify-center shrink-0",
-                      check.status === "ok" && "bg-green-500/15",
-                      check.status === "error" && "bg-red-500/15",
-                      check.status === "warn" && "bg-yellow-500/15",
-                      check.status === "checking" && "bg-muted"
-                    )}
-                  >
-                    <Icon
-                      className={cn(
-                        "h-5 w-5",
-                        check.status === "ok" && "text-green-400",
-                        check.status === "error" && "text-red-400",
-                        check.status === "warn" && "text-yellow-400",
-                        check.status === "checking" && "text-muted-foreground"
-                      )}
-                    />
+              {/* Card Header with gradient */}
+              <div className={cn("p-3 bg-gradient-to-r", gradient)}>
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-2.5">
+                    <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center">
+                      <Icon className="h-4 w-4 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="font-semibold text-white text-sm">{check.name}</h3>
+                      <p className="text-[10px] text-white/60">{check.description}</p>
+                    </div>
                   </div>
-                  <div className="min-w-0">
-                    <h3 className="font-semibold text-foreground text-sm truncate">{check.name}</h3>
-                    <p className="text-xs text-muted-foreground truncate">{check.description}</p>
+                  <div className="shrink-0">
+                    {check.status === "ok" && <CheckCircle className="h-5 w-5 text-white/90" />}
+                    {check.status === "error" && <XCircle className="h-5 w-5 text-red-200" />}
+                    {check.status === "warn" && <AlertCircle className="h-5 w-5 text-yellow-200" />}
+                    {check.status === "checking" && <RefreshCw className="h-4 w-4 text-white/70 animate-spin" />}
                   </div>
                 </div>
-                {statusIcon[check.status]}
               </div>
 
-              <div className="mt-3 flex items-center justify-between gap-2">
-                <p className="text-xs text-muted-foreground flex-1 truncate">{check.message}</p>
-                <div
-                  className={cn(
-                    "shrink-0 text-[10px] font-medium px-2 py-0.5 rounded-full border",
-                    statusBadge[check.status]
+              {/* Card Body */}
+              <div className="p-3 bg-card">
+                <div className="flex items-center justify-between gap-2">
+                  <p className="text-xs text-muted-foreground flex-1 truncate">{check.message}</p>
+                  {check.responseTime !== undefined && (
+                    <span className={cn(
+                      "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
+                      check.responseTime < 500 ? "bg-green-500/15 text-green-400" :
+                      check.responseTime < 1000 ? "bg-yellow-500/15 text-yellow-400" :
+                      "bg-red-500/15 text-red-400"
+                    )}>{check.responseTime}ms</span>
                   )}
-                >
-                  {statusLabel[check.status]}
                 </div>
-              </div>
 
-              {check.responseTime !== undefined && (
-                <div className="mt-2 flex items-center gap-1">
-                  <div className="h-1 flex-1 rounded-full bg-muted overflow-hidden">
+                {/* Response time bar */}
+                {check.responseTime !== undefined && (
+                  <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
@@ -436,9 +469,11 @@ export default function SystemStatus() {
                       style={{ width: `${Math.min(100, (check.responseTime / 2000) * 100)}%` }}
                     />
                   </div>
-                  <span className="text-[10px] text-muted-foreground shrink-0">{check.responseTime}ms</span>
-                </div>
-              )}
+                )}
+
+                {/* Extra content for specific cards */}
+                {renderExtraContent(check)}
+              </div>
             </div>
           );
         })}
