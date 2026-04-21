@@ -88,7 +88,7 @@ export default function Sales() {
           : currentYearRevenue > 0 ? 100 : 0;
         
         // Create yearly data for chart visualization
-        const yearlyData = sortedData.slice(0, 5).map(record => ({
+        const yearlyData = sortedData.slice(0, 9).map(record => ({
           year: record.year,
           totalRevenue: record.total_revenue,
           totalProfit: record.total_profit || 0,
