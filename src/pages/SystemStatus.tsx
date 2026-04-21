@@ -408,63 +408,72 @@ export default function SystemStatus() {
       </div>
 
       {/* System Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-3">
         {checks.map((check) => {
           const Icon = check.icon;
-          const gradient = (check as any).gradient || "from-gray-500 to-gray-600";
+          const isError = check.status === "error";
+          const isWarn = check.status === "warn";
+          const isChecking = check.status === "checking";
           return (
             <div
               key={check.id}
               className={cn(
-                "rounded-xl overflow-hidden border transition-all",
-                check.status === "ok" && "border-border hover:border-green-500/30",
-                check.status === "error" && "border-red-500/30",
-                check.status === "warn" && "border-yellow-500/30",
-                check.status === "checking" && "border-border opacity-70"
+                "rounded-lg border bg-card transition-all",
+                isError && "border-red-500/40 bg-red-500/5",
+                isWarn && "border-yellow-500/40 bg-yellow-500/5",
+                !isError && !isWarn && "border-border hover:border-border/80",
+                isChecking && "opacity-70"
               )}
             >
-              {/* Card Header with gradient */}
-              <div className={cn("p-3 bg-gradient-to-r", gradient)}>
+              {/* Card Header — neutral */}
+              <div className="p-3 border-b border-border/50">
                 <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-2.5">
-                    <div className="h-8 w-8 rounded-lg bg-white/15 flex items-center justify-center">
-                      <Icon className="h-4 w-4 text-white" />
+                  <div className="flex items-center gap-2.5 min-w-0">
+                    <div className={cn(
+                      "h-8 w-8 rounded-lg flex items-center justify-center shrink-0",
+                      isError && "bg-red-500/15 text-red-500",
+                      isWarn && "bg-yellow-500/15 text-yellow-600",
+                      !isError && !isWarn && "bg-muted text-muted-foreground"
+                    )}>
+                      <Icon className="h-4 w-4" />
                     </div>
-                    <div>
-                      <h3 className="font-semibold text-white text-sm">{check.name}</h3>
-                      <p className="text-[10px] text-white/60">{check.description}</p>
+                    <div className="min-w-0">
+                      <h3 className="font-medium text-foreground text-sm truncate">{check.name}</h3>
+                      <p className="text-[10px] text-muted-foreground truncate">{check.description}</p>
                     </div>
                   </div>
                   <div className="shrink-0">
-                    {check.status === "ok" && <CheckCircle className="h-5 w-5 text-white/90" />}
-                    {check.status === "error" && <XCircle className="h-5 w-5 text-red-200" />}
-                    {check.status === "warn" && <AlertCircle className="h-5 w-5 text-yellow-200" />}
-                    {check.status === "checking" && <RefreshCw className="h-4 w-4 text-white/70 animate-spin" />}
+                    {check.status === "ok" && <CheckCircle className="h-4 w-4 text-green-500" />}
+                    {isError && <XCircle className="h-4 w-4 text-red-500" />}
+                    {isWarn && <AlertCircle className="h-4 w-4 text-yellow-500" />}
+                    {isChecking && <RefreshCw className="h-4 w-4 text-muted-foreground animate-spin" />}
                   </div>
                 </div>
               </div>
 
               {/* Card Body */}
-              <div className="p-3 bg-card">
+              <div className="p-3">
                 <div className="flex items-center justify-between gap-2">
-                  <p className="text-xs text-muted-foreground flex-1 truncate">{check.message}</p>
+                  <p className={cn(
+                    "text-xs flex-1 truncate",
+                    isError && "text-red-500 font-medium",
+                    isWarn && "text-yellow-600 font-medium",
+                    !isError && !isWarn && "text-muted-foreground"
+                  )}>{check.message}</p>
                   {check.responseTime !== undefined && (
                     <span className={cn(
-                      "text-[10px] font-medium px-1.5 py-0.5 rounded-full",
-                      check.responseTime < 500 ? "bg-green-500/15 text-green-400" :
-                      check.responseTime < 1000 ? "bg-yellow-500/15 text-yellow-400" :
-                      "bg-red-500/15 text-red-400"
+                      "text-[10px] font-medium px-1.5 py-0.5 rounded-full bg-muted text-muted-foreground"
                     )}>{check.responseTime}ms</span>
                   )}
                 </div>
 
-                {/* Response time bar */}
-                {check.responseTime !== undefined && (
+                {/* Response time bar — only show when slow */}
+                {check.responseTime !== undefined && check.responseTime >= 500 && (
                   <div className="mt-2 h-1 rounded-full bg-muted overflow-hidden">
                     <div
                       className={cn(
                         "h-full rounded-full transition-all",
-                        check.responseTime < 500 ? "bg-green-500" : check.responseTime < 1000 ? "bg-yellow-500" : "bg-red-500"
+                        check.responseTime < 1000 ? "bg-yellow-500" : "bg-red-500"
                       )}
                       style={{ width: `${Math.min(100, (check.responseTime / 2000) * 100)}%` }}
                     />
