@@ -49,6 +49,7 @@ import { compareDates, formatCurrency } from "@/lib/utils";
 import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkDeleteCustomersDialog } from "@/components/customers/BulkDeleteCustomersDialog";
+import { MalaysiaMap } from "@/components/customers/MalaysiaMap";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
