@@ -192,36 +192,37 @@ function Customers() {
 
   const calculateStateStats = async () => {
     try {
-      const initialStateData = malaysianStates.map(state => ({
-        state,
-        count: 0,
-        amount: 0
-      }));
-      
-      for (let i = 0; i < malaysianStates.length; i++) {
-        const state = malaysianStates[i];
-        const { data, error } = await authClient
-          .from("customers")
-          .select("id, sales_amount")
-          .eq("city", state);
-          
-        if (error) {
-          console.error(`Error fetching data for ${state}:`, error);
-          continue;
-        }
-        
-        if (data && data.length > 0) {
-          const count = data.length;
-          const totalAmount = data.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0);
-          
-          initialStateData[i].count = count;
-          initialStateData[i].amount = totalAmount;
-        }
+      // Fetch all customers in one query and aggregate locally for accurate counts
+      const { data, error } = await authClient
+        .from("customers")
+        .select("city, sales_amount");
+
+      if (error) {
+        console.error("Error fetching state stats:", error);
+        return;
       }
-      
-      initialStateData.sort((a, b) => b.count - a.count);
-      
-      setStateStats(initialStateData);
+
+      const aggregates = new Map<string, { count: number; amount: number }>();
+      malaysianStates.forEach((s) => aggregates.set(s, { count: 0, amount: 0 }));
+
+      (data || []).forEach((row: any) => {
+        const stateName = (row.city || "").trim();
+        if (!stateName) return;
+        const entry = aggregates.get(stateName);
+        if (entry) {
+          entry.count += 1;
+          entry.amount += parseFloat(String(row.sales_amount || 0));
+        }
+      });
+
+      const stats = malaysianStates.map((state) => ({
+        state,
+        count: aggregates.get(state)?.count || 0,
+        amount: aggregates.get(state)?.amount || 0,
+      }));
+
+      stats.sort((a, b) => b.count - a.count);
+      setStateStats(stats);
     } catch (error) {
       console.error("Error calculating state stats:", error);
     }
