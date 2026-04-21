@@ -211,74 +211,70 @@ export default function Sales() {
             <div className="space-y-8">
               <div className="grid grid-cols-1 md:grid-cols-4 gap-4">
                 {/* Total Revenue Card */}
-                <Card className="bg-white">
+                <Card className="border-0 shadow-md bg-gradient-to-br from-blue-500 to-blue-600 text-white">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <DollarSign className="h-5 w-5 text-blue-500" />
-                      <span className="text-sm text-muted-foreground">Total Revenue</span>
+                      <DollarSign className="h-5 w-5 text-white" />
+                      <span className="text-sm text-white/90">Total Revenue</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {formatCurrency(analytics.totalAllTimeRevenue).replace("MYR", "RM")}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+                      <p className="text-xs text-white/80 mt-1">All-time total</p>
                     </div>
                   </CardContent>
                 </Card>
                 
                 {/* Total Profit Card */}
-                <Card className="bg-white">
+                <Card className="border-0 shadow-md bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <DollarSign className="h-5 w-5 text-green-500" />
-                      <span className="text-sm text-muted-foreground">Total Profit</span>
+                      <DollarSign className="h-5 w-5 text-white" />
+                      <span className="text-sm text-white/90">Total Profit</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {formatCurrency(analytics.totalAllTimeProfit).replace("MYR", "RM")}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">All-time total</p>
+                      <p className="text-xs text-white/80 mt-1">All-time total</p>
                     </div>
                   </CardContent>
                 </Card>
                 
                 {/* Year-over-Year Growth Card */}
-                <Card className="bg-white">
+                <Card className={`border-0 shadow-md text-white bg-gradient-to-br ${analytics.percentageChange >= 0 ? 'from-teal-500 to-teal-600' : 'from-rose-500 to-rose-600'}`}>
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
                       {analytics.percentageChange >= 0 ? (
-                        <TrendingUp className="h-5 w-5 text-emerald-500" />
+                        <TrendingUp className="h-5 w-5 text-white" />
                       ) : (
-                        <TrendingDown className="h-5 w-5 text-rose-500" />
+                        <TrendingDown className="h-5 w-5 text-white" />
                       )}
-                      <span className="text-sm text-muted-foreground">Year-over-Year Growth</span>
+                      <span className="text-sm text-white/90">Year-over-Year Growth</span>
                     </div>
                     <div>
-                      <p 
-                        className={`text-2xl font-bold ${
-                          analytics.percentageChange >= 0 ? 'text-emerald-600' : 'text-rose-600'
-                        }`}
-                      >
+                      <p className="text-2xl font-bold text-white">
                         {analytics.percentageChange >= 0 ? '+' : ''}
                         {analytics.percentageChange.toFixed(1)}%
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Current year vs previous</p>
+                      <p className="text-xs text-white/80 mt-1">Current year vs previous</p>
                     </div>
                   </CardContent>
                 </Card>
                 
                 {/* Current Year Card */}
-                <Card className="bg-white">
+                <Card className="border-0 shadow-md bg-gradient-to-br from-purple-500 to-purple-600 text-white">
                   <CardContent className="p-6">
                     <div className="flex items-center justify-between mb-2">
-                      <Calendar className="h-5 w-5 text-purple-500" />
-                      <span className="text-sm text-muted-foreground">Current Year ({new Date().getFullYear()})</span>
+                      <Calendar className="h-5 w-5 text-white" />
+                      <span className="text-sm text-white/90">Current Year ({new Date().getFullYear()})</span>
                     </div>
                     <div>
-                      <p className="text-2xl font-bold text-slate-900">
+                      <p className="text-2xl font-bold text-white">
                         {formatCurrency(analytics.currentYearRevenue).replace("MYR", "RM")}
                       </p>
-                      <p className="text-xs text-muted-foreground mt-1">Year to date</p>
+                      <p className="text-xs text-white/80 mt-1">Year to date</p>
                     </div>
                   </CardContent>
                 </Card>

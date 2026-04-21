@@ -478,38 +478,38 @@ function Customers() {
       </section>
       
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Total Customers</span>
+              <span className="text-sm text-white/90">Total Customers</span>
               <span className="text-3xl font-bold mt-1">{totalCustomers}</span>
             </div>
-            <div className="h-12 w-12 rounded-full bg-blue-50 flex items-center justify-center">
-              <Users className="h-6 w-6 text-blue-500" />
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <Users className="h-6 w-6 text-white" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Total Sales</span>
+              <span className="text-sm text-white/90">Total Sales</span>
               <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
             </div>
-            <div className="h-12 w-12 rounded-full bg-green-50 flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-green-500" />
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <DollarSign className="h-6 w-6 text-white" />
             </div>
           </CardContent>
         </Card>
         
-        <Card className="shadow-sm">
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
           <CardContent className="p-6 flex items-center justify-between">
             <div className="flex flex-col">
-              <span className="text-sm text-muted-foreground">Gross Profit</span>
+              <span className="text-sm text-white/90">Gross Profit</span>
               <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.grossProfit)}</span>
             </div>
-            <div className="h-12 w-12 rounded-full bg-purple-50 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-purple-500" />
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <TrendingUp className="h-6 w-6 text-white" />
             </div>
           </CardContent>
         </Card>
