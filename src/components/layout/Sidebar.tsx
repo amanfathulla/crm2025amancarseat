@@ -254,10 +254,10 @@ export function Sidebar() {
               to="/customers"
               onClick={() => isMobile && setMobileOpen(false)}
               className={cn(
-                "block rounded-xl p-3 mt-3 transition-all duration-200",
+                "block rounded-xl p-3 mt-3 transition-all duration-200 border",
                 location.pathname === "/customers"
-                  ? "bg-gradient-to-br from-blue-600 to-blue-700 shadow-lg"
-                  : "bg-gradient-to-br from-blue-500/20 to-blue-600/20 hover:from-blue-500/30 hover:to-blue-600/30"
+                  ? "bg-blue-600 border-blue-400 shadow-lg"
+                  : "bg-blue-600/15 border-blue-500/30 hover:bg-blue-600/25"
               )}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -265,20 +265,20 @@ export function Sidebar() {
                 <span className="text-sm font-semibold text-white">Customers</span>
               </div>
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-white/10 rounded-lg p-2 text-center">
-                  <Clock className="h-3 w-3 mx-auto mb-1 text-yellow-300" />
+                <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg p-2 text-center">
+                  <Clock className="h-3 w-3 mx-auto mb-1 text-amber-300" />
                   <span className="block text-lg font-bold text-white">{orderCounts.processing}</span>
-                  <span className="text-[10px] text-white/70">Process</span>
+                  <span className="text-[10px] text-amber-100/80">Process</span>
                 </div>
-                <div className="bg-white/10 rounded-lg p-2 text-center">
-                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-green-300" />
+                <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-2 text-center">
+                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-emerald-300" />
                   <span className="block text-lg font-bold text-white">{orderCounts.completed}</span>
-                  <span className="text-[10px] text-white/70">Done</span>
+                  <span className="text-[10px] text-emerald-100/80">Done</span>
                 </div>
-                <div className="bg-white/10 rounded-lg p-2 text-center">
+                <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 text-center">
                   <XCircle className="h-3 w-3 mx-auto mb-1 text-red-300" />
                   <span className="block text-lg font-bold text-white">{orderCounts.cancelled}</span>
-                  <span className="text-[10px] text-white/70">Cancel</span>
+                  <span className="text-[10px] text-red-100/80">Cancel</span>
                 </div>
               </div>
             </NavLink>
@@ -307,10 +307,10 @@ export function Sidebar() {
               to="/sales"
               onClick={() => isMobile && setMobileOpen(false)}
               className={cn(
-                "block rounded-xl p-3 mt-2 transition-all duration-200",
+                "block rounded-xl p-3 mt-2 transition-all duration-200 border",
                 location.pathname === "/sales"
-                  ? "bg-gradient-to-br from-emerald-600 to-emerald-700 shadow-lg"
-                  : "bg-gradient-to-br from-emerald-500/20 to-emerald-600/20 hover:from-emerald-500/30 hover:to-emerald-600/30"
+                  ? "bg-emerald-600 border-emerald-400 shadow-lg"
+                  : "bg-emerald-600/15 border-emerald-500/30 hover:bg-emerald-600/25"
               )}
             >
               <div className="flex items-center gap-2 mb-3">
@@ -318,17 +318,17 @@ export function Sidebar() {
                 <span className="text-sm font-semibold text-white">Sales</span>
               </div>
               <div className="grid grid-cols-2 gap-2">
-                <div className="bg-white/10 rounded-lg p-2">
+                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-2">
                   <div className="flex items-center gap-1 mb-1">
                     <Wallet className="h-3 w-3 text-blue-300" />
-                    <span className="text-[10px] text-white/70">Revenue</span>
+                    <span className="text-[10px] text-blue-100/80">Revenue</span>
                   </div>
                   <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalRevenue)}</span>
                 </div>
-                <div className="bg-white/10 rounded-lg p-2">
+                <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-2">
                   <div className="flex items-center gap-1 mb-1">
                     <TrendingUp className="h-3 w-3 text-green-300" />
-                    <span className="text-[10px] text-white/70">Profit</span>
+                    <span className="text-[10px] text-green-100/80">Profit</span>
                   </div>
                   <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalProfit)}</span>
                 </div>
