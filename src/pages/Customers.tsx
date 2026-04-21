@@ -49,6 +49,7 @@ import { compareDates, formatCurrency } from "@/lib/utils";
 import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
 import { Checkbox } from "@/components/ui/checkbox";
 import { BulkDeleteCustomersDialog } from "@/components/customers/BulkDeleteCustomersDialog";
+import { MalaysiaMap } from "@/components/customers/MalaysiaMap";
 
 const malaysianStates = [
   "Johor", "Kedah", "Kelantan", "Melaka", "Negeri Sembilan", 
@@ -192,36 +193,37 @@ function Customers() {
 
   const calculateStateStats = async () => {
     try {
-      const initialStateData = malaysianStates.map(state => ({
-        state,
-        count: 0,
-        amount: 0
-      }));
-      
-      for (let i = 0; i < malaysianStates.length; i++) {
-        const state = malaysianStates[i];
-        const { data, error } = await authClient
-          .from("customers")
-          .select("id, sales_amount")
-          .eq("city", state);
-          
-        if (error) {
-          console.error(`Error fetching data for ${state}:`, error);
-          continue;
-        }
-        
-        if (data && data.length > 0) {
-          const count = data.length;
-          const totalAmount = data.reduce((sum, customer) => sum + (customer.sales_amount || 0), 0);
-          
-          initialStateData[i].count = count;
-          initialStateData[i].amount = totalAmount;
-        }
+      // Fetch all customers in one query and aggregate locally for accurate counts
+      const { data, error } = await authClient
+        .from("customers")
+        .select("city, sales_amount");
+
+      if (error) {
+        console.error("Error fetching state stats:", error);
+        return;
       }
-      
-      initialStateData.sort((a, b) => b.count - a.count);
-      
-      setStateStats(initialStateData);
+
+      const aggregates = new Map<string, { count: number; amount: number }>();
+      malaysianStates.forEach((s) => aggregates.set(s, { count: 0, amount: 0 }));
+
+      (data || []).forEach((row: any) => {
+        const stateName = (row.city || "").trim();
+        if (!stateName) return;
+        const entry = aggregates.get(stateName);
+        if (entry) {
+          entry.count += 1;
+          entry.amount += parseFloat(String(row.sales_amount || 0));
+        }
+      });
+
+      const stats = malaysianStates.map((state) => ({
+        state,
+        count: aggregates.get(state)?.count || 0,
+        amount: aggregates.get(state)?.amount || 0,
+      }));
+
+      stats.sort((a, b) => b.count - a.count);
+      setStateStats(stats);
     } catch (error) {
       console.error("Error calculating state stats:", error);
     }
@@ -555,40 +557,15 @@ function Customers() {
       
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-lg">Orders by Malaysian States (Negeri)</CardTitle>
-          <CardDescription>Overview of orders distribution across all Malaysian states</CardDescription>
+          <CardTitle className="text-lg">Peta Tempahan Mengikut Negeri</CardTitle>
+          <CardDescription>Klik mana-mana negeri pada peta untuk tapis senarai pelanggan</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={stateStats}
-                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="state" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={70}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Orders" onClick={(data) => handleStateFilter(data.state)}>
-                  {stateStats.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={stateColors[index % stateColors.length]} 
-                      fillOpacity={stateFilter === entry.state ? 1 : entry.count > 0 ? 0.75 : 0.25}
-                      stroke={stateFilter === entry.state ? "#000" : "none"}
-                      strokeWidth={stateFilter === entry.state ? 1 : 0}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <MalaysiaMap
+            stateStats={stateStats}
+            selectedState={stateFilter}
+            onSelectState={handleStateFilter}
+          />
         </CardContent>
       </Card>
 
