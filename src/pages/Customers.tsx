@@ -556,40 +556,15 @@ function Customers() {
       
       <Card className="mb-8">
         <CardHeader>
-          <CardTitle className="text-lg">Orders by Malaysian States (Negeri)</CardTitle>
-          <CardDescription>Overview of orders distribution across all Malaysian states</CardDescription>
+          <CardTitle className="text-lg">Peta Tempahan Mengikut Negeri</CardTitle>
+          <CardDescription>Klik mana-mana negeri pada peta untuk tapis senarai pelanggan</CardDescription>
         </CardHeader>
         <CardContent>
-          <div className="h-[300px]">
-            <ResponsiveContainer width="100%" height="100%">
-              <BarChart 
-                data={stateStats}
-                margin={{ top: 5, right: 30, left: 20, bottom: 60 }}
-              >
-                <CartesianGrid strokeDasharray="3 3" />
-                <XAxis 
-                  dataKey="state" 
-                  angle={-45} 
-                  textAnchor="end" 
-                  height={70}
-                  tick={{ fontSize: 12 }}
-                />
-                <YAxis />
-                <Tooltip content={<CustomTooltip />} />
-                <Bar dataKey="count" name="Orders" onClick={(data) => handleStateFilter(data.state)}>
-                  {stateStats.map((entry, index) => (
-                    <Cell 
-                      key={`cell-${index}`} 
-                      fill={stateColors[index % stateColors.length]} 
-                      fillOpacity={stateFilter === entry.state ? 1 : entry.count > 0 ? 0.75 : 0.25}
-                      stroke={stateFilter === entry.state ? "#000" : "none"}
-                      strokeWidth={stateFilter === entry.state ? 1 : 0}
-                    />
-                  ))}
-                </Bar>
-              </BarChart>
-            </ResponsiveContainer>
-          </div>
+          <MalaysiaMap
+            stateStats={stateStats}
+            selectedState={stateFilter}
+            onSelectState={handleStateFilter}
+          />
         </CardContent>
       </Card>
 
