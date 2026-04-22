@@ -28,6 +28,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
 import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
 import Order from "@/pages/Order";
+import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 
 function App() {
@@ -43,6 +44,7 @@ function App() {
               <Route path="/" element={<Index />} />
               <Route path="/login" element={<Login />} />
               <Route path="/order" element={<Order />} />
+              <Route path="/order-fullsilk" element={<OrderFullsilk />} />
               <Route path="/order/thank-you" element={<OrderThankYou />} />
               
               {/* Routes with sidebar and authenticated layout */}

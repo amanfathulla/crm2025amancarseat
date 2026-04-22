@@ -70,6 +70,26 @@ export default function OrderPage() {
     });
   }, []);
 
+  // Auto-select material from URL query param (e.g. ?material=fullsilk)
+  useEffect(() => {
+    if (enabledCategories === null) return;
+    const params = new URLSearchParams(window.location.search);
+    const mat = params.get("material");
+    if (!mat) return;
+    const match = ALL_MATERIAL_CATEGORIES.find(c =>
+      c.id.toLowerCase().includes(mat.toLowerCase()) ||
+      c.label.toLowerCase().includes(mat.toLowerCase())
+    );
+    if (match) {
+      setSelectedCategory(match);
+      setSelectedProduct(null);
+      setSelectedVariation(null);
+      fetchProducts(match.label);
+      setStep("product");
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [enabledCategories]);
+
   const MATERIAL_CATEGORIES = enabledCategories
     ? ALL_MATERIAL_CATEGORIES.filter(c => enabledCategories.includes(c.label))
     : ALL_MATERIAL_CATEGORIES;
