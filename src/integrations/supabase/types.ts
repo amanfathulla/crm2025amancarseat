@@ -632,6 +632,33 @@ export type Database = {
         }
         Relationships: []
       }
+      shipping_settings: {
+        Row: {
+          created_at: string | null
+          id: string
+          is_enabled: boolean
+          sabah_sarawak_cost: number
+          semenanjung_cost: number
+          updated_at: string | null
+        }
+        Insert: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          sabah_sarawak_cost?: number
+          semenanjung_cost?: number
+          updated_at?: string | null
+        }
+        Update: {
+          created_at?: string | null
+          id?: string
+          is_enabled?: boolean
+          sabah_sarawak_cost?: number
+          semenanjung_cost?: number
+          updated_at?: string | null
+        }
+        Relationships: []
+      }
       telegram_settings: {
         Row: {
           bot_token: string
