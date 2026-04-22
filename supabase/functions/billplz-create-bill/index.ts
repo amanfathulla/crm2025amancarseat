@@ -39,6 +39,22 @@ serve(async (req) => {
     const body = await req.json();
     const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
 
+    // Fetch shipping settings
+    const { data: shipSettings } = await supabase
+      .from('shipping_settings')
+      .select('semenanjung_cost, sabah_sarawak_cost, is_enabled')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    const EAST_MALAYSIA = ['Sabah', 'Sarawak', 'W.P. Labuan'];
+    let shippingCost = 0;
+    if (shipSettings && (shipSettings as any).is_enabled && state) {
+      shippingCost = EAST_MALAYSIA.includes(state)
+        ? Number((shipSettings as any).sabah_sarawak_cost) || 0
+        : Number((shipSettings as any).semenanjung_cost) || 0;
+    }
+
     if (!name || !phone || !product || !sales_amount) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
@@ -77,6 +93,9 @@ serve(async (req) => {
       }
     }
 
+    // Add shipping cost to canonical price
+    const priceWithShipping = Number(canonicalPrice) + Number(shippingCost);
+
     // Apply coupon discount if applicable
     let discountAmount = 0;
     if (coupon_code && coupon_code.trim()) {
@@ -94,7 +113,7 @@ serve(async (req) => {
         const validUntil = new Date(coupon.valid_until);
         if (now >= validFrom && now <= validUntil && coupon.usage_count < coupon.usage_limit) {
           if (coupon.discount_type === 'percentage') {
-            discountAmount = canonicalPrice * (coupon.discount_amount / 100);
+            discountAmount = priceWithShipping * (coupon.discount_amount / 100);
           } else {
             discountAmount = coupon.discount_amount;
           }
@@ -102,12 +121,12 @@ serve(async (req) => {
       }
     }
 
-    const validatedPrice = Math.max(canonicalPrice - discountAmount, 0.01);
+    const validatedPrice = Math.max(priceWithShipping - discountAmount, 0.01);
 
     // Reject if client price differs significantly from server price (tolerance for rounding)
     const clientPrice = parseFloat(sales_amount);
     if (Math.abs(clientPrice - validatedPrice) > 1.0) {
-      console.error(`Price mismatch: client=${clientPrice}, server=${validatedPrice}`);
+      console.error(`Price mismatch: client=${clientPrice}, server=${validatedPrice} (base=${canonicalPrice}, ship=${shippingCost}, discount=${discountAmount})`);
       return new Response(JSON.stringify({ error: 'Harga tidak sah. Sila muat semula halaman dan cuba lagi.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
