@@ -39,6 +39,22 @@ serve(async (req) => {
     const body = await req.json();
     const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
 
+    // Fetch shipping settings
+    const { data: shipSettings } = await supabase
+      .from('shipping_settings')
+      .select('semenanjung_cost, sabah_sarawak_cost, is_enabled')
+      .order('created_at', { ascending: true })
+      .limit(1)
+      .maybeSingle();
+
+    const EAST_MALAYSIA = ['Sabah', 'Sarawak', 'W.P. Labuan'];
+    let shippingCost = 0;
+    if (shipSettings && (shipSettings as any).is_enabled && state) {
+      shippingCost = EAST_MALAYSIA.includes(state)
+        ? Number((shipSettings as any).sabah_sarawak_cost) || 0
+        : Number((shipSettings as any).semenanjung_cost) || 0;
+    }
+
     if (!name || !phone || !product || !sales_amount) {
       return new Response(JSON.stringify({ error: 'Missing required fields' }), {
         status: 400,
