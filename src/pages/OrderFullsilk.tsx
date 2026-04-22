@@ -2,6 +2,7 @@ import { useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { ArrowRight, Sparkles, ShieldCheck, Star } from "lucide-react";
 import heroBg from "@/assets/fullsilk-hero.png";
+import LiveFooter from "@/components/LiveFooter";
 
 export default function OrderFullsilk() {
   const navigate = useNavigate();
@@ -77,6 +78,8 @@ export default function OrderFullsilk() {
           </div>
         </div>
       </section>
+
+      <LiveFooter />
     </div>
   );
 }
