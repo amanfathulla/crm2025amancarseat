@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { useToast } from "@/hooks/use-toast";
+import LiveFooter from "@/components/LiveFooter";
 
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
@@ -53,10 +54,31 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
+  const [shippingCosts, setShippingCosts] = useState<{ semenanjung: number; sabahSarawak: number; enabled: boolean }>({ semenanjung: 10, sabahSarawak: 20, enabled: true });
+
   const [couponInput, setCouponInput] = useState("");
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+
+  // Fetch shipping settings
+  useEffect(() => {
+    supabase.from("shipping_settings" as any)
+      .select("semenanjung_cost, sabah_sarawak_cost, is_enabled")
+      .order("created_at", { ascending: true })
+      .limit(1)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) {
+          const r = data as any;
+          setShippingCosts({
+            semenanjung: Number(r.semenanjung_cost) || 0,
+            sabahSarawak: Number(r.sabah_sarawak_cost) || 0,
+            enabled: !!r.is_enabled,
+          });
+        }
+      });
+  }, []);
 
   // Fetch enabled categories on mount
   useEffect(() => {
@@ -138,8 +160,8 @@ export default function OrderPage() {
 
   const EAST_MALAYSIA = ["Sabah", "Sarawak", "W.P. Labuan"];
   const getPostageCost = (state: string) => {
-    if (!state) return 0;
-    return EAST_MALAYSIA.includes(state) ? 50 : 10;
+    if (!state || !shippingCosts.enabled) return 0;
+    return EAST_MALAYSIA.includes(state) ? shippingCosts.sabahSarawak : shippingCosts.semenanjung;
   };
   const postageCost = getPostageCost(form.state);
 
@@ -635,7 +657,7 @@ export default function OrderPage() {
                   </div>
                   {!form.state && (
                     <p className="text-amber-600 text-xs flex items-center gap-1">
-                      <Info className="h-3 w-3" /> Semenanjung RM10 · Sabah/Sarawak/Labuan RM50
+                      <Info className="h-3 w-3" /> Semenanjung RM{shippingCosts.semenanjung.toFixed(0)} · Sabah/Sarawak/Labuan RM{shippingCosts.sabahSarawak.toFixed(0)}
                     </p>
                   )}
                   {appliedCoupon && (
@@ -753,9 +775,7 @@ export default function OrderPage() {
       </main>
 
       {/* Footer */}
-      <footer className="border-t border-white/5 py-4 text-center">
-        <p className="text-white/20 text-xs">© 2025 ACS Legacy AmancarseatCover · Semua hak terpelihara</p>
-      </footer>
+      <LiveFooter />
     </div>
   );
 }
