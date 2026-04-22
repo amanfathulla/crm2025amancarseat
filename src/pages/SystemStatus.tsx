@@ -208,7 +208,7 @@ export default function SystemStatus() {
       updateCheck("settings", "error", "Gagal akses tetapan admin");
     }
 
-    // 10. Billplz
+    // 10. Billplz - real health check (config + edge function reachability)
     const billplzStart = Date.now();
     try {
       const { data, error } = await authClient.from("billplz_settings").select("api_key, collection_id, x_signature_key").limit(1).single();
@@ -217,12 +217,30 @@ export default function SystemStatus() {
       const hasCol = data?.collection_id?.trim();
       const hasSig = data?.x_signature_key?.trim();
       if (!hasApiKey || !hasCol) {
-        updateCheck("billplz", "warn", `⚠️ ${!hasApiKey ? "API Key " : ""}${!hasCol ? "Collection ID " : ""}belum dikonfigurasi`, Date.now() - billplzStart);
+        updateCheck("billplz", "error", `🚨 ${!hasApiKey ? "API Key " : ""}${!hasCol ? "Collection ID " : ""}belum dikonfigurasi - Pembayaran TIDAK BERFUNGSI`, Date.now() - billplzStart);
       } else {
-        updateCheck("billplz", "ok", `API Key ✓ | Collection ✓ | X-Sig ${hasSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
+        // Real ping to edge function with intentionally empty body — should return 400 (function alive & configured)
+        try {
+          const pingRes = await fetch(
+            "https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill",
+            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
+          );
+          const pingData = await pingRes.json().catch(() => ({}));
+          if (pingRes.status === 400 && String(pingData?.error || "").toLowerCase().includes("missing")) {
+            updateCheck("billplz", "ok", `Billplz aktif ✓ | X-Sig ${hasSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
+          } else if (pingRes.status === 500 && String(pingData?.error || "").toLowerCase().includes("billplz credentials")) {
+            updateCheck("billplz", "error", "🚨 Kredential Billplz tidak dimuat - Pembayaran GAGAL", Date.now() - billplzStart);
+          } else if (pingRes.status >= 500) {
+            updateCheck("billplz", "error", `🚨 Edge function ralat (HTTP ${pingRes.status}) - Pembayaran GAGAL`, Date.now() - billplzStart);
+          } else {
+            updateCheck("billplz", "warn", `⚠️ Respons tidak dijangka: ${pingRes.status} - ${pingData?.error || "unknown"}`, Date.now() - billplzStart);
+          }
+        } catch (pingErr: any) {
+          updateCheck("billplz", "error", `🚨 Edge function tidak dapat dihubungi: ${pingErr?.message || "network error"}`, Date.now() - billplzStart);
+        }
       }
     } catch {
-      updateCheck("billplz", "error", "Gagal semak konfigurasi Billplz");
+      updateCheck("billplz", "error", "🚨 Gagal semak konfigurasi Billplz - Pembayaran TIDAK BERFUNGSI");
     }
 
     // 11. Coupons
