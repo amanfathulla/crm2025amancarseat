@@ -482,7 +482,10 @@ export default function OrderPage() {
                   {selectedProduct.description && (
                     <div className="p-4 flex gap-3 border-t border-white/8">
                       <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
-                      <p className="text-white/60 text-sm leading-relaxed">{selectedProduct.description}</p>
+                      <FormattedDescription
+                        text={selectedProduct.description}
+                        className="text-white/70 text-sm flex-1"
+                      />
                     </div>
                   )}
                   {getYoutubeId(selectedProduct.youtube_url) && (
