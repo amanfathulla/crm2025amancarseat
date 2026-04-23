@@ -354,13 +354,27 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
               <FormLabel>Penerangan Produk</FormLabel>
               <FormControl>
                 <Textarea
-                  placeholder="Masukkan penerangan produk (opsional)"
-                  className="resize-none"
-                  rows={3}
+                  placeholder={`Contoh format:
+
+Material premium tahan lama dan mudah dibersihkan.
+
+- Tahan air & kalis habuk
+- Selesa untuk pemanduan jauh
+- Reka bentuk eksklusif
+- Pemasangan mudah & kemas
+
+Garansi 1 tahun.`}
+                  className="resize-y font-mono text-sm leading-relaxed"
+                  rows={10}
                   {...field}
                   value={field.value || ""}
                 />
               </FormControl>
+              <p className="text-xs text-muted-foreground mt-1">
+                💡 Tekan <kbd className="px-1 py-0.5 bg-muted rounded text-[10px]">Enter</kbd> untuk baris baru.
+                Mulakan baris dengan <code className="text-primary">-</code>, <code className="text-primary">*</code> atau <code className="text-primary">•</code> untuk bullet point.
+                Baris kosong = perenggan baru. Sokongan <code className="text-primary">&lt;br&gt;</code> tag.
+              </p>
               <FormMessage />
             </FormItem>
           )}
