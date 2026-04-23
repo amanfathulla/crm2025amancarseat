@@ -219,14 +219,14 @@ export default function SystemStatus() {
       if (!hasApiKey || !hasCol) {
         updateCheck("billplz", "error", `🚨 ${!hasApiKey ? "API Key " : ""}${!hasCol ? "Collection ID " : ""}belum dikonfigurasi - Pembayaran TIDAK BERFUNGSI`, Date.now() - billplzStart);
       } else {
-        // Real ping to edge function with intentionally empty body — should return 400 (function alive & configured)
+        // Real ping to edge function — `ping: true` returns 200 OK without creating a bill
         try {
           const pingRes = await fetch(
             "https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill",
-            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({}) }
+            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ping: true }) }
           );
           const pingData = await pingRes.json().catch(() => ({}));
-          if (pingRes.status === 400 && String(pingData?.error || "").toLowerCase().includes("missing")) {
+          if (pingRes.ok && pingData?.status === "healthy") {
             updateCheck("billplz", "ok", `Billplz aktif ✓ | X-Sig ${hasSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
           } else if (pingRes.status === 500 && String(pingData?.error || "").toLowerCase().includes("billplz credentials")) {
             updateCheck("billplz", "error", "🚨 Kredential Billplz tidak dimuat - Pembayaran GAGAL", Date.now() - billplzStart);

@@ -36,7 +36,16 @@ serve(async (req) => {
       throw new Error('BillPlz credentials not configured. Sila kemaskini tetapan Billplz dalam Admin Settings.');
     }
 
-    const body = await req.json();
+    const body = await req.json().catch(() => ({}));
+
+    // Health-check ping from System Monitor — return 200 OK without creating a bill
+    if (body && body.ping === true) {
+      return new Response(JSON.stringify({ ok: true, status: 'healthy', message: 'Billplz function reachable & credentials configured' }), {
+        status: 200,
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+      });
+    }
+
     const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
 
     // Fetch shipping settings
