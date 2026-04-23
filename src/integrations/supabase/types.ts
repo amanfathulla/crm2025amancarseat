@@ -467,13 +467,6 @@ export type Database = {
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
-          {
-            foreignKeyName: "order_items_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_products"
-            referencedColumns: ["id"]
-          },
         ]
       }
       orders: {
@@ -554,13 +547,6 @@ export type Database = {
             columns: ["product_id"]
             isOneToOne: false
             referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_variations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_products"
             referencedColumns: ["id"]
           },
         ]
@@ -741,99 +727,7 @@ export type Database = {
       }
     }
     Views: {
-      public_product_variations: {
-        Row: {
-          created_at: string | null
-          id: string | null
-          inventory: number | null
-          name: string | null
-          price: number | null
-          product_id: string | null
-        }
-        Insert: {
-          created_at?: string | null
-          id?: string | null
-          inventory?: number | null
-          name?: string | null
-          price?: number | null
-          product_id?: string | null
-        }
-        Update: {
-          created_at?: string | null
-          id?: string | null
-          inventory?: number | null
-          name?: string | null
-          price?: number | null
-          product_id?: string | null
-        }
-        Relationships: [
-          {
-            foreignKeyName: "product_variations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "products"
-            referencedColumns: ["id"]
-          },
-          {
-            foreignKeyName: "product_variations_product_id_fkey"
-            columns: ["product_id"]
-            isOneToOne: false
-            referencedRelation: "public_products"
-            referencedColumns: ["id"]
-          },
-        ]
-      }
-      public_products: {
-        Row: {
-          category: string | null
-          created_at: string | null
-          description: string | null
-          id: string | null
-          image_url: string | null
-          image_urls: string[] | null
-          inventory: number | null
-          name: string | null
-          price: number | null
-          sales: number | null
-          sku: string | null
-          status: string | null
-          updated_at: string | null
-          youtube_url: string | null
-        }
-        Insert: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          image_urls?: string[] | null
-          inventory?: number | null
-          name?: string | null
-          price?: number | null
-          sales?: number | null
-          sku?: string | null
-          status?: string | null
-          updated_at?: string | null
-          youtube_url?: string | null
-        }
-        Update: {
-          category?: string | null
-          created_at?: string | null
-          description?: string | null
-          id?: string | null
-          image_url?: string | null
-          image_urls?: string[] | null
-          inventory?: number | null
-          name?: string | null
-          price?: number | null
-          sales?: number | null
-          sku?: string | null
-          status?: string | null
-          updated_at?: string | null
-          youtube_url?: string | null
-        }
-        Relationships: []
-      }
+      [_ in never]: never
     }
     Functions: {
       check_admin_password:
