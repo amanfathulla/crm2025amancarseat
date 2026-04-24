@@ -120,16 +120,16 @@ export default function OrderPage() {
   const fetchProducts = async (categoryLabel: string) => {
     setLoadingProducts(true);
     try {
-      const { data: prods, error } = await supabase
-        .from("products").select("id, name, price, category, image_url, description")
+      const { data: prods, error } = await (supabase as any)
+        .from("public_products").select("id, name, price, category, image_url, description, status")
         .eq("status", "active").eq("category", categoryLabel)
         .order("name", { ascending: true }).limit(200);
       if (error) throw error;
 
-      const ids = (prods || []).map(p => p.id);
+      const ids = (prods || []).map((p: any) => p.id);
       const [varsRes, detailRes] = await Promise.all([
-        ids.length > 0 ? supabase.from("product_variations").select("id, product_id, name, price").in("product_id", ids).order("price") : { data: [] },
-        ids.length > 0 ? (supabase.from("products").select("id, youtube_url, image_urls").in("id", ids) as any) : { data: [] },
+        ids.length > 0 ? (supabase as any).from("public_product_variations").select("id, product_id, name, price").in("product_id", ids).order("price") : { data: [] },
+        ids.length > 0 ? ((supabase as any).from("public_products").select("id, youtube_url, image_urls").in("id", ids)) : { data: [] },
       ]);
       const vars = varsRes.data || [];
       const detailMap: Record<string, { youtube_url: string | null; image_urls: string[] | null }> = {};
