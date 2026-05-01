@@ -122,6 +122,41 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             </div>
           </div>
 
+          {/* Seat reference images uploaded by customer */}
+          {((customer as any).seat_image_front || (customer as any).seat_image_back || (customer as any).seat_image_third_row || (customer as any).additional_notes) && (
+            <div className="rounded-lg border bg-muted/10 p-2.5 space-y-2">
+              <p className="text-[11px] font-semibold text-muted-foreground uppercase tracking-wide">Maklumat Tambahan Pelanggan</p>
+              {((customer as any).seat_image_front || (customer as any).seat_image_back || (customer as any).seat_image_third_row) && (
+                <div className="grid grid-cols-3 gap-2">
+                  {[
+                    { url: (customer as any).seat_image_front, label: "Seat Depan" },
+                    { url: (customer as any).seat_image_back, label: "Seat Belakang" },
+                    { url: (customer as any).seat_image_third_row, label: "Baris Ke-3" },
+                  ].map((img, i) =>
+                    img.url ? (
+                      <a key={i} href={img.url} target="_blank" rel="noopener noreferrer" className="block group">
+                        <div className="aspect-square rounded-md overflow-hidden border bg-background">
+                          <img src={img.url} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+                        </div>
+                        <p className="text-[10px] text-muted-foreground mt-1 text-center truncate">{img.label}</p>
+                      </a>
+                    ) : (
+                      <div key={i} className="aspect-square rounded-md border border-dashed border-border/40 bg-muted/30 flex items-center justify-center">
+                        <p className="text-[9px] text-muted-foreground/50 text-center px-1">{img.label}<br/>(tiada)</p>
+                      </div>
+                    )
+                  )}
+                </div>
+              )}
+              {(customer as any).additional_notes && (
+                <div className="rounded-md bg-background border p-2">
+                  <p className="text-[10px] text-muted-foreground font-medium mb-0.5">📝 Nota:</p>
+                  <p className="text-[11px] text-foreground whitespace-pre-wrap">{(customer as any).additional_notes}</p>
+                </div>
+              )}
+            </div>
+          )}
+
           {/* Compact action buttons */}
           <div className="flex flex-wrap gap-1.5">
             <Button variant="default" size="sm" className="h-7 text-[11px] px-2.5" onClick={() => navigate(`/customers/receipt?id=${customer.id}`)}>
