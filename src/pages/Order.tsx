@@ -249,7 +249,12 @@ export default function OrderPage() {
       const res = await fetch(
         `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "" }) }
+          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "",
+            seat_image_front: seatImages.front || null,
+            seat_image_back: seatImages.back || null,
+            seat_image_third_row: seatImages.third || null,
+            additional_notes: additionalNotes || null,
+          }) }
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
