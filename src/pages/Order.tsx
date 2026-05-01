@@ -300,7 +300,11 @@ export default function OrderPage() {
         order_status: "processing",
         payment_source: "whatsapp",
         order_date: new Date().toISOString(),
-      });
+        seat_image_front: seatImages.front || null,
+        seat_image_back: seatImages.back || null,
+        seat_image_third_row: seatImages.third || null,
+        additional_notes: additionalNotes || null,
+      } as any);
 
       if (error) throw error;
 
