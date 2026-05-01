@@ -57,6 +57,39 @@ export default function OrderPage() {
     address: "", city: "", state: "", zip_code: "",
   });
 
+  // Optional seat reference images + notes
+  const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
+  const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
+  const [additionalNotes, setAdditionalNotes] = useState("");
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: "front" | "back" | "third") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB per gambar.", variant: "destructive" });
+      return;
+    }
+    setUploadingImage(slot);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${Date.now()}-${slot}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("customer-seat-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from("customer-seat-images").getPublicUrl(path);
+      setSeatImages(prev => ({ ...prev, [slot]: pub.publicUrl }));
+      toast({ title: "Gambar dimuat naik", description: "Gambar berjaya dihantar." });
+    } catch (err: any) {
+      toast({ title: "Gagal muat naik", description: err?.message || "Sila cuba lagi.", variant: "destructive" });
+    } finally {
+      setUploadingImage(null);
+      e.target.value = "";
+    }
+  };
+
+  const removeImage = (slot: "front" | "back" | "third") => {
+    setSeatImages(prev => ({ ...prev, [slot]: "" }));
+  };
+
   const [shippingCosts, setShippingCosts] = useState<{ semenanjung: number; sabahSarawak: number; enabled: boolean }>({ semenanjung: 10, sabahSarawak: 20, enabled: true });
 
   const [couponInput, setCouponInput] = useState("");
