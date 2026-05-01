@@ -679,6 +679,77 @@ export default function OrderPage() {
                 </div>
               </section>
 
+              {/* Maklumat Tambahan — Optional Seat Reference Images & Notes */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ImagePlus className="h-4 w-4 text-pink-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Maklumat Tambahan</h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">Opsional</span>
+                </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex gap-2">
+                  <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p>Jika diluar kawasan atau di tempat kerja, boleh hantar gambar kemudian. Team HQ kami akan followup anda. 🙏</p>
+                </div>
+
+                {(["front","back","third"] as const).map((slot) => {
+                  const labels = {
+                    front: "Gambar Seat Depan",
+                    back: "Gambar Seat Belakang",
+                    third: "Gambar Baris Ke-3 (MPV sahaja)",
+                  };
+                  const url = seatImages[slot];
+                  const isUploading = uploadingImage === slot;
+                  return (
+                    <div key={slot}>
+                      <Label className="text-gray-600 text-xs mb-1.5 block">{labels[slot]}</Label>
+                      {url ? (
+                        <div className="relative rounded-xl overflow-hidden border border-gray-300 bg-gray-50">
+                          <img src={url} alt={labels[slot]} className="w-full max-h-56 object-contain" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(slot)}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center"
+                            aria-label="Buang gambar"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 px-4 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-blue-400 cursor-pointer transition-colors ${isUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                          {isUploading ? (
+                            <Loader2 className="h-5 w-5 text-gray-500 animate-spin" />
+                          ) : (
+                            <Upload className="h-5 w-5 text-gray-500" />
+                          )}
+                          <span className="text-sm text-gray-700 font-medium">
+                            {isUploading ? "Memuat naik..." : "Klik untuk muat naik gambar"}
+                          </span>
+                          <span className="text-xs text-gray-400">Maks 5MB · JPG/PNG</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, slot)}
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Nota Tambahan (opsional)</Label>
+                  <Textarea
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                    placeholder="Sebarang arahan atau permintaan khas..."
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 min-h-[80px]"
+                    maxLength={1000}
+                  />
+                </div>
+              </section>
+
               {/* Order Summary */}
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
                 <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
