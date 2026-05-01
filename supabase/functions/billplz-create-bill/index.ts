@@ -46,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code } = body;
+    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code, seat_image_front, seat_image_back, seat_image_third_row, additional_notes } = body;
 
     // Fetch shipping settings
     const { data: shipSettings } = await supabase
@@ -167,6 +167,10 @@ serve(async (req) => {
         zip_code: zip_code ? String(zip_code).slice(0, 10) : '',
         order_status: 'processing',
         order_date: new Date().toISOString(),
+        seat_image_front: seat_image_front || null,
+        seat_image_back: seat_image_back || null,
+        seat_image_third_row: seat_image_third_row || null,
+        additional_notes: additional_notes ? String(additional_notes).slice(0, 1000) : null,
       })
       .select()
       .single();

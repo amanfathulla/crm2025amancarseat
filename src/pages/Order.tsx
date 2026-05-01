@@ -5,9 +5,11 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
+import { Upload, X, ImagePlus } from "lucide-react";
 
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
@@ -54,6 +56,39 @@ export default function OrderPage() {
     name: "", phone: "", email: "", car_model: "",
     address: "", city: "", state: "", zip_code: "",
   });
+
+  // Optional seat reference images + notes
+  const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
+  const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
+  const [additionalNotes, setAdditionalNotes] = useState("");
+
+  const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: "front" | "back" | "third") => {
+    const file = e.target.files?.[0];
+    if (!file) return;
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB per gambar.", variant: "destructive" });
+      return;
+    }
+    setUploadingImage(slot);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `${Date.now()}-${slot}-${Math.random().toString(36).slice(2, 8)}.${ext}`;
+      const { error } = await supabase.storage.from("customer-seat-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (error) throw error;
+      const { data: pub } = supabase.storage.from("customer-seat-images").getPublicUrl(path);
+      setSeatImages(prev => ({ ...prev, [slot]: pub.publicUrl }));
+      toast({ title: "Gambar dimuat naik", description: "Gambar berjaya dihantar." });
+    } catch (err: any) {
+      toast({ title: "Gagal muat naik", description: err?.message || "Sila cuba lagi.", variant: "destructive" });
+    } finally {
+      setUploadingImage(null);
+      e.target.value = "";
+    }
+  };
+
+  const removeImage = (slot: "front" | "back" | "third") => {
+    setSeatImages(prev => ({ ...prev, [slot]: "" }));
+  };
 
   const [shippingCosts, setShippingCosts] = useState<{ semenanjung: number; sabahSarawak: number; enabled: boolean }>({ semenanjung: 10, sabahSarawak: 20, enabled: true });
 
@@ -214,7 +249,12 @@ export default function OrderPage() {
       const res = await fetch(
         `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "" }) }
+          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "",
+            seat_image_front: seatImages.front || null,
+            seat_image_back: seatImages.back || null,
+            seat_image_third_row: seatImages.third || null,
+            additional_notes: additionalNotes || null,
+          }) }
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
@@ -260,7 +300,11 @@ export default function OrderPage() {
         order_status: "processing",
         payment_source: "whatsapp",
         order_date: new Date().toISOString(),
-      });
+        seat_image_front: seatImages.front || null,
+        seat_image_back: seatImages.back || null,
+        seat_image_third_row: seatImages.third || null,
+        additional_notes: additionalNotes || null,
+      } as any);
 
       if (error) throw error;
 
@@ -632,6 +676,77 @@ export default function OrderPage() {
                       {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-gray-900 focus:bg-gray-100">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
+                </div>
+              </section>
+
+              {/* Maklumat Tambahan — Optional Seat Reference Images & Notes */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
+                <div className="flex items-center gap-2 mb-1">
+                  <ImagePlus className="h-4 w-4 text-pink-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Maklumat Tambahan</h3>
+                  <span className="text-[10px] px-2 py-0.5 rounded-full bg-gray-100 text-gray-600 font-medium">Opsional</span>
+                </div>
+                <div className="rounded-lg bg-amber-50 border border-amber-200 p-3 text-xs text-amber-800 flex gap-2">
+                  <Info className="h-4 w-4 shrink-0 mt-0.5" />
+                  <p>Jika diluar kawasan atau di tempat kerja, boleh hantar gambar kemudian. Team HQ kami akan followup anda. 🙏</p>
+                </div>
+
+                {(["front","back","third"] as const).map((slot) => {
+                  const labels = {
+                    front: "Gambar Seat Depan",
+                    back: "Gambar Seat Belakang",
+                    third: "Gambar Baris Ke-3 (MPV sahaja)",
+                  };
+                  const url = seatImages[slot];
+                  const isUploading = uploadingImage === slot;
+                  return (
+                    <div key={slot}>
+                      <Label className="text-gray-600 text-xs mb-1.5 block">{labels[slot]}</Label>
+                      {url ? (
+                        <div className="relative rounded-xl overflow-hidden border border-gray-300 bg-gray-50">
+                          <img src={url} alt={labels[slot]} className="w-full max-h-56 object-contain" />
+                          <button
+                            type="button"
+                            onClick={() => removeImage(slot)}
+                            className="absolute top-2 right-2 w-7 h-7 rounded-full bg-black/70 hover:bg-black text-white flex items-center justify-center"
+                            aria-label="Buang gambar"
+                          >
+                            <X className="h-4 w-4" />
+                          </button>
+                        </div>
+                      ) : (
+                        <label className={`flex flex-col items-center justify-center gap-2 w-full py-6 px-4 rounded-xl border-2 border-dashed border-gray-300 bg-gray-50 hover:bg-gray-100 hover:border-blue-400 cursor-pointer transition-colors ${isUploading ? "opacity-60 pointer-events-none" : ""}`}>
+                          {isUploading ? (
+                            <Loader2 className="h-5 w-5 text-gray-500 animate-spin" />
+                          ) : (
+                            <Upload className="h-5 w-5 text-gray-500" />
+                          )}
+                          <span className="text-sm text-gray-700 font-medium">
+                            {isUploading ? "Memuat naik..." : "Klik untuk muat naik gambar"}
+                          </span>
+                          <span className="text-xs text-gray-400">Maks 5MB · JPG/PNG</span>
+                          <input
+                            type="file"
+                            accept="image/*"
+                            className="hidden"
+                            onChange={(e) => handleImageUpload(e, slot)}
+                            disabled={isUploading}
+                          />
+                        </label>
+                      )}
+                    </div>
+                  );
+                })}
+
+                <div>
+                  <Label className="text-gray-600 text-xs mb-1.5 block">Nota Tambahan (opsional)</Label>
+                  <Textarea
+                    value={additionalNotes}
+                    onChange={(e) => setAdditionalNotes(e.target.value)}
+                    placeholder="Sebarang arahan atau permintaan khas..."
+                    className="bg-white border-gray-300 text-gray-900 placeholder:text-gray-400 min-h-[80px]"
+                    maxLength={1000}
+                  />
                 </div>
               </section>
 

@@ -189,6 +189,7 @@ export type Database = {
       }
       customers: {
         Row: {
+          additional_notes: string | null
           address: string | null
           car_model: string | null
           city: string | null
@@ -207,6 +208,9 @@ export type Database = {
           product: string | null
           product_variation: string | null
           sales_amount: number | null
+          seat_image_back: string | null
+          seat_image_front: string | null
+          seat_image_third_row: string | null
           state: string | null
           total_orders: number | null
           total_spent: number | null
@@ -214,6 +218,7 @@ export type Database = {
           zip_code: string | null
         }
         Insert: {
+          additional_notes?: string | null
           address?: string | null
           car_model?: string | null
           city?: string | null
@@ -232,6 +237,9 @@ export type Database = {
           product?: string | null
           product_variation?: string | null
           sales_amount?: number | null
+          seat_image_back?: string | null
+          seat_image_front?: string | null
+          seat_image_third_row?: string | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
@@ -239,6 +247,7 @@ export type Database = {
           zip_code?: string | null
         }
         Update: {
+          additional_notes?: string | null
           address?: string | null
           car_model?: string | null
           city?: string | null
@@ -257,6 +266,9 @@ export type Database = {
           product?: string | null
           product_variation?: string | null
           sales_amount?: number | null
+          seat_image_back?: string | null
+          seat_image_front?: string | null
+          seat_image_third_row?: string | null
           state?: string | null
           total_orders?: number | null
           total_spent?: number | null
