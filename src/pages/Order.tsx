@@ -763,6 +763,40 @@ export default function OrderPage() {
                 </div>
               </section>
 
+              {/* Jenis Bayaran */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <CreditCardIcon className="h-4 w-4 text-emerald-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Jenis Bayaran</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("full")}
+                    className={`relative rounded-xl border-2 p-3 text-left transition-all ${paymentType === "full" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-gray-200 bg-white hover:border-gray-300"}`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-900">Bayaran Penuh</span>
+                      {paymentType === "full" && <CheckCircle className="h-4 w-4 text-emerald-600" />}
+                    </div>
+                    <p className="text-[11px] text-gray-500">Bayar 100% sekali termasuk penghantaran</p>
+                    <p className="text-sm font-bold text-emerald-600 mt-1">RM{finalPrice.toFixed(2)}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("deposit")}
+                    className={`relative rounded-xl border-2 p-3 text-left transition-all ${paymentType === "deposit" ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200 bg-white hover:border-gray-300"}`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-900">Deposit (50%)</span>
+                      {paymentType === "deposit" && <CheckCircle className="h-4 w-4 text-blue-600" />}
+                    </div>
+                    <p className="text-[11px] text-gray-500">Bayar separuh dahulu, baki kemudian</p>
+                    <p className="text-sm font-bold text-blue-600 mt-1">RM{(finalPrice * 0.5).toFixed(2)}</p>
+                  </button>
+                </div>
+              </section>
+
               {/* Order Summary */}
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
                 <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
@@ -798,10 +832,28 @@ export default function OrderPage() {
                       <span>-RM{couponDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
-                    <span className="text-gray-900">Jumlah Bayar</span>
-                    <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
+                  <div className="flex justify-between pt-3 border-t border-gray-200 text-sm">
+                    <span className="text-gray-600">Jumlah Penuh</span>
+                    <span className="text-gray-900 font-semibold">RM{finalPrice.toFixed(2)}</span>
                   </div>
+                  {paymentType === "deposit" ? (
+                    <>
+                      <div className="flex justify-between font-bold text-base">
+                        <span className="text-gray-900">Bayar Sekarang (Deposit 50%)</span>
+                        <span className="text-blue-600">RM{amountToPay.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
+                        <span className="text-amber-800 font-semibold text-xs">⏳ Baki Perlu Dibayar</span>
+                        <span className="text-amber-700 font-bold">RM{balanceAmount.toFixed(2)}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-1">Baki akan diuruskan oleh team HQ selepas tempahan disahkan.</p>
+                    </>
+                  ) : (
+                    <div className="flex justify-between font-bold text-base">
+                      <span className="text-gray-900">Jumlah Bayar</span>
+                      <span className="text-green-600">RM{amountToPay.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
               </section>
 
