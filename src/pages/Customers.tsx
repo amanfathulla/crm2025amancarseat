@@ -171,6 +171,10 @@ function Customers() {
         created_at: record.created_at || "",
         updated_at: record.updated_at || "",
         order_number: (record as any).order_number || null,
+        seat_image_front: (record as any).seat_image_front || null,
+        seat_image_back: (record as any).seat_image_back || null,
+        seat_image_third_row: (record as any).seat_image_third_row || null,
+        additional_notes: (record as any).additional_notes || null,
       })) || [];
       
       setCustomers(mappedCustomers);
