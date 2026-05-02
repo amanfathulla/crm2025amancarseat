@@ -115,11 +115,30 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
               <InfoRow icon={<Phone className="h-3 w-3" />} label="Telefon" value={customer.phone || "—"} />
             </div>
             {/* Finance row */}
-            <div className="border-t border-border/40 bg-muted/20 px-3 py-1.5 flex items-center justify-between gap-2">
+            <div className="border-t border-border/40 bg-muted/20 px-3 py-1.5 flex items-center justify-between gap-2 flex-wrap">
               <span className="text-muted-foreground">💰 Jualan: <span className="font-semibold text-foreground">{formatCurrency(customer.sales_amount)}</span></span>
               <span className="text-muted-foreground">Bayar: <span className="font-bold text-green-600">{formatCurrency(customer.paid_amount)}</span></span>
               <span className="text-muted-foreground">Untung: <span className={`font-bold ${customer.gross_profit < 0 ? "text-destructive" : "text-foreground"}`}>{formatCurrency(customer.gross_profit)}</span></span>
             </div>
+            {/* Deposit / Balance row */}
+            {customer.payment_type === "deposit" && (
+              <div className="border-t border-amber-500/30 bg-amber-500/10 px-3 py-1.5 flex items-center justify-between gap-2 flex-wrap">
+                <span className="text-amber-700 dark:text-amber-400 font-medium flex items-center gap-1">
+                  🏷️ Jenis Bayaran: <span className="font-bold">Deposit (50%)</span>
+                </span>
+                <span className="text-amber-700 dark:text-amber-400">
+                  Deposit Diterima: <span className="font-bold text-green-600">{formatCurrency(customer.deposit_amount || customer.paid_amount)}</span>
+                </span>
+                <span className="text-amber-700 dark:text-amber-400">
+                  ⏳ Baki Tertunggak: <span className="font-bold text-amber-700 dark:text-amber-300">{formatCurrency(customer.balance_amount || 0)}</span>
+                </span>
+              </div>
+            )}
+            {customer.payment_type === "full" && (
+              <div className="border-t border-green-500/20 bg-green-500/5 px-3 py-1 text-[10px] text-green-700 dark:text-green-400 font-medium">
+                ✅ Bayaran Penuh
+              </div>
+            )}
           </div>
 
           {/* Seat reference images uploaded by customer */}
