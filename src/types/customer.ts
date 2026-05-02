@@ -29,6 +29,9 @@ export interface Customer {
   seat_image_back?: string | null;
   seat_image_third_row?: string | null;
   additional_notes?: string | null;
+  payment_type?: string | null;
+  deposit_amount?: number | null;
+  balance_amount?: number | null;
 }
 
 export interface CustomerFormData {
