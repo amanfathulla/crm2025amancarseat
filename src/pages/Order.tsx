@@ -1,6 +1,6 @@
 import { useState, useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -61,6 +61,7 @@ export default function OrderPage() {
   const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: "front" | "back" | "third") => {
     const file = e.target.files?.[0];
@@ -207,6 +208,8 @@ export default function OrderPage() {
       : appliedCoupon.discount_amount
     : 0;
   const finalPrice = Math.max(0, productPrice + postageCost - couponDiscount);
+  const amountToPay = paymentType === "deposit" ? Math.round(finalPrice * 0.5 * 100) / 100 : finalPrice;
+  const balanceAmount = paymentType === "deposit" ? Math.round((finalPrice - amountToPay) * 100) / 100 : 0;
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
@@ -249,11 +252,14 @@ export default function OrderPage() {
       const res = await fetch(
         `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: finalPrice.toString(), coupon_code: appliedCoupon?.code || "",
+          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: amountToPay.toString(), coupon_code: appliedCoupon?.code || "",
             seat_image_front: seatImages.front || null,
             seat_image_back: seatImages.back || null,
             seat_image_third_row: seatImages.third || null,
             additional_notes: additionalNotes || null,
+            payment_type: paymentType,
+            full_price: finalPrice,
+            balance_amount: balanceAmount,
           }) }
       );
       const data = await res.json();
@@ -295,7 +301,7 @@ export default function OrderPage() {
         product: selectedProduct?.name || "",
         product_variation: selectedVariation?.name || "",
         sales_amount: finalPrice,
-        paid_amount: finalPrice,
+        paid_amount: amountToPay,
         gross_profit: 0,
         order_status: "processing",
         payment_source: "whatsapp",
@@ -304,6 +310,9 @@ export default function OrderPage() {
         seat_image_back: seatImages.back || null,
         seat_image_third_row: seatImages.third || null,
         additional_notes: additionalNotes || null,
+        payment_type: paymentType,
+        deposit_amount: paymentType === "deposit" ? amountToPay : 0,
+        balance_amount: balanceAmount,
       } as any);
 
       if (error) throw error;
@@ -318,11 +327,15 @@ export default function OrderPage() {
         body: JSON.stringify({ customer_id: customerId, payment_source: "whatsapp" }),
       }).catch(() => {});
 
+      const paymentLine = paymentType === "deposit"
+        ? `💰 Bayaran Deposit (50%): RM${amountToPay.toFixed(2)}\n💵 Baki Tertunggak: RM${balanceAmount.toFixed(2)}\n💯 Jumlah Penuh: RM${finalPrice.toFixed(2)}`
+        : `💰 Jumlah Bayar (Penuh): RM${amountToPay.toFixed(2)}`;
+
       const waMsg = encodeURIComponent(
         `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
         `📋 No. Tempahan: #${orderRef}\n` +
         `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
-        `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
+        `${paymentLine}\n\n` +
         `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
         `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
         `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
@@ -750,6 +763,40 @@ export default function OrderPage() {
                 </div>
               </section>
 
+              {/* Jenis Bayaran */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-3">
+                <div className="flex items-center gap-2">
+                  <CreditCardIcon className="h-4 w-4 text-emerald-600" />
+                  <h3 className="text-gray-900 font-semibold text-sm">Jenis Bayaran</h3>
+                </div>
+                <div className="grid grid-cols-2 gap-3">
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("full")}
+                    className={`relative rounded-xl border-2 p-3 text-left transition-all ${paymentType === "full" ? "border-emerald-500 bg-emerald-50 shadow-md" : "border-gray-200 bg-white hover:border-gray-300"}`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-900">Bayaran Penuh</span>
+                      {paymentType === "full" && <CheckCircle className="h-4 w-4 text-emerald-600" />}
+                    </div>
+                    <p className="text-[11px] text-gray-500">Bayar 100% sekali termasuk penghantaran</p>
+                    <p className="text-sm font-bold text-emerald-600 mt-1">RM{finalPrice.toFixed(2)}</p>
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setPaymentType("deposit")}
+                    className={`relative rounded-xl border-2 p-3 text-left transition-all ${paymentType === "deposit" ? "border-blue-500 bg-blue-50 shadow-md" : "border-gray-200 bg-white hover:border-gray-300"}`}
+                  >
+                    <div className="flex items-center justify-between mb-1">
+                      <span className="text-sm font-bold text-gray-900">Deposit (50%)</span>
+                      {paymentType === "deposit" && <CheckCircle className="h-4 w-4 text-blue-600" />}
+                    </div>
+                    <p className="text-[11px] text-gray-500">Bayar separuh dahulu, baki kemudian</p>
+                    <p className="text-sm font-bold text-blue-600 mt-1">RM{(finalPrice * 0.5).toFixed(2)}</p>
+                  </button>
+                </div>
+              </section>
+
               {/* Order Summary */}
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
                 <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
@@ -785,10 +832,28 @@ export default function OrderPage() {
                       <span>-RM{couponDiscount.toFixed(2)}</span>
                     </div>
                   )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200 font-bold text-base">
-                    <span className="text-gray-900">Jumlah Bayar</span>
-                    <span className="text-green-600">RM{finalPrice.toFixed(2)}</span>
+                  <div className="flex justify-between pt-3 border-t border-gray-200 text-sm">
+                    <span className="text-gray-600">Jumlah Penuh</span>
+                    <span className="text-gray-900 font-semibold">RM{finalPrice.toFixed(2)}</span>
                   </div>
+                  {paymentType === "deposit" ? (
+                    <>
+                      <div className="flex justify-between font-bold text-base">
+                        <span className="text-gray-900">Bayar Sekarang (Deposit 50%)</span>
+                        <span className="text-blue-600">RM{amountToPay.toFixed(2)}</span>
+                      </div>
+                      <div className="flex justify-between rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
+                        <span className="text-amber-800 font-semibold text-xs">⏳ Baki Perlu Dibayar</span>
+                        <span className="text-amber-700 font-bold">RM{balanceAmount.toFixed(2)}</span>
+                      </div>
+                      <p className="text-[11px] text-gray-500 mt-1">Baki akan diuruskan oleh team HQ selepas tempahan disahkan.</p>
+                    </>
+                  ) : (
+                    <div className="flex justify-between font-bold text-base">
+                      <span className="text-gray-900">Jumlah Bayar</span>
+                      <span className="text-green-600">RM{amountToPay.toFixed(2)}</span>
+                    </div>
+                  )}
                 </div>
               </section>
 
@@ -834,7 +899,7 @@ export default function OrderPage() {
                 <Button type="submit"
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  Bayar Dengan BillPlz
+                  {paymentType === "deposit" ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan BillPlz` : `Bayar RM${amountToPay.toFixed(2)} Dengan BillPlz`}
                 </Button>
                 <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
 

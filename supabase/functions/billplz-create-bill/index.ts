@@ -46,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code, seat_image_front, seat_image_back, seat_image_third_row, additional_notes } = body;
+    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code, seat_image_front, seat_image_back, seat_image_third_row, additional_notes, payment_type, full_price, balance_amount } = body;
 
     // Fetch shipping settings
     const { data: shipSettings } = await supabase
@@ -130,20 +130,28 @@ serve(async (req) => {
       }
     }
 
-    const validatedPrice = Math.max(priceWithShipping - discountAmount, 0.01);
+    const fullValidatedPrice = Math.max(priceWithShipping - discountAmount, 0.01);
+    const isDeposit = payment_type === 'deposit';
+    // Server-computed amount the buyer must pay NOW
+    const expectedAmountToPay = isDeposit
+      ? Math.round(fullValidatedPrice * 0.5 * 100) / 100
+      : fullValidatedPrice;
+    const serverBalanceAmount = isDeposit
+      ? Math.round((fullValidatedPrice - expectedAmountToPay) * 100) / 100
+      : 0;
 
     // Reject if client price differs significantly from server price (tolerance for rounding)
     const clientPrice = parseFloat(sales_amount);
-    if (Math.abs(clientPrice - validatedPrice) > 1.0) {
-      console.error(`Price mismatch: client=${clientPrice}, server=${validatedPrice} (base=${canonicalPrice}, ship=${shippingCost}, discount=${discountAmount})`);
+    if (Math.abs(clientPrice - expectedAmountToPay) > 1.0) {
+      console.error(`Price mismatch: client=${clientPrice}, server=${expectedAmountToPay} (full=${fullValidatedPrice}, deposit=${isDeposit})`);
       return new Response(JSON.stringify({ error: 'Harga tidak sah. Sila muat semula halaman dan cuba lagi.' }), {
         status: 400,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' },
       });
     }
 
-    // Use the validated (server-side) price
-    const finalPrice = validatedPrice;
+    // Amount to charge via BillPlz now
+    const finalPrice = expectedAmountToPay;
 
     // Create customer record first
     const uniqueEmail = email && email.trim()
@@ -159,7 +167,7 @@ serve(async (req) => {
         product,
         product_variation: product_variation || '',
         car_model: car_model ? String(car_model).slice(0, 100) : '',
-        sales_amount: finalPrice,
+        sales_amount: fullValidatedPrice,
         paid_amount: finalPrice,
         address: address ? String(address).slice(0, 500) : '',
         city: city ? String(city).slice(0, 100) : '',
@@ -171,6 +179,9 @@ serve(async (req) => {
         seat_image_back: seat_image_back || null,
         seat_image_third_row: seat_image_third_row || null,
         additional_notes: additional_notes ? String(additional_notes).slice(0, 1000) : null,
+        payment_type: isDeposit ? 'deposit' : 'full',
+        deposit_amount: isDeposit ? finalPrice : 0,
+        balance_amount: serverBalanceAmount,
       })
       .select()
       .single();

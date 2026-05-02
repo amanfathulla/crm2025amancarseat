@@ -191,9 +191,11 @@ export type Database = {
         Row: {
           additional_notes: string | null
           address: string | null
+          balance_amount: number | null
           car_model: string | null
           city: string | null
           created_at: string | null
+          deposit_amount: number | null
           email: string
           gross_profit: number | null
           id: string
@@ -204,6 +206,7 @@ export type Database = {
           order_time: string | null
           paid_amount: number | null
           payment_source: string | null
+          payment_type: string | null
           phone: string | null
           product: string | null
           product_variation: string | null
@@ -220,9 +223,11 @@ export type Database = {
         Insert: {
           additional_notes?: string | null
           address?: string | null
+          balance_amount?: number | null
           car_model?: string | null
           city?: string | null
           created_at?: string | null
+          deposit_amount?: number | null
           email: string
           gross_profit?: number | null
           id?: string
@@ -233,6 +238,7 @@ export type Database = {
           order_time?: string | null
           paid_amount?: number | null
           payment_source?: string | null
+          payment_type?: string | null
           phone?: string | null
           product?: string | null
           product_variation?: string | null
@@ -249,9 +255,11 @@ export type Database = {
         Update: {
           additional_notes?: string | null
           address?: string | null
+          balance_amount?: number | null
           car_model?: string | null
           city?: string | null
           created_at?: string | null
+          deposit_amount?: number | null
           email?: string
           gross_profit?: number | null
           id?: string
@@ -262,6 +270,7 @@ export type Database = {
           order_time?: string | null
           paid_amount?: number | null
           payment_source?: string | null
+          payment_type?: string | null
           phone?: string | null
           product?: string | null
           product_variation?: string | null
