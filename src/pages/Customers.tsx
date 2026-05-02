@@ -175,6 +175,9 @@ function Customers() {
         seat_image_back: (record as any).seat_image_back || null,
         seat_image_third_row: (record as any).seat_image_third_row || null,
         additional_notes: (record as any).additional_notes || null,
+        payment_type: (record as any).payment_type || null,
+        deposit_amount: Number((record as any).deposit_amount) || 0,
+        balance_amount: Number((record as any).balance_amount) || 0,
       })) || [];
       
       setCustomers(mappedCustomers);
