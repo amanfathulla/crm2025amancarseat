@@ -25,6 +25,10 @@ export interface Customer {
   created_at: string;
   updated_at: string;
   order_number?: number;
+  seat_image_front?: string | null;
+  seat_image_back?: string | null;
+  seat_image_third_row?: string | null;
+  additional_notes?: string | null;
 }
 
 export interface CustomerFormData {
