@@ -301,7 +301,7 @@ export default function OrderPage() {
         product: selectedProduct?.name || "",
         product_variation: selectedVariation?.name || "",
         sales_amount: finalPrice,
-        paid_amount: finalPrice,
+        paid_amount: amountToPay,
         gross_profit: 0,
         order_status: "processing",
         payment_source: "whatsapp",
@@ -310,6 +310,9 @@ export default function OrderPage() {
         seat_image_back: seatImages.back || null,
         seat_image_third_row: seatImages.third || null,
         additional_notes: additionalNotes || null,
+        payment_type: paymentType,
+        deposit_amount: paymentType === "deposit" ? amountToPay : 0,
+        balance_amount: balanceAmount,
       } as any);
 
       if (error) throw error;
@@ -324,11 +327,15 @@ export default function OrderPage() {
         body: JSON.stringify({ customer_id: customerId, payment_source: "whatsapp" }),
       }).catch(() => {});
 
+      const paymentLine = paymentType === "deposit"
+        ? `💰 Bayaran Deposit (50%): RM${amountToPay.toFixed(2)}\n💵 Baki Tertunggak: RM${balanceAmount.toFixed(2)}\n💯 Jumlah Penuh: RM${finalPrice.toFixed(2)}`
+        : `💰 Jumlah Bayar (Penuh): RM${amountToPay.toFixed(2)}`;
+
       const waMsg = encodeURIComponent(
         `Assalamualaikum, saya ingin membuat bayaran melalui WhatsApp untuk tempahan berikut:\n\n` +
         `📋 No. Tempahan: #${orderRef}\n` +
         `📦 Produk: ${selectedProduct?.name || "-"}${selectedVariation ? ` (${selectedVariation.name})` : ""}\n` +
-        `💰 Jumlah Bayar: RM${finalPrice.toFixed(2)}\n\n` +
+        `${paymentLine}\n\n` +
         `Saya telah buat pemindahan ke:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454\n\n` +
         `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
         `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
