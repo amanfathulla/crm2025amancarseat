@@ -899,7 +899,7 @@ export default function OrderPage() {
                 <Button type="submit"
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  Bayar Dengan BillPlz
+                  {paymentType === "deposit" ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan BillPlz` : `Bayar RM${amountToPay.toFixed(2)} Dengan BillPlz`}
                 </Button>
                 <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
 
