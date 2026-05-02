@@ -208,6 +208,8 @@ export default function OrderPage() {
       : appliedCoupon.discount_amount
     : 0;
   const finalPrice = Math.max(0, productPrice + postageCost - couponDiscount);
+  const amountToPay = paymentType === "deposit" ? Math.round(finalPrice * 0.5 * 100) / 100 : finalPrice;
+  const balanceAmount = paymentType === "deposit" ? Math.round((finalPrice - amountToPay) * 100) / 100 : 0;
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
