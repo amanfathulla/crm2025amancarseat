@@ -46,7 +46,7 @@ serve(async (req) => {
       });
     }
 
-    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code, seat_image_front, seat_image_back, seat_image_third_row, additional_notes } = body;
+    const { name, email, phone, product, product_variation, car_model, sales_amount, address, city, state, zip_code, coupon_code, seat_image_front, seat_image_back, seat_image_third_row, additional_notes, payment_type, full_price, balance_amount } = body;
 
     // Fetch shipping settings
     const { data: shipSettings } = await supabase
