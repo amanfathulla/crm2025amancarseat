@@ -61,6 +61,7 @@ export default function OrderPage() {
   const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: "front" | "back" | "third") => {
     const file = e.target.files?.[0];
