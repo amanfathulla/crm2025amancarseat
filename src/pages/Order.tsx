@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -42,6 +42,7 @@ const STEP_LABELS: Record<Step, string> = {
 
 export default function OrderPage() {
   const { toast } = useToast();
+  const pageScrollRef = useRef<HTMLDivElement | null>(null);
   const [step, setStep] = useState<Step>("category");
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
@@ -62,6 +63,32 @@ export default function OrderPage() {
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
+
+  const resetOrderScroll = () => {
+    pageScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    if (pageScrollRef.current) pageScrollRef.current.scrollTop = 0;
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    document.documentElement.scrollTop = 0;
+    document.body.scrollTop = 0;
+  };
+
+  useEffect(() => {
+    const previousScrollRestoration = window.history.scrollRestoration;
+    window.history.scrollRestoration = "manual";
+    resetOrderScroll();
+    return () => {
+      window.history.scrollRestoration = previousScrollRestoration;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    resetOrderScroll();
+    requestAnimationFrame(() => {
+      resetOrderScroll();
+      requestAnimationFrame(resetOrderScroll);
+    });
+  }, [step]);
 
   const handleImageUpload = async (e: React.ChangeEvent<HTMLInputElement>, slot: "front" | "back" | "third") => {
     const file = e.target.files?.[0];
@@ -239,15 +266,9 @@ export default function OrderPage() {
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
     if (selectedProduct.variations.length > 0 && !selectedVariation) { toast({ title: "Sila pilih saiz / variasi", variant: "destructive" }); return; }
-    // Blur any focused element to prevent browser auto-scroll to focused input
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
+    resetOrderScroll();
     setStep("form");
-    // Force scroll to top immediately, then again after paint to override any focus-induced scroll
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-    requestAnimationFrame(() => {
-      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
-    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -364,7 +385,7 @@ export default function OrderPage() {
 
   return (
     /* Full-screen fixed background — covers everything */
-    <div className="fixed inset-0 bg-[#0a0a0f] overflow-y-auto">
+    <div ref={pageScrollRef} className="fixed inset-0 bg-[#0a0a0f] overflow-y-auto">
       {/* Ambient glow top */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
         <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-blue-600/10 blur-[120px]" />
