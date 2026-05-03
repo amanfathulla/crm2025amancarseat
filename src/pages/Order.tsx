@@ -239,8 +239,15 @@ export default function OrderPage() {
   const handleProceedToForm = () => {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
     if (selectedProduct.variations.length > 0 && !selectedVariation) { toast({ title: "Sila pilih saiz / variasi", variant: "destructive" }); return; }
+    // Blur any focused element to prevent browser auto-scroll to focused input
+    if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     setStep("form");
-    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
+    // Force scroll to top immediately, then again after paint to override any focus-induced scroll
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+    requestAnimationFrame(() => {
+      window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+      requestAnimationFrame(() => window.scrollTo({ top: 0, left: 0, behavior: "auto" }));
+    });
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
