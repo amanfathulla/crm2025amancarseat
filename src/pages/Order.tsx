@@ -240,6 +240,7 @@ export default function OrderPage() {
     if (!selectedProduct) { toast({ title: "Sila pilih produk", variant: "destructive" }); return; }
     if (selectedProduct.variations.length > 0 && !selectedVariation) { toast({ title: "Sila pilih saiz / variasi", variant: "destructive" }); return; }
     setStep("form");
+    setTimeout(() => window.scrollTo({ top: 0, behavior: "smooth" }), 0);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
