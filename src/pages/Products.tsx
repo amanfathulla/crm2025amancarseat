@@ -102,7 +102,8 @@ export default function Products() {
 
   useEffect(() => {
     fetchProducts();
-  }, []);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [authClient]);
 
   const handleToggleCategory = async (categoryName: string, newValue: boolean) => {
     setTogglingCategory(categoryName);
