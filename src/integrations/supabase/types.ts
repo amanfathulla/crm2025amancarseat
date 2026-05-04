@@ -485,6 +485,13 @@ export type Database = {
             foreignKeyName: "order_items_product_id_fkey"
             columns: ["product_id"]
             isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "order_items_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
             referencedRelation: "products"
             referencedColumns: ["id"]
           },
@@ -570,6 +577,13 @@ export type Database = {
           product_id?: string
         }
         Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_variations_product_id_fkey"
             columns: ["product_id"]
@@ -762,6 +776,112 @@ export type Database = {
       }
     }
     Views: {
+      admin_product_variations: {
+        Row: {
+          cost: number | null
+          created_at: string | null
+          id: string | null
+          inventory: number | null
+          name: string | null
+          price: number | null
+          product_id: string | null
+        }
+        Insert: {
+          cost?: number | null
+          created_at?: string | null
+          id?: string | null
+          inventory?: number | null
+          name?: string | null
+          price?: number | null
+          product_id?: string | null
+        }
+        Update: {
+          cost?: number | null
+          created_at?: string | null
+          id?: string | null
+          inventory?: number | null
+          name?: string | null
+          price?: number | null
+          product_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "public_products"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      admin_products: {
+        Row: {
+          category: string | null
+          cost: number | null
+          created_at: string | null
+          description: string | null
+          id: string | null
+          image_url: string | null
+          image_urls: string[] | null
+          inventory: number | null
+          name: string | null
+          price: number | null
+          sales: number | null
+          sku: string | null
+          status: string | null
+          updated_at: string | null
+          youtube_url: string | null
+        }
+        Insert: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          image_urls?: string[] | null
+          inventory?: number | null
+          name?: string | null
+          price?: number | null
+          sales?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string | null
+          youtube_url?: string | null
+        }
+        Update: {
+          category?: string | null
+          cost?: number | null
+          created_at?: string | null
+          description?: string | null
+          id?: string | null
+          image_url?: string | null
+          image_urls?: string[] | null
+          inventory?: number | null
+          name?: string | null
+          price?: number | null
+          sales?: number | null
+          sku?: string | null
+          status?: string | null
+          updated_at?: string | null
+          youtube_url?: string | null
+        }
+        Relationships: []
+      }
       public_product_variations: {
         Row: {
           created_at: string | null
@@ -788,6 +908,13 @@ export type Database = {
           product_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "product_variations_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "product_variations_product_id_fkey"
             columns: ["product_id"]
