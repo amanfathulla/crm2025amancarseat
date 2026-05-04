@@ -57,16 +57,16 @@ export default function Products() {
     try {
       setLoading(true);
       const [productsRes, variationsRes, categorySettingsRes] = await Promise.all([
-        authClient.from("products").select("*").order("name"),
-        authClient.from("product_variations").select("*"),
+        authClient.from("admin_products" as any).select("*").order("name"),
+        authClient.from("admin_product_variations" as any).select("*"),
         authClient.from("category_settings" as any).select("*"),
       ]);
 
       if (productsRes.error) throw productsRes.error;
       if (variationsRes.error) throw variationsRes.error;
 
-      const productsWithVariations: Product[] = (productsRes.data || []).map(product => {
-        const productVariations: ProductVariation[] = (variationsRes.data || [])
+      const productsWithVariations: Product[] = ((productsRes.data || []) as any[]).map((product: any) => {
+        const productVariations: ProductVariation[] = ((variationsRes.data || []) as any[])
           .filter((v: any) => v.product_id === product.id)
           .map((v: any) => ({
             id: v.id,
@@ -78,7 +78,7 @@ export default function Products() {
 
         return {
           ...product,
-          image_urls: (product as any).image_urls || [],
+          image_urls: product.image_urls || [],
           variations: productVariations.length > 0 ? productVariations : undefined
         };
       });
