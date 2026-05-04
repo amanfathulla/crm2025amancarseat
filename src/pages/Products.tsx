@@ -57,8 +57,8 @@ export default function Products() {
     try {
       setLoading(true);
       const [productsRes, variationsRes, categorySettingsRes] = await Promise.all([
-        authClient.from("products").select("*").order("name"),
-        authClient.from("product_variations").select("*"),
+        authClient.from("admin_products" as any).select("*").order("name"),
+        authClient.from("admin_product_variations" as any).select("*"),
         authClient.from("category_settings" as any).select("*"),
       ]);
 
