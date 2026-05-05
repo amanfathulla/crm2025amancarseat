@@ -47,6 +47,7 @@ export default function OrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [imageIndex, setImageIndex] = useState(0);
 
   const [selectedCategory, setSelectedCategory] = useState<typeof ALL_MATERIAL_CATEGORIES[0] | null>(null);
@@ -146,10 +147,13 @@ export default function OrderPage() {
 
   // Fetch enabled categories on mount
   useEffect(() => {
-    supabase.from("category_settings" as any).select("name, is_enabled").then(({ data }) => {
+    supabase.from("category_settings" as any).select("name, is_enabled, image_url").then(({ data }) => {
       if (data) {
         const enabled = (data as any[]).filter(r => r.is_enabled).map(r => r.name);
         setEnabledCategories(enabled);
+        const imgs: Record<string, string> = {};
+        (data as any[]).forEach(r => { if (r.image_url) imgs[r.name] = r.image_url; });
+        setCategoryImages(imgs);
       } else {
         setEnabledCategories(ALL_MATERIAL_CATEGORIES.map(c => c.label));
       }
