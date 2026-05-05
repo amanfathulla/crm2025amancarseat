@@ -74,6 +74,12 @@ function Customers() {
     totalCustomers: 0,
     totalSales: 0,
     grossProfit: 0,
+    salesCurrentYear: 0,
+    profitCurrentYear: 0,
+    salesPreviousYear: 0,
+    profitPreviousYear: 0,
+    earliestYear: null as number | null,
+    latestYear: null as number | null,
     processingOrders: 0,
     completedOrders: 0,
     cancelledOrders: 0
