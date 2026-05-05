@@ -130,6 +130,47 @@ export default function Products() {
     }
   };
 
+  const handleCategoryImageUpload = async (categoryName: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingCategoryImage(categoryName);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `category-${categoryName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: categoryName, image_url: url }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryImages(prev => ({ ...prev, [categoryName]: url }));
+      toast({ title: "✅ Gambar dimuat naik", description: `Gambar utama ${categoryName} dikemaskini.` });
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingCategoryImage(null);
+    }
+  };
+
+  const handleRemoveCategoryImage = async (categoryName: string) => {
+    setUploadingCategoryImage(categoryName);
+    try {
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: categoryName, image_url: null }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryImages(prev => { const n = { ...prev }; delete n[categoryName]; return n; });
+      toast({ title: "Gambar dibuang" });
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingCategoryImage(null);
+    }
+  };
   const getProductsByCategory = (categoryName: string) =>
     products.filter(p => p.category === categoryName);
 
