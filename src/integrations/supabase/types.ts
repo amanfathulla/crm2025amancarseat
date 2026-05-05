@@ -125,6 +125,7 @@ export type Database = {
         Row: {
           created_at: string | null
           id: string
+          image_url: string | null
           is_enabled: boolean
           name: string
           updated_at: string | null
@@ -132,6 +133,7 @@ export type Database = {
         Insert: {
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_enabled?: boolean
           name: string
           updated_at?: string | null
@@ -139,6 +141,7 @@ export type Database = {
         Update: {
           created_at?: string | null
           id?: string
+          image_url?: string | null
           is_enabled?: boolean
           name?: string
           updated_at?: string | null
@@ -288,6 +291,7 @@ export type Database = {
       }
       leads: {
         Row: {
+          car_model: string | null
           closed_at: string | null
           contacted_at: string | null
           created_at: string
@@ -298,6 +302,7 @@ export type Database = {
           updated_at: string
         }
         Insert: {
+          car_model?: string | null
           closed_at?: string | null
           contacted_at?: string | null
           created_at?: string
@@ -308,6 +313,7 @@ export type Database = {
           updated_at?: string
         }
         Update: {
+          car_model?: string | null
           closed_at?: string | null
           contacted_at?: string | null
           created_at?: string
