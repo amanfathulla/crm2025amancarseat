@@ -529,44 +529,84 @@ function Customers() {
         <p className="text-muted-foreground text-sm">Manage your customer base</p>
       </section>
       
-      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-6 animate-fade-in">
-        <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-white/90">Total Customers</span>
-              <span className="text-3xl font-bold mt-1">{totalCustomers}</span>
+      {(() => {
+        const currentYear = new Date().getFullYear();
+        const previousYear = currentYear - 1;
+        const { salesCurrentYear, profitCurrentYear, salesPreviousYear, profitPreviousYear, earliestYear, latestYear } = customerStats;
+        const yearsRange = earliestYear && latestYear
+          ? (earliestYear === latestYear ? `${earliestYear}` : `${earliestYear} – ${latestYear}`)
+          : "—";
+        const noDataThisYear = salesCurrentYear === 0;
+        const lastDataYearNote = noDataThisYear && latestYear && latestYear < currentYear
+          ? `Tiada data untuk ${currentYear}. Data terakhir: ${latestYear}`
+          : null;
+
+        return (
+          <div className="space-y-3 mb-6 animate-fade-in">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+              <Card className="shadow-sm border-0 bg-gradient-to-br from-blue-500 to-blue-600 text-white">
+                <CardContent className="p-6 flex items-center justify-between">
+                  <div className="flex flex-col">
+                    <span className="text-sm text-white/90">Total Customers</span>
+                    <span className="text-3xl font-bold mt-1">{totalCustomers}</span>
+                    <span className="text-[11px] text-white/70 mt-1">Sepanjang masa</span>
+                  </div>
+                  <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+                    <Users className="h-6 w-6 text-white" />
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-white/90">Total Sales ({currentYear})</span>
+                      <span className="text-3xl font-bold mt-1">{formatCurrency(salesCurrentYear)}</span>
+                      <span className="text-[11px] text-white/80 mt-1">
+                        Tahun lepas ({previousYear}): {formatCurrency(salesPreviousYear)}
+                      </span>
+                      <span className="text-[11px] text-white/70">
+                        Sepanjang masa: {formatCurrency(customerStats.totalSales)} • Data: {yearsRange}
+                      </span>
+                      {lastDataYearNote && (
+                        <span className="text-[11px] text-yellow-100 mt-1 font-medium">⚠ {lastDataYearNote}</span>
+                      )}
+                    </div>
+                    <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                      <DollarSign className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
+
+              <Card className="shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
+                <CardContent className="p-6">
+                  <div className="flex items-start justify-between">
+                    <div className="flex flex-col">
+                      <span className="text-sm text-white/90">Gross Profit ({currentYear})</span>
+                      <span className="text-3xl font-bold mt-1">{formatCurrency(profitCurrentYear)}</span>
+                      <span className="text-[11px] text-white/80 mt-1">
+                        Tahun lepas ({previousYear}): {formatCurrency(profitPreviousYear)}
+                      </span>
+                      <span className="text-[11px] text-white/70">
+                        Sepanjang masa: {formatCurrency(customerStats.grossProfit)} • Data: {yearsRange}
+                      </span>
+                      {lastDataYearNote && (
+                        <span className="text-[11px] text-yellow-100 mt-1 font-medium">⚠ {lastDataYearNote}</span>
+                      )}
+                    </div>
+                    <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center shrink-0">
+                      <TrendingUp className="h-6 w-6 text-white" />
+                    </div>
+                  </div>
+                </CardContent>
+              </Card>
             </div>
-            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-              <Users className="h-6 w-6 text-white" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-white/90">Total Sales</span>
-              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.totalSales)}</span>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-              <DollarSign className="h-6 w-6 text-white" />
-            </div>
-          </CardContent>
-        </Card>
-        
-        <Card className="shadow-sm border-0 bg-gradient-to-br from-purple-500 to-purple-600 text-white">
-          <CardContent className="p-6 flex items-center justify-between">
-            <div className="flex flex-col">
-              <span className="text-sm text-white/90">Gross Profit</span>
-              <span className="text-3xl font-bold mt-1">{formatCurrency(customerStats.grossProfit)}</span>
-            </div>
-            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
-              <TrendingUp className="h-6 w-6 text-white" />
-            </div>
-          </CardContent>
-        </Card>
-      </div>
-      
+          </div>
+        );
+      })()}
+
       <div className="flex flex-wrap gap-4 mb-8">
         <Card 
           className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
