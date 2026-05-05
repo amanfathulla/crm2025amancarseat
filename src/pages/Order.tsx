@@ -521,13 +521,13 @@ export default function OrderPage() {
                 : selectedProduct.image_url ? [selectedProduct.image_url] : [];
               return (
                 <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
-                  {/* Multi-image carousel */}
+              {/* Multi-image carousel - keep original aspect ratio */}
                   {imgs.length > 0 && (
-                    <div className="relative w-full aspect-video overflow-hidden bg-black/40">
+                    <div className="relative w-full max-h-[70vh] overflow-hidden bg-black/40 flex items-center justify-center">
                       <img
                         src={imgs[imageIndex] || imgs[0]}
                         alt={selectedProduct.name}
-                        className="w-full h-full object-cover transition-opacity duration-200"
+                        className="w-full h-auto max-h-[70vh] object-contain transition-opacity duration-200"
                       />
                       {imgs.length > 1 && (
                         <>
