@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff, ImagePlus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
@@ -49,6 +50,8 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryEnabled, setCategoryEnabled] = useState<Record<string, boolean>>({});
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [uploadingCategoryImage, setUploadingCategoryImage] = useState<string | null>(null);
   const [togglingCategory, setTogglingCategory] = useState<string | null>(null);
   const { toast } = useToast();
   const { authClient } = useAuth();
@@ -87,11 +90,14 @@ export default function Products() {
 
       // Build category enabled map
       const enabledMap: Record<string, boolean> = {};
+      const imagesMap: Record<string, string> = {};
       materialCategories.forEach(c => { enabledMap[c.name] = true; }); // default all enabled
       (categorySettingsRes.data || []).forEach((row: any) => {
         enabledMap[row.name] = row.is_enabled;
+        if (row.image_url) imagesMap[row.name] = row.image_url;
       });
       setCategoryEnabled(enabledMap);
+      setCategoryImages(imagesMap);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({ title: "Ralat", description: "Terdapat masalah semasa mengambil produk", variant: "destructive" });
