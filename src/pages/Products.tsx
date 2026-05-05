@@ -252,6 +252,69 @@ export default function Products() {
                 </div>
               </button>
 
+              {/* Material Hero Image uploader */}
+              <div className="px-4 py-3 bg-card border-t space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Gambar Utama Material</span>
+                  {categoryImages[category.name] && (
+                    <button
+                      onClick={() => handleRemoveCategoryImage(category.name)}
+                      className="text-xs text-destructive hover:underline flex items-center gap-1"
+                      disabled={uploadingCategoryImage === category.name}
+                    >
+                      <X className="h-3 w-3" /> Buang
+                    </button>
+                  )}
+                </div>
+                {categoryImages[category.name] ? (
+                  <div className="relative w-full bg-muted/30 rounded-lg overflow-hidden">
+                    <img
+                      src={categoryImages[category.name]}
+                      alt={category.name}
+                      className="w-full h-auto max-h-40 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/40 transition-colors">
+                    {uploadingCategoryImage === category.name ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-5 w-5 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Muat naik gambar (ikut ratio asal)</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingCategoryImage === category.name}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCategoryImageUpload(category.name, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+                {categoryImages[category.name] && (
+                  <label className="flex items-center justify-center gap-1 text-xs text-primary hover:underline cursor-pointer">
+                    <ImagePlus className="h-3 w-3" /> Tukar gambar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingCategoryImage === category.name}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCategoryImageUpload(category.name, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
+
               {/* Enable/Disable Toggle bar */}
               <div className={`flex items-center justify-between px-4 py-2.5 bg-card border-t`}>
                 <div className="flex items-center gap-2">
