@@ -478,6 +478,17 @@ export default function OrderPage() {
               </div>
             </div>
 
+            {/* Material hero image (full ratio, no crop) */}
+            {categoryImages[selectedCategory.label] && (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                <img
+                  src={categoryImages[selectedCategory.label]}
+                  alt={selectedCategory.label}
+                  className="w-full h-auto max-h-[60vh] object-contain"
+                />
+              </div>
+            )}
+
             {loadingProducts ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-white/30" />
