@@ -15,6 +15,7 @@ interface Lead {
   id: string;
   name: string;
   phone: string;
+  car_model?: string | null;
   status: string;
   displayStatus?: string;
   created_at: string;
@@ -41,7 +42,7 @@ export default function Leads() {
     conversionRate: 0,
   });
   const [isAddDialogOpen, setIsAddDialogOpen] = useState(false);
-  const [newLead, setNewLead] = useState({ name: "", phone: "" });
+  const [newLead, setNewLead] = useState({ name: "", phone: "", car_model: "" });
   const [isLoading, setIsLoading] = useState(false);
   const [activeTab, setActiveTab] = useState("charts");
 
@@ -118,6 +119,7 @@ export default function Leads() {
       const { error } = await authClient.from("leads").insert({
         name: newLead.name.trim(),
         phone: newLead.phone.trim(),
+        car_model: newLead.car_model.trim() || null,
         status: "new",
       });
 
@@ -127,7 +129,7 @@ export default function Leads() {
       await fetchLeads();
       
       toast.success("Lead berjaya ditambah!");
-      setNewLead({ name: "", phone: "" });
+      setNewLead({ name: "", phone: "", car_model: "" });
       setIsAddDialogOpen(false);
     } catch (error) {
       console.error("Error adding lead:", error);
@@ -206,6 +208,15 @@ export default function Leads() {
                   placeholder="Masukkan no telefon"
                   value={newLead.phone}
                   onChange={(e) => setNewLead({ ...newLead, phone: e.target.value })}
+                />
+              </div>
+              <div className="space-y-2">
+                <Label htmlFor="car_model">Model Kereta</Label>
+                <Input
+                  id="car_model"
+                  placeholder="Contoh: Perodua Myvi 2022"
+                  value={newLead.car_model}
+                  onChange={(e) => setNewLead({ ...newLead, car_model: e.target.value })}
                 />
               </div>
             </div>

@@ -47,6 +47,7 @@ export default function OrderPage() {
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
   const [imageIndex, setImageIndex] = useState(0);
 
   const [selectedCategory, setSelectedCategory] = useState<typeof ALL_MATERIAL_CATEGORIES[0] | null>(null);
@@ -146,10 +147,13 @@ export default function OrderPage() {
 
   // Fetch enabled categories on mount
   useEffect(() => {
-    supabase.from("category_settings" as any).select("name, is_enabled").then(({ data }) => {
+    supabase.from("category_settings" as any).select("name, is_enabled, image_url").then(({ data }) => {
       if (data) {
         const enabled = (data as any[]).filter(r => r.is_enabled).map(r => r.name);
         setEnabledCategories(enabled);
+        const imgs: Record<string, string> = {};
+        (data as any[]).forEach(r => { if (r.image_url) imgs[r.name] = r.image_url; });
+        setCategoryImages(imgs);
       } else {
         setEnabledCategories(ALL_MATERIAL_CATEGORIES.map(c => c.label));
       }
@@ -474,6 +478,17 @@ export default function OrderPage() {
               </div>
             </div>
 
+            {/* Material hero image (full ratio, no crop) */}
+            {categoryImages[selectedCategory.label] && (
+              <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-black/40 flex items-center justify-center">
+                <img
+                  src={categoryImages[selectedCategory.label]}
+                  alt={selectedCategory.label}
+                  className="w-full h-auto max-h-[60vh] object-contain"
+                />
+              </div>
+            )}
+
             {loadingProducts ? (
               <div className="flex flex-col items-center justify-center py-20 gap-3">
                 <Loader2 className="h-8 w-8 animate-spin text-white/30" />
@@ -521,13 +536,13 @@ export default function OrderPage() {
                 : selectedProduct.image_url ? [selectedProduct.image_url] : [];
               return (
                 <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
-                  {/* Multi-image carousel */}
+              {/* Multi-image carousel - keep original aspect ratio */}
                   {imgs.length > 0 && (
-                    <div className="relative w-full aspect-video overflow-hidden bg-black/40">
+                    <div className="relative w-full max-h-[70vh] overflow-hidden bg-black/40 flex items-center justify-center">
                       <img
                         src={imgs[imageIndex] || imgs[0]}
                         alt={selectedProduct.name}
-                        className="w-full h-full object-cover transition-opacity duration-200"
+                        className="w-full h-auto max-h-[70vh] object-contain transition-opacity duration-200"
                       />
                       {imgs.length > 1 && (
                         <>

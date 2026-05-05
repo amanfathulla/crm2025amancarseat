@@ -2,7 +2,8 @@ import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
-import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff } from "lucide-react";
+import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff, ImagePlus, X } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
@@ -49,6 +50,8 @@ export default function Products() {
   const [selectedProduct, setSelectedProduct] = useState<Product | null>(null);
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryEnabled, setCategoryEnabled] = useState<Record<string, boolean>>({});
+  const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [uploadingCategoryImage, setUploadingCategoryImage] = useState<string | null>(null);
   const [togglingCategory, setTogglingCategory] = useState<string | null>(null);
   const { toast } = useToast();
   const { authClient } = useAuth();
@@ -87,11 +90,14 @@ export default function Products() {
 
       // Build category enabled map
       const enabledMap: Record<string, boolean> = {};
+      const imagesMap: Record<string, string> = {};
       materialCategories.forEach(c => { enabledMap[c.name] = true; }); // default all enabled
       (categorySettingsRes.data || []).forEach((row: any) => {
         enabledMap[row.name] = row.is_enabled;
+        if (row.image_url) imagesMap[row.name] = row.image_url;
       });
       setCategoryEnabled(enabledMap);
+      setCategoryImages(imagesMap);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({ title: "Ralat", description: "Terdapat masalah semasa mengambil produk", variant: "destructive" });
@@ -124,6 +130,47 @@ export default function Products() {
     }
   };
 
+  const handleCategoryImageUpload = async (categoryName: string, file: File) => {
+    if (file.size > 5 * 1024 * 1024) {
+      toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB.", variant: "destructive" });
+      return;
+    }
+    setUploadingCategoryImage(categoryName);
+    try {
+      const ext = file.name.split(".").pop() || "jpg";
+      const path = `category-${categoryName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.${ext}`;
+      const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
+      if (upErr) throw upErr;
+      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+      const url = pub.publicUrl;
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: categoryName, image_url: url }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryImages(prev => ({ ...prev, [categoryName]: url }));
+      toast({ title: "✅ Gambar dimuat naik", description: `Gambar utama ${categoryName} dikemaskini.` });
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingCategoryImage(null);
+    }
+  };
+
+  const handleRemoveCategoryImage = async (categoryName: string) => {
+    setUploadingCategoryImage(categoryName);
+    try {
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: categoryName, image_url: null }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryImages(prev => { const n = { ...prev }; delete n[categoryName]; return n; });
+      toast({ title: "Gambar dibuang" });
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setUploadingCategoryImage(null);
+    }
+  };
   const getProductsByCategory = (categoryName: string) =>
     products.filter(p => p.category === categoryName);
 
@@ -204,6 +251,69 @@ export default function Products() {
                   <p className="text-white/80 text-sm">{count} produk</p>
                 </div>
               </button>
+
+              {/* Material Hero Image uploader */}
+              <div className="px-4 py-3 bg-card border-t space-y-2">
+                <div className="flex items-center justify-between">
+                  <span className="text-xs font-medium text-muted-foreground">Gambar Utama Material</span>
+                  {categoryImages[category.name] && (
+                    <button
+                      onClick={() => handleRemoveCategoryImage(category.name)}
+                      className="text-xs text-destructive hover:underline flex items-center gap-1"
+                      disabled={uploadingCategoryImage === category.name}
+                    >
+                      <X className="h-3 w-3" /> Buang
+                    </button>
+                  )}
+                </div>
+                {categoryImages[category.name] ? (
+                  <div className="relative w-full bg-muted/30 rounded-lg overflow-hidden">
+                    <img
+                      src={categoryImages[category.name]}
+                      alt={category.name}
+                      className="w-full h-auto max-h-40 object-contain"
+                    />
+                  </div>
+                ) : (
+                  <label className="flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/40 transition-colors">
+                    {uploadingCategoryImage === category.name ? (
+                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
+                    ) : (
+                      <>
+                        <ImagePlus className="h-5 w-5 text-muted-foreground mb-1" />
+                        <span className="text-xs text-muted-foreground">Muat naik gambar (ikut ratio asal)</span>
+                      </>
+                    )}
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingCategoryImage === category.name}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCategoryImageUpload(category.name, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+                {categoryImages[category.name] && (
+                  <label className="flex items-center justify-center gap-1 text-xs text-primary hover:underline cursor-pointer">
+                    <ImagePlus className="h-3 w-3" /> Tukar gambar
+                    <input
+                      type="file"
+                      accept="image/*"
+                      className="hidden"
+                      disabled={uploadingCategoryImage === category.name}
+                      onChange={(e) => {
+                        const f = e.target.files?.[0];
+                        if (f) handleCategoryImageUpload(category.name, f);
+                        e.target.value = "";
+                      }}
+                    />
+                  </label>
+                )}
+              </div>
 
               {/* Enable/Disable Toggle bar */}
               <div className={`flex items-center justify-between px-4 py-2.5 bg-card border-t`}>
