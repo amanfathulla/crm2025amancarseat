@@ -188,8 +188,7 @@ function Customers() {
       
       setCustomers(mappedCustomers);
       
-      const stats = calculateCustomerStats(mappedCustomers);
-      setCustomerStats(stats);
+      await calculateCustomerStats();
       
       calculateStateStats();
     } catch (error: any) {
@@ -242,23 +241,61 @@ function Customers() {
     }
   };
 
-  const calculateCustomerStats = (customers: Customer[]) => {
-    const totalCustomers = customers.length;
-    const totalSales = customers.reduce((sum, customer) => sum + customer.sales_amount, 0);
-    const grossProfit = customers.reduce((sum, customer) => sum + customer.gross_profit, 0);
-    
-    const processingOrders = customers.filter(c => c.order_status === "processing").length;
-    const completedOrders = customers.filter(c => c.order_status === "completed").length;
-    const cancelledOrders = customers.filter(c => c.order_status === "cancelled").length;
-    
-    return {
-      totalCustomers,
-      totalSales,
-      grossProfit,
-      processingOrders,
-      completedOrders,
-      cancelledOrders
-    };
+  const calculateCustomerStats = async () => {
+    try {
+      const { data, error, count } = await authClient
+        .from("customers")
+        .select("sales_amount, gross_profit, order_status, order_date, created_at", { count: "exact" });
+      if (error) throw error;
+      const rows = (data || []) as any[];
+      const totalCustomers = count || rows.length;
+      const totalSales = rows.reduce((s, r) => s + Number(r.sales_amount || 0), 0);
+      const grossProfit = rows.reduce((s, r) => s + Number(r.gross_profit || 0), 0);
+
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const previousYear = currentYear - 1;
+      let salesCurrentYear = 0, profitCurrentYear = 0, salesPreviousYear = 0, profitPreviousYear = 0;
+      let earliestYear: number | null = null;
+      let latestYear: number | null = null;
+
+      rows.forEach(r => {
+        const d = r.order_date || r.created_at;
+        if (!d) return;
+        const y = new Date(d).getFullYear();
+        if (isNaN(y)) return;
+        if (earliestYear === null || y < earliestYear) earliestYear = y;
+        if (latestYear === null || y > latestYear) latestYear = y;
+        if (y === currentYear) {
+          salesCurrentYear += Number(r.sales_amount || 0);
+          profitCurrentYear += Number(r.gross_profit || 0);
+        } else if (y === previousYear) {
+          salesPreviousYear += Number(r.sales_amount || 0);
+          profitPreviousYear += Number(r.gross_profit || 0);
+        }
+      });
+
+      const processingOrders = rows.filter(r => r.order_status === "processing").length;
+      const completedOrders = rows.filter(r => r.order_status === "completed").length;
+      const cancelledOrders = rows.filter(r => r.order_status === "cancelled").length;
+
+      setCustomerStats({
+        totalCustomers,
+        totalSales,
+        grossProfit,
+        salesCurrentYear,
+        profitCurrentYear,
+        salesPreviousYear,
+        profitPreviousYear,
+        earliestYear,
+        latestYear,
+        processingOrders,
+        completedOrders,
+        cancelledOrders,
+      });
+    } catch (err) {
+      console.error("Error calculating customer stats:", err);
+    }
   };
 
   useEffect(() => {
