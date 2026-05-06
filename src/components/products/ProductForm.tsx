@@ -124,8 +124,23 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
         .from("product-images")
         .getPublicUrl(fileName);
 
-      setImageUrls(prev => [...prev, urlData.publicUrl]);
-      toast({ title: `✅ Gambar ${imageUrls.length + 1} berjaya dimuat naik` });
+      const newImages = [...imageUrls, urlData.publicUrl];
+      setImageUrls(newImages);
+
+      // Auto-persist to DB if editing existing product (so user doesn't lose upload if they close)
+      if (isEditing && initialData?.id) {
+        const { error: persistErr } = await authClient
+          .from("products")
+          .update({
+            image_url: newImages[0],
+            image_urls: newImages,
+          } as any)
+          .eq("id", initialData.id);
+        if (persistErr) throw persistErr;
+        toast({ title: `✅ Gambar ${newImages.length} berjaya disimpan` });
+      } else {
+        toast({ title: `✅ Gambar ${newImages.length} dimuat naik`, description: "Klik Simpan untuk simpan produk" });
+      }
     } catch (err: any) {
       toast({ title: "Ralat muat naik gambar", description: err.message, variant: "destructive" });
     } finally {
@@ -134,8 +149,18 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = async (index: number) => {
+    const newImages = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newImages);
+    if (isEditing && initialData?.id) {
+      const { error } = await authClient
+        .from("products")
+        .update({ image_url: newImages[0] || null, image_urls: newImages } as any)
+        .eq("id", initialData.id);
+      if (error) {
+        toast({ title: "Ralat padam gambar", description: error.message, variant: "destructive" });
+      }
+    }
   };
 
   const handleVariationChange = (index: number, field: keyof ProductVariationFormValues, value: string | number) => {
