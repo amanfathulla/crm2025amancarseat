@@ -149,8 +149,18 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     }
   };
 
-  const handleRemoveImage = (index: number) => {
-    setImageUrls(prev => prev.filter((_, i) => i !== index));
+  const handleRemoveImage = async (index: number) => {
+    const newImages = imageUrls.filter((_, i) => i !== index);
+    setImageUrls(newImages);
+    if (isEditing && initialData?.id) {
+      const { error } = await authClient
+        .from("products")
+        .update({ image_url: newImages[0] || null, image_urls: newImages } as any)
+        .eq("id", initialData.id);
+      if (error) {
+        toast({ title: "Ralat padam gambar", description: error.message, variant: "destructive" });
+      }
+    }
   };
 
   const handleVariationChange = (index: number, field: keyof ProductVariationFormValues, value: string | number) => {
