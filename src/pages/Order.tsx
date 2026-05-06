@@ -176,6 +176,12 @@ export default function OrderPage() {
       setSelectedVariation(null);
       fetchProducts(match.label);
       setStep("product");
+      // Track page view (fire-and-forget)
+      (supabase as any).from("page_views").insert({
+        material: match.label,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }).then(() => {});
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledCategories]);
