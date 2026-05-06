@@ -301,34 +301,36 @@ export default function Dashboard() {
         </div>
       </section>
 
-      {/* KPI Cards + Target Card */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-4">
-        <div className="lg:col-span-4">
-          <SummaryStatCards
-            revenueData={revenueData}
-            totalAllTimeRevenue={totalAllTimeRevenue}
-            totalAllTimeProfit={totalAllTimeProfit}
-            totalProfitYearFromCustomers={totalProfitYearFromCustomers}
-            sales2025={sales2025}
-          />
-        </div>
-        <div className="lg:col-span-1">
-          <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />
-        </div>
-      </div>
-      
+      {/* KPI Cards (full width) */}
+      <SummaryStatCards
+        revenueData={revenueData}
+        totalAllTimeRevenue={totalAllTimeRevenue}
+        totalAllTimeProfit={totalAllTimeProfit}
+        totalProfitYearFromCustomers={totalProfitYearFromCustomers}
+        sales2025={sales2025}
+      />
+
       <MonthlyComparisonCards
         thisMonthRevenue={revenueData.thisMonth.revenue}
         lastMonthRevenue={revenueData.lastMonth.revenue}
         thisMonthProfit={revenueData.thisMonth.profit}
         lastMonthProfit={revenueData.lastMonth.profit}
       />
-      
-      <RevenueProfitChart 
-        dailyRevenueData={dailyRevenueData} 
+
+      <RevenueProfitChart
+        dailyRevenueData={dailyRevenueData}
         monthlyRevenueData={monthlyRevenueData}
-        isLoading={isLoading} 
+        isLoading={isLoading}
       />
+
+      {/* Analytics: View Pages + ROAS */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+        <MaterialViewsCard />
+        <AdsRoasCard />
+      </div>
+
+      {/* Sales Target — di bawah sekali */}
+      <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />
 
       <AdminSettingsDialog open={showSettings} onOpenChange={setShowSettings} />
     </div>
