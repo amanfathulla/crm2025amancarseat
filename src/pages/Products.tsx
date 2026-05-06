@@ -139,9 +139,9 @@ export default function Products() {
     try {
       const ext = file.name.split(".").pop() || "jpg";
       const path = `category-${categoryName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.${ext}`;
-      const { error: upErr } = await supabase.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
+      const { error: upErr } = await authClient.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
       if (upErr) throw upErr;
-      const { data: pub } = supabase.storage.from("product-images").getPublicUrl(path);
+      const { data: pub } = authClient.storage.from("product-images").getPublicUrl(path);
       const url = pub.publicUrl;
       const { error } = await authClient
         .from("category_settings" as any)
