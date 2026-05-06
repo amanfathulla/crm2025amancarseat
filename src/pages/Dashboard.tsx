@@ -7,6 +7,8 @@ import { SummaryStatCards } from "./dashboard/SummaryStatCards";
 import { MonthlyComparisonCards } from "./dashboard/MonthlyComparisonCards";
 import { RevenueProfitChart } from "./dashboard/RevenueProfitChart";
 import { SalesTargetCard } from "./dashboard/SalesTargetCard";
+import { MaterialViewsCard } from "./dashboard/MaterialViewsCard";
+import { AdsRoasCard } from "./dashboard/AdsRoasCard";
 import { getDailyQuote } from "@/utils/motivationalQuotes";
 import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
 
