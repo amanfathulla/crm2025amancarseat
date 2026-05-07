@@ -19,6 +19,49 @@ import {
   CreditCard,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
+import { useEffect, useState } from "react";
+import { useAuth } from "@/hooks/useAuth";
+
+function SeatImage({ url, label }: { url: string | null | undefined; label: string }) {
+  const { authClient } = useAuth();
+  const [signedUrl, setSignedUrl] = useState<string | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+    if (!url) { setSignedUrl(null); return; }
+    // Extract storage path from a public URL of customer-seat-images bucket
+    const marker = "/customer-seat-images/";
+    const idx = url.indexOf(marker);
+    const path = idx >= 0 ? url.substring(idx + marker.length) : url;
+    (async () => {
+      const { data } = await authClient.storage
+        .from("customer-seat-images")
+        .createSignedUrl(path, 60 * 60);
+      if (!cancelled) setSignedUrl(data?.signedUrl || null);
+    })();
+    return () => { cancelled = true; };
+  }, [url, authClient]);
+
+  if (!url) {
+    return (
+      <div className="aspect-square rounded-md border border-dashed border-border/40 bg-muted/30 flex items-center justify-center">
+        <p className="text-[9px] text-muted-foreground/50 text-center px-1">{label}<br/>(tiada)</p>
+      </div>
+    );
+  }
+  return (
+    <a href={signedUrl || "#"} target="_blank" rel="noopener noreferrer" className="block group">
+      <div className="aspect-square rounded-md overflow-hidden border bg-background">
+        {signedUrl ? (
+          <img src={signedUrl} alt={label} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
+        ) : (
+          <div className="w-full h-full bg-muted animate-pulse" />
+        )}
+      </div>
+      <p className="text-[10px] text-muted-foreground mt-1 text-center truncate">{label}</p>
+    </a>
+  );
+}
 
 interface CustomerDetailsProps {
   customer: Customer;
@@ -151,20 +194,9 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
                     { url: (customer as any).seat_image_front, label: "Seat Depan" },
                     { url: (customer as any).seat_image_back, label: "Seat Belakang" },
                     { url: (customer as any).seat_image_third_row, label: "Baris Ke-3" },
-                  ].map((img, i) =>
-                    img.url ? (
-                      <a key={i} href={img.url} target="_blank" rel="noopener noreferrer" className="block group">
-                        <div className="aspect-square rounded-md overflow-hidden border bg-background">
-                          <img src={img.url} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-1 text-center truncate">{img.label}</p>
-                      </a>
-                    ) : (
-                      <div key={i} className="aspect-square rounded-md border border-dashed border-border/40 bg-muted/30 flex items-center justify-center">
-                        <p className="text-[9px] text-muted-foreground/50 text-center px-1">{img.label}<br/>(tiada)</p>
-                      </div>
-                    )
-                  )}
+                  ].map((img, i) => (
+                    <SeatImage key={i} url={img.url} label={img.label} />
+                  ))}
                 </div>
               )}
               {(customer as any).additional_notes && (
