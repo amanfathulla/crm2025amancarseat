@@ -194,20 +194,9 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
                     { url: (customer as any).seat_image_front, label: "Seat Depan" },
                     { url: (customer as any).seat_image_back, label: "Seat Belakang" },
                     { url: (customer as any).seat_image_third_row, label: "Baris Ke-3" },
-                  ].map((img, i) =>
-                    img.url ? (
-                      <a key={i} href={img.url} target="_blank" rel="noopener noreferrer" className="block group">
-                        <div className="aspect-square rounded-md overflow-hidden border bg-background">
-                          <img src={img.url} alt={img.label} className="w-full h-full object-cover group-hover:scale-105 transition-transform" />
-                        </div>
-                        <p className="text-[10px] text-muted-foreground mt-1 text-center truncate">{img.label}</p>
-                      </a>
-                    ) : (
-                      <div key={i} className="aspect-square rounded-md border border-dashed border-border/40 bg-muted/30 flex items-center justify-center">
-                        <p className="text-[9px] text-muted-foreground/50 text-center px-1">{img.label}<br/>(tiada)</p>
-                      </div>
-                    )
-                  )}
+                  ].map((img, i) => (
+                    <SeatImage key={i} url={img.url} label={img.label} />
+                  ))}
                 </div>
               )}
               {(customer as any).additional_notes && (
