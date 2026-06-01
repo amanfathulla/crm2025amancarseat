@@ -975,13 +975,36 @@ export default function OrderPage() {
               <div className="space-y-3">
                 <p className="text-white/40 text-xs uppercase tracking-widest text-center font-medium">Pilih Kaedah Pembayaran</p>
 
-                {/* BillPlz */}
+                {/* Gateway picker (only show if more than 1 enabled) */}
+                {gateways.length > 1 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {gateways.map((g) => (
+                      <button
+                        key={g.provider}
+                        type="button"
+                        onClick={() => setSelectedGateway(g.provider)}
+                        className={`rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition-all ${
+                          selectedGateway === g.provider
+                            ? "border-blue-400 bg-blue-500/20 text-white shadow-lg shadow-blue-900/40"
+                            : "border-white/15 bg-white/5 text-white/70 hover:border-white/30"
+                        }`}
+                      >
+                        {g.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pay button */}
                 <Button type="submit"
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  {paymentType === "deposit" ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan BillPlz` : `Bayar RM${amountToPay.toFixed(2)} Dengan BillPlz`}
+                  {paymentType === "deposit"
+                    ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`
+                    : `Bayar RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`}
                 </Button>
-                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
+                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui {gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"} Malaysia</p>
+
 
                 {/* Divider */}
                 <div className="flex items-center gap-3 py-1">
