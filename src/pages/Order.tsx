@@ -308,18 +308,28 @@ export default function OrderPage() {
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     setStep("loading");
     try {
+      const endpoint = selectedGateway === "billplz"
+        ? "billplz-create-bill"
+        : "payment-create-bill";
+      const payload: any = {
+        ...form,
+        product: selectedProduct?.name,
+        product_variation: selectedVariation?.name || "",
+        sales_amount: amountToPay.toString(),
+        coupon_code: appliedCoupon?.code || "",
+        seat_image_front: seatImages.front || null,
+        seat_image_back: seatImages.back || null,
+        seat_image_third_row: seatImages.third || null,
+        additional_notes: additionalNotes || null,
+        payment_type: paymentType,
+        full_price: finalPrice,
+        balance_amount: balanceAmount,
+      };
+      if (selectedGateway !== "billplz") payload.provider = selectedGateway;
       const res = await fetch(
-        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
+        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/${endpoint}`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: amountToPay.toString(), coupon_code: appliedCoupon?.code || "",
-            seat_image_front: seatImages.front || null,
-            seat_image_back: seatImages.back || null,
-            seat_image_third_row: seatImages.third || null,
-            additional_notes: additionalNotes || null,
-            payment_type: paymentType,
-            full_price: finalPrice,
-            balance_amount: balanceAmount,
-          }) }
+          body: JSON.stringify(payload) }
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
