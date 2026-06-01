@@ -64,6 +64,26 @@ export default function OrderPage() {
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
+  const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
+  const [selectedGateway, setSelectedGateway] = useState<string>("billplz");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("payment_gateways" as any)
+        .select("provider, display_name, display_order")
+        .eq("is_enabled", true)
+        .order("display_order", { ascending: true });
+      const list = (data as any[]) || [];
+      if (list.length > 0) {
+        setGateways(list);
+        setSelectedGateway(list[0].provider);
+      } else {
+        // Fallback so order page never breaks
+        setGateways([{ provider: "billplz", display_name: "Billplz" }]);
+      }
+    })();
+  }, []);
 
   const resetOrderScroll = () => {
     pageScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
