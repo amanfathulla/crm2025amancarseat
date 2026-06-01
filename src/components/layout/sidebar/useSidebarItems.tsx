@@ -109,5 +109,6 @@ export function useSidebarItems(orderCounts: {
       ]
     },
     { title: "Products", path: "/products", icon: Package },
+    { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
   ];
 }
