@@ -230,6 +230,7 @@ export type Database = {
           created_at: string | null
           deposit_amount: number | null
           email: string
+          gateway_bill_id: string | null
           gross_profit: number | null
           id: string
           name: string
@@ -238,6 +239,7 @@ export type Database = {
           order_status: string
           order_time: string | null
           paid_amount: number | null
+          payment_gateway: string | null
           payment_source: string | null
           payment_type: string | null
           phone: string | null
@@ -262,6 +264,7 @@ export type Database = {
           created_at?: string | null
           deposit_amount?: number | null
           email: string
+          gateway_bill_id?: string | null
           gross_profit?: number | null
           id?: string
           name: string
@@ -270,6 +273,7 @@ export type Database = {
           order_status?: string
           order_time?: string | null
           paid_amount?: number | null
+          payment_gateway?: string | null
           payment_source?: string | null
           payment_type?: string | null
           phone?: string | null
@@ -294,6 +298,7 @@ export type Database = {
           created_at?: string | null
           deposit_amount?: number | null
           email?: string
+          gateway_bill_id?: string | null
           gross_profit?: number | null
           id?: string
           name?: string
@@ -302,6 +307,7 @@ export type Database = {
           order_status?: string
           order_time?: string | null
           paid_amount?: number | null
+          payment_gateway?: string | null
           payment_source?: string | null
           payment_type?: string | null
           phone?: string | null
@@ -605,6 +611,42 @@ export type Database = {
           referrer?: string | null
           user_agent?: string | null
           viewed_at?: string
+        }
+        Relationships: []
+      }
+      payment_gateways: {
+        Row: {
+          created_at: string
+          credentials: Json
+          display_name: string
+          display_order: number
+          id: string
+          is_enabled: boolean
+          provider: string
+          sandbox_mode: boolean
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          credentials?: Json
+          display_name: string
+          display_order?: number
+          id?: string
+          is_enabled?: boolean
+          provider: string
+          sandbox_mode?: boolean
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          credentials?: Json
+          display_name?: string
+          display_order?: number
+          id?: string
+          is_enabled?: boolean
+          provider?: string
+          sandbox_mode?: boolean
+          updated_at?: string
         }
         Relationships: []
       }
