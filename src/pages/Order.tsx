@@ -64,6 +64,26 @@ export default function OrderPage() {
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
+  const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
+  const [selectedGateway, setSelectedGateway] = useState<string>("billplz");
+
+  useEffect(() => {
+    (async () => {
+      const { data } = await supabase
+        .from("payment_gateways" as any)
+        .select("provider, display_name, display_order")
+        .eq("is_enabled", true)
+        .order("display_order", { ascending: true });
+      const list = (data as any[]) || [];
+      if (list.length > 0) {
+        setGateways(list);
+        setSelectedGateway(list[0].provider);
+      } else {
+        // Fallback so order page never breaks
+        setGateways([{ provider: "billplz", display_name: "Billplz" }]);
+      }
+    })();
+  }, []);
 
   const resetOrderScroll = () => {
     pageScrollRef.current?.scrollTo({ top: 0, left: 0, behavior: "auto" });
@@ -288,18 +308,28 @@ export default function OrderPage() {
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     setStep("loading");
     try {
+      const endpoint = selectedGateway === "billplz"
+        ? "billplz-create-bill"
+        : "payment-create-bill";
+      const payload: any = {
+        ...form,
+        product: selectedProduct?.name,
+        product_variation: selectedVariation?.name || "",
+        sales_amount: amountToPay.toString(),
+        coupon_code: appliedCoupon?.code || "",
+        seat_image_front: seatImages.front || null,
+        seat_image_back: seatImages.back || null,
+        seat_image_third_row: seatImages.third || null,
+        additional_notes: additionalNotes || null,
+        payment_type: paymentType,
+        full_price: finalPrice,
+        balance_amount: balanceAmount,
+      };
+      if (selectedGateway !== "billplz") payload.provider = selectedGateway;
       const res = await fetch(
-        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill`,
+        `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/${endpoint}`,
         { method: "POST", headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ ...form, product: selectedProduct?.name, product_variation: selectedVariation?.name || "", sales_amount: amountToPay.toString(), coupon_code: appliedCoupon?.code || "",
-            seat_image_front: seatImages.front || null,
-            seat_image_back: seatImages.back || null,
-            seat_image_third_row: seatImages.third || null,
-            additional_notes: additionalNotes || null,
-            payment_type: paymentType,
-            full_price: finalPrice,
-            balance_amount: balanceAmount,
-          }) }
+          body: JSON.stringify(payload) }
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
@@ -945,13 +975,36 @@ export default function OrderPage() {
               <div className="space-y-3">
                 <p className="text-white/40 text-xs uppercase tracking-widest text-center font-medium">Pilih Kaedah Pembayaran</p>
 
-                {/* BillPlz */}
+                {/* Gateway picker (only show if more than 1 enabled) */}
+                {gateways.length > 1 && (
+                  <div className="grid grid-cols-2 gap-2">
+                    {gateways.map((g) => (
+                      <button
+                        key={g.provider}
+                        type="button"
+                        onClick={() => setSelectedGateway(g.provider)}
+                        className={`rounded-xl border-2 p-2.5 text-center text-xs font-semibold transition-all ${
+                          selectedGateway === g.provider
+                            ? "border-blue-400 bg-blue-500/20 text-white shadow-lg shadow-blue-900/40"
+                            : "border-white/15 bg-white/5 text-white/70 hover:border-white/30"
+                        }`}
+                      >
+                        {g.display_name}
+                      </button>
+                    ))}
+                  </div>
+                )}
+
+                {/* Pay button */}
                 <Button type="submit"
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  {paymentType === "deposit" ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan BillPlz` : `Bayar RM${amountToPay.toFixed(2)} Dengan BillPlz`}
+                  {paymentType === "deposit"
+                    ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`
+                    : `Bayar RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`}
                 </Button>
-                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui BillPlz Malaysia</p>
+                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui {gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"} Malaysia</p>
+
 
                 {/* Divider */}
                 <div className="flex items-center gap-3 py-1">

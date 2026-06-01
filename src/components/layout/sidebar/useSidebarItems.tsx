@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Users, ShoppingCart, Package, LayoutDashboard } from "lucide-react";
+import { Users, ShoppingCart, Package, LayoutDashboard, CreditCard } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -109,5 +109,6 @@ export function useSidebarItems(orderCounts: {
       ]
     },
     { title: "Products", path: "/products", icon: Package },
+    { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
   ];
 }

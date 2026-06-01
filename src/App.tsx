@@ -18,6 +18,7 @@ import Dashboard from "@/pages/Dashboard";
 import Customers from "@/pages/Customers";
 import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
+import PaymentGateways from "@/pages/PaymentGateways";
 import Leads from "@/pages/Leads";
 import Marketing from "@/pages/Marketing";
 import SystemStatus from "@/pages/SystemStatus";
@@ -62,6 +63,7 @@ function App() {
                 <Route path="/customers/invoice" element={<CustomerInvoice />} />
                 <Route path="/sales" element={<Sales />} />
                 <Route path="/products" element={<Products />} />
+                <Route path="/payment-gateways" element={<PaymentGateways />} />
                 <Route path="/system-status" element={<SystemStatus />} />
               </Route>
               
