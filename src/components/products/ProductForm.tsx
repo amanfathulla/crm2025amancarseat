@@ -11,6 +11,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { Card, CardContent } from "@/components/ui/card";
 import { Upload, X, Youtube, Image as ImageIcon, Loader2, Plus } from "lucide-react";
+import { uploadProductImage } from "@/utils/productImageUpload";
 
 const productVariationSchema = z.object({
   name: z.string(),
@@ -104,27 +105,10 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
       return;
     }
 
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Fail terlalu besar", description: "Maksimum saiz fail 5MB", variant: "destructive" });
-      return;
-    }
-
     setUploadingIndex(imageUrls.length);
     try {
-      const ext = file.name.split(".").pop();
-      const fileName = `product-${Date.now()}-${Math.random().toString(36).slice(2)}.${ext}`;
-
-      const { error: uploadError } = await authClient.storage
-        .from("product-images")
-        .upload(fileName, file, { upsert: true });
-
-      if (uploadError) throw uploadError;
-
-      const { data: urlData } = authClient.storage
-        .from("product-images")
-        .getPublicUrl(fileName);
-
-      const newImages = [...imageUrls, urlData.publicUrl];
+      const publicUrl = await uploadProductImage(authClient, file, "product");
+      const newImages = [...imageUrls, publicUrl];
       setImageUrls(newImages);
 
       // Auto-persist to DB if editing existing product (so user doesn't lose upload if they close)
