@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff, ImagePlus, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
