@@ -24,6 +24,7 @@ import {
   ExternalLink,
   Copy,
   Activity,
+  CreditCard,
 } from "lucide-react";
 
 interface SidebarItemType {
@@ -159,6 +160,7 @@ export function Sidebar() {
     { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
+    { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
     { title: "Sistem Monitor", path: "/system-status", icon: Activity },
   ];
 
