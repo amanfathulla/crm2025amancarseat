@@ -3,7 +3,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Switch } from "@/components/ui/switch";
 import { Search, MoreHorizontal, Edit, Trash, Loader2, Plus, ChevronLeft, Package, ExternalLink, Eye, EyeOff, ImagePlus, X } from "lucide-react";
-import { supabase } from "@/integrations/supabase/client";
 import { cn } from "@/lib/utils";
 import { useAuth } from "@/hooks/useAuth";
 import { Product, ProductVariation } from "@/types/product";
@@ -12,6 +11,7 @@ import ProductForm from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
 import MaterialOrderLinks from "@/components/products/MaterialOrderLinks";
 import ShippingCostSettings from "@/components/products/ShippingCostSettings";
+import { uploadProductImage } from "@/utils/productImageUpload";
 import {
   Dialog,
   DialogContent,
@@ -131,18 +131,9 @@ export default function Products() {
   };
 
   const handleCategoryImageUpload = async (categoryName: string, file: File) => {
-    if (file.size > 5 * 1024 * 1024) {
-      toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB.", variant: "destructive" });
-      return;
-    }
     setUploadingCategoryImage(categoryName);
     try {
-      const ext = file.name.split(".").pop() || "jpg";
-      const path = `category-${categoryName.replace(/\s+/g, "-").toLowerCase()}-${Date.now()}.${ext}`;
-      const { error: upErr } = await authClient.storage.from("product-images").upload(path, file, { upsert: false, contentType: file.type });
-      if (upErr) throw upErr;
-      const { data: pub } = authClient.storage.from("product-images").getPublicUrl(path);
-      const url = pub.publicUrl;
+      const url = await uploadProductImage(authClient, file, `category-${categoryName}`);
       const { error } = await authClient
         .from("category_settings" as any)
         .upsert({ name: categoryName, image_url: url }, { onConflict: "name" } as any);
