@@ -159,3 +159,12 @@ verify_jwt = false
 
 [functions.telegram-notify]
 verify_jwt = false
+
+[functions.payment-create-bill]
+verify_jwt = false
+
+[functions.payment-callback]
+verify_jwt = false
+
+[functions.admin-upload-product-image]
+verify_jwt = false
