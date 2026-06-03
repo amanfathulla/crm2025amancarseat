@@ -12,6 +12,7 @@ import {
 import { Toaster } from "@/components/ui/toaster"
 
 import { AuthProvider } from "@/hooks/useAuth";
+import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
@@ -37,43 +38,45 @@ function App() {
 
   return (
     <AuthProvider>
-      <QueryClientProvider client={queryClient}>
-        <Router>
-          <div className="flex min-h-screen w-full">
-            <Routes>
-              {/* Routes without sidebar */}
-              <Route path="/" element={<Index />} />
-              <Route path="/admin" element={<Login />} />
-              <Route path="/login" element={<Login />} />
-              <Route path="/order" element={<Order />} />
-              <Route path="/order-fullsilk" element={<OrderFullsilk />} />
-              <Route path="/order/thank-you" element={<OrderThankYou />} />
-              
-              {/* Routes with sidebar and authenticated layout */}
-              <Route path="/" element={
-                <div className="flex w-full">
-                  <Sidebar />
-                  <MainLayout />
-                </div>
-              }>
-                <Route path="/dashboard" element={<Dashboard />} />
-                <Route path="/leads" element={<Leads />} />
-                <Route path="/marketing" element={<Marketing />} />
-                <Route path="/customers" element={<Customers />} />
-                <Route path="/customers/receipt" element={<CustomerReceipt />} />
-                <Route path="/customers/invoice" element={<CustomerInvoice />} />
-                <Route path="/sales" element={<Sales />} />
-                <Route path="/products" element={<Products />} />
-                <Route path="/payment-gateways" element={<PaymentGateways />} />
-                <Route path="/system-status" element={<SystemStatus />} />
-              </Route>
-              
-              <Route path="*" element={<NotFound />} />
-            </Routes>
-          </div>
-          <Toaster />
-        </Router>
-      </QueryClientProvider>
+      <LanguageProvider>
+        <QueryClientProvider client={queryClient}>
+          <Router>
+            <div className="flex min-h-screen w-full">
+              <Routes>
+                {/* Routes without sidebar */}
+                <Route path="/" element={<Index />} />
+                <Route path="/admin" element={<Login />} />
+                <Route path="/login" element={<Login />} />
+                <Route path="/order" element={<Order />} />
+                <Route path="/order-fullsilk" element={<OrderFullsilk />} />
+                <Route path="/order/thank-you" element={<OrderThankYou />} />
+
+                {/* Routes with sidebar and authenticated layout */}
+                <Route path="/" element={
+                  <div className="flex w-full">
+                    <Sidebar />
+                    <MainLayout />
+                  </div>
+                }>
+                  <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/leads" element={<Leads />} />
+                  <Route path="/marketing" element={<Marketing />} />
+                  <Route path="/customers" element={<Customers />} />
+                  <Route path="/customers/receipt" element={<CustomerReceipt />} />
+                  <Route path="/customers/invoice" element={<CustomerInvoice />} />
+                  <Route path="/sales" element={<Sales />} />
+                  <Route path="/products" element={<Products />} />
+                  <Route path="/payment-gateways" element={<PaymentGateways />} />
+                  <Route path="/system-status" element={<SystemStatus />} />
+                </Route>
+
+                <Route path="*" element={<NotFound />} />
+              </Routes>
+            </div>
+            <Toaster />
+          </Router>
+        </QueryClientProvider>
+      </LanguageProvider>
     </AuthProvider>
   );
 }
