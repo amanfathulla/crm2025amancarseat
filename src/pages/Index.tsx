@@ -1,28 +1,25 @@
-
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { useAuth } from "@/hooks/useAuth";
-import { Loader2 } from "lucide-react";
+import { HeroSection } from "@/components/sales/HeroSection";
+import { BeforeAfterSection } from "@/components/sales/BeforeAfterSection";
+import { ColorGallery } from "@/components/sales/ColorGallery";
+import { WhyFabricSilk } from "@/components/sales/WhyFabricSilk";
+import { WallOfFame } from "@/components/sales/WallOfFame";
+import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
+import { Footer } from "@/components/sales/Footer";
 
 const Index = () => {
-  const navigate = useNavigate();
-  const { user, isLoading } = useAuth();
-  
-  useEffect(() => {
-    if (!isLoading) {
-      // Redirect to dashboard if user is logged in, otherwise to login page
-      if (user) {
-        navigate("/dashboard");
-      } else {
-        navigate("/admin");
-      }
-    }
-  }, [user, isLoading, navigate]);
-  
-  // Show loading spinner while checking authentication status
+  const handleCTAClick = () => {
+    document.getElementById("quick-order")?.scrollIntoView({ behavior: "smooth" });
+  };
+
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      <Loader2 className="h-8 w-8 animate-spin text-primary/70" />
+    <div className="min-h-screen bg-background w-full">
+      <HeroSection onCTAClick={handleCTAClick} totalReviews={1000} />
+      <BeforeAfterSection />
+      <WhyFabricSilk />
+      <ColorGallery />
+      <WallOfFame reviews={[]} />
+      <QuickOrderForm />
+      <Footer />
     </div>
   );
 };
