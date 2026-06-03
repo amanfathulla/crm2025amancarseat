@@ -19,7 +19,7 @@ export function MainLayout({ children, requireAuth = true }: MainLayoutProps) {
 
   useEffect(() => {
     if (!isLoading && requireAuth && !user) {
-      navigate("/login");
+      navigate("/admin");
     }
     const timer = setTimeout(() => {
       setIsPageLoaded(true);
