@@ -43,6 +43,7 @@ function App() {
             <Routes>
               {/* Routes without sidebar */}
               <Route path="/" element={<Index />} />
+              <Route path="/admin" element={<Login />} />
               <Route path="/login" element={<Login />} />
               <Route path="/order" element={<Order />} />
               <Route path="/order-fullsilk" element={<OrderFullsilk />} />
