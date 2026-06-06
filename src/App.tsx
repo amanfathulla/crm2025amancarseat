@@ -30,6 +30,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
 import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
 import Order from "@/pages/Order";
+import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 
@@ -48,6 +49,7 @@ function App() {
                 <Route path="/admin" element={<Login />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/order" element={<Order />} />
+                <Route path="/testimoni" element={<Testimoni />} />
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
 
