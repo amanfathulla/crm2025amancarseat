@@ -13,12 +13,12 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-card border-t border-border">
+    <footer className="bg-red-700 text-white border-t border-red-900">
       {/* Leather Alternative Section */}
-      <div className="bg-secondary/50 border-b border-border">
+      <div className="bg-red-800/60 border-b border-red-900">
         <div className="container mx-auto px-4 py-8 md:py-10">
           <div className="max-w-2xl mx-auto text-center">
-            <p className="text-base md:text-lg text-muted-foreground mb-4">
+            <p className="text-base md:text-lg text-white/90 mb-4">
               {language === 'bm' 
                 ? 'Nak material kulit? Kami juga ada!' 
                 : 'Want leather material? We have that too!'}
