@@ -1,51 +1,53 @@
 import { useMemo, useState } from "react";
-import { Link } from "react-router-dom";
+import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { ArrowLeft, Star, MessageCircle, CheckCircle } from "lucide-react";
-import fabricBlue from "@/assets/fabric-silk-blue.jpg";
-import fabricBlack from "@/assets/fabric-silk-black.jpg";
-import fabricRedStitch from "@/assets/fabric-silk-red-stitch.jpg";
-import fabricRed from "@/assets/fabric-silk-red.jpg";
-import fabricPurple from "@/assets/fabric-silk-purple.jpg";
-import fabricBrown from "@/assets/fabric-silk-brown.jpg";
-import fabricCream from "@/assets/fabric-silk-cream.jpg";
-import afterSeat from "@/assets/after-seat.jpg";
-import heroSeat from "@/assets/hero-seat-cover.jpg";
+import { Input } from "@/components/ui/input";
+import { ArrowLeft, Star, MessageCircle, Search, Plus, Loader2 } from "lucide-react";
+import { useReviews } from "@/hooks/useReviews";
+import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
 
-const IMAGES = [fabricBlue, fabricBlack, fabricRedStitch, fabricRed, fabricPurple, fabricBrown, fabricCream, afterSeat, heroSeat];
-const NAMES = ["Ahmad","Siti","Rizal","Farah","Hafiz","Ain","Azman","Lina","Faizal","Nora","Hakim","Aisyah","Zaki","Mira","Idris","Liyana","Syafiq","Hana","Amir","Dina","Fauzi","Sara","Yusof","Intan","Razak","Aida","Hisham","Erin","Kamil","Suhaila","Nizam","Wani","Ridzuan","Yana","Khairul","Salmah","Faris","Lily","Hadi","Nadia"];
-const CARS = ["Proton X50","Perodua Myvi","Honda City","Toyota Vios","Proton Saga","Perodua Axia","Nissan Almera","Mazda 3","Perodua Bezza","Honda Civic","Toyota Hilux","Perodua Aruz","Proton X70","Honda HR-V","Toyota Yaris","Perodua Alza","Proton Persona","Mitsubishi Triton","Toyota Innova","Honda BR-V"];
-const REVIEWS = [
-  "Puas hati sangat! Kereta nampak macam baru.",
-  "Material premium, sejuk dan selesa.",
-  "Bini puji habis-habisan, terima kasih ACS!",
-  "Highly recommended! Quality top.",
-  "Pasang sendiri pun mudah, fitting kemas.",
-  "Corak diamond memang nampak mewah.",
-  "Worth the price, kualiti tahan lasak.",
-  "Servis cepat, barang sampai 2 hari.",
-  "Anti slip, anak duduk pun stabil.",
-  "Best beli! Akan order untuk kereta kedua.",
-];
-
-const TOTAL = 312;
-
-const sample = <T,>(arr: T[], i: number) => arr[i % arr.length];
+const PAGE_SIZE = 12;
 
 export default function Testimoni() {
-  const [visible, setVisible] = useState(60);
-  const items = useMemo(
-    () =>
-      Array.from({ length: TOTAL }, (_, i) => ({
-        id: i,
-        name: sample(NAMES, i * 3 + 1),
-        car: sample(CARS, i * 7 + 2),
-        review: sample(REVIEWS, i * 5 + 3),
-        image: sample(IMAGES, i),
-        rating: 5,
-      })),
-    []
-  );
+  const { brand: brandSlug } = useParams<{ brand?: string }>();
+  const navigate = useNavigate();
+  const { reviews, loading, error } = useReviews();
+
+  const activeBrand = getBrandKeyFromSlug(brandSlug);
+  const [search, setSearch] = useState("");
+  const [page, setPage] = useState(1);
+
+  const counts = useMemo(() => {
+    const c: Record<string, number> = {};
+    for (const b of BRANDS) c[b.key] = 0;
+    for (const r of reviews) {
+      for (const b of BRANDS) {
+        if (b.key === "all") c.all += 1;
+        else if (b.match(r.car_model || "")) c[b.key] += 1;
+      }
+    }
+    return c;
+  }, [reviews]);
+
+  const filtered = useMemo(() => {
+    const brand = BRANDS.find((b) => b.key === activeBrand)!;
+    const term = search.trim().toLowerCase();
+    return reviews.filter((r) => {
+      if (!brand.match(r.car_model || "")) return false;
+      if (term && !(r.car_model || "").toLowerCase().includes(term) && !(r.name || "").toLowerCase().includes(term)) return false;
+      return true;
+    });
+  }, [reviews, activeBrand, search]);
+
+  const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
+  const currentPage = Math.min(page, totalPages);
+  const pageItems = filtered.slice((currentPage - 1) * PAGE_SIZE, currentPage * PAGE_SIZE);
+
+  const handleBrandChange = (key: string) => {
+    setPage(1);
+    if (key === "all") navigate("/testimoni");
+    else navigate(`/testimoni/${key}`);
+  };
 
   const handleReview = () => {
     const msg = encodeURIComponent("Hi ACS, saya nak hantar review & gambar seat saya 🙌");
@@ -54,7 +56,6 @@ export default function Testimoni() {
 
   return (
     <div className="min-h-screen bg-black text-white">
-      {/* Header */}
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/70 border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <Button asChild variant="ghost" className="text-white hover:bg-white/10">
@@ -64,64 +65,179 @@ export default function Testimoni() {
             <img src="/acs-logo.png" alt="ACS" className="h-7" />
             <span className="font-bold tracking-wide hidden sm:inline">AMANCARSEAT®</span>
           </div>
-          <Button onClick={handleReview} className="bg-[#FFC107] hover:bg-[#FFD54F] text-black font-bold rounded-full">
+          <Button onClick={handleReview} className="bg-[#FFC107] hover:bg-[#FFD54F] text-black font-bold rounded-full hidden md:inline-flex">
             <MessageCircle className="w-4 h-4 mr-2" /> Tulis Review
           </Button>
         </div>
       </header>
 
-      {/* Hero */}
-      <section className="container mx-auto px-4 py-10 md:py-16 text-center">
-        <div className="inline-flex items-center gap-2 bg-white/10 rounded-full px-4 py-2 mb-4">
-          <CheckCircle className="w-4 h-4 text-[#FFC107]" />
-          <span className="text-sm">WhatsApp Verified</span>
+      <section className="container mx-auto px-4 py-10 md:py-14 text-center">
+        <h1 className="text-4xl md:text-5xl font-black mb-2">Galeri Testimoni</h1>
+        <p className="text-gray-400">{counts.all}+ Testimoni Sebenar</p>
+
+        {/* Brand chips */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-8">
+          {BRANDS.map((b) => {
+            const isActive = activeBrand === b.key;
+            return (
+              <button
+                key={b.key}
+                onClick={() => handleBrandChange(b.key)}
+                className={`flex items-center gap-2 px-4 py-2 rounded-full text-sm font-semibold transition border ${
+                  isActive
+                    ? "bg-red-600 text-white border-red-600 shadow-lg shadow-red-900/40"
+                    : "bg-neutral-900 text-gray-300 border-white/10 hover:bg-neutral-800"
+                }`}
+              >
+                {b.label}
+                <span className={`text-xs rounded-full px-2 py-0.5 ${isActive ? "bg-black/30" : "bg-black/60"}`}>
+                  {counts[b.key] ?? 0}
+                </span>
+              </button>
+            );
+          })}
         </div>
-        <h1 className="text-4xl md:text-6xl font-black mb-3">Wall of Fame</h1>
-        <p className="text-gray-400 max-w-2xl mx-auto">
-          {TOTAL}+ testimoni sebenar dari pelanggan AmanCarSeat di seluruh Malaysia.
-        </p>
-        <div className="flex flex-wrap items-center justify-center gap-6 mt-6 text-sm">
-          <span className="flex items-center gap-1"><Star className="w-4 h-4 fill-[#FFC107] text-[#FFC107]" /> 4.9/5 Rating</span>
-          <span>{TOTAL}+ Customer Verified</span>
+
+        {/* Search */}
+        <div className="max-w-xl mx-auto mt-6 relative">
+          <Search className="w-4 h-4 absolute left-4 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Input
+            value={search}
+            onChange={(e) => {
+              setSearch(e.target.value);
+              setPage(1);
+            }}
+            placeholder="Cari model kereta (cth: Myvi, Civic, Vios)..."
+            className="pl-10 bg-neutral-900 border-white/10 text-white placeholder:text-gray-500 rounded-full h-11"
+          />
         </div>
       </section>
 
-      {/* Grid */}
       <section className="container mx-auto px-4 pb-16">
-        <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 lg:grid-cols-5 gap-3">
-          {items.slice(0, visible).map((r) => (
-            <div key={r.id} className="group relative aspect-square rounded-xl overflow-hidden bg-neutral-900 border border-white/10">
-              <img src={r.image} alt={r.name} className="w-full h-full object-cover group-hover:scale-105 transition-transform" loading="lazy" />
-              <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/30 to-transparent" />
-              <div className="absolute bottom-2 left-2 right-2">
-                <p className="text-white text-xs font-semibold truncate">{r.name}</p>
-                <p className="text-white/70 text-[10px] truncate">{r.car}</p>
-                <div className="flex gap-0.5 mt-1">
-                  {Array.from({ length: 5 }).map((_, i) => (
-                    <Star key={i} className="w-2.5 h-2.5 fill-[#FFC107] text-[#FFC107]" />
-                  ))}
-                </div>
-                <p className="text-white/80 text-[10px] mt-1 line-clamp-2">"{r.review}"</p>
-              </div>
-            </div>
-          ))}
+        <div className="flex items-center justify-between mb-4">
+          <p className="text-sm text-gray-400">{filtered.length} testimoni ditemui</p>
+          <Button onClick={handleReview} className="bg-red-600 hover:bg-red-700 text-white rounded-full">
+            <Plus className="w-4 h-4 mr-2" /> Tulis Review Anda
+          </Button>
         </div>
 
-        {visible < items.length && (
-          <div className="flex justify-center mt-10">
-            <Button onClick={() => setVisible((v) => v + 60)} size="lg" className="bg-white text-black hover:bg-gray-200 rounded-full px-8">
-              Muat Lagi ({items.length - visible} lagi)
-            </Button>
+        {loading ? (
+          <div className="flex items-center justify-center py-20 text-gray-400">
+            <Loader2 className="w-5 h-5 mr-2 animate-spin" /> Memuat testimoni...
+          </div>
+        ) : error ? (
+          <div className="text-center py-20 text-red-400">{error}</div>
+        ) : pageItems.length === 0 ? (
+          <div className="text-center py-20 text-gray-400">Tiada testimoni dijumpai.</div>
+        ) : (
+          <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            {pageItems.map((r) => (
+              <ReviewCard key={r.id} review={r} />
+            ))}
           </div>
         )}
 
-        <div className="text-center mt-12">
-          <p className="text-gray-400 mb-4">Sudah beli dari kami? Kongsi pengalaman anda!</p>
-          <Button onClick={handleReview} size="lg" className="bg-[#FFC107] hover:bg-[#FFD54F] text-black font-bold rounded-full px-10">
-            <MessageCircle className="w-5 h-5 mr-2" /> Hantar Review Saya
-          </Button>
-        </div>
+        {/* Pagination */}
+        {totalPages > 1 && (
+          <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
+        )}
       </section>
+    </div>
+  );
+}
+
+function ReviewCard({ review }: { review: Review }) {
+  const images = (review.images ?? []).filter(Boolean);
+  return (
+    <div className="bg-neutral-950 border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
+      <div className="flex items-start justify-between gap-2">
+        <div className="min-w-0">
+          <p className="font-bold truncate">{review.name || "ACS Customer"}</p>
+          <p className="text-xs text-gray-400 truncate">{review.car_model || "—"}</p>
+        </div>
+        <div className="flex gap-0.5 shrink-0">
+          {Array.from({ length: 5 }).map((_, i) => (
+            <Star
+              key={i}
+              className={`w-3.5 h-3.5 ${i < (review.rating || 5) ? "fill-red-500 text-red-500" : "text-white/20"}`}
+            />
+          ))}
+        </div>
+      </div>
+      {review.review && (
+        <p className="text-sm text-gray-300 line-clamp-3 italic">"{review.review}"</p>
+      )}
+      <div className="grid grid-cols-2 gap-2 text-xs">
+        <div className="flex items-center justify-between bg-neutral-900 rounded-md px-2 py-1.5">
+          <span className="text-gray-400">Kualiti</span>
+          <span className="flex items-center gap-1 font-semibold">
+            <Star className="w-3 h-3 fill-red-500 text-red-500" /> {review.quality_rating ?? 5}
+          </span>
+        </div>
+        <div className="flex items-center justify-between bg-neutral-900 rounded-md px-2 py-1.5">
+          <span className="text-gray-400">Harga</span>
+          <span className="flex items-center gap-1 font-semibold">
+            <Star className="w-3 h-3 fill-red-500 text-red-500" /> {review.price_rating ?? 5}
+          </span>
+        </div>
+      </div>
+      {images.length > 0 && (
+        <div className="grid grid-cols-3 gap-1.5">
+          {images.slice(0, 3).map((src, i) => (
+            <a key={i} href={src} target="_blank" rel="noreferrer" className="aspect-square rounded-md overflow-hidden bg-neutral-900 border border-white/5">
+              <img src={src} alt={`${review.name} ${i + 1}`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
+            </a>
+          ))}
+        </div>
+      )}
+    </div>
+  );
+}
+
+function Pagination({ page, totalPages, onChange }: { page: number; totalPages: number; onChange: (p: number) => void }) {
+  const pages: (number | "...")[] = [];
+  const add = (n: number | "...") => pages.push(n);
+  const window = 1;
+  for (let i = 1; i <= totalPages; i++) {
+    if (i === 1 || i === totalPages || (i >= page - window && i <= page + window)) {
+      add(i);
+    } else if (pages[pages.length - 1] !== "...") {
+      add("...");
+    }
+  }
+  return (
+    <div className="flex flex-wrap items-center justify-center gap-1.5 mt-10">
+      <button
+        onClick={() => onChange(Math.max(1, page - 1))}
+        disabled={page === 1}
+        className="w-9 h-9 rounded-md bg-neutral-900 border border-white/10 disabled:opacity-40 hover:bg-neutral-800"
+      >
+        ‹
+      </button>
+      {pages.map((p, i) =>
+        p === "..." ? (
+          <span key={`d-${i}`} className="px-2 text-gray-500">…</span>
+        ) : (
+          <button
+            key={p}
+            onClick={() => onChange(p)}
+            className={`min-w-9 h-9 px-3 rounded-md border text-sm font-semibold ${
+              p === page
+                ? "bg-red-600 text-white border-red-600"
+                : "bg-neutral-900 text-gray-300 border-white/10 hover:bg-neutral-800"
+            }`}
+          >
+            {p}
+          </button>
+        )
+      )}
+      <button
+        onClick={() => onChange(Math.min(totalPages, page + 1))}
+        disabled={page === totalPages}
+        className="w-9 h-9 rounded-md bg-neutral-900 border border-white/10 disabled:opacity-40 hover:bg-neutral-800"
+      >
+        ›
+      </button>
     </div>
   );
 }
