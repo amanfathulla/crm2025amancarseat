@@ -23,16 +23,15 @@ export const Footer = () => {
                 ? 'Nak material kulit? Kami juga ada!' 
                 : 'Want leather material? We have that too!'}
             </p>
-            <p className="text-sm text-muted-foreground mb-6">
+            <p className="text-sm text-white/80 mb-6">
               {language === 'bm' 
                 ? 'Koleksi Sensico Leather Premium dengan corak Diamond yang sama – untuk boss yang prefer feel kulit.' 
                 : 'Sensico Leather Premium collection with the same Diamond pattern – for those who prefer the leather feel.'}
             </p>
             <Button 
-              variant="secondary"
               size="lg"
               onClick={handleLeatherCatalog}
-              className="px-8 py-5 rounded-full font-bold border-2 border-border hover:border-primary/50 transition-all"
+              className="px-8 py-5 rounded-full font-bold bg-white text-red-700 hover:bg-white/90 border-0 transition-all"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               {language === 'bm' ? 'Lihat Katalog Kulit' : 'View Leather Catalog'}
@@ -46,12 +45,12 @@ export const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-primary rounded-lg flex items-center justify-center">
-                <span className="text-primary-foreground font-bold text-lg">A</span>
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
+                <span className="text-red-700 font-bold text-lg">A</span>
               </div>
-              <span className="font-bold text-xl text-foreground">AMANCARSEAT</span>
+              <span className="font-bold text-xl text-white">AMANCARSEAT</span>
             </div>
-            <p className="text-sm text-muted-foreground leading-relaxed">
+            <p className="text-sm text-white/85 leading-relaxed">
               {language === 'bm' 
                 ? 'Pakar sarung tempat duduk kereta premium di Malaysia. Lebih 10 tahun pengalaman dalam industri automotif.'
                 : 'Premium car seat cover specialist in Malaysia. Over 10 years of experience in the automotive industry.'}
@@ -60,25 +59,25 @@ export const Footer = () => {
 
           {/* Contact Info */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-foreground">
+            <h4 className="font-semibold text-white">
               {language === 'bm' ? 'Hubungi Kami' : 'Contact Us'}
             </h4>
             <div className="space-y-3">
               <a 
                 href="tel:+60194503184" 
-                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-3 text-sm text-white/85 hover:text-white transition-colors"
               >
                 <Phone className="w-4 h-4" />
                 019-450 3184
               </a>
               <a 
                 href="mailto:admin@amancarseat.com" 
-                className="flex items-center gap-3 text-sm text-muted-foreground hover:text-primary transition-colors"
+                className="flex items-center gap-3 text-sm text-white/85 hover:text-white transition-colors"
               >
                 <Mail className="w-4 h-4" />
                 admin@amancarseat.com
               </a>
-              <div className="flex items-start gap-3 text-sm text-muted-foreground">
+              <div className="flex items-start gap-3 text-sm text-white/85">
                 <MapPin className="w-4 h-4 mt-0.5 flex-shrink-0" />
                 <span>Kota Bharu, Kelantan</span>
               </div>
@@ -87,18 +86,18 @@ export const Footer = () => {
 
           {/* Business Hours */}
           <div className="space-y-4">
-            <h4 className="font-semibold text-foreground">
+            <h4 className="font-semibold text-white">
               {language === 'bm' ? 'Waktu Operasi' : 'Business Hours'}
             </h4>
             <div className="space-y-3">
-              <div className="flex items-center gap-3 text-sm text-muted-foreground">
+              <div className="flex items-center gap-3 text-sm text-white/85">
                 <Clock className="w-4 h-4" />
                 <div>
                   <p>{language === 'bm' ? 'Isnin - Sabtu' : 'Monday - Saturday'}</p>
-                  <p className="font-medium text-foreground">9:00 AM - 6:00 PM</p>
+                  <p className="font-medium text-white">9:00 AM - 6:00 PM</p>
                 </div>
               </div>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-white/85">
                 {language === 'bm' ? 'Ahad: Tutup' : 'Sunday: Closed'}
               </p>
             </div>
@@ -106,11 +105,11 @@ export const Footer = () => {
         </div>
 
         {/* Bottom bar */}
-        <div className="border-t border-border mt-8 pt-6 text-center space-y-2">
-          <p className="text-sm text-muted-foreground">
+        <div className="border-t border-white/20 mt-8 pt-6 text-center space-y-2">
+          <p className="text-sm text-white/85">
             © {new Date().getFullYear()} Aman Car Seat. {language === 'bm' ? 'Hak Cipta Terpelihara.' : 'All Rights Reserved.'}
           </p>
-          <p className="text-xs text-muted-foreground/70">
+          <p className="text-xs text-white/70">
             {new Date().toLocaleDateString(language === 'bm' ? 'ms-MY' : 'en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}{' '}
             | {new Date().toLocaleTimeString(language === 'bm' ? 'ms-MY' : 'en-MY', { hour: '2-digit', minute: '2-digit', hour12: true })}
           </p>
