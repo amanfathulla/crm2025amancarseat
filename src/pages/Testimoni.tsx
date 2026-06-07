@@ -2,9 +2,12 @@ import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Star, MessageCircle, Search, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Search, Plus, Loader2 } from "lucide-react";
 import { useReviews } from "@/hooks/useReviews";
 import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
+import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
+import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
+import { Footer } from "@/components/sales/Footer";
 
 const PAGE_SIZE = 12;
 
@@ -16,6 +19,7 @@ export default function Testimoni() {
   const activeBrand = getBrandKeyFromSlug(brandSlug);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -49,13 +53,10 @@ export default function Testimoni() {
     else navigate(`/testimoni/${key}`);
   };
 
-  const handleReview = () => {
-    const msg = encodeURIComponent("Hi ACS, saya nak hantar review & gambar seat saya 🙌");
-    window.open(`https://wa.me/60194503184?text=${msg}`, "_blank");
-  };
+  const handleReview = () => setReviewOpen(true);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen w-full flex-1 bg-black text-white">
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/70 border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <Button asChild variant="ghost" className="text-white hover:bg-white/10">
@@ -65,9 +66,7 @@ export default function Testimoni() {
             <img src="/acs-logo.png" alt="ACS" className="h-7" />
             <span className="font-bold tracking-wide hidden sm:inline">AMANCARSEAT®</span>
           </div>
-          <Button onClick={handleReview} className="bg-[#FFC107] hover:bg-[#FFD54F] text-black font-bold rounded-full hidden md:inline-flex">
-            <MessageCircle className="w-4 h-4 mr-2" /> Tulis Review
-          </Button>
+          <span />
         </div>
       </header>
 
@@ -142,6 +141,14 @@ export default function Testimoni() {
           <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         )}
       </section>
+
+      <section id="quick-order" className="border-t border-white/10">
+        <QuickOrderForm />
+      </section>
+
+      <Footer />
+
+      <ReviewSubmitDialog open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>
   );
 }
