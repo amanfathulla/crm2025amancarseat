@@ -141,6 +141,14 @@ export default function Testimoni() {
           <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         )}
       </section>
+
+      <section id="quick-order" className="border-t border-white/10">
+        <QuickOrderForm />
+      </section>
+
+      <Footer />
+
+      <ReviewSubmitDialog open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>
   );
 }
