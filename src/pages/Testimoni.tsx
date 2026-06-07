@@ -19,6 +19,7 @@ export default function Testimoni() {
   const activeBrand = getBrandKeyFromSlug(brandSlug);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
+  const [reviewOpen, setReviewOpen] = useState(false);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
