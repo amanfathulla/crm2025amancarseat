@@ -53,13 +53,10 @@ export default function Testimoni() {
     else navigate(`/testimoni/${key}`);
   };
 
-  const handleReview = () => {
-    const msg = encodeURIComponent("Hi ACS, saya nak hantar review & gambar seat saya 🙌");
-    window.open(`https://wa.me/60194503184?text=${msg}`, "_blank");
-  };
+  const handleReview = () => setReviewOpen(true);
 
   return (
-    <div className="min-h-screen bg-black text-white">
+    <div className="min-h-screen w-full flex-1 bg-black text-white">
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/70 border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
           <Button asChild variant="ghost" className="text-white hover:bg-white/10">
@@ -69,9 +66,7 @@ export default function Testimoni() {
             <img src="/acs-logo.png" alt="ACS" className="h-7" />
             <span className="font-bold tracking-wide hidden sm:inline">AMANCARSEAT®</span>
           </div>
-          <Button onClick={handleReview} className="bg-[#FFC107] hover:bg-[#FFD54F] text-black font-bold rounded-full hidden md:inline-flex">
-            <MessageCircle className="w-4 h-4 mr-2" /> Tulis Review
-          </Button>
+          <span />
         </div>
       </header>
 
