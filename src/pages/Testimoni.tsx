@@ -2,9 +2,12 @@ import { useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { ArrowLeft, Star, MessageCircle, Search, Plus, Loader2 } from "lucide-react";
+import { ArrowLeft, Star, Search, Plus, Loader2 } from "lucide-react";
 import { useReviews } from "@/hooks/useReviews";
 import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
+import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
+import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
+import { Footer } from "@/components/sales/Footer";
 
 const PAGE_SIZE = 12;
 
