@@ -89,9 +89,11 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
 
     setSubmitting(true);
     try {
-      const [avatarUrl, imageUrls, videoUrl] = await Promise.all([
+      const [avatarUrl, imageUrls, selfieUrl, boxUrl, videoUrl] = await Promise.all([
         avatar ? uploadToReviews(avatar, "avatars") : Promise.resolve(null),
         Promise.all(images.map((f) => uploadToReviews(f, "images"))),
+        selfie ? uploadToReviews(selfie, "selfies") : Promise.resolve(null),
+        boxImage ? uploadToReviews(boxImage, "box") : Promise.resolve(null),
         video ? uploadToReviews(video, "videos") : Promise.resolve(null),
       ]);
 
@@ -108,6 +110,8 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
         images: imageUrls,
         video: videoUrl,
         avatar_url: avatarUrl,
+        selfie_url: selfieUrl,
+        box_image_url: boxUrl,
       });
       if (error) throw error;
 
