@@ -55,13 +55,15 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
   const [model, setModel] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const [boxImage, setBoxImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setRating(5); setQuality(5); setPrice(5);
     setAvatar(null); setName(""); setBrand(""); setModel("");
-    setReviewText(""); setImages([]); setVideo(null);
+    setReviewText(""); setImages([]); setSelfie(null); setBoxImage(null); setVideo(null);
   };
 
   const handleImages = (files: FileList | null) => {
