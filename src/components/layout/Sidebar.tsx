@@ -23,8 +23,8 @@ import {
   ShoppingBag,
   ExternalLink,
   Copy,
-  Activity,
   CreditCard,
+  Star,
 } from "lucide-react";
 
 interface SidebarItemType {
