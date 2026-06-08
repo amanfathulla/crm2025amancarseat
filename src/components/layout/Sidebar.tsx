@@ -355,9 +355,18 @@ export function Sidebar() {
             </NavLink>
           )}
 
-          {/* Order Page Card */}
+          {/* Link Tempahan Card -> Dashboard khas */}
           {(expanded || (isMobile && mobileOpen)) && (
-            <div className="block rounded-xl p-3 mt-2 transition-all duration-200 bg-gradient-to-br from-violet-500/20 to-violet-600/20">
+            <NavLink
+              to="/link-tempahan"
+              onClick={() => isMobile && setMobileOpen(false)}
+              className={cn(
+                "block rounded-xl p-3 mt-2 transition-all duration-200 border",
+                location.pathname === "/link-tempahan"
+                  ? "bg-violet-600 border-violet-400 shadow-lg"
+                  : "bg-gradient-to-br from-violet-500/20 to-violet-600/20 border-violet-500/30 hover:from-violet-500/30 hover:to-violet-600/30"
+              )}
+            >
               <div className="flex items-center justify-between mb-1">
                 <div className="flex items-center gap-2">
                   <ShoppingBag className="h-4 w-4 text-violet-300" />
@@ -367,18 +376,21 @@ export function Sidebar() {
                   href={`${window.location.origin}/order`}
                   target="_blank"
                   rel="noopener noreferrer"
-                  onClick={() => isMobile && setMobileOpen(false)}
+                  onClick={(e) => e.stopPropagation()}
                   className="text-violet-300 hover:text-violet-100"
+                  title="Buka link tempahan"
                 >
                   <ExternalLink className="h-3 w-3" />
                 </a>
               </div>
               <div className="flex items-center gap-1 mt-2 bg-white/10 rounded-lg px-2 py-1">
                 <span className="text-[10px] text-white/70 flex-1 truncate">
-                  {window.location.origin}/order
+                  Urus link & kos penghantaran
                 </span>
                 <button
-                  onClick={() => {
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
                     navigator.clipboard.writeText(`${window.location.origin}/order`);
                     setCopied(true);
                     toast({ title: "✅ Link disalin!", description: `${window.location.origin}/order` });
@@ -390,25 +402,26 @@ export function Sidebar() {
                   {copied ? <CheckCircle className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
                 </button>
               </div>
-            </div>
+            </NavLink>
           )}
 
           {/* Collapsed Order Icon */}
           {!expanded && !isMobile && (
-            <a
-              href="/order"
-              target="_blank"
-              rel="noopener noreferrer"
+            <NavLink
+              to="/link-tempahan"
               className={cn(
                 "relative flex h-11 w-full items-center rounded-lg transition-all duration-200",
-                "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
+                location.pathname === "/link-tempahan"
+                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
+                  : "text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground"
               )}
             >
               <div className="grid h-full w-12 place-content-center">
                 <ShoppingBag className="h-5 w-5" />
               </div>
-            </a>
+            </NavLink>
           )}
+
 
 
         </nav>
