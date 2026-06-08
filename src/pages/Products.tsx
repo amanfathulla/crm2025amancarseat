@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
 import { uploadProductImage } from "@/utils/productImageUpload";
-import { uploadProductImage } from "@/utils/productImageUpload";
 import {
   Dialog,
   DialogContent,
