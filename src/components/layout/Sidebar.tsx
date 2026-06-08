@@ -160,8 +160,8 @@ export function Sidebar() {
     { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
+    { title: "Reviews", path: "/reviews", icon: Star },
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
-    { title: "Sistem Monitor", path: "/system-status", icon: Activity },
   ];
 
   const orderPageUrl = "/order";
