@@ -9,8 +9,7 @@ import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
-import MaterialOrderLinks from "@/components/products/MaterialOrderLinks";
-import ShippingCostSettings from "@/components/products/ShippingCostSettings";
+import { uploadProductImage } from "@/utils/productImageUpload";
 import { uploadProductImage } from "@/utils/productImageUpload";
 import {
   Dialog,
