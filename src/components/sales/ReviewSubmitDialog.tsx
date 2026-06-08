@@ -55,13 +55,15 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
   const [model, setModel] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [images, setImages] = useState<File[]>([]);
+  const [selfie, setSelfie] = useState<File | null>(null);
+  const [boxImage, setBoxImage] = useState<File | null>(null);
   const [video, setVideo] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setRating(5); setQuality(5); setPrice(5);
     setAvatar(null); setName(""); setBrand(""); setModel("");
-    setReviewText(""); setImages([]); setVideo(null);
+    setReviewText(""); setImages([]); setSelfie(null); setBoxImage(null); setVideo(null);
   };
 
   const handleImages = (files: FileList | null) => {
@@ -87,9 +89,11 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
 
     setSubmitting(true);
     try {
-      const [avatarUrl, imageUrls, videoUrl] = await Promise.all([
+      const [avatarUrl, imageUrls, selfieUrl, boxUrl, videoUrl] = await Promise.all([
         avatar ? uploadToReviews(avatar, "avatars") : Promise.resolve(null),
         Promise.all(images.map((f) => uploadToReviews(f, "images"))),
+        selfie ? uploadToReviews(selfie, "selfies") : Promise.resolve(null),
+        boxImage ? uploadToReviews(boxImage, "box") : Promise.resolve(null),
         video ? uploadToReviews(video, "videos") : Promise.resolve(null),
       ]);
 
@@ -106,6 +110,8 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
         images: imageUrls,
         video: videoUrl,
         avatar_url: avatarUrl,
+        selfie_url: selfieUrl,
+        box_image_url: boxUrl,
       });
       if (error) throw error;
 
@@ -201,12 +207,28 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
             <p className="text-xs text-gray-400 mt-1">{images.length}/5 gambar dipilih</p>
           </div>
 
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
+              <Label className="text-white">Selfie bersama ACS (Pilihan)</Label>
+              <Input type="file" accept="image/*" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)}
+                className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
+              <p className="text-xs text-gray-400 mt-1">{selfie ? "1 gambar dipilih" : "Selfie anda dengan car seat"}</p>
+            </div>
+            <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
+              <Label className="text-white">Gambar Box ACS (Pilihan)</Label>
+              <Input type="file" accept="image/*" onChange={(e) => setBoxImage(e.target.files?.[0] ?? null)}
+                className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
+              <p className="text-xs text-gray-400 mt-1">{boxImage ? "1 gambar dipilih" : "Gambar kotak/packaging ACS"}</p>
+            </div>
+          </div>
+
           <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
             <Label className="text-white">Video Produk (Pilihan)</Label>
             <Input type="file" accept="video/*" onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
               className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
             <p className="text-xs text-gray-400 mt-1">Format yang disokong: MP4, MOV, AVI (maksimum 50MB)</p>
           </div>
+
 
           <Button type="submit" disabled={submitting} className="w-full bg-red-600 hover:bg-red-700 text-white font-bold py-6 rounded-xl">
             {submitting ? (<><Loader2 className="w-4 h-4 mr-2 animate-spin" /> Menghantar...</>) : (<><Upload className="w-4 h-4 mr-2" /> Hantar Ulasan</>)}

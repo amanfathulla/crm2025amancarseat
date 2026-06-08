@@ -9,8 +9,6 @@ import { Product, ProductVariation } from "@/types/product";
 import { useToast } from "@/hooks/use-toast";
 import ProductForm from "@/components/products/ProductForm";
 import DeleteProductDialog from "@/components/products/DeleteProductDialog";
-import MaterialOrderLinks from "@/components/products/MaterialOrderLinks";
-import ShippingCostSettings from "@/components/products/ShippingCostSettings";
 import { uploadProductImage } from "@/utils/productImageUpload";
 import {
   Dialog,
@@ -331,26 +329,20 @@ export default function Products() {
         })}
       </div>
 
-      {/* Material Order Links Panel */}
-      <MaterialOrderLinks />
-
-      {/* Quick Stats + Shipping Settings */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-4">
-        <div className="bg-card rounded-xl border p-4 lg:col-span-1">
-          <div className="flex items-center gap-3">
-            <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
-              <Package className="h-5 w-5 text-primary" />
-            </div>
-            <div>
-              <p className="text-sm text-muted-foreground">Jumlah Produk</p>
-              <p className="text-2xl font-bold">{products.length}</p>
-            </div>
+      {/* Quick Stats */}
+      <div className="bg-card rounded-xl border p-4">
+        <div className="flex items-center gap-3">
+          <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
+            <Package className="h-5 w-5 text-primary" />
+          </div>
+          <div>
+            <p className="text-sm text-muted-foreground">Jumlah Produk</p>
+            <p className="text-2xl font-bold">{products.length}</p>
           </div>
         </div>
-
-        <div className="lg:col-span-2">
-          <ShippingCostSettings />
-        </div>
+        <p className="text-xs text-muted-foreground mt-3">
+          💡 Link tempahan setiap material & tetapan kos penghantaran kini berada di menu <strong>Link Tempahan</strong> pada sidebar.
+        </p>
       </div>
     </div>
   );

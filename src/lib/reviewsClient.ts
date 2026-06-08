@@ -21,9 +21,11 @@ export interface Review {
   avatar_url: string | null;
   quality_rating: number | null;
   price_rating: number | null;
+  selfie_url?: string | null;
+  box_image_url?: string | null;
 }
 
-// 17 brand kereta utama di Malaysia
+// 14 brand kereta tempatan & Asia di Malaysia (tanpa BMW/Audi/Mercedes)
 export const CAR_BRANDS = [
   { key: "perodua", label: "Perodua", regex: /perodua|myvi|axia|bezza|alza|aruz|kancil|kembara|kelisa|kenari|viva|ativa|nautica|rusa/i },
   { key: "proton", label: "Proton", regex: /proton|saga|waja|wira|persona|preve|inspira|exora|iriz|x50|x70|x90|s70|satria|gen-?2|perdana|tiara/i },
@@ -39,10 +41,8 @@ export const CAR_BRANDS = [
   { key: "suzuki", label: "Suzuki", regex: /suzuki|swift|sx4|vitara|jimny|ertiga|alto|baleno|celerio|s-?presso/i },
   { key: "subaru", label: "Subaru", regex: /subaru|impreza|forester|outback|xv|legacy|brz|wrx|crosstrek/i },
   { key: "volkswagen", label: "Volkswagen", regex: /volkswagen|\bvw\b|polo|golf|jetta|passat|tiguan|touareg|vento|beetle/i },
-  { key: "bmw", label: "BMW", regex: /\bbmw\b|\b[1-8]\s?series\b|\b(?:1|2|3|4|5|6|7|8)(?:18|20|25|28|30|35|40|50)i\b|\bx[1-7]\b|\bm[2-8]\b/i },
-  { key: "mercedes", label: "Mercedes-Benz", regex: /mercedes|merc|benz|\b[acegs]-?class\b|\b[acegs]\d{3}\b|gla|glb|glc|gle|gls|cla|amg|sprinter|vito|viano/i },
-  { key: "audi", label: "Audi", regex: /\baudi\b|\ba[1-8]\b|\bq[2-8]\b|\brs[3-7]\b|\bs[3-8]\b|tt\b/i },
 ];
+
 
 export const BRANDS = [
   { key: "all", label: "Semua", match: () => true },

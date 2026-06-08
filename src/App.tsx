@@ -22,7 +22,8 @@ import Products from "@/pages/Products";
 import PaymentGateways from "@/pages/PaymentGateways";
 import Leads from "@/pages/Leads";
 import Marketing from "@/pages/Marketing";
-import SystemStatus from "@/pages/SystemStatus";
+import Reviews from "@/pages/Reviews";
+import LinkTempahan from "@/pages/LinkTempahan";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -70,7 +71,8 @@ function App() {
                   <Route path="/sales" element={<Sales />} />
                   <Route path="/products" element={<Products />} />
                   <Route path="/payment-gateways" element={<PaymentGateways />} />
-                  <Route path="/system-status" element={<SystemStatus />} />
+                  <Route path="/reviews" element={<Reviews />} />
+                  <Route path="/link-tempahan" element={<LinkTempahan />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
