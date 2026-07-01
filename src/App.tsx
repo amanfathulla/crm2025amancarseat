@@ -16,6 +16,7 @@ import { LanguageProvider } from "@/contexts/LanguageContext";
 import Index from "@/pages/Index";
 import Login from "@/pages/Login";
 import Dashboard from "@/pages/Dashboard";
+import LiveDashboard from "@/pages/LiveDashboard";
 import Customers from "@/pages/Customers";
 import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
@@ -64,6 +65,7 @@ function App() {
                   </div>
                 }>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/live-dashboard" element={<LiveDashboard />} />
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/marketing" element={<Marketing />} />
                   <Route path="/customers" element={<Customers />} />

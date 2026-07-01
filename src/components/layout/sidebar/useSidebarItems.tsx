@@ -1,5 +1,5 @@
 import { useNavigate } from "react-router-dom";
-import { Users, ShoppingCart, Package, LayoutDashboard, CreditCard } from "lucide-react";
+import { Users, ShoppingCart, Package, LayoutDashboard, CreditCard, Radio } from "lucide-react";
 import { useState, useEffect } from "react";
 import { useAuth } from "@/hooks/useAuth";
 
@@ -56,6 +56,7 @@ export function useSidebarItems(orderCounts: {
 
   return [
     { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { title: "Live Dashboard", path: "/live-dashboard", icon: Radio },
     { 
       title: "Customers", 
       path: "/customers", 
