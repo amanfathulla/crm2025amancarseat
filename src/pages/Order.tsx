@@ -257,6 +257,17 @@ export default function OrderPage() {
     setSelectedProduct(null); setSelectedVariation(null);
     fetchProducts(cat.label);
     setStep("product");
+    // Reflect selection in URL so views are tracked per material
+    try {
+      const slug = cat.id.toLowerCase();
+      window.history.pushState({}, "", `/order/material${slug}`);
+    } catch {}
+    // Track page view (fire-and-forget)
+    (supabase as any).from("page_views").insert({
+      material: cat.label,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+    }).then(() => {});
   };
 
   const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
