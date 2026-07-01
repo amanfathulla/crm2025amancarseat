@@ -56,6 +56,7 @@ export function useSidebarItems(orderCounts: {
 
   return [
     { title: "Dashboard", path: "/dashboard", icon: LayoutDashboard },
+    { title: "Live Dashboard", path: "/live-dashboard", icon: Radio },
     { 
       title: "Customers", 
       path: "/customers", 
