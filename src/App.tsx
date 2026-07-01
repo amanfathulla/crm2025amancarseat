@@ -65,6 +65,7 @@ function App() {
                   </div>
                 }>
                   <Route path="/dashboard" element={<Dashboard />} />
+                  <Route path="/live-dashboard" element={<LiveDashboard />} />
                   <Route path="/leads" element={<Leads />} />
                   <Route path="/marketing" element={<Marketing />} />
                   <Route path="/customers" element={<Customers />} />
