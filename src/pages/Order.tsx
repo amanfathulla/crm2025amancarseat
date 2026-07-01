@@ -180,15 +180,24 @@ export default function OrderPage() {
     });
   }, []);
 
-  // Auto-select material from URL query param (e.g. ?material=fullsilk)
+  // Auto-select material from URL path (/order/materialmesh) or query param (?material=fullsilk)
   useEffect(() => {
     if (enabledCategories === null) return;
     const params = new URLSearchParams(window.location.search);
-    const mat = params.get("material");
+    let mat = params.get("material");
+    if (!mat) {
+      // Path-based: /order/materialmesh, /order/mesh, /order/kain-mesh
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const last = parts[parts.length - 1];
+      if (last && last !== "order") {
+        mat = last.toLowerCase().replace(/^material[-_]?/, "");
+      }
+    }
     if (!mat) return;
+    const needle = mat.toLowerCase();
     const match = ALL_MATERIAL_CATEGORIES.find(c =>
-      c.id.toLowerCase().includes(mat.toLowerCase()) ||
-      c.label.toLowerCase().includes(mat.toLowerCase())
+      c.id.toLowerCase().includes(needle) ||
+      c.label.toLowerCase().includes(needle)
     );
     if (match) {
       setSelectedCategory(match);
@@ -248,6 +257,17 @@ export default function OrderPage() {
     setSelectedProduct(null); setSelectedVariation(null);
     fetchProducts(cat.label);
     setStep("product");
+    // Reflect selection in URL so views are tracked per material
+    try {
+      const slug = cat.id.toLowerCase();
+      window.history.pushState({}, "", `/order/material${slug}`);
+    } catch {}
+    // Track page view (fire-and-forget)
+    (supabase as any).from("page_views").insert({
+      material: cat.label,
+      user_agent: navigator.userAgent,
+      referrer: document.referrer || null,
+    }).then(() => {});
   };
 
   const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;

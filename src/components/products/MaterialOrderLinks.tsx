@@ -26,7 +26,7 @@ export default function MaterialOrderLinks() {
   const buildUrl = (materialId: string) =>
     materialId === "fullsilk"
       ? `${origin}/order-fullsilk`
-      : `${origin}/order?material=${materialId}`;
+      : `${origin}/order/material${materialId}`;
 
   const handleCopy = async (materialId: string, label: string) => {
     const url = buildUrl(materialId);
