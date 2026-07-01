@@ -156,7 +156,7 @@ export function Sidebar() {
   };
 
   const mainItems: SidebarItemType[] = [
-    { title: "Dashboard", path: "/", icon: Home },
+    { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
