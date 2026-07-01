@@ -180,15 +180,24 @@ export default function OrderPage() {
     });
   }, []);
 
-  // Auto-select material from URL query param (e.g. ?material=fullsilk)
+  // Auto-select material from URL path (/order/materialmesh) or query param (?material=fullsilk)
   useEffect(() => {
     if (enabledCategories === null) return;
     const params = new URLSearchParams(window.location.search);
-    const mat = params.get("material");
+    let mat = params.get("material");
+    if (!mat) {
+      // Path-based: /order/materialmesh, /order/mesh, /order/kain-mesh
+      const parts = window.location.pathname.split("/").filter(Boolean);
+      const last = parts[parts.length - 1];
+      if (last && last !== "order") {
+        mat = last.toLowerCase().replace(/^material[-_]?/, "");
+      }
+    }
     if (!mat) return;
+    const needle = mat.toLowerCase();
     const match = ALL_MATERIAL_CATEGORIES.find(c =>
-      c.id.toLowerCase().includes(mat.toLowerCase()) ||
-      c.label.toLowerCase().includes(mat.toLowerCase())
+      c.id.toLowerCase().includes(needle) ||
+      c.label.toLowerCase().includes(needle)
     );
     if (match) {
       setSelectedCategory(match);
