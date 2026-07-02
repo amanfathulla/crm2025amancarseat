@@ -53,6 +53,7 @@ export default function LiveDashboard() {
   const [materialData, setMaterialData] = useState<
     { name: string; views: number; pct: number; cpv: string }[]
   >([]);
+  const [todayOrdersCount, setTodayOrdersCount] = useState(0);
   const [adsToday, setAdsToday] = useState({
     spend: 0,
     clicks: 0,
@@ -97,10 +98,11 @@ export default function LiveDashboard() {
       );
       setYesterdaySalesRM(ySales);
 
-      // Recent 10 orders
+      // Recent orders — HARI INI SAHAJA (max 10)
       const { data: recent } = await authClient
         .from("customers")
         .select("id, name, product, car_model, sales_amount, paid_amount, created_at")
+        .gte("created_at", todayIso)
         .order("created_at", { ascending: false })
         .limit(10);
       setRecentOrders(
@@ -113,6 +115,7 @@ export default function LiveDashboard() {
           created_at: r.created_at,
         }))
       );
+      setTodayOrdersCount((recent || []).length);
 
       // Top 5 designs (product name) - 30 days
       const { data: prodRows } = await authClient
@@ -133,18 +136,22 @@ export default function LiveDashboard() {
       const dmax = Math.max(1, ...arr.map((a) => a.count));
       setDesignData(arr.map((a) => ({ ...a, pct: (a.count / dmax) * 100 })));
 
-      // Material page views (7 days)
+      // Material page views (7 days) — REAL DATA, group by whatever material exists
       const { data: pv } = await authClient
         .from("page_views" as any)
         .select("material")
         .gte("viewed_at", sevenIso)
-        .limit(20000);
+        .limit(50000);
       const vmap: Record<string, number> = {};
       (pv || []).forEach((r: any) => {
-        const m = r.material || "Lain-lain";
+        const m = (r.material || "Lain-lain").toString().trim();
         vmap[m] = (vmap[m] || 0) + 1;
       });
-      const mats = MATERIALS.map((m) => ({ name: m, views: vmap[m] || 0 }));
+      // Merge fixed materials + any extras discovered in DB
+      const allNames = Array.from(new Set([...MATERIALS, ...Object.keys(vmap)]));
+      const mats = allNames
+        .map((name) => ({ name, views: vmap[name] || 0 }))
+        .sort((a, b) => b.views - a.views);
       const vmax = Math.max(1, ...mats.map((m) => m.views));
 
       // Ads spend today (for cpv)
@@ -260,13 +267,14 @@ export default function LiveDashboard() {
           }}
         />
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div>
+          <div className="md:col-span-2">
             <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">
               Jualan Hari Ini
             </p>
             <p
-              className="text-4xl md:text-6xl font-black leading-tight"
+              className="font-black leading-none break-words"
               style={{
+                fontSize: "clamp(3rem, 11vw, 9rem)",
                 background:
                   "linear-gradient(135deg, #fef3c7 0%, #fde68a 40%, #f59e0b 100%)",
                 WebkitBackgroundClip: "text",
@@ -276,7 +284,7 @@ export default function LiveDashboard() {
               RM {todaySalesRM.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
             </p>
             <div
-              className={`mt-2 inline-flex items-center gap-1 text-sm font-semibold ${
+              className={`mt-3 inline-flex items-center gap-1 text-sm font-semibold ${
                 pctVsYesterday >= 0 ? "text-emerald-400" : "text-red-400"
               }`}
             >
@@ -287,22 +295,10 @@ export default function LiveDashboard() {
 
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">Order Baru</p>
-            <p className="text-4xl md:text-6xl font-black text-amber-400 leading-tight">
+            <p className="text-5xl md:text-7xl font-black text-amber-400 leading-none">
               {ordersToday}
             </p>
             <p className="text-xs text-slate-400 mt-2">pesanan diterima hari ini</p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">
-              Belanja Iklan Hari Ini
-            </p>
-            <p className="text-3xl md:text-4xl font-bold text-white">
-              RM {adsToday.spend.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
-            </p>
-            <p className="text-xs text-slate-400 mt-2">
-              {adsToday.clicks} klik · {adsToday.leads} lead
-            </p>
           </div>
         </div>
 
@@ -418,6 +414,41 @@ export default function LiveDashboard() {
         </div>
       </div>
 
+      {/* Belanja Iklan Hari Ini */}
+      <div
+        className="rounded-2xl p-5 md:p-6 shadow-sm border grid grid-cols-2 md:grid-cols-4 gap-4"
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
+        }}
+      >
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">
+            Belanja Iklan Hari Ini
+          </p>
+          <p className="text-2xl md:text-3xl font-black text-white">
+            RM {adsToday.spend.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Klik</p>
+          <p className="text-2xl md:text-3xl font-black text-amber-400">
+            {adsToday.clicks.toLocaleString("en-MY")}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Lead</p>
+          <p className="text-2xl md:text-3xl font-black text-emerald-400">
+            {adsToday.leads.toLocaleString("en-MY")}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Impressions</p>
+          <p className="text-2xl md:text-3xl font-black text-white">
+            {adsToday.impressions.toLocaleString("en-MY")}
+          </p>
+        </div>
+      </div>
+
       {/* Live Orders */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b">
@@ -428,7 +459,7 @@ export default function LiveDashboard() {
             <div>
               <h3 className="font-semibold text-foreground">Order Terbaru Live</h3>
               <p className="text-xs text-muted-foreground">
-                Auto-refresh · 10 customer terkini
+                Hari ini sahaja · {todayOrdersCount} order
               </p>
             </div>
           </div>
