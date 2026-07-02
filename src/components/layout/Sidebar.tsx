@@ -25,6 +25,7 @@ import {
   Copy,
   CreditCard,
   Star,
+  Radio,
 } from "lucide-react";
 
 interface SidebarItemType {
@@ -157,6 +158,7 @@ export function Sidebar() {
 
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
+    { title: "Live Dashboard", path: "/live-dashboard", icon: Radio },
     { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
