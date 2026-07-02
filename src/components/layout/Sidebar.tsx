@@ -25,6 +25,7 @@ import {
   Copy,
   CreditCard,
   Star,
+  Radio,
 } from "lucide-react";
 
 interface SidebarItemType {
