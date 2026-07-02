@@ -98,10 +98,11 @@ export default function LiveDashboard() {
       );
       setYesterdaySalesRM(ySales);
 
-      // Recent 10 orders
+      // Recent orders — HARI INI SAHAJA (max 10)
       const { data: recent } = await authClient
         .from("customers")
         .select("id, name, product, car_model, sales_amount, paid_amount, created_at")
+        .gte("created_at", todayIso)
         .order("created_at", { ascending: false })
         .limit(10);
       setRecentOrders(
@@ -114,6 +115,7 @@ export default function LiveDashboard() {
           created_at: r.created_at,
         }))
       );
+      setTodayOrdersCount((recent || []).length);
 
       // Top 5 designs (product name) - 30 days
       const { data: prodRows } = await authClient
@@ -134,18 +136,22 @@ export default function LiveDashboard() {
       const dmax = Math.max(1, ...arr.map((a) => a.count));
       setDesignData(arr.map((a) => ({ ...a, pct: (a.count / dmax) * 100 })));
 
-      // Material page views (7 days)
+      // Material page views (7 days) — REAL DATA, group by whatever material exists
       const { data: pv } = await authClient
         .from("page_views" as any)
         .select("material")
         .gte("viewed_at", sevenIso)
-        .limit(20000);
+        .limit(50000);
       const vmap: Record<string, number> = {};
       (pv || []).forEach((r: any) => {
-        const m = r.material || "Lain-lain";
+        const m = (r.material || "Lain-lain").toString().trim();
         vmap[m] = (vmap[m] || 0) + 1;
       });
-      const mats = MATERIALS.map((m) => ({ name: m, views: vmap[m] || 0 }));
+      // Merge fixed materials + any extras discovered in DB
+      const allNames = Array.from(new Set([...MATERIALS, ...Object.keys(vmap)]));
+      const mats = allNames
+        .map((name) => ({ name, views: vmap[name] || 0 }))
+        .sort((a, b) => b.views - a.views);
       const vmax = Math.max(1, ...mats.map((m) => m.views));
 
       // Ads spend today (for cpv)
