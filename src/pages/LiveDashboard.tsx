@@ -414,6 +414,41 @@ export default function LiveDashboard() {
         </div>
       </div>
 
+      {/* Belanja Iklan Hari Ini */}
+      <div
+        className="rounded-2xl p-5 md:p-6 shadow-sm border grid grid-cols-2 md:grid-cols-4 gap-4"
+        style={{
+          background: "linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%)",
+        }}
+      >
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">
+            Belanja Iklan Hari Ini
+          </p>
+          <p className="text-2xl md:text-3xl font-black text-white">
+            RM {adsToday.spend.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Klik</p>
+          <p className="text-2xl md:text-3xl font-black text-amber-400">
+            {adsToday.clicks.toLocaleString("en-MY")}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Lead</p>
+          <p className="text-2xl md:text-3xl font-black text-emerald-400">
+            {adsToday.leads.toLocaleString("en-MY")}
+          </p>
+        </div>
+        <div>
+          <p className="text-[11px] uppercase tracking-widest text-slate-300 mb-1">Impressions</p>
+          <p className="text-2xl md:text-3xl font-black text-white">
+            {adsToday.impressions.toLocaleString("en-MY")}
+          </p>
+        </div>
+      </div>
+
       {/* Live Orders */}
       <div className="rounded-2xl border bg-card shadow-sm overflow-hidden">
         <div className="flex items-center justify-between p-5 border-b">
@@ -424,7 +459,7 @@ export default function LiveDashboard() {
             <div>
               <h3 className="font-semibold text-foreground">Order Terbaru Live</h3>
               <p className="text-xs text-muted-foreground">
-                Auto-refresh · 10 customer terkini
+                Hari ini sahaja · {todayOrdersCount} order
               </p>
             </div>
           </div>
