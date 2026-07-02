@@ -267,13 +267,14 @@ export default function LiveDashboard() {
           }}
         />
         <div className="relative grid grid-cols-1 md:grid-cols-3 gap-6 items-center">
-          <div>
+          <div className="md:col-span-2">
             <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">
               Jualan Hari Ini
             </p>
             <p
-              className="text-4xl md:text-6xl font-black leading-tight"
+              className="font-black leading-none break-words"
               style={{
+                fontSize: "clamp(3rem, 11vw, 9rem)",
                 background:
                   "linear-gradient(135deg, #fef3c7 0%, #fde68a 40%, #f59e0b 100%)",
                 WebkitBackgroundClip: "text",
@@ -283,7 +284,7 @@ export default function LiveDashboard() {
               RM {todaySalesRM.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
             </p>
             <div
-              className={`mt-2 inline-flex items-center gap-1 text-sm font-semibold ${
+              className={`mt-3 inline-flex items-center gap-1 text-sm font-semibold ${
                 pctVsYesterday >= 0 ? "text-emerald-400" : "text-red-400"
               }`}
             >
@@ -294,22 +295,10 @@ export default function LiveDashboard() {
 
           <div>
             <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">Order Baru</p>
-            <p className="text-4xl md:text-6xl font-black text-amber-400 leading-tight">
+            <p className="text-5xl md:text-7xl font-black text-amber-400 leading-none">
               {ordersToday}
             </p>
             <p className="text-xs text-slate-400 mt-2">pesanan diterima hari ini</p>
-          </div>
-
-          <div>
-            <p className="text-xs uppercase tracking-widest text-slate-300 mb-2">
-              Belanja Iklan Hari Ini
-            </p>
-            <p className="text-3xl md:text-4xl font-bold text-white">
-              RM {adsToday.spend.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
-            </p>
-            <p className="text-xs text-slate-400 mt-2">
-              {adsToday.clicks} klik · {adsToday.leads} lead
-            </p>
           </div>
         </div>
 
