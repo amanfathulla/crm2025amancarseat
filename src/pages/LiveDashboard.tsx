@@ -53,6 +53,7 @@ export default function LiveDashboard() {
   const [materialData, setMaterialData] = useState<
     { name: string; views: number; pct: number; cpv: string }[]
   >([]);
+  const [todayOrdersCount, setTodayOrdersCount] = useState(0);
   const [adsToday, setAdsToday] = useState({
     spend: 0,
     clicks: 0,
