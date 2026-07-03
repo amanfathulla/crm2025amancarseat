@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText, Calculator
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -98,6 +98,25 @@ function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
+  const handleRecalculateProfit = async () => {
+    if (!confirm("Kira semula Gross Profit untuk semua order yang bernilai RM 0.00? Kos akan diambil dari halaman Products.")) return;
+    try {
+      setIsRecalculating(true);
+      const { data, error } = await authClient.rpc("recalculate_gross_profit_all", { p_only_zero: true });
+      if (error) throw error;
+      toast({
+        title: "Gross Profit dikira semula",
+        description: `${data ?? 0} rekod telah dikemaskini.`,
+      });
+      fetchCustomers();
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message || "Gagal kira semula", variant: "destructive" });
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
@@ -731,6 +750,18 @@ function Customers() {
               />
             </div>
             
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={handleRecalculateProfit}
+              disabled={isRecalculating}
+              className="whitespace-nowrap"
+              title="Kira semula Gross Profit untuk order yang bernilai RM 0.00"
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              {isRecalculating ? "Mengira..." : "Recalculate Profit"}
+            </Button>
+
             <Button
               variant="outline"
               size="sm"
