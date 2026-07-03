@@ -753,6 +753,18 @@ function Customers() {
             <Button
               variant="outline"
               size="sm"
+              onClick={handleRecalculateProfit}
+              disabled={isRecalculating}
+              className="whitespace-nowrap"
+              title="Kira semula Gross Profit untuk order yang bernilai RM 0.00"
+            >
+              <Calculator className="h-4 w-4 mr-2" />
+              {isRecalculating ? "Mengira..." : "Recalculate Profit"}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
               onClick={() => setIsDownloadDialogOpen(true)}
               className="whitespace-nowrap"
             >
