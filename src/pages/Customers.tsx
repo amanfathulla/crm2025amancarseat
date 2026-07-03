@@ -98,6 +98,25 @@ function Customers() {
   const [selectedCustomer, setSelectedCustomer] = useState<CustomerFormData | null>(null);
   const [isDownloadDialogOpen, setIsDownloadDialogOpen] = useState(false);
   const [selectedCustomers, setSelectedCustomers] = useState<string[]>([]);
+  const [isRecalculating, setIsRecalculating] = useState(false);
+
+  const handleRecalculateProfit = async () => {
+    if (!confirm("Kira semula Gross Profit untuk semua order yang bernilai RM 0.00? Kos akan diambil dari halaman Products.")) return;
+    try {
+      setIsRecalculating(true);
+      const { data, error } = await authClient.rpc("recalculate_gross_profit_all", { p_only_zero: true });
+      if (error) throw error;
+      toast({
+        title: "Gross Profit dikira semula",
+        description: `${data ?? 0} rekod telah dikemaskini.`,
+      });
+      fetchCustomers();
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message || "Gagal kira semula", variant: "destructive" });
+    } finally {
+      setIsRecalculating(false);
+    }
+  };
   const [isBulkDeleteDialogOpen, setIsBulkDeleteDialogOpen] = useState(false);
   
   useEffect(() => {
