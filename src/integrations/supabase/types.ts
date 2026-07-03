@@ -1102,6 +1102,14 @@ export type Database = {
         Returns: undefined
       }
       is_valid_admin_session: { Args: never; Returns: boolean }
+      recalculate_gross_profit_all: {
+        Args: { p_only_zero?: boolean }
+        Returns: number
+      }
+      resolve_product_cost: {
+        Args: { p_product: string; p_variation: string }
+        Returns: number
+      }
       update_admin_email: {
         Args: { p_admin_id: string; p_new_email: string; p_password: string }
         Returns: boolean

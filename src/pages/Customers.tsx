@@ -6,7 +6,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText, Calculator
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
