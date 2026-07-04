@@ -79,8 +79,8 @@ export default function OrderPage() {
         setGateways(list);
         setSelectedGateway(list[0].provider);
       } else {
-        // Fallback so order page never breaks
-        setGateways([{ provider: "billplz", display_name: "Billplz" }]);
+        setGateways([]);
+        setSelectedGateway("");
       }
     })();
   }, []);
@@ -287,6 +287,7 @@ export default function OrderPage() {
   const finalPrice = Math.max(0, productPrice + postageCost - couponDiscount);
   const amountToPay = paymentType === "deposit" ? Math.round(finalPrice * 0.5 * 100) / 100 : finalPrice;
   const balanceAmount = paymentType === "deposit" ? Math.round((finalPrice - amountToPay) * 100) / 100 : 0;
+  const selectedGatewayName = gateways.find((g) => g.provider === selectedGateway)?.display_name || "Gateway";
 
   const handleApplyCoupon = async () => {
     const code = couponInput.trim().toUpperCase();
@@ -326,6 +327,7 @@ export default function OrderPage() {
     if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
     if (!form.state) { toast({ title: "Sila pilih negeri untuk kira kos postage", variant: "destructive" }); return; }
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
+    if (!selectedGateway) { toast({ title: "Gateway pembayaran belum aktif", description: "Sila pilih Bayar Melalui WhatsApp atau cuba lagi kemudian.", variant: "destructive" }); return; }
     setStep("loading");
     try {
       const endpoint = selectedGateway === "billplz"
@@ -394,6 +396,7 @@ export default function OrderPage() {
         gross_profit: 0,
         order_status: "processing",
         payment_source: "whatsapp",
+        payment_gateway: null,
         order_date: new Date().toISOString(),
         seat_image_front: seatImages.front || null,
         seat_image_back: seatImages.back || null,
@@ -1017,13 +1020,18 @@ export default function OrderPage() {
 
                 {/* Pay button */}
                 <Button type="submit"
+                  disabled={!selectedGateway}
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  {paymentType === "deposit"
-                    ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`
-                    : `Bayar RM${amountToPay.toFixed(2)} Dengan ${gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"}`}
+                  {!selectedGateway
+                    ? "Gateway Online Belum Aktif"
+                    : paymentType === "deposit"
+                    ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan ${selectedGatewayName}`
+                    : `Bayar RM${amountToPay.toFixed(2)} Dengan ${selectedGatewayName}`}
                 </Button>
-                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui {gateways.find((g) => g.provider === selectedGateway)?.display_name || "Billplz"} Malaysia</p>
+                <p className="text-center text-white/25 text-xs">
+                  {selectedGateway ? `🔒 Pembayaran selamat melalui ${selectedGatewayName} Malaysia` : "Aktifkan gateway online di panel Payment Gateway atau gunakan WhatsApp"}
+                </p>
 
 
                 {/* Divider */}

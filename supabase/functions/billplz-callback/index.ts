@@ -18,16 +18,15 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Load X-Signature key from DB (admin-configurable), fall back to env var
-    const { data: settings } = await supabase
-      .from('billplz_settings')
-      .select('x_signature_key')
+    const { data: gateway } = await supabase
+      .from('payment_gateways')
+      .select('credentials')
+      .eq('provider', 'billplz')
       .limit(1)
       .single();
 
-    const BILLPLZ_X_SIGNATURE_KEY = (settings?.x_signature_key && settings.x_signature_key.trim())
-      ? settings.x_signature_key.trim()
-      : Deno.env.get('BILLPLZ_X_SIGNATURE_KEY');
+    const credentials = (gateway?.credentials || {}) as Record<string, string>;
+    const BILLPLZ_X_SIGNATURE_KEY = credentials.x_signature_key?.trim();
 
     const contentType = req.headers.get('content-type') || '';
     let params: Record<string, string> = {};

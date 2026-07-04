@@ -17,23 +17,23 @@ serve(async (req) => {
 
     const supabase = createClient(SUPABASE_URL!, SUPABASE_SERVICE_ROLE_KEY!);
 
-    // Load Billplz credentials from DB (admin-configurable)
-    const { data: settings } = await supabase
-      .from('billplz_settings')
-      .select('api_key, collection_id')
+    const { data: gateway } = await supabase
+      .from('payment_gateways')
+      .select('is_enabled, credentials')
+      .eq('provider', 'billplz')
       .limit(1)
       .single();
 
-    // Fall back to env vars if DB row is empty
-    const BILLPLZ_API_KEY = (settings?.api_key && settings.api_key.trim()) 
-      ? settings.api_key.trim() 
-      : Deno.env.get('BILLPLZ_API_KEY');
-    const BILLPLZ_COLLECTION_ID = (settings?.collection_id && settings.collection_id.trim())
-      ? settings.collection_id.trim()
-      : Deno.env.get('BILLPLZ_COLLECTION_ID');
+    if (!gateway?.is_enabled) {
+      throw new Error('Billplz tidak aktif. Sila aktifkan di menu Payment Gateway.');
+    }
+
+    const credentials = (gateway.credentials || {}) as Record<string, string>;
+    const BILLPLZ_API_KEY = credentials.api_key?.trim();
+    const BILLPLZ_COLLECTION_ID = credentials.collection_id?.trim();
 
     if (!BILLPLZ_API_KEY || !BILLPLZ_COLLECTION_ID) {
-      throw new Error('BillPlz credentials not configured. Sila kemaskini tetapan Billplz dalam Admin Settings.');
+      throw new Error('Billplz credentials belum lengkap. Sila kemaskini di menu Payment Gateway.');
     }
 
     const body = await req.json().catch(() => ({}));
@@ -182,6 +182,8 @@ serve(async (req) => {
         payment_type: isDeposit ? 'deposit' : 'full',
         deposit_amount: isDeposit ? finalPrice : 0,
         balance_amount: serverBalanceAmount,
+        payment_source: 'billplz',
+        payment_gateway: 'billplz',
       })
       .select()
       .single();
@@ -237,7 +239,7 @@ serve(async (req) => {
     // Update customer with bill ID
     await supabase
       .from('customers')
-      .update({ zip_code: billData.id })
+      .update({ gateway_bill_id: billData.id })
       .eq('id', customer.id);
 
     // Fire Telegram notification (non-blocking)

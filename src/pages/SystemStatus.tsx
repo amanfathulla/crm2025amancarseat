@@ -43,13 +43,13 @@ const INITIAL_CHECKS: Omit<SystemCheck, "status" | "message" | "responseTime" | 
   { id: "database", name: "Database Supabase", description: "Sambungan utama ke pangkalan data", icon: Activity, gradient: "from-violet-500 to-violet-600" },
   { id: "dashboard", name: "Dashboard", description: "Data jualan & statistik pelanggan", icon: LayoutDashboard, gradient: "from-blue-500 to-blue-600" },
   { id: "customers", name: "Customers", description: "Rekod & status pesanan pelanggan", icon: Users, gradient: "from-cyan-500 to-cyan-600" },
-  { id: "order-flow", name: "Link Tempahan", description: "Aliran pesanan WhatsApp & BillPlz", icon: ShoppingBag, gradient: "from-pink-500 to-pink-600" },
+  { id: "order-flow", name: "Link Tempahan", description: "Aliran pesanan WhatsApp & gateway online", icon: ShoppingBag, gradient: "from-pink-500 to-pink-600" },
   { id: "leads", name: "Lead Management", description: "Pengurusan prospek & leads", icon: Target, gradient: "from-orange-500 to-orange-600" },
   { id: "marketing", name: "Marketing", description: "Nota & tugas pemasaran", icon: Megaphone, gradient: "from-rose-500 to-rose-600" },
   { id: "products", name: "Products", description: "Katalog produk & variasi", icon: Package, gradient: "from-emerald-500 to-emerald-600" },
   { id: "sales", name: "Sales Records", description: "Data rekod jualan tahunan", icon: BarChart3, gradient: "from-teal-500 to-teal-600" },
-  { id: "settings", name: "Settings (Admin)", description: "Tetapan admin & konfigurasi", icon: Settings, gradient: "from-slate-500 to-slate-600" },
-  { id: "billplz", name: "Billplz Payment", description: "Konfigurasi & kelayakan Billplz", icon: CreditCard, gradient: "from-indigo-500 to-indigo-600" },
+  { id: "settings", name: "Settings (Admin)", description: "Tetapan admin, kupon & notifikasi", icon: Settings, gradient: "from-slate-500 to-slate-600" },
+  { id: "payment-gateways", name: "Payment Gateways", description: "Konfigurasi gateway aktif", icon: CreditCard, gradient: "from-indigo-500 to-indigo-600" },
   { id: "coupons", name: "Sistem Kupon", description: "Urus kod diskaun pelanggan", icon: Activity, gradient: "from-amber-500 to-amber-600" },
 ];
 
@@ -123,24 +123,24 @@ export default function SystemStatus() {
       updateCheck("customers", "error", "Gagal akses jadual customers");
     }
 
-    // 4. Order Flow (WhatsApp & BillPlz tracking)
+    // 4. Order Flow (WhatsApp & online gateway tracking)
     const orderStart = Date.now();
     try {
-      const [wpRes, bpRes, wpCompRes, bpCompRes] = await Promise.all([
+      const [wpRes, onlineRes, wpCompRes, onlineCompRes] = await Promise.all([
         authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "whatsapp"),
-        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "billplz"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).neq("payment_source", "whatsapp"),
         authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "whatsapp").eq("order_status", "completed"),
-        authClient.from("customers").select("id", { count: "exact", head: true }).eq("payment_source", "billplz").eq("order_status", "completed"),
+        authClient.from("customers").select("id", { count: "exact", head: true }).neq("payment_source", "whatsapp").eq("order_status", "completed"),
       ]);
       const wpTotal = wpRes.count ?? 0;
-      const bpTotal = bpRes.count ?? 0;
+      const onlineTotal = onlineRes.count ?? 0;
       const wpDone = wpCompRes.count ?? 0;
-      const bpDone = bpCompRes.count ?? 0;
-      updateCheck("order-flow", "ok", `${wpTotal + bpTotal} jumlah tempahan`, Date.now() - orderStart, {
+      const onlineDone = onlineCompRes.count ?? 0;
+      updateCheck("order-flow", "ok", `${wpTotal + onlineTotal} jumlah tempahan`, Date.now() - orderStart, {
         whatsappTotal: wpTotal,
         whatsappCompleted: wpDone,
-        billplzTotal: bpTotal,
-        billplzCompleted: bpDone,
+        onlineTotal,
+        onlineCompleted: onlineDone,
       });
     } catch {
       updateCheck("order-flow", "error", "Gagal semak aliran pesanan");
@@ -201,46 +201,44 @@ export default function SystemStatus() {
     // 9. Settings
     const settingsStart = Date.now();
     try {
-      const { error } = await authClient.from("billplz_settings").select("api_key").limit(1).single();
+      const { error } = await authClient.from("coupons").select("id").limit(1);
       if (error) throw error;
       updateCheck("settings", "ok", "Tetapan admin boleh diakses", Date.now() - settingsStart);
     } catch {
       updateCheck("settings", "error", "Gagal akses tetapan admin");
     }
 
-    // 10. Billplz - real health check (config + edge function reachability)
-    const billplzStart = Date.now();
+    // 10. Payment Gateways - one source of truth
+    const gatewaysStart = Date.now();
     try {
-      const { data, error } = await authClient.from("billplz_settings").select("api_key, collection_id, x_signature_key").limit(1).single();
+      const { data, error } = await (authClient as any)
+        .from("payment_gateways")
+        .select("provider, display_name, is_enabled, credentials")
+        .order("display_order", { ascending: true });
       if (error) throw error;
-      const hasApiKey = data?.api_key?.trim();
-      const hasCol = data?.collection_id?.trim();
-      const hasSig = data?.x_signature_key?.trim();
-      if (!hasApiKey || !hasCol) {
-        updateCheck("billplz", "error", `🚨 ${!hasApiKey ? "API Key " : ""}${!hasCol ? "Collection ID " : ""}belum dikonfigurasi - Pembayaran TIDAK BERFUNGSI`, Date.now() - billplzStart);
+      const rows = (data || []) as any[];
+      const active = rows.filter((g) => g.is_enabled);
+      const missingCredentials = active.filter((g) => {
+        const c = g.credentials || {};
+        if (g.provider === "billplz") return !c.api_key || !c.collection_id;
+        if (g.provider === "toyyibpay") return !c.secret_key || !c.category_code;
+        if (g.provider === "chip") return !c.api_key || !c.brand_id;
+        if (g.provider === "bayarcash") return !c.api_key || !c.portal_key;
+        if (g.provider === "bcl") return !c.api_key || !c.merchant_id;
+        return false;
+      });
+      if (active.length === 0) {
+        updateCheck("payment-gateways", "warn", "Tiada gateway online aktif", Date.now() - gatewaysStart);
+      } else if (missingCredentials.length > 0) {
+        updateCheck("payment-gateways", "error", `${missingCredentials.length} gateway aktif belum lengkap credential`, Date.now() - gatewaysStart);
       } else {
-        // Real ping to edge function — `ping: true` returns 200 OK without creating a bill
-        try {
-          const pingRes = await fetch(
-            "https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/billplz-create-bill",
-            { method: "POST", headers: { "Content-Type": "application/json" }, body: JSON.stringify({ ping: true }) }
-          );
-          const pingData = await pingRes.json().catch(() => ({}));
-          if (pingRes.ok && pingData?.status === "healthy") {
-            updateCheck("billplz", "ok", `Billplz aktif ✓ | X-Sig ${hasSig ? "✓" : "⚠️"}`, Date.now() - billplzStart);
-          } else if (pingRes.status === 500 && String(pingData?.error || "").toLowerCase().includes("billplz credentials")) {
-            updateCheck("billplz", "error", "🚨 Kredential Billplz tidak dimuat - Pembayaran GAGAL", Date.now() - billplzStart);
-          } else if (pingRes.status >= 500) {
-            updateCheck("billplz", "error", `🚨 Edge function ralat (HTTP ${pingRes.status}) - Pembayaran GAGAL`, Date.now() - billplzStart);
-          } else {
-            updateCheck("billplz", "warn", `⚠️ Respons tidak dijangka: ${pingRes.status} - ${pingData?.error || "unknown"}`, Date.now() - billplzStart);
-          }
-        } catch (pingErr: any) {
-          updateCheck("billplz", "error", `🚨 Edge function tidak dapat dihubungi: ${pingErr?.message || "network error"}`, Date.now() - billplzStart);
-        }
+        updateCheck("payment-gateways", "ok", `${active.length} gateway aktif`, Date.now() - gatewaysStart, {
+          active: active.map((g) => g.display_name).join(", "),
+          total: rows.length,
+        });
       }
     } catch {
-      updateCheck("billplz", "error", "🚨 Gagal semak konfigurasi Billplz - Pembayaran TIDAK BERFUNGSI");
+      updateCheck("payment-gateways", "error", "Gagal semak konfigurasi gateway");
     }
 
     // 11. Coupons
@@ -310,9 +308,9 @@ export default function SystemStatus() {
           <div className="bg-blue-500/10 rounded-lg p-2">
             <div className="flex items-center gap-1.5 mb-1">
               <CreditCard className="h-3 w-3 text-blue-400" />
-              <span className="text-[10px] text-blue-400/80">BillPlz</span>
+              <span className="text-[10px] text-blue-400/80">Gateway</span>
             </div>
-            <span className="text-sm font-bold text-blue-300">{check.extra.billplzCompleted}/{check.extra.billplzTotal}</span>
+            <span className="text-sm font-bold text-blue-300">{check.extra.onlineCompleted}/{check.extra.onlineTotal}</span>
             <span className="text-[9px] text-muted-foreground ml-1">selesai</span>
           </div>
         </div>

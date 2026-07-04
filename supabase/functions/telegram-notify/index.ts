@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     // Fetch customer data
     const { data: customer, error: custErr } = await supabase
       .from("customers")
-      .select("name, phone, car_model, product, product_variation, sales_amount, order_number, state, payment_source")
+      .select("name, phone, car_model, product, product_variation, sales_amount, order_number, state, payment_source, payment_gateway")
       .eq("id", customer_id)
       .single();
 
@@ -89,8 +89,13 @@ Deno.serve(async (req) => {
       });
     }
 
-    const src = ((customer as any).payment_source || payment_source || "billplz").toLowerCase();
-    const srcLabel = src === "whatsapp" ? "💬 WhatsApp (Manual)" : "💳 BillPlz (Online)";
+    const paymentSourceKey = String((customer as any).payment_source || payment_source || "").toLowerCase();
+    const src = paymentSourceKey === "whatsapp"
+      ? "whatsapp"
+      : String((customer as any).payment_gateway || (customer as any).payment_source || payment_source || "manual").toLowerCase();
+    const srcLabel = src === "whatsapp"
+      ? "💬 WhatsApp (Manual)"
+      : `💳 ${src.charAt(0).toUpperCase()}${src.slice(1)} (Online)`;
     const amount = `RM${Number((customer as any).sales_amount || 0).toFixed(2)}`;
     const variation = (customer as any).product_variation ? ` (${(customer as any).product_variation})` : "";
 

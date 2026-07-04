@@ -79,7 +79,12 @@ const statusConfig: Record<string, { label: string; className: string }> = {
 
 const sourceConfig = {
   billplz: { label: "BillPlz", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-blue-500/15 text-blue-600 border-blue-500/30" },
+  toyyibpay: { label: "toyyibPay", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-indigo-500/15 text-indigo-600 border-indigo-500/30" },
+  chip: { label: "CHIP", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-cyan-500/15 text-cyan-600 border-cyan-500/30" },
+  bayarcash: { label: "Bayarcash", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-amber-500/15 text-amber-600 border-amber-500/30" },
+  bcl: { label: "BCL Pay", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-purple-500/15 text-purple-600 border-purple-500/30" },
   whatsapp: { label: "WhatsApp", icon: <MessageCircle className="h-2.5 w-2.5" />, className: "bg-green-500/15 text-green-600 border-green-500/30" },
+  manual: { label: "Manual", icon: <CreditCard className="h-2.5 w-2.5" />, className: "bg-slate-500/15 text-slate-600 border-slate-500/30" },
 };
 
 export function CustomerDetails({ customer, onEdit, onDelete, index, className }: CustomerDetailsProps) {
@@ -91,9 +96,17 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
   };
 
   const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground" };
-  const source = sourceConfig[(customer.payment_source as keyof typeof sourceConfig) ?? "billplz"] ?? sourceConfig.billplz;
+  const paymentSourceKey = String(customer.payment_source || "").toLowerCase();
+  const sourceKey = paymentSourceKey === "whatsapp"
+    ? "whatsapp"
+    : String(customer.payment_gateway || customer.payment_source || "manual").toLowerCase();
+  const source = sourceConfig[sourceKey as keyof typeof sourceConfig] ?? {
+    label: sourceKey.charAt(0).toUpperCase() + sourceKey.slice(1),
+    icon: <CreditCard className="h-2.5 w-2.5" />,
+    className: "bg-blue-500/15 text-blue-600 border-blue-500/30",
+  };
   const location = [customer.city, customer.state].filter(Boolean).join(", ") || customer.location || "—";
-  const isBillplzPending = (!customer.payment_source || customer.payment_source === "billplz") && customer.order_status === "processing";
+  const isOnlinePaymentPending = sourceKey !== "whatsapp" && sourceKey !== "manual" && customer.order_status === "processing";
 
   const orderNum = customer.order_number ? `#${customer.order_number}` : `#${index}`;
   const waPhone = customer.phone ? customer.phone.replace(/[^0-9]/g, "").replace(/^0/, "60") : "";
@@ -107,7 +120,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
 
   const waFollowupMessage = encodeURIComponent(
     `Assalamualaikum ${customer.name} 😊\n\nIni peringatan mesra dari *ACS Legacy AmancarseatCover* 🚗\n\n` +
-    `Kami perasan tempahan anda ${orderNum} masih belum selesai pembayaran melalui BillPlz.\n\n` +
+    `Kami perasan tempahan anda ${orderNum} masih belum selesai pembayaran melalui ${source.label}.\n\n` +
     `📦 Produk: ${customer.product || "—"}${customer.product_variation ? ` (${customer.product_variation})` : ""}\n` +
     `💰 Jumlah: RM ${Number(customer.paid_amount || 0).toFixed(2)}\n\nJika ada sebarang masalah dengan pembayaran, boleh hubungi kami ya! 🙏\n` +
     `Atau bayar melalui:\n🏦 Maybank – ACS LEGACY\n🔢 553038596454`
@@ -226,7 +239,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
             <Button variant="destructive" size="sm" className="h-7 text-[11px] px-2.5" onClick={onDelete}>
               <Trash2 className="h-3 w-3 mr-1" /> Padam
             </Button>
-            {isBillplzPending && waFollowupLink && (
+            {isOnlinePaymentPending && waFollowupLink && (
               <a href={waFollowupLink} target="_blank" rel="noopener noreferrer">
                 <Button variant="outline" size="sm" className="h-7 text-[11px] px-2.5 border-yellow-500/40 text-yellow-600 hover:bg-yellow-500/10">
                   <MessageCircle className="h-3 w-3 mr-1" /> Peringatan Bayaran

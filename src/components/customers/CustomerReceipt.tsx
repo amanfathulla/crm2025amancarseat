@@ -16,6 +16,16 @@ const fmtDate = (d: string | null) => {
   });
 };
 
+const paymentLabels: Record<string, string> = {
+  billplz: "BillPlz (Online)",
+  toyyibpay: "toyyibPay (Online)",
+  chip: "CHIP (Online)",
+  bayarcash: "Bayarcash (Online)",
+  bcl: "BCL Pay (Online)",
+  whatsapp: "WhatsApp (Manual)",
+  manual: "Manual",
+};
+
 export function CustomerReceipt() {
   const [customer, setCustomer] = useState<any>(null);
   const [isLoading, setIsLoading] = useState(true);
@@ -129,7 +139,11 @@ export function CustomerReceipt() {
   const isCompleted = customer.order_status === "completed";
   const isProcessing = customer.order_status === "processing";
   const showEmail = customer.email && !customer.email.includes("@noemail.com") && !customer.email.includes("@temp.local");
-  const paymentSource = customer.payment_source === "whatsapp" ? "WhatsApp (Manual)" : "BillPlz (Online)";
+  const paymentSourceKey = String(customer.payment_source || "").toLowerCase();
+  const paymentKey = paymentSourceKey === "whatsapp"
+    ? "whatsapp"
+    : String(customer.payment_gateway || customer.payment_source || "manual").toLowerCase();
+  const paymentSource = paymentLabels[paymentKey] || `${paymentKey.charAt(0).toUpperCase()}${paymentKey.slice(1)} (Online)`;
 
   return (
     <div className="container mx-auto p-4 max-w-2xl">

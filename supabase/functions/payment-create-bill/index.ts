@@ -1,5 +1,5 @@
 // Dispatcher edge function: creates a bill via the chosen payment gateway provider.
-// Supports: toyyibpay, chip, bayarcash, bcl. (Billplz keeps its own dedicated function.)
+// Supports: toyyibpay, chip, bayarcash, bcl.
 import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
@@ -125,6 +125,7 @@ serve(async (req) => {
         payment_type: isDeposit ? "deposit" : "full",
         deposit_amount: isDeposit ? amountToPay : 0,
         balance_amount: serverBalance,
+        payment_source: provider,
         payment_gateway: provider,
       }).select().single();
 
