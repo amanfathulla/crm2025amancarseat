@@ -1020,13 +1020,18 @@ export default function OrderPage() {
 
                 {/* Pay button */}
                 <Button type="submit"
+                  disabled={!selectedGateway}
                   className="w-full h-14 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-bold text-base rounded-xl shadow-xl shadow-blue-900/40 transition-all">
                   <ShoppingBag className="h-5 w-5 mr-2" />
-                  {paymentType === "deposit"
+                  {!selectedGateway
+                    ? "Gateway Online Belum Aktif"
+                    : paymentType === "deposit"
                     ? `Bayar Deposit RM${amountToPay.toFixed(2)} Dengan ${selectedGatewayName}`
                     : `Bayar RM${amountToPay.toFixed(2)} Dengan ${selectedGatewayName}`}
                 </Button>
-                <p className="text-center text-white/25 text-xs">🔒 Pembayaran selamat melalui {selectedGatewayName} Malaysia</p>
+                <p className="text-center text-white/25 text-xs">
+                  {selectedGateway ? `🔒 Pembayaran selamat melalui ${selectedGatewayName} Malaysia` : "Aktifkan gateway online di panel Payment Gateway atau gunakan WhatsApp"}
+                </p>
 
 
                 {/* Divider */}
