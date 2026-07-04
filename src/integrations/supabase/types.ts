@@ -127,30 +127,6 @@ export type Database = {
         }
         Relationships: []
       }
-      billplz_settings: {
-        Row: {
-          api_key: string
-          collection_id: string
-          id: string
-          updated_at: string
-          x_signature_key: string
-        }
-        Insert: {
-          api_key?: string
-          collection_id?: string
-          id?: string
-          updated_at?: string
-          x_signature_key?: string
-        }
-        Update: {
-          api_key?: string
-          collection_id?: string
-          id?: string
-          updated_at?: string
-          x_signature_key?: string
-        }
-        Relationships: []
-      }
       category_settings: {
         Row: {
           created_at: string | null
