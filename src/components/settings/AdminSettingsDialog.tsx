@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CreditCard, CheckCircle2, Tag, Trash2, Plus, Send } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface AdminSettingsDialogProps {
@@ -52,17 +52,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   const [showEmailPw, setShowEmailPw] = useState(false);
   const [isUpdatingEmail, setIsUpdatingEmail] = useState(false);
 
-  // Billplz form
-  const [billplzApiKey, setBillplzApiKey] = useState("");
-  const [billplzXSig, setBillplzXSig] = useState("");
-  const [billplzCollection, setBillplzCollection] = useState("");
-  const [showApiKey, setShowApiKey] = useState(false);
-  const [showXSig, setShowXSig] = useState(false);
-  const [isLoadingBillplz, setIsLoadingBillplz] = useState(false);
-  const [isSavingBillplz, setIsSavingBillplz] = useState(false);
-  const [billplzRowId, setBillplzRowId] = useState<string | null>(null);
-  const [billplzSaved, setBillplzSaved] = useState(false);
-
   // Coupon form
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
@@ -89,28 +78,9 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   // Load data when dialog opens
   useEffect(() => {
     if (!open) return;
-    fetchBillplz();
     fetchCoupons();
     fetchTelegram();
   }, [open, authClient]);
-
-  const fetchBillplz = async () => {
-    setIsLoadingBillplz(true);
-    try {
-      const { data } = await authClient
-        .from("billplz_settings")
-        .select("id, api_key, x_signature_key, collection_id")
-        .limit(1)
-        .single();
-      if (data) {
-        setBillplzRowId(data.id);
-        setBillplzApiKey(data.api_key || "");
-        setBillplzXSig(data.x_signature_key || "");
-        setBillplzCollection(data.collection_id || "");
-      }
-    } catch (_) {}
-    finally { setIsLoadingBillplz(false); }
-  };
 
   const fetchCoupons = async () => {
     setIsLoadingCoupons(true);
@@ -149,7 +119,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     setCurrentPassword(""); setNewPassword(""); setConfirmPassword("");
     setPassword(""); setNewEmail("");
     setShowCurrentPw(false); setShowNewPw(false); setShowEmailPw(false);
-    setBillplzSaved(false); setTelegramSaved(false);
+    setTelegramSaved(false);
     setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
   };
 
@@ -184,32 +154,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
       else { toast({ title: "Gagal", description: "Password tidak betul", variant: "destructive" }); }
     } catch { toast({ title: "Error", description: "Gagal kemaskini email", variant: "destructive" }); }
     finally { setIsUpdatingEmail(false); }
-  };
-
-  // ---- Billplz ----
-  const handleSaveBillplz = async () => {
-    if (!billplzApiKey.trim()) { toast({ title: "Error", description: "API Key tidak boleh kosong", variant: "destructive" }); return; }
-    if (!billplzCollection.trim()) { toast({ title: "Error", description: "Collection ID tidak boleh kosong", variant: "destructive" }); return; }
-    setIsSavingBillplz(true);
-    try {
-      if (billplzRowId) {
-        const { error } = await authClient.from("billplz_settings").update({
-          api_key: billplzApiKey.trim(), x_signature_key: billplzXSig.trim(),
-          collection_id: billplzCollection.trim(), updated_at: new Date().toISOString(),
-        }).eq("id", billplzRowId);
-        if (error) throw error;
-      } else {
-        const { data, error } = await authClient.from("billplz_settings").insert({
-          api_key: billplzApiKey.trim(), x_signature_key: billplzXSig.trim(), collection_id: billplzCollection.trim(),
-        }).select("id").single();
-        if (error) throw error;
-        if (data) setBillplzRowId(data.id);
-      }
-      setBillplzSaved(true);
-      toast({ title: "Berjaya!", description: "Tetapan Billplz telah disimpan" });
-      setTimeout(() => setBillplzSaved(false), 3000);
-    } catch { toast({ title: "Error", description: "Gagal simpan tetapan Billplz", variant: "destructive" }); }
-    finally { setIsSavingBillplz(false); }
   };
 
   // ---- Telegram ----
@@ -315,12 +259,8 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
           <DialogTitle className="text-lg font-semibold">Tetapan Admin</DialogTitle>
         </DialogHeader>
 
-        <Tabs defaultValue="billplz" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
-            <TabsTrigger value="billplz" className="flex items-center gap-1 text-xs">
-              <CreditCard className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Billplz</span>
-            </TabsTrigger>
+        <Tabs defaultValue="telegram" className="w-full">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="telegram" className="flex items-center gap-1 text-xs">
               <Send className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Telegram</span>
@@ -338,59 +278,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               <span className="hidden sm:inline">Email</span>
             </TabsTrigger>
           </TabsList>
-
-          {/* ── Billplz Tab ── */}
-          <TabsContent value="billplz" className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">
-              Kemaskini kelayakan pembayaran Billplz. Nilai disimpan dengan selamat dalam pangkalan data.
-            </p>
-            {isLoadingBillplz ? (
-              <div className="flex items-center justify-center py-6">
-                <LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" />
-              </div>
-            ) : (
-              <>
-                <div className="space-y-2">
-                  <Label>API Key (Secret Key)</Label>
-                  <div className="relative">
-                    <Input type={showApiKey ? "text" : "password"} value={billplzApiKey}
-                      onChange={(e) => setBillplzApiKey(e.target.value)} placeholder="Masukkan Billplz API Key"
-                      className="pr-10 font-mono text-sm" />
-                    <button type="button" onClick={() => setShowApiKey(!showApiKey)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showApiKey ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Settings → API</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>X-Signature Key</Label>
-                  <div className="relative">
-                    <Input type={showXSig ? "text" : "password"} value={billplzXSig}
-                      onChange={(e) => setBillplzXSig(e.target.value)} placeholder="Masukkan X-Signature Key"
-                      className="pr-10 font-mono text-sm" />
-                    <button type="button" onClick={() => setShowXSig(!showXSig)}
-                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground">
-                      {showXSig ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
-                    </button>
-                  </div>
-                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Settings → API → XSignature Key</p>
-                </div>
-                <div className="space-y-2">
-                  <Label>Collection ID</Label>
-                  <Input type="text" value={billplzCollection} onChange={(e) => setBillplzCollection(e.target.value)}
-                    placeholder="cth: abc123xyz" className="font-mono text-sm" />
-                  <p className="text-xs text-muted-foreground">Ditemui di: Billplz Dashboard → Collections → pilih koleksi anda</p>
-                </div>
-                <Button onClick={handleSaveBillplz} disabled={isSavingBillplz} className="w-full"
-                  variant={billplzSaved ? "outline" : "default"}>
-                  {isSavingBillplz ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Menyimpan...</>
-                    : billplzSaved ? <><CheckCircle2 className="mr-2 h-4 w-4 text-green-500" />Tersimpan!</>
-                    : "Simpan Tetapan Billplz"}
-                </Button>
-              </>
-            )}
-          </TabsContent>
 
           {/* ── Telegram Tab ── */}
           <TabsContent value="telegram" className="space-y-4 pt-2">
