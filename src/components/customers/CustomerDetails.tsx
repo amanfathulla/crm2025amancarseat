@@ -96,7 +96,10 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
   };
 
   const status = statusConfig[customer.order_status] ?? { label: customer.order_status, className: "bg-muted text-muted-foreground" };
-  const sourceKey = ((customer.payment_gateway || customer.payment_source || "manual") as string).toLowerCase();
+  const paymentSourceKey = String(customer.payment_source || "").toLowerCase();
+  const sourceKey = paymentSourceKey === "whatsapp"
+    ? "whatsapp"
+    : String(customer.payment_gateway || customer.payment_source || "manual").toLowerCase();
   const source = sourceConfig[sourceKey as keyof typeof sourceConfig] ?? {
     label: sourceKey.charAt(0).toUpperCase() + sourceKey.slice(1),
     icon: <CreditCard className="h-2.5 w-2.5" />,

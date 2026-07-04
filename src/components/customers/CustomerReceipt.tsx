@@ -139,7 +139,10 @@ export function CustomerReceipt() {
   const isCompleted = customer.order_status === "completed";
   const isProcessing = customer.order_status === "processing";
   const showEmail = customer.email && !customer.email.includes("@noemail.com") && !customer.email.includes("@temp.local");
-  const paymentKey = String(customer.payment_gateway || customer.payment_source || "manual").toLowerCase();
+  const paymentSourceKey = String(customer.payment_source || "").toLowerCase();
+  const paymentKey = paymentSourceKey === "whatsapp"
+    ? "whatsapp"
+    : String(customer.payment_gateway || customer.payment_source || "manual").toLowerCase();
   const paymentSource = paymentLabels[paymentKey] || `${paymentKey.charAt(0).toUpperCase()}${paymentKey.slice(1)} (Online)`;
 
   return (

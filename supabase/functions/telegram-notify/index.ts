@@ -89,7 +89,10 @@ Deno.serve(async (req) => {
       });
     }
 
-    const src = ((customer as any).payment_source || (customer as any).payment_gateway || payment_source || "manual").toLowerCase();
+    const paymentSourceKey = String((customer as any).payment_source || payment_source || "").toLowerCase();
+    const src = paymentSourceKey === "whatsapp"
+      ? "whatsapp"
+      : String((customer as any).payment_gateway || (customer as any).payment_source || payment_source || "manual").toLowerCase();
     const srcLabel = src === "whatsapp"
       ? "💬 WhatsApp (Manual)"
       : `💳 ${src.charAt(0).toUpperCase()}${src.slice(1)} (Online)`;
