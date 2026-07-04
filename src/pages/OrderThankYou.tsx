@@ -20,6 +20,7 @@ interface CustomerData {
   order_date: string;
   order_status: string;
   payment_source: string;
+  payment_gateway?: string | null;
 }
 
 const WA_NUMBER = "60194503184";
@@ -41,7 +42,7 @@ export default function OrderThankYou() {
     if (customerId) {
       supabase
         .from("customers")
-        .select("name, phone, email, car_model, product, product_variation, sales_amount, paid_amount, address, city, state, order_number, order_date, order_status, payment_source")
+        .select("name, phone, email, car_model, product, product_variation, sales_amount, paid_amount, address, city, state, order_number, order_date, order_status, payment_source, payment_gateway")
         .eq("id", customerId)
         .single()
         .then(({ data }) => {
