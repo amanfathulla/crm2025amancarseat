@@ -61,26 +61,6 @@ export function useSidebarItems(orderCounts: {
       title: "Customers", 
       path: "/customers", 
       icon: Users,
-      badges: [
-        { 
-          label: `${orderCounts.processing}`, 
-          variant: "secondary", 
-          tooltip: "Orders In Process",
-          onClick: () => handleOrderFilter('processing'),
-        },
-        { 
-          label: `${orderCounts.completed}`, 
-          variant: "default", 
-          tooltip: "Completed Orders",
-          onClick: () => handleOrderFilter('completed'),
-        },
-        { 
-          label: `${orderCounts.cancelled}`, 
-          variant: "destructive", 
-          tooltip: "Cancelled Orders",
-          onClick: () => handleOrderFilter('cancelled'),
-        }
-      ]
     },
     { 
       title: "Sales", 
