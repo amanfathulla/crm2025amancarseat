@@ -136,11 +136,11 @@ export default function LiveDashboard() {
       const dmax = Math.max(1, ...arr.map((a) => a.count));
       setDesignData(arr.map((a) => ({ ...a, pct: (a.count / dmax) * 100 })));
 
-      // Material page views (7 days) — REAL DATA, group by whatever material exists
+      // Material page views (HARI INI SAHAJA) — REAL DATA
       const { data: pv } = await authClient
         .from("page_views" as any)
         .select("material")
-        .gte("viewed_at", sevenIso)
+        .gte("viewed_at", todayIso)
         .limit(50000);
       const vmap: Record<string, number> = {};
       (pv || []).forEach((r: any) => {
@@ -154,30 +154,27 @@ export default function LiveDashboard() {
         .sort((a, b) => b.views - a.views);
       const vmax = Math.max(1, ...mats.map((m) => m.views));
 
-      // Ads spend today (for cpv)
+      // Ads spend HARI INI — dari ads_spend (spend_date + amount) sama macam Dashboard
+      const todayDateStr = todayIso.substring(0, 10);
       const { data: adsTodayRows } = await authClient
         .from("ads_spend" as any)
-        .select("spend, clicks, impressions, leads")
-        .gte("date", todayIso.substring(0, 10));
-      const totalAds = (adsTodayRows || []).reduce(
-        (acc: any, r: any) => ({
-          spend: acc.spend + Number(r.spend || 0),
-          clicks: acc.clicks + Number(r.clicks || 0),
-          impressions: acc.impressions + Number(r.impressions || 0),
-          leads: acc.leads + Number(r.leads || 0),
-        }),
-        { spend: 0, clicks: 0, impressions: 0, leads: 0 }
+        .select("amount")
+        .eq("spend_date", todayDateStr);
+      const spendToday = (adsTodayRows || []).reduce(
+        (acc: number, r: any) => acc + Number(r.amount || 0),
+        0
       );
+      const totalAds = { spend: spendToday, clicks: 0, impressions: 0, leads: 0 };
       setAdsToday(totalAds);
 
-      const totalViews7d = mats.reduce((s, m) => s + m.views, 0);
+      const totalViewsToday = mats.reduce((s, m) => s + m.views, 0);
       setMaterialData(
         mats.map((m) => ({
           ...m,
           pct: (m.views / vmax) * 100,
           cpv:
-            totalViews7d > 0 && totalAds.spend > 0
-              ? (totalAds.spend / totalViews7d).toFixed(2)
+            totalViewsToday > 0 && totalAds.spend > 0
+              ? (totalAds.spend / totalViewsToday).toFixed(2)
               : "0.00",
         }))
       );
@@ -339,7 +336,7 @@ export default function LiveDashboard() {
               <div>
                 <h3 className="font-semibold text-foreground">View Pages Material</h3>
                 <p className="text-xs text-muted-foreground">
-                  View 7 hari + kos per view (belanja iklan hari ini)
+                  View hari ini + kos per view (belanja iklan hari ini)
                 </p>
               </div>
             </div>
