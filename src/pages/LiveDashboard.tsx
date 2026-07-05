@@ -336,7 +336,7 @@ export default function LiveDashboard() {
               <div>
                 <h3 className="font-semibold text-foreground">View Pages Material</h3>
                 <p className="text-xs text-muted-foreground">
-                  View 7 hari + kos per view (belanja iklan hari ini)
+                  View hari ini + kos per view (belanja iklan hari ini)
                 </p>
               </div>
             </div>
