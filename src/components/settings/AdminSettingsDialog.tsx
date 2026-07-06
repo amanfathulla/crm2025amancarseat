@@ -8,6 +8,7 @@ import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
 import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send, Radio, Copy, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
+import { PublicDashSettings } from "@/components/settings/PublicDashSettings";
 
 interface AdminSettingsDialogProps {
   open: boolean;
