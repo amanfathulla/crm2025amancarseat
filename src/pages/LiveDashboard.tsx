@@ -155,7 +155,9 @@ export default function LiveDashboard() {
       const vmax = Math.max(1, ...mats.map((m) => m.views));
 
       // Ads spend HARI INI — dari ads_spend (spend_date + amount) sama macam Dashboard
-      const todayDateStr = todayIso.substring(0, 10);
+      // Guna tarikh tempatan (MYT) supaya sync dengan input dari Dashboard pada hari yang sama
+      const _today = new Date();
+      const todayDateStr = `${_today.getFullYear()}-${String(_today.getMonth() + 1).padStart(2, "0")}-${String(_today.getDate()).padStart(2, "0")}`;
       const { data: adsTodayRows } = await authClient
         .from("ads_spend" as any)
         .select("amount")
