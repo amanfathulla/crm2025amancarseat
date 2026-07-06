@@ -511,6 +511,11 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               {isUpdatingEmail ? <><LoaderCircle className="mr-2 h-4 w-4 animate-spin" />Mengemaskini...</> : "Kemaskini Email"}
             </Button>
           </TabsContent>
+
+          {/* ── Public Dashboard Tab ── */}
+          <TabsContent value="publicdash" className="space-y-4 pt-2">
+            <PublicDashSettings authClient={authClient} toast={toast} />
+          </TabsContent>
         </Tabs>
       </DialogContent>
     </Dialog>
