@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send, Radio, Copy, RefreshCw } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 
 interface AdminSettingsDialogProps {
@@ -260,7 +260,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         </DialogHeader>
 
         <Tabs defaultValue="telegram" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="telegram" className="flex items-center gap-1 text-xs">
               <Send className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Telegram</span>
@@ -276,6 +276,10 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
             <TabsTrigger value="email" className="flex items-center gap-1 text-xs">
               <Mail className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Email</span>
+            </TabsTrigger>
+            <TabsTrigger value="publicdash" className="flex items-center gap-1 text-xs">
+              <Radio className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Public</span>
             </TabsTrigger>
           </TabsList>
 
