@@ -35,6 +35,7 @@ import Order from "@/pages/Order";
 import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
+import RaceDashboard from "@/pages/RaceDashboard";
 
 function App() {
   const queryClient = new QueryClient();
@@ -56,6 +57,7 @@ function App() {
                 <Route path="/testimoni/:brand" element={<Testimoni />} />
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
+                <Route path="/live-dashboardacs" element={<RaceDashboard />} />
 
                 {/* Routes with sidebar and authenticated layout */}
                 <Route path="/" element={
