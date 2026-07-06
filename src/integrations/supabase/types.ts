@@ -732,6 +732,36 @@ export type Database = {
         }
         Relationships: []
       }
+      public_dashboard_settings: {
+        Row: {
+          created_at: string
+          expires_at: string
+          hide_sensitive_costs: boolean
+          id: string
+          last_changed_at: string
+          password_hash: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          expires_at?: string
+          hide_sensitive_costs?: boolean
+          id?: string
+          last_changed_at?: string
+          password_hash: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          expires_at?: string
+          hide_sensitive_costs?: boolean
+          id?: string
+          last_changed_at?: string
+          password_hash?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       sales_records: {
         Row: {
           amount: number
@@ -1072,6 +1102,8 @@ export type Database = {
         Args: { p_admin_id: string; p_user_agent?: string }
         Returns: string
       }
+      get_public_dashboard_status: { Args: never; Returns: Json }
+      get_public_race_dash: { Args: { p_password: string }; Returns: Json }
       increment_coupon_usage: { Args: { p_code: string }; Returns: undefined }
       invalidate_admin_session: {
         Args: { p_token: string }
@@ -1086,6 +1118,14 @@ export type Database = {
         Args: { p_product: string; p_variation: string }
         Returns: number
       }
+      set_public_dashboard_hide_costs: {
+        Args: { p_hide: boolean }
+        Returns: boolean
+      }
+      set_public_dashboard_password: {
+        Args: { p_password: string }
+        Returns: Json
+      }
       update_admin_email: {
         Args: { p_admin_id: string; p_new_email: string; p_password: string }
         Returns: boolean
@@ -1099,6 +1139,10 @@ export type Database = {
         Returns: boolean
       }
       validate_admin_session: { Args: { p_token: string }; Returns: string }
+      verify_public_dashboard_password: {
+        Args: { p_password: string }
+        Returns: Json
+      }
     }
     Enums: {
       [_ in never]: never
