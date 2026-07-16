@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+import { useState, useEffect, useMemo } from "react";
 import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -45,6 +45,7 @@ import {
 } from "recharts";
 import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
+import { CustomerOrdersDialog } from "@/components/customers/CustomerOrdersDialog";
 import { compareDates, formatCurrency } from "@/lib/utils";
 import { DownloadCustomersDialog } from "@/components/customers/DownloadCustomersDialog";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -66,6 +67,8 @@ function Customers() {
   const [customers, setCustomers] = useState<Customer[]>([]);
   const [isLoading, setIsLoading] = useState(true);
   const [searchQuery, setSearchQuery] = useState("");
+  const [groupByPhone, setGroupByPhone] = useState(true);
+  const [ordersPhone, setOrdersPhone] = useState<string | null>(null);
   const [searchParams, setSearchParams] = useSearchParams();
   const [statusFilter, setStatusFilter] = useState<string | null>(null);
   const [stateFilter, setStateFilter] = useState<string | null>(null);
@@ -372,6 +375,38 @@ function Customers() {
       customer.product_variation.toLowerCase().includes(searchQuery.toLowerCase()) ||
       (customer.order_status && customer.order_status.toLowerCase().includes(searchQuery.toLowerCase()))
   );
+
+  // Group by phone: 1 row per unique phone, with all their orders aggregated.
+  const groupedCustomers = useMemo(() => {
+    const map = new Map<string, any>();
+    for (const c of filteredCustomers) {
+      const phone = (c.phone || "").trim();
+      if (!phone) continue;
+      const existing = map.get(phone);
+      if (!existing) {
+        map.set(phone, {
+          phone,
+          name: c.name,
+          orders: [c],
+          orderCount: 1,
+          totalSpent: Number(c.sales_amount || 0),
+          latestStatus: c.order_status,
+          latestDate: c.order_date,
+        });
+      } else {
+        existing.orders.push(c);
+        existing.orderCount += 1;
+        existing.totalSpent += Number(c.sales_amount || 0);
+        if (new Date(c.order_date) > new Date(existing.latestDate || 0)) {
+          existing.latestStatus = c.order_status;
+          existing.latestDate = c.order_date;
+        }
+      }
+    }
+    return Array.from(map.values()).sort((a, b) => (b.latestDate || "").localeCompare(a.latestDate || ""));
+  }, [filteredCustomers]);
+
+  const listData = groupByPhone ? groupedCustomers : filteredCustomers;
 
   const handleEditCustomer = (customer: Customer) => {
     setSelectedCustomer({
@@ -726,6 +761,17 @@ function Customers() {
             </Button>
 
             <Button
+              variant={groupByPhone ? "default" : "outline"}
+              size="sm"
+              onClick={() => setGroupByPhone((v) => !v)}
+              className="whitespace-nowrap"
+              title="Kumpulkan pelanggan mengikut nombor telefon"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              {groupByPhone ? "Group: Phone" : "Group: Order"}
+            </Button>
+
+            <Button
               variant="outline"
               size="sm"
               onClick={() => setIsDownloadDialogOpen(true)}
@@ -806,7 +852,7 @@ function Customers() {
             <div className="py-8 text-center text-muted-foreground">
               Loading customers...
             </div>
-          ) : filteredCustomers.length === 0 ? (
+          ) : listData.length === 0 ? (
             <div className="py-8 text-center text-muted-foreground">
               {searchQuery || statusFilter || stateFilter
                 ? "No customers match your search criteria."
@@ -815,24 +861,68 @@ function Customers() {
           ) : (
             <>
               <Accordion type="single" collapsible className="w-full">
-                {filteredCustomers.map((customer, index) => (
-                  <div key={customer.id} className="flex items-start gap-4">
-                    <Checkbox
-                      checked={selectedCustomers.includes(customer.id)}
-                      onCheckedChange={(checked) => 
-                        handleSelectCustomer(customer.id, checked as boolean)
-                      }
-                      className="mt-5 h-5 w-5"
-                    />
-                    <CustomerDetails
-                      customer={customer}
-                      onEdit={() => handleEditCustomer(customer)}
-                      onDelete={() => handleDeleteCustomer(customer)}
-                      index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
-                      className="flex-1"
-                    />
-                  </div>
-                ))}
+                {listData.map((entry, index) => {
+                  if (groupByPhone) {
+                    const g = entry as any;
+                    const statusBadge =
+                      g.latestStatus === "completed"
+                        ? "bg-green-500/15 text-green-600 border-green-500/30"
+                        : g.latestStatus === "cancelled"
+                        ? "bg-red-500/15 text-red-600 border-red-500/30"
+                        : "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
+                    return (
+                      <div key={g.phone} className="flex items-start gap-4 py-3 border-b border-border last:border-0">
+                        <div className="flex-1 min-w-0">
+                          <div className="flex items-center gap-2 flex-wrap">
+                            <button
+                              onClick={() => setOrdersPhone(g.phone)}
+                              className="font-semibold text-foreground hover:text-primary hover:underline"
+                            >
+                              {g.name || "—"}
+                            </button>
+                            <button
+                              onClick={() => setOrdersPhone(g.phone)}
+                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                            >
+                              {g.phone}
+                            </button>
+                            <Badge variant="secondary" className="text-xs">
+                              {g.orderCount} order
+                            </Badge>
+                            <span className={`inline-block rounded-full border px-2 py-0.5 text-xs ${statusBadge}`}>
+                              {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
+                            </span>
+                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Jumlah dibelanjakan: <span className="font-medium text-foreground">{formatCurrency(g.totalSpent)}</span>
+                          </p>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)}>
+                          Lihat Order
+                        </Button>
+                      </div>
+                    );
+                  }
+                  const customer = entry as Customer;
+                  return (
+                    <div key={customer.id} className="flex items-start gap-4">
+                      <Checkbox
+                        checked={selectedCustomers.includes(customer.id)}
+                        onCheckedChange={(checked) =>
+                          handleSelectCustomer(customer.id, checked as boolean)
+                        }
+                        className="mt-5 h-5 w-5"
+                      />
+                      <CustomerDetails
+                        customer={customer}
+                        onEdit={() => handleEditCustomer(customer)}
+                        onDelete={() => handleDeleteCustomer(customer)}
+                        index={(currentPage - 1) * CUSTOMERS_PER_PAGE + index + 1}
+                        className="flex-1"
+                      />
+                    </div>
+                  );
+                })}
               </Accordion>
               
               {totalPages > 1 && (
@@ -921,6 +1011,14 @@ function Customers() {
           }}
         />
       )}
+
+      <CustomerOrdersDialog
+        phone={ordersPhone}
+        open={!!ordersPhone}
+        onOpenChange={(o) => {
+          if (!o) setOrdersPhone(null);
+        }}
+      />
     </div>
   );
 }
