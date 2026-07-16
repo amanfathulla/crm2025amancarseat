@@ -14,7 +14,10 @@ export default defineConfig(({ mode }) => ({
     react(),
     mode === 'development' && componentTagger(),
     VitePWA({
-      registerType: 'autoUpdate',
+      // SW disabled so nothing (audio, api) is served from a stale cache.
+      selfDestroying: true,
+      injectRegister: false,
+      devOptions: { enabled: false },
       includeAssets: ['lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png'],
       manifest: {
         name: 'ACS Legacy - CRM System',
