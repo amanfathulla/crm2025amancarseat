@@ -22,10 +22,11 @@ interface WallOfFameProps {
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
   
-  // Latest 15 reviews that have images (newest first).
+  // Latest 15 "pickup" reviews that have images (newest first).
   const getFeaturedReviews = () => {
     return reviews
       .filter(r => r.images && r.images.length > 0)
+      .filter(r => r.car_model.toLowerCase().includes("pickup"))
       .slice(0, 15);
   };
 
