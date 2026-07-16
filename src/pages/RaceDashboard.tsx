@@ -1,6 +1,10 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Loader2, Radio, Lock, Volume2, VolumeX, ShoppingCart } from "lucide-react";
+import {
+  Loader2, Radio, Lock, Volume2, VolumeX, ShoppingCart,
+  Target, DollarSign, Percent, TrendingUp, MousePointer2, User,
+} from "lucide-react";
+import { LineChart, Line, ResponsiveContainer } from "recharts";
 
 // ─── Race Dash — public live sales dashboard ────────────────────────────────
 // Route: /live-dashboardacs
@@ -28,6 +32,15 @@ type RecentOrder = {
   created_at: string;
 };
 
+type TrendDay = {
+  date: string;
+  sales: number;
+  orders: number;
+  spend: number;
+  views: number;
+  clicks: number;
+}; // requires RPC extension
+
 type DashData = {
   ok: boolean;
   reason?: string;
@@ -40,6 +53,7 @@ type DashData = {
   total_clicks?: number; // requires RPC extension
   materials: Material[];
   recent_orders?: RecentOrder[]; // requires RPC extension
+  trend?: TrendDay[]; // requires RPC extension — last 7 days
   as_of: string;
 };
 
@@ -92,79 +106,6 @@ function relTime(iso: string) {
   if (min < 60) return `${min} minit lalu`;
   const hr = Math.floor(min / 60);
   return `${hr} jam lalu`;
-}
-
-// ─── Circular gauge (SVG) ───────────────────────────────────────────────────
-function Gauge({
-  value,
-  max,
-  label,
-  display,
-  accent,
-  unavailable,
-}: {
-  value: number;
-  max: number;
-  label: string;
-  display: string;
-  accent: string;
-  unavailable?: boolean;
-}) {
-  const size = 140;
-  const stroke = 12;
-  const r = (size - stroke) / 2;
-  const c = 2 * Math.PI * r;
-  // Show 240° arc (from -120° to +120°)
-  const arcFrac = 240 / 360;
-  const dashArc = c * arcFrac;
-  const clamped = Math.min(Math.max(value / max, 0), 1);
-  const dashProg = unavailable ? 0 : dashArc * clamped;
-  return (
-    <div className="flex flex-col items-center">
-      <div className="relative" style={{ width: size, height: size }}>
-        <svg width={size} height={size} className="-rotate-[210deg]">
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke="#262A31"
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dashArc} ${c}`}
-          />
-          <circle
-            cx={size / 2}
-            cy={size / 2}
-            r={r}
-            fill="none"
-            stroke={accent}
-            strokeWidth={stroke}
-            strokeLinecap="round"
-            strokeDasharray={`${dashProg} ${c}`}
-            style={{
-              transition: "stroke-dasharray 0.8s ease-out",
-              filter: `drop-shadow(0 0 6px ${accent}88)`,
-            }}
-          />
-        </svg>
-        <div className="absolute inset-0 flex flex-col items-center justify-center">
-          <div
-            className="text-2xl font-black"
-            style={{ color: unavailable ? "#7A8088" : accent, fontFamily: "Oswald, sans-serif" }}
-          >
-            {display}
-          </div>
-        </div>
-      </div>
-      <div
-        className="mt-1 text-[11px] tracking-[0.25em] uppercase"
-        style={{ color: "#7A8088", fontFamily: "Rajdhani, sans-serif" }}
-      >
-        {label}
-      </div>
-    </div>
-  );
 }
 
 // ─── Live order toast popup ─────────────────────────────────────────────────
@@ -417,6 +358,25 @@ export default function RaceDashboard() {
         : revenue > 0
           ? 100
           : 0;
+
+    // Derive daily series for sparklines from the 7-day trend (requires RPC extension)
+    const trend = data.trend ?? [];
+    const series = {
+      roas: trend.map((d) => (d.spend > 0 ? d.sales / d.spend : 0)),
+      roi: trend.map((d) => (d.spend > 0 ? ((d.sales - d.spend) / d.spend) * 100 : 0)),
+      ctr: trend.map((d) => (d.views > 0 ? (d.orders / d.views) * 100 : 0)),
+      cpo: trend.map((d) => (d.orders > 0 ? d.spend / d.orders : 0)),
+      spend: trend.map((d) => d.spend),
+      cpc: trend.map((d) => (d.clicks > 0 ? d.spend / d.clicks : 0)),
+    };
+    const pctChange = (arr: number[]) => {
+      if (arr.length < 2) return null;
+      const yest = arr[arr.length - 2];
+      const today = arr[arr.length - 1];
+      if (yest === 0) return today > 0 ? 100 : null;
+      return ((today - yest) / yest) * 100;
+    };
+
     return {
       roas,
       roi,
@@ -430,6 +390,15 @@ export default function RaceDashboard() {
       totalViews,
       noOrders: orders === 0,
       noAds: spend === 0,
+      series,
+      pct: {
+        roas: pctChange(series.roas),
+        roi: pctChange(series.roi),
+        ctr: pctChange(series.ctr),
+        cpo: pctChange(series.cpo),
+        spend: pctChange(series.spend),
+        cpc: pctChange(series.cpc),
+      },
     };
   }, [data]);
 
@@ -559,72 +528,84 @@ export default function RaceDashboard() {
         </div>
       </section>
 
-      {/* GAUGE CLUSTER */}
+      {/* PERFORMANCE CARDS */}
       <section className="px-4 pt-6">
         <div
-          className="rounded-2xl border p-5"
-          style={{ background: "#15181D", borderColor: "#262A31" }}
+          className="text-[11px] tracking-[0.3em] uppercase mb-3 px-1"
+          style={{ color: "#7A8088" }}
         >
-          <div
-            className="text-[11px] tracking-[0.3em] uppercase mb-4"
-            style={{ color: "#7A8088" }}
-          >
-            Performance Cluster
-          </div>
-          <div className="grid grid-cols-3 gap-2">
-            <Gauge
-              label="ROAS"
-              value={Math.min(metrics?.roas ?? 0, 5)}
-              max={5}
-              display={
-                metrics?.noOrders || metrics?.noAds
-                  ? "—"
-                  : `${(metrics?.roas ?? 0).toFixed(2)}x`
-              }
-              accent="#FF7A1A"
-              unavailable={metrics?.noOrders || metrics?.noAds}
-            />
-            <Gauge
-              label="ROI"
-              value={Math.max(Math.min(((metrics?.roi ?? 0) + 100) / 200, 1) * 100, 0)}
-              max={100}
-              display={
-                metrics?.noOrders || metrics?.noAds
-                  ? "N/A"
-                  : `${(metrics?.roi ?? 0) >= 0 ? "+" : ""}${(metrics?.roi ?? 0).toFixed(0)}%`
-              }
-              accent="#00C2A8"
-              unavailable={metrics?.noOrders || metrics?.noAds}
-            />
-            <Gauge
-              label="CTR"
-              value={Math.min(metrics?.ctr ?? 0, 20)}
-              max={20}
-              display={`${(metrics?.ctr ?? 0).toFixed(1)}%`}
-              accent="#FFD23F"
-            />
-          </div>
+          Performance Hari Ini
+        </div>
+        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <StatCardChart
+            icon={Target}
+            label="ROAS"
+            value={metrics?.noOrders || metrics?.noAds ? "—" : `${(metrics?.roas ?? 0).toFixed(2)}x`}
+            pct={metrics?.pct.roas}
+            series={metrics?.series.roas ?? []}
+            color="#FF7A1A"
+            unavailable={metrics?.noOrders || metrics?.noAds}
+          />
+          <StatCardChart
+            icon={DollarSign}
+            label="ROI"
+            value={
+              metrics?.noOrders || metrics?.noAds
+                ? "N/A"
+                : `${(metrics?.roi ?? 0) >= 0 ? "+" : ""}${(metrics?.roi ?? 0).toFixed(0)}%`
+            }
+            pct={metrics?.pct.roi}
+            series={metrics?.series.roi ?? []}
+            color="#00C2A8"
+            unavailable={metrics?.noOrders || metrics?.noAds}
+          />
+          <StatCardChart
+            icon={Percent}
+            label="CTR"
+            value={`${(metrics?.ctr ?? 0).toFixed(1)}%`}
+            pct={metrics?.pct.ctr}
+            series={metrics?.series.ctr ?? []}
+            color="#FFD23F"
+          />
+          {!hideCosts && (
+            <>
+              <StatCardChart
+                icon={ShoppingCart}
+                label="Cost / Order"
+                value={metrics?.noOrders ? "—" : fmtRM(metrics?.cpo ?? 0, 2)}
+                pct={metrics?.pct.cpo}
+                series={metrics?.series.cpo ?? []}
+                color="#B08CFF"
+                unavailable={metrics?.noOrders}
+              />
+              <StatCardChart
+                icon={TrendingUp}
+                label="Ad Spend"
+                value={fmtRM(metrics?.spend ?? 0, 0)}
+                pct={metrics?.pct.spend}
+                series={metrics?.series.spend ?? []}
+                color="#5AA9FF"
+              />
+              <StatCardChart
+                icon={MousePointer2}
+                label="CPC"
+                value={metrics?.cpc ? fmtRM(metrics?.cpc, 2) : "—"}
+                pct={metrics?.pct.cpc}
+                series={metrics?.series.cpc ?? []}
+                color="#3FD6C7"
+              />
+              <StatCardChart
+                icon={User}
+                label="CPL"
+                value="—"
+                series={[]}
+                color="#FF7AB8"
+                unavailable
+              />
+            </>
+          )}
         </div>
       </section>
-
-      {/* STAT CARDS */}
-      {!hideCosts && (
-        <section className="px-4 pt-4">
-          <div className="grid grid-cols-2 gap-3">
-            <StatCard label="Belanja Iklan" value={fmtRM(metrics?.spend ?? 0, 0)} />
-            <StatCard
-              label="Cost / Order"
-              value={
-                metrics?.noOrders
-                  ? "—"
-                  : fmtRM(metrics?.cpo ?? 0, 2)
-              }
-            />
-            <StatCard label="CPC" value={metrics?.cpc ? fmtRM(metrics?.cpc, 2) : "—"} />
-            <StatCard label="CPL" value={metrics?.cpl ? fmtRM(metrics?.cpl, 2) : "—"} />
-          </div>
-        </section>
-      )}
 
       {/* MATERIAL TELEMETRY */}
       <section className="px-4 pt-4 pb-8">
@@ -742,6 +723,57 @@ export default function RaceDashboard() {
           Auto-refresh setiap 30s
         </div>
       </section>
+    </div>
+  );
+}
+
+// ─── Flat stat card with % badge + mini sparkline (matches original mockup) ─
+function StatCardChart({
+  icon: Icon,
+  label,
+  value,
+  pct,
+  series,
+  color,
+  unavailable,
+}: {
+  icon: any;
+  label: string;
+  value: string;
+  pct?: number | null;
+  series: number[];
+  color: string;
+  unavailable?: boolean;
+}) {
+  const chartData = series.map((v, i) => ({ i, v }));
+  const hasChart = series.some((v) => v > 0);
+  return (
+    <div className="rounded-xl border p-3" style={{ background: "#15181D", borderColor: "#262A31" }}>
+      <div className="flex items-center gap-1.5 mb-2">
+        <Icon className="h-3.5 w-3.5" style={{ color }} />
+        <span className="text-[10px] tracking-[0.2em] uppercase" style={{ color: "#7A8088" }}>{label}</span>
+      </div>
+      <div className="text-xl font-black" style={{ color: unavailable ? "#7A8088" : "#F2F2F0", fontFamily: "Oswald, sans-serif" }}>
+        {value}
+      </div>
+      {pct !== undefined && pct !== null && (
+        <div className="text-[11px] font-bold mt-0.5" style={{ color: pct >= 0 ? "#00C2A8" : "#ff9999" }}>
+          {pct >= 0 ? "▲" : "▼"} {Math.abs(pct).toFixed(0)}% dari semalam
+        </div>
+      )}
+      <div className="h-8 mt-1.5 -mx-1">
+        {hasChart ? (
+          <ResponsiveContainer width="100%" height="100%">
+            <LineChart data={chartData}>
+              <Line type="monotone" dataKey="v" stroke={color} strokeWidth={2} dot={false} isAnimationActive={false} />
+            </LineChart>
+          </ResponsiveContainer>
+        ) : (
+          <div className="h-full flex items-center text-[10px]" style={{ color: "#3A3F47" }}>
+            Belum cukup data 7 hari
+          </div>
+        )}
+      </div>
     </div>
   );
 }
