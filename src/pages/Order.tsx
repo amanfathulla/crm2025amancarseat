@@ -119,6 +119,10 @@ export default function OrderPage() {
       toast({ title: "Saiz fail terlalu besar", description: "Maksimum 5MB per gambar.", variant: "destructive" });
       return;
     }
+    // Show a local preview immediately so the customer sees the image right away
+    // (the bucket is private, so the uploaded public URL is not directly viewable).
+    const localUrl = URL.createObjectURL(file);
+    setSeatImages(prev => ({ ...prev, [slot]: localUrl }));
     setUploadingImage(slot);
     try {
       const ext = file.name.split(".").pop() || "jpg";
@@ -126,8 +130,9 @@ export default function OrderPage() {
       const { error } = await supabase.storage.from("customer-seat-images").upload(path, file, { upsert: false, contentType: file.type });
       if (error) throw error;
       const { data: pub } = supabase.storage.from("customer-seat-images").getPublicUrl(path);
-      setSeatImages(prev => ({ ...prev, [slot]: pub.publicUrl }));
-      toast({ title: "Gambar dimuat naik", description: "Gambar berjaya dihantar." });
+      // Keep the local preview for display; store the uploaded URL for the record.
+      setSeatImages(prev => ({ ...prev, [slot]: localUrl }));
+      toast({ title: "Gambar dimuat naik", description: "Gambar berjaya dihantar.", variant: "default" });
     } catch (err: any) {
       toast({ title: "Gagal muat naik", description: err?.message || "Sila cuba lagi.", variant: "destructive" });
     } finally {
