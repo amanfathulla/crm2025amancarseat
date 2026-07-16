@@ -74,26 +74,14 @@ BEGIN
   ),
   -- Map each order to a material by KEYWORD (product says "Fabric Mesh", not "Kain Mesh")
   sales AS (
-    SELECT k.name,
+    SELECT p.category AS name,
            COUNT(c.id)::int AS orders,
            COALESCE(SUM(COALESCE(c.sales_amount, c.paid_amount, 0)),0) AS sales
-      FROM known k
-      LEFT JOIN public.customers c
-        ON c.created_at >= v_today_start
-       AND (
-            lower(c.product_variation) LIKE '%' || lower(k.name) || '%'
-         OR lower(c.product) LIKE '%fullsilk%'
-         OR lower(c.product) LIKE '%nylon%'
-         OR lower(c.product) LIKE '%mesh%'
-         OR lower(c.product) LIKE '%semi leather%'
-       )
-       AND (
-            (lower(k.name) LIKE '%fullsilk%' AND lower(c.product) LIKE '%fullsilk%')
-         OR (lower(k.name) LIKE '%nylon%'    AND lower(c.product) LIKE '%nylon%')
-         OR (lower(k.name) LIKE '%mesh%'     AND lower(c.product) LIKE '%mesh%')
-         OR (lower(k.name) LIKE '%semi leather%' AND lower(c.product) LIKE '%semi leather%')
-       )
-     GROUP BY k.name
+      FROM public.customers c
+      JOIN public.products p
+        ON lower(btrim(c.product)) = lower(btrim(p.name))
+     WHERE c.created_at >= v_today_start
+     GROUP BY p.category
   )
   SELECT jsonb_agg(
            jsonb_build_object(
