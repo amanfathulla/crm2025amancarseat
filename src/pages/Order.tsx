@@ -10,6 +10,7 @@ import { useToast } from "@/hooks/use-toast";
 import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
 import { Upload, X, ImagePlus } from "lucide-react";
+import { QRCodeSVG } from "qrcode.react";
 
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
@@ -63,6 +64,7 @@ export default function OrderPage() {
   const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+  const [showQr, setShowQr] = useState(false);
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
   const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
   const [selectedGateway, setSelectedGateway] = useState<string>("billplz");
@@ -393,10 +395,9 @@ export default function OrderPage() {
 
     try {
       const customerId = crypto.randomUUID();
-      const email = form.email?.trim() || `${form.phone.replace(/[^0-9]/g, "")}+${Date.now()}@noemail.com`;
-      const orderRef = customerId.slice(-6).toUpperCase();
+      const email = form.email?.trim() || `${form.phone.replace(/[^0-9]/g, "")}@noemail.com`;
 
-      const { error } = await supabase.from("customers").insert({
+      const { data: inserted, error } = await supabase.from("customers").insert({
         id: customerId,
         name: form.name,
         phone: form.phone,
@@ -422,9 +423,11 @@ export default function OrderPage() {
         payment_type: paymentType,
         deposit_amount: paymentType === "deposit" ? amountToPay : 0,
         balance_amount: balanceAmount,
-      } as any);
+      } as any).select("order_number").single();
 
       if (error) throw error;
+      const orderNumber = (inserted as any)?.order_number;
+      const orderRef = orderNumber ? `#${orderNumber}` : customerId.slice(-6).toUpperCase();
 
       if (appliedCoupon?.code) {
         await supabase.rpc("increment_coupon_usage", { p_code: appliedCoupon.code });
@@ -1073,6 +1076,28 @@ export default function OrderPage() {
                         <p className="text-green-400 font-bold text-lg tracking-widest">553038596454</p>
                       </div>
                     </div>
+                    <button
+                      type="button"
+                      onClick={() => setShowQr(v => !v)}
+                      className="w-full mt-1 text-xs font-semibold text-green-300 hover:text-green-200 underline underline-offset-2"
+                    >
+                      {showQr ? "Sembunyi QR" : "Papar QR untuk scan"}
+                    </button>
+                    {showQr && (
+                      <div className="mt-2 flex flex-col items-center gap-2 rounded-xl bg-white p-3">
+                        <QRCodeSVG
+                          value="553038596454"
+                          size={160}
+                          level="M"
+                          includeMargin
+                          bgColor="#ffffff"
+                          fgColor="#0a0a0f"
+                        />
+                        <p className="text-[10px] text-gray-600 text-center leading-tight">
+                          Scan dengan app perbankan untuk salin akaun Maybank<br />ACS LEGACY · 553038596454
+                        </p>
+                      </div>
+                    )}
                   </div>
                   <button
                     type="button"
