@@ -630,6 +630,7 @@ export default function RaceDashboard() {
                     </div>
                     <div className="text-[11px] text-[#7A8088] mt-0.5">
                       {m.views} view · {m.orders} order
+                      {!hideCosts && ` · Jualan ${fmtRM(m.sales || 0, 0)}`}
                       {!hideCosts && ` · Kos ${fmtRM(m.views * (m.cpv || 0), 2)}`}
                       {!hideCosts && ` · CPV ${fmtRM(m.cpv, 2)}`}
                     </div>
