@@ -268,23 +268,6 @@ export function Sidebar() {
                 <Users className="h-4 w-4 text-blue-200" />
                 <span className="text-sm font-semibold text-white">Customers</span>
               </div>
-              <div className="grid grid-cols-3 gap-2">
-                <div className="bg-amber-500/20 border border-amber-400/30 rounded-lg p-2 text-center">
-                  <Clock className="h-3 w-3 mx-auto mb-1 text-amber-300" />
-                  <span className="block text-lg font-bold text-white">{orderCounts.processing}</span>
-                  <span className="text-[10px] text-amber-100/80">Process</span>
-                </div>
-                <div className="bg-emerald-500/20 border border-emerald-400/30 rounded-lg p-2 text-center">
-                  <CheckCircle className="h-3 w-3 mx-auto mb-1 text-emerald-300" />
-                  <span className="block text-lg font-bold text-white">{orderCounts.completed}</span>
-                  <span className="text-[10px] text-emerald-100/80">Done</span>
-                </div>
-                <div className="bg-red-500/20 border border-red-400/30 rounded-lg p-2 text-center">
-                  <XCircle className="h-3 w-3 mx-auto mb-1 text-red-300" />
-                  <span className="block text-lg font-bold text-white">{orderCounts.cancelled}</span>
-                  <span className="text-[10px] text-red-100/80">Cancel</span>
-                </div>
-              </div>
             </NavLink>
           )}
 
