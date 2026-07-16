@@ -402,6 +402,10 @@ export default function RaceDashboard() {
     };
   }, [data]);
 
+  // Hook kena dipanggil sebelum conditional return (Rules of Hooks) —
+  // guna ?? 0 supaya selamat dipanggil walaupun `data` belum load lagi.
+  const animatedSales = useCountUp(data?.today_sales ?? 0, 1200);
+
   if (!pw) {
     return (
       <>
@@ -435,7 +439,6 @@ export default function RaceDashboard() {
   }
 
   const hideCosts = data?.hide_sensitive_costs ?? false;
-  const animatedSales = useCountUp(data?.today_sales ?? 0, 1200);
 
   return (
     <div
