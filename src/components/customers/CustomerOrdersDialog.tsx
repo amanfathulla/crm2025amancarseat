@@ -1,5 +1,5 @@
 import { useEffect, useState } from "react";
-import { X, Phone, Package, DollarSign, Calendar, Pencil } from "lucide-react";
+import { X, Phone, Package, DollarSign, Calendar, Pencil, MapPin, Car } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Customer } from "@/types/customer";
@@ -16,6 +16,47 @@ const STATUS_BADGE: Record<string, string> = {
   completed: "bg-green-500/15 text-green-600 border-green-500/30",
   cancelled: "bg-red-500/15 text-red-600 border-red-500/30",
 };
+
+// Renders a customer seat image via a signed URL (bucket is private).
+function SeatImage({ url, label }: { url: string | null; label: string }) {
+  const [signed, setSigned] = useState<string | null>(null);
+  const { authClient } = useAuth();
+  useEffect(() => {
+    let cancelled = false;
+    if (!url) {
+      setSigned(null);
+      return;
+    }
+    const marker = "/customer-seat-images/";
+    const idx = url.indexOf(marker);
+    const path = idx >= 0 ? url.substring(idx + marker.length) : url;
+    authClient.storage
+      .from("customer-seat-images")
+      .createSignedUrl(path, 60 * 60)
+      .then(({ data }) => {
+        if (!cancelled) setSigned(data?.signedUrl || null);
+      })
+      .catch(() => {
+        if (!cancelled) setSigned(null);
+      });
+    return () => {
+      cancelled = true;
+    };
+  }, [url, authClient]);
+  if (!url) return null;
+  return (
+    <div className="space-y-1">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      {signed ? (
+        <img src={signed} alt={label} className="h-20 w-20 rounded-lg border border-border object-cover" />
+      ) : (
+        <div className="h-20 w-20 rounded-lg border border-border bg-muted flex items-center justify-center text-[10px] text-muted-foreground">
+          …
+        </div>
+      )}
+    </div>
+  );
+}
 
 interface Props {
   phone: string | null;
@@ -144,6 +185,21 @@ export function CustomerOrdersDialog({ phone, open, onOpenChange }: Props) {
                           {c.order_date ? new Date(c.order_date).toLocaleDateString("ms-MY") : "—"}
                           {c.order_number ? ` • #${c.order_number}` : ""}
                         </p>
+                        <div className="mt-2 space-y-1 text-xs text-muted-foreground">
+                          <p className="flex items-center gap-1.5"><span className="font-medium text-foreground">Nama:</span> {c.name || "—"}</p>
+                          <p className="flex items-center gap-1.5"><Car className="h-3 w-3" /> <span className="font-medium text-foreground">Model:</span> {c.car_model || "—"}</p>
+                          <p className="flex items-center gap-1.5"><MapPin className="h-3 w-3" /> <span className="font-medium text-foreground">Alamat:</span> {[c.address, c.city, c.state].filter(Boolean).join(", ") || "—"}</p>
+                          {c.additional_notes ? (
+                            <p><span className="font-medium text-foreground">Nota:</span> {c.additional_notes}</p>
+                          ) : null}
+                        </div>
+                        {(c.seat_image_front || c.seat_image_back || c.seat_image_third_row) && (
+                          <div className="mt-2 flex gap-2 flex-wrap">
+                            <SeatImage url={c.seat_image_front} label="Seat Depan" />
+                            <SeatImage url={c.seat_image_back} label="Seat Belakang" />
+                            <SeatImage url={c.seat_image_third_row} label="Baris Ke-3" />
+                          </div>
+                        )}
                       </div>
 
                       <div className="shrink-0 text-right">

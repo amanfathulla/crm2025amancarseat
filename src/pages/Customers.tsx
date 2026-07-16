@@ -6,7 +6,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
-  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText, Calculator
+  Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText, Calculator,
+  Clock, CheckCircle, XCircle
 } from "lucide-react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
@@ -661,6 +662,45 @@ function Customers() {
           </div>
         );
       })()}
+
+      <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mt-6">
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-amber-500 to-amber-600 text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-white/90">In Process</span>
+              <span className="text-3xl font-bold mt-1">{customerStats.processingOrders}</span>
+              <span className="text-[11px] text-white/70 mt-1">Tempahan sedang diproses</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <Clock className="h-6 w-6 text-white" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-emerald-500 to-emerald-600 text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-white/90">Completed</span>
+              <span className="text-3xl font-bold mt-1">{customerStats.completedOrders}</span>
+              <span className="text-[11px] text-white/70 mt-1">Tempahan selesai</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <CheckCircle className="h-6 w-6 text-white" />
+            </div>
+          </CardContent>
+        </Card>
+        <Card className="shadow-sm border-0 bg-gradient-to-br from-red-500 to-red-600 text-white">
+          <CardContent className="p-6 flex items-center justify-between">
+            <div className="flex flex-col">
+              <span className="text-sm text-white/90">Cancelled</span>
+              <span className="text-3xl font-bold mt-1">{customerStats.cancelledOrders}</span>
+              <span className="text-[11px] text-white/70 mt-1">Tempahan dibatalkan</span>
+            </div>
+            <div className="h-12 w-12 rounded-full bg-white/20 flex items-center justify-center">
+              <XCircle className="h-6 w-6 text-white" />
+            </div>
+          </CardContent>
+        </Card>
+      </div>
 
       <Card className="mb-8">
         <CardHeader>
