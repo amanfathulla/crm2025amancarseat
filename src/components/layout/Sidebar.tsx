@@ -13,16 +13,9 @@ import {
   X,
   Menu,
   Target,
-  Clock,
-  CheckCircle,
-  XCircle,
-  TrendingUp,
-  Wallet,
   Megaphone,
   LogOut,
   ShoppingBag,
-  ExternalLink,
-  Copy,
   CreditCard,
   Star,
   Radio,
@@ -37,7 +30,6 @@ interface SidebarItemType {
 export function Sidebar() {
   const { toast } = useToast();
   const [expanded, setExpanded] = useState(true);
-  const [copied, setCopied] = useState(false);
   const isMobile = useIsMobile();
   const [mobileOpen, setMobileOpen] = useState(false);
   const location = useLocation();
@@ -296,29 +288,13 @@ export function Sidebar() {
               className={cn(
                 "block rounded-xl p-3 mt-2 transition-all duration-200 border",
                 location.pathname === "/sales"
-                  ? "bg-emerald-600 border-emerald-400 shadow-lg"
-                  : "bg-emerald-600/15 border-emerald-500/30 hover:bg-emerald-600/25"
+                  ? "bg-blue-600 border-blue-400 shadow-lg"
+                  : "bg-blue-600/15 border-blue-500/30 hover:bg-blue-600/25"
               )}
             >
               <div className="flex items-center gap-2 mb-3">
-                <BarChart3 className="h-4 w-4 text-emerald-200" />
+                <BarChart3 className="h-4 w-4 text-blue-200" />
                 <span className="text-sm font-semibold text-white">Sales</span>
-              </div>
-              <div className="grid grid-cols-2 gap-2">
-                <div className="bg-blue-500/20 border border-blue-400/30 rounded-lg p-2">
-                  <div className="flex items-center gap-1 mb-1">
-                    <Wallet className="h-3 w-3 text-blue-300" />
-                    <span className="text-[10px] text-blue-100/80">Revenue</span>
-                  </div>
-                  <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalRevenue)}</span>
-                </div>
-                <div className="bg-green-500/20 border border-green-400/30 rounded-lg p-2">
-                  <div className="flex items-center gap-1 mb-1">
-                    <TrendingUp className="h-3 w-3 text-green-300" />
-                    <span className="text-[10px] text-green-100/80">Profit</span>
-                  </div>
-                  <span className="block text-sm font-bold text-white">{formatCurrency(salesData.totalProfit)}</span>
-                </div>
               </div>
             </NavLink>
           )}
@@ -348,44 +324,13 @@ export function Sidebar() {
               className={cn(
                 "block rounded-xl p-3 mt-2 transition-all duration-200 border",
                 location.pathname === "/link-tempahan"
-                  ? "bg-violet-600 border-violet-400 shadow-lg"
-                  : "bg-gradient-to-br from-violet-500/20 to-violet-600/20 border-violet-500/30 hover:from-violet-500/30 hover:to-violet-600/30"
+                  ? "bg-blue-600 border-blue-400 shadow-lg"
+                  : "bg-blue-600/15 border-blue-500/30 hover:bg-blue-600/25"
               )}
             >
-              <div className="flex items-center justify-between mb-1">
-                <div className="flex items-center gap-2">
-                  <ShoppingBag className="h-4 w-4 text-violet-300" />
-                  <span className="text-sm font-semibold text-white">Link Tempahan</span>
-                </div>
-                <a
-                  href={`${window.location.origin}/order`}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  onClick={(e) => e.stopPropagation()}
-                  className="text-violet-300 hover:text-violet-100"
-                  title="Buka link tempahan"
-                >
-                  <ExternalLink className="h-3 w-3" />
-                </a>
-              </div>
-              <div className="flex items-center gap-1 mt-2 bg-white/10 rounded-lg px-2 py-1">
-                <span className="text-[10px] text-white/70 flex-1 truncate">
-                  Urus link & kos penghantaran
-                </span>
-                <button
-                  onClick={(e) => {
-                    e.preventDefault();
-                    e.stopPropagation();
-                    navigator.clipboard.writeText(`${window.location.origin}/order`);
-                    setCopied(true);
-                    toast({ title: "✅ Link disalin!", description: `${window.location.origin}/order` });
-                    setTimeout(() => setCopied(false), 2000);
-                  }}
-                  className="shrink-0 text-violet-300 hover:text-white transition-colors"
-                  title="Salin link"
-                >
-                  {copied ? <CheckCircle className="h-3 w-3 text-green-400" /> : <Copy className="h-3 w-3" />}
-                </button>
+              <div className="flex items-center gap-2">
+                <ShoppingBag className="h-4 w-4 text-blue-200" />
+                <span className="text-sm font-semibold text-white">Link Tempahan</span>
               </div>
             </NavLink>
           )}
