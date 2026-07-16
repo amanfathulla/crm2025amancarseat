@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Radio, Lock, Volume2, VolumeX, ShoppingCart,
+  Loader2, Radio, Lock, Volume2, VolumeX, ShoppingCart,
   Target, DollarSign, Percent, TrendingUp, MousePointer2, User,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
@@ -57,6 +57,7 @@ type DashData = {
   as_of: string;
 };
 
+const SS_KEY = "acs_race_dash_pw";
 const MUTE_KEY = "acs_race_dash_muted";
 
 const fmtRM = (v: number, digits = 0) =>
@@ -158,10 +159,121 @@ function OrderToast({ toast, onDone }: { toast: Toast; onDone: (key: string) => 
   );
 }
 
+// ─── Password gate ──────────────────────────────────────────────────────────
+function PasswordGate({ onUnlock }: { onUnlock: (pw: string) => void }) {
+  const [pw, setPw] = useState("");
+  const [err, setErr] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
+
+  const submit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setErr(null);
+    setBusy(true);
+    const { data, error } = await (supabase.rpc as any)(
+      "verify_public_dashboard_password",
+      { p_password: pw },
+    );
+    setBusy(false);
+    if (error) {
+      setErr("Ralat sambungan. Cuba lagi.");
+      return;
+    }
+    const res = data as any;
+    if (res?.ok) {
+      sessionStorage.setItem(SS_KEY, pw);
+      onUnlock(pw);
+      return;
+    }
+    if (res?.reason === "expired") {
+      setErr("Password telah tamat tempoh, sila hubungi admin untuk password baru.");
+    } else if (res?.reason === "not_configured") {
+      setErr("Password belum diset oleh admin.");
+    } else {
+      setErr("Password salah.");
+    }
+  };
+
+  return (
+    <div
+      className="min-h-screen w-full flex items-center justify-center px-4"
+      style={{
+        background: "radial-gradient(ellipse at top, #1A1D22 0%, #0E1013 100%)",
+        color: "#F2F2F0",
+      }}
+    >
+      <form
+        onSubmit={submit}
+        className="w-full max-w-sm rounded-2xl border p-6 space-y-5"
+        style={{ background: "#15181D", borderColor: "#262A31" }}
+      >
+        <div className="flex items-center gap-2 text-[#FF7A1A]">
+          <Lock className="h-5 w-5" />
+          <span
+            className="text-xs tracking-[0.3em] uppercase font-bold"
+            style={{ fontFamily: "Rajdhani, sans-serif" }}
+          >
+            Race Dash · Akses Terhad
+          </span>
+        </div>
+        <div>
+          <h1
+            className="text-2xl font-black"
+            style={{ fontFamily: "Oswald, sans-serif" }}
+          >
+            AmanCarSeat
+          </h1>
+          <p className="text-sm text-[#7A8088]">Public Live Sales Dashboard</p>
+        </div>
+        <div className="space-y-1">
+          <label
+            className="text-[11px] tracking-widest uppercase text-[#7A8088]"
+            style={{ fontFamily: "Rajdhani, sans-serif" }}
+          >
+            Password
+          </label>
+          <input
+            type="password"
+            value={pw}
+            onChange={(e) => setPw(e.target.value)}
+            autoFocus
+            className="w-full rounded-lg px-3 py-2.5 text-base bg-[#0E1013] border outline-none transition"
+            style={{
+              borderColor: "#262A31",
+              color: "#F2F2F0",
+              fontFamily: "Rajdhani, sans-serif",
+            }}
+            onFocus={(e) => (e.currentTarget.style.borderColor = "#FF7A1A")}
+            onBlur={(e) => (e.currentTarget.style.borderColor = "#262A31")}
+          />
+        </div>
+        {err && (
+          <div className="text-xs rounded-lg px-3 py-2 bg-[#3a0f0f] border border-[#5c1a1a] text-[#ff9999]">
+            {err}
+          </div>
+        )}
+        <button
+          type="submit"
+          disabled={busy || !pw}
+          className="w-full rounded-lg py-2.5 font-bold tracking-wide text-black disabled:opacity-50"
+          style={{
+            background: "linear-gradient(135deg, #FFD9A8, #FF7A1A)",
+            fontFamily: "Rajdhani, sans-serif",
+            boxShadow: "0 0 20px #FF7A1A55",
+          }}
+        >
+          {busy ? "Menyemak…" : "MASUK"}
+        </button>
+      </form>
+    </div>
+  );
+}
+
 // ─── Main dashboard ─────────────────────────────────────────────────────────
 export default function RaceDashboard() {
+  const [pw, setPw] = useState<string | null>(() => sessionStorage.getItem(SS_KEY));
   const [data, setData] = useState<DashData | null>(null);
   const [loading, setLoading] = useState(false);
+  const [expired, setExpired] = useState(false);
 
   const [muted, setMuted] = useState(() => sessionStorage.getItem(MUTE_KEY) === "1");
   const [toasts, setToasts] = useState<Toast[]>([]);
@@ -180,15 +292,22 @@ export default function RaceDashboard() {
     });
   };
 
-  const load = async () => {
+  const load = async (password: string) => {
     setLoading(true);
     const { data: res, error } = await (supabase.rpc as any)("get_public_race_dash", {
-      p_password: "",
+      p_password: password,
     });
     setLoading(false);
     if (error) return;
     const r = res as DashData;
-    if (!r?.ok) return;
+    if (!r?.ok) {
+      if (r?.reason === "expired" || r?.reason === "invalid") {
+        sessionStorage.removeItem(SS_KEY);
+        setPw(null);
+        setExpired(r?.reason === "expired");
+      }
+      return;
+    }
 
     // Detect new orders since last poll → trigger popup + sound
     const recent = r.recent_orders ?? [];
@@ -213,11 +332,12 @@ export default function RaceDashboard() {
   };
 
   useEffect(() => {
-    load();
-    const iv = setInterval(() => load(), 30000);
+    if (!pw) return;
+    load(pw);
+    const iv = setInterval(() => load(pw), 30000);
     return () => clearInterval(iv);
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [muted]);
+  }, [pw, muted]);
 
   const metrics = useMemo(() => {
     if (!data) return null;
@@ -288,6 +408,38 @@ export default function RaceDashboard() {
   const animatedOrders = useCountUp(data?.today_orders ?? 0, 800);
 
   const hideCosts = data?.hide_sensitive_costs ?? false;
+
+  if (!pw) {
+    return (
+      <>
+        {expired && (
+          <div
+            style={{
+              position: "fixed",
+              top: 12,
+              left: "50%",
+              transform: "translateX(-50%)",
+              zIndex: 50,
+              background: "#3a0f0f",
+              border: "1px solid #5c1a1a",
+              color: "#ff9999",
+              padding: "8px 14px",
+              borderRadius: 8,
+              fontSize: 12,
+            }}
+          >
+            Password telah tamat tempoh.
+          </div>
+        )}
+        <PasswordGate
+          onUnlock={(p) => {
+            setPw(p);
+            setExpired(false);
+          }}
+        />
+      </>
+    );
+  }
 
   return (
     <div
