@@ -174,7 +174,7 @@ function OrderToast({ toast, onDone }: { toast: Toast; onDone: (key: string) => 
   const [, force] = useState(0);
 
   useEffect(() => {
-    const dismiss = setTimeout(() => onDone(toast.key), 6000);
+    const dismiss = setTimeout(() => onDone(toast.key), 4000);
     const tick = setInterval(() => force((n) => n + 1), 1000); // refresh relative time
     return () => {
       clearTimeout(dismiss);
@@ -184,33 +184,35 @@ function OrderToast({ toast, onDone }: { toast: Toast; onDone: (key: string) => 
 
   return (
     <div
-      className="w-72 rounded-xl border p-3 shadow-lg animate-in slide-in-from-right"
-      style={{
-        background: "#15181D",
-        borderColor: "#FF7A1A55",
-        boxShadow: "0 4px 24px rgba(255,122,26,0.25)",
-      }}
+      className="fixed inset-0 z-50 flex items-center justify-center px-6 animate-in fade-in"
+      style={{ background: "rgba(10,11,13,0.72)" }}
+      onClick={() => onDone(toast.key)}
     >
-      <div className="flex items-center gap-1.5 mb-1">
-        <ShoppingCart className="h-3.5 w-3.5" style={{ color: "#FF7A1A" }} />
-        <span
-          className="text-[10px] font-bold tracking-[0.2em] uppercase"
-          style={{ color: "#FF7A1A" }}
-        >
-          Order baru masuk
-        </span>
-      </div>
-      <div className="text-sm font-bold" style={{ color: "#F2F2F0" }}>
-        {toast.order.customer_name} beli {toast.order.product}
-        {toast.order.product_variation ? ` — ${toast.order.product_variation}` : ""}
-      </div>
-      <div className="flex items-center justify-between mt-1">
-        <span className="text-base font-black" style={{ color: "#00C2A8", fontFamily: "Oswald, sans-serif" }}>
+      <div
+        className="w-full max-w-[260px] rounded-xl border p-4 shadow-2xl animate-in zoom-in-95 slide-in-from-bottom-2 text-center"
+        style={{
+          background: "#15181D",
+          borderColor: "#FF7A1A66",
+          boxShadow: "0 8px 40px rgba(255,122,26,0.35)",
+        }}
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-center gap-1.5 mb-2">
+          <ShoppingCart className="h-3.5 w-3.5" style={{ color: "#FF7A1A" }} />
+          <span className="text-[10px] font-bold tracking-[0.15em] uppercase" style={{ color: "#FF7A1A" }}>
+            Order baru masuk
+          </span>
+        </div>
+        <div className="text-sm font-bold leading-snug" style={{ color: "#F2F2F0" }}>
+          {toast.order.customer_name} beli {toast.order.product}
+          {toast.order.product_variation ? ` — ${toast.order.product_variation}` : ""}
+        </div>
+        <div className="text-xl font-black mt-2" style={{ color: "#00C2A8", fontFamily: "Oswald, sans-serif" }}>
           {fmtRM(toast.order.price, 2)}
-        </span>
-        <span className="text-[11px]" style={{ color: "#7A8088" }}>
+        </div>
+        <div className="text-[10px] mt-1" style={{ color: "#7A8088" }}>
           {relTime(toast.order.created_at)}
-        </span>
+        </div>
       </div>
     </div>
   );
@@ -376,10 +378,7 @@ export default function RaceDashboard() {
       const fresh = recent.filter((o) => !seenOrderIds.current.has(o.id));
       if (fresh.length > 0) {
         fresh.forEach((o) => seenOrderIds.current.add(o.id));
-        setToasts((prev) => [
-          ...fresh.map((o) => ({ key: `${o.id}-${Date.now()}`, order: o })),
-          ...prev,
-        ].slice(0, 3));
+        setToasts([{ key: `${fresh[0].id}-${Date.now()}`, order: fresh[0] }]);
         if (!muted) {
           audioRef.current?.play().catch(() => {
             /* autoplay blocked until first user interaction — expected on first load */
@@ -485,11 +484,9 @@ export default function RaceDashboard() {
 
       {/* Sound + toast layer */}
       <audio ref={audioRef} src="/sounds/kaching.mp3" preload="auto" />
-      <div className="fixed top-4 right-4 z-50 flex flex-col gap-2">
-        {toasts.map((t) => (
-          <OrderToast key={t.key} toast={t} onDone={dismissToast} />
-        ))}
-      </div>
+      {toasts.map((t) => (
+        <OrderToast key={t.key} toast={t} onDone={dismissToast} />
+      ))}
       <button
         onClick={toggleMute}
         className="fixed bottom-4 right-4 z-40 rounded-full p-2.5 border"
