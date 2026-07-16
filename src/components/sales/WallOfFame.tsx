@@ -18,27 +18,15 @@ interface WallOfFameProps {
 }
 
 // Featured brands to show on landing page
-const FEATURED_BRANDS = ['pickup', 'selfie', 'box acs'] as const;
 
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
   
-  // Per category: 5 latest, fallback to 3 if not enough. Reviews come pre-sorted (newest first).
+  // Latest 15 reviews that have images (newest first).
   const getFeaturedReviews = () => {
-    const result: Review[] = [];
-    const usedIds = new Set<string>();
-    for (const brand of FEATURED_BRANDS) {
-      const brandReviews = reviews
-        .filter(r => r.images && r.images.length > 0)
-        .filter(r => r.car_model.toLowerCase().includes(brand))
-        .filter(r => !usedIds.has(r.id));
-      const take = brandReviews.length >= 5 ? 5 : Math.min(brandReviews.length, 3);
-      brandReviews.slice(0, take).forEach(r => {
-        result.push(r);
-        usedIds.add(r.id);
-      });
-    }
-    return result;
+    return reviews
+      .filter(r => r.images && r.images.length > 0)
+      .slice(0, 15);
   };
 
   const featuredReviews = getFeaturedReviews();

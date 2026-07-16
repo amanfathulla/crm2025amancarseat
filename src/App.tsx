@@ -1,9 +1,10 @@
 
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
   Route,
+  useLocation,
 } from "react-router-dom";
 import {
   QueryClient,
@@ -37,6 +38,14 @@ import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
 
+function ScrollToTop() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   const queryClient = new QueryClient();
 
@@ -45,6 +54,7 @@ function App() {
       <LanguageProvider>
         <QueryClientProvider client={queryClient}>
           <Router>
+            <ScrollToTop />
             <div className="flex min-h-screen w-full">
               <Routes>
                 {/* Routes without sidebar */}

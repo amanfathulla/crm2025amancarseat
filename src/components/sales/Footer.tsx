@@ -13,9 +13,9 @@ export const Footer = () => {
   };
 
   return (
-    <footer className="bg-red-700 text-white border-t border-red-900">
+    <footer className="bg-black text-white border-t border-white/10">
       {/* Leather Alternative Section */}
-      <div className="bg-red-800/60 border-b border-red-900">
+      <div className="bg-zinc-900/60 border-b border-white/10">
         <div className="container mx-auto px-4 py-8 md:py-10">
           <div className="max-w-2xl mx-auto text-center">
             <p className="text-base md:text-lg text-white/90 mb-4">
@@ -31,7 +31,7 @@ export const Footer = () => {
             <Button 
               size="lg"
               onClick={handleLeatherCatalog}
-              className="px-8 py-5 rounded-full font-bold bg-white text-red-700 hover:bg-white/90 border-0 transition-all"
+              className="px-8 py-5 rounded-full font-bold bg-white text-black hover:bg-white/90 border-0 transition-all"
             >
               <MessageCircle className="w-4 h-4 mr-2" />
               {language === 'bm' ? 'Lihat Katalog Kulit' : 'View Leather Catalog'}
@@ -46,7 +46,7 @@ export const Footer = () => {
           <div className="space-y-4">
             <div className="flex items-center gap-3">
               <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-red-700 font-bold text-lg">A</span>
+                <span className="text-black font-bold text-lg">A</span>
               </div>
               <span className="font-bold text-xl text-white">AMANCARSEAT</span>
             </div>
