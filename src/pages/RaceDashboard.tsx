@@ -526,7 +526,7 @@ export default function RaceDashboard() {
         >
           Performance Hari Ini
         </div>
-        <div className="grid grid-cols-1 gap-3">
+        <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
           <StatCardChart
             icon={Target}
             label="ROAS"
@@ -630,8 +630,8 @@ export default function RaceDashboard() {
                     </div>
                     <div className="text-[11px] text-[#7A8088] mt-0.5">
                       {m.views} view · {m.orders} order
+                      {!hideCosts && ` · Kos ${fmtRM(m.views * (m.cpv || 0), 2)}`}
                       {!hideCosts && ` · CPV ${fmtRM(m.cpv, 2)}`}
-                      {!hideCosts && m.clicks !== undefined && ` · CPC ${m.cpc ? fmtRM(m.cpc, 2) : "—"}`}
                     </div>
                   </div>
                   <div className="text-right">
