@@ -526,7 +526,7 @@ export default function RaceDashboard() {
         >
           Performance Hari Ini
         </div>
-        <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+        <div className="grid grid-cols-1 gap-3">
           <StatCardChart
             icon={Target}
             label="ROAS"
@@ -762,7 +762,7 @@ function StatCardChart({
           </ResponsiveContainer>
         ) : (
           <div className="h-full flex items-center text-[10px]" style={{ color: "#3A3F47" }}>
-            Belum cukup data 7 hari
+            Hari ini
           </div>
         )}
       </div>
