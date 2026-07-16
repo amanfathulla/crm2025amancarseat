@@ -1,7 +1,7 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import {
-  Loader2, Radio, Volume2, VolumeX, ShoppingCart,
+  Radio, Lock, Volume2, VolumeX, ShoppingCart,
   Target, DollarSign, Percent, TrendingUp, MousePointer2, User,
 } from "lucide-react";
 import { LineChart, Line, ResponsiveContainer } from "recharts";
@@ -285,6 +285,7 @@ export default function RaceDashboard() {
   // Hook kena dipanggil sebelum conditional return (Rules of Hooks) —
   // guna ?? 0 supaya selamat dipanggil walaupun `data` belum load lagi.
   const animatedSales = useCountUp(data?.today_sales ?? 0, 1200);
+  const animatedOrders = useCountUp(data?.today_orders ?? 0, 800);
 
   const hideCosts = data?.hide_sensitive_costs ?? false;
 
@@ -317,70 +318,56 @@ export default function RaceDashboard() {
       </button>
 
       {/* HERO */}
-      <section
-        className="px-4 pt-6 pb-8"
-        style={{
-          background: "linear-gradient(180deg, #1E140B 0%, #0E1013 100%)",
-          borderBottom: "1px solid #262A31",
-        }}
-      >
-        <div className="flex items-center gap-2 mb-3">
-          <span className="relative flex h-2.5 w-2.5">
-            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
-            <span className="relative inline-flex rounded-full h-2.5 w-2.5 bg-red-500" />
+      <section className="max-w-3xl mx-auto px-4 pt-14 pb-8">
+        {/* HEADER */}
+        <div className="flex items-center justify-between mb-6">
+          <div className="flex items-center gap-2">
+            <span className="relative flex h-2 w-2">
+              <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
+              <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
+            </span>
+            <span className="text-[11px] font-bold tracking-[0.3em] uppercase" style={{ color: "#7A8088" }}>
+              Live · Jualan Hari Ini
+            </span>
+          </div>
+          <span className="text-[11px]" style={{ color: "#7A8088" }}>
+            {new Date().toLocaleDateString("ms-MY", { day: "2-digit", month: "long", year: "numeric" })}
           </span>
-          <span
-            className="text-[11px] font-bold tracking-[0.3em] uppercase"
-            style={{ color: "#FF7A1A" }}
-          >
-            Live · Jualan Hari Ini
-          </span>
-          {loading && <Loader2 className="h-3 w-3 animate-spin text-[#7A8088]" />}
         </div>
 
-        <div
-          className="font-black leading-none"
-          style={{
-            fontFamily: "Oswald, sans-serif",
-            fontSize: "clamp(3.2rem, 14vw, 5.5rem)",
-            background: "linear-gradient(180deg, #FFD9A8 0%, #FF7A1A 100%)",
-            WebkitBackgroundClip: "text",
-            WebkitTextFillColor: "transparent",
-            backgroundClip: "text",
-            filter: "drop-shadow(0 0 22px rgba(255,122,26,0.55))",
-            letterSpacing: "-0.02em",
-          }}
-        >
-          {fmtRM(animatedSales, 0)}
-        </div>
-
-        <div className="mt-4 flex flex-wrap gap-2">
-          <div
-            className="px-3 py-1.5 rounded-full text-xs font-bold flex items-center gap-1"
-            style={{
-              background: "rgba(0,194,168,0.15)",
-              color: "#00C2A8",
-              border: "1px solid rgba(0,194,168,0.35)",
-            }}
-          >
-            {(metrics?.pctVsY ?? 0) >= 0 ? "▲" : "▼"} {Math.abs(metrics?.pctVsY ?? 0).toFixed(0)}%
-            <span className="opacity-70 font-medium">dari semalam</span>
+        {/* HERO — centered */}
+        <div className="text-center mb-8">
+          <div className="text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: "#7A8088" }}>
+            Jumlah Jualan Hari Ini
           </div>
           <div
-            className="px-3 py-1.5 rounded-full text-xs font-bold"
+            className="font-black leading-none"
             style={{
-              background: "rgba(236,72,153,0.15)",
-              color: "#f472b6",
-              border: "1px solid rgba(236,72,153,0.35)",
+              fontFamily: "Oswald, sans-serif",
+              fontSize: "clamp(3.2rem, 14vw, 5.5rem)",
+              color: "#FF7A1A",
+              textShadow: "0 0 40px rgba(255,122,26,0.4)",
+              letterSpacing: "-0.02em",
             }}
           >
-            🛒 {data?.today_orders ?? 0} order baru
+            {fmtRM(animatedSales, 0)}
+          </div>
+          <div className="mt-3 flex items-center justify-center gap-2">
+            <span className="text-sm font-bold" style={{ color: "#00C2A8" }}>
+              {(metrics?.pctVsY ?? 0) >= 0 ? "▲" : "▼"} {Math.abs(metrics?.pctVsY ?? 0).toFixed(0)}% dari semalam
+            </span>
+          </div>
+          <div className="mt-3 inline-flex items-center gap-2 rounded-full border px-4 py-1.5" style={{ borderColor: "#262A31" }}>
+            <ShoppingCart className="h-3.5 w-3.5" style={{ color: "#FF7A1A" }} />
+            <span className="text-sm font-bold" style={{ fontFamily: "Oswald, sans-serif" }}>
+              {Math.round(animatedOrders)} ORDER
+            </span>
           </div>
         </div>
       </section>
 
       {/* PERFORMANCE CARDS */}
-      <section className="px-4 pt-6">
+      <section className="max-w-3xl mx-auto px-4 pt-6">
         <div
           className="text-[11px] tracking-[0.3em] uppercase mb-3 px-1"
           style={{ color: "#7A8088" }}
@@ -459,7 +446,7 @@ export default function RaceDashboard() {
       </section>
 
       {/* MATERIAL TELEMETRY */}
-      <section className="px-4 pt-4 pb-8">
+      <section className="max-w-3xl mx-auto px-4 pt-4 pb-8">
         <div
           className="rounded-2xl border overflow-hidden"
           style={{ background: "#15181D", borderColor: "#262A31" }}
@@ -515,27 +502,29 @@ export default function RaceDashboard() {
           )}
         </div>
 
-        {/* ORDER TERKINI */}
-        {(data?.recent_orders?.length ?? 0) > 0 && (
+        {/* ORDER TERKINI — sentiasa keluar (placeholder bila tiada data) */}
+        <div
+          className="mt-4 rounded-2xl border overflow-hidden"
+          style={{ background: "#15181D", borderColor: "#262A31" }}
+        >
           <div
-            className="mt-4 rounded-2xl border overflow-hidden"
-            style={{ background: "#15181D", borderColor: "#262A31" }}
+            className="px-4 pt-4 pb-3 flex items-center justify-between"
+            style={{ color: "#7A8088" }}
           >
-            <div
-              className="px-4 pt-4 pb-3 flex items-center justify-between"
-              style={{ color: "#7A8088" }}
-            >
-              <span className="text-[11px] tracking-[0.3em] uppercase">Order Terkini</span>
-              <span className="flex items-center gap-1 text-[10px] text-[#FF7A1A]">
-                <span className="relative flex h-1.5 w-1.5">
-                  <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF7A1A] opacity-75" />
-                  <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF7A1A]" />
-                </span>
-                LIVE
+            <span className="text-[11px] tracking-[0.3em] uppercase">Order Terkini</span>
+            <span className="flex items-center gap-1 text-[10px] text-[#FF7A1A]">
+              <span className="relative flex h-1.5 w-1.5">
+                <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-[#FF7A1A] opacity-75" />
+                <span className="relative inline-flex rounded-full h-1.5 w-1.5 bg-[#FF7A1A]" />
               </span>
-            </div>
-            <div>
-              {data!.recent_orders!.slice(0, 10).map((o, i) => {
+              LIVE
+            </span>
+          </div>
+          <div>
+            {(data?.recent_orders?.length ?? 0) === 0 ? (
+              <div className="px-4 pb-4 text-sm text-[#7A8088]">Belum ada order.</div>
+            ) : (
+              data!.recent_orders!.slice(0, 10).map((o, i) => {
                 const isFresh = Date.now() - new Date(o.created_at).getTime() < 15000;
                 return (
                   <div
@@ -564,10 +553,10 @@ export default function RaceDashboard() {
                     </div>
                   </div>
                 );
-              })}
-            </div>
+              })
+            )}
           </div>
-        )}
+        </div>
 
         <div className="mt-4 text-center text-[10px] tracking-[0.3em] uppercase text-[#7A8088] flex items-center justify-center gap-1.5">
           <Radio className="h-3 w-3" />
