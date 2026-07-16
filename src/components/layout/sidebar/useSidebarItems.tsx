@@ -66,28 +66,6 @@ export function useSidebarItems(orderCounts: {
       title: "Sales", 
       path: "/sales", 
       icon: ShoppingCart,
-      badges: [
-        {
-          label: `RM${salesData.totalRevenue.toLocaleString('en-MY', { 
-            minimumFractionDigits: 0, 
-            maximumFractionDigits: 0 
-          })}`,
-          variant: "default",
-          tooltip: "Total Revenue (Jumlah Jualan Keseluruhan)",
-          onClick: () => navigate('/sales'),
-          className: "bg-blue-600 hover:bg-blue-700 text-white"
-        },
-        {
-          label: `RM${salesData.totalProfit.toLocaleString('en-MY', { 
-            minimumFractionDigits: 0, 
-            maximumFractionDigits: 0 
-          })}`,
-          variant: "default", 
-          tooltip: "Total Profit (Jumlah Untung Keseluruhan)",
-          onClick: () => navigate('/sales'),
-          className: "bg-green-600 hover:bg-green-700 text-white"
-        }
-      ]
     },
     { title: "Products", path: "/products", icon: Package },
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
