@@ -328,6 +328,14 @@ export default function OrderPage() {
     if (!form.state) { toast({ title: "Sila pilih negeri untuk kira kos postage", variant: "destructive" }); return; }
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     if (!selectedGateway) { toast({ title: "Gateway pembayaran belum aktif", description: "Sila pilih Bayar Melalui WhatsApp atau cuba lagi kemudian.", variant: "destructive" }); return; }
+    // Track CTA click for CPC (fire-and-forget)
+    if (selectedCategory) {
+      (supabase as any).from("material_clicks").insert({
+        material: selectedCategory.label,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }).then(() => {});
+    }
     setStep("loading");
     try {
       const endpoint = selectedGateway === "billplz"
@@ -370,6 +378,15 @@ export default function OrderPage() {
     if (finalPrice <= 0) {
       toast({ title: "Harga tidak sah", variant: "destructive" });
       return;
+    }
+
+    // Track CTA click for CPC (fire-and-forget)
+    if (selectedCategory) {
+      (supabase as any).from("material_clicks").insert({
+        material: selectedCategory.label,
+        user_agent: navigator.userAgent,
+        referrer: document.referrer || null,
+      }).then(() => {});
     }
 
     setStep("loading");
