@@ -61,6 +61,8 @@ export default function OrderPage() {
 
   // Optional seat reference images + notes
   const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
+  // Real storage URLs (for saving to DB). seatImages holds local preview blobs.
+  const [seatImageUrls, setSeatImageUrls] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
   const [showQr, setShowQr] = useState(false);
@@ -130,8 +132,9 @@ export default function OrderPage() {
       const { error } = await supabase.storage.from("customer-seat-images").upload(path, file, { upsert: false, contentType: file.type });
       if (error) throw error;
       const { data: pub } = supabase.storage.from("customer-seat-images").getPublicUrl(path);
-      // Keep the local preview for display; store the uploaded URL for the record.
-      setSeatImages(prev => ({ ...prev, [slot]: localUrl }));
+      // Keep the local preview (seatImages) for instant display; store the real
+      // storage URL separately so the DB record points at the uploaded file.
+      setSeatImageUrls(prev => ({ ...prev, [slot]: pub.publicUrl }));
       toast({ title: "Gambar dimuat naik", description: "Gambar berjaya dihantar.", variant: "default" });
     } catch (err: any) {
       toast({ title: "Gagal muat naik", description: err?.message || "Sila cuba lagi.", variant: "destructive" });
@@ -143,6 +146,7 @@ export default function OrderPage() {
 
   const removeImage = (slot: "front" | "back" | "third") => {
     setSeatImages(prev => ({ ...prev, [slot]: "" }));
+    setSeatImageUrls(prev => ({ ...prev, [slot]: "" }));
   };
 
   const [shippingCosts, setShippingCosts] = useState<{ semenanjung: number; sabahSarawak: number; enabled: boolean }>({ semenanjung: 10, sabahSarawak: 20, enabled: true });
@@ -353,9 +357,9 @@ export default function OrderPage() {
         product_variation: selectedVariation?.name || "",
         sales_amount: amountToPay.toString(),
         coupon_code: appliedCoupon?.code || "",
-        seat_image_front: seatImages.front || null,
-        seat_image_back: seatImages.back || null,
-        seat_image_third_row: seatImages.third || null,
+        seat_image_front: seatImageUrls.front || null,
+        seat_image_back: seatImageUrls.back || null,
+        seat_image_third_row: seatImageUrls.third || null,
         additional_notes: additionalNotes || null,
         payment_type: paymentType,
         full_price: finalPrice,
@@ -420,9 +424,9 @@ export default function OrderPage() {
         payment_source: "whatsapp",
         payment_gateway: null,
         order_date: new Date().toISOString(),
-        seat_image_front: seatImages.front || null,
-        seat_image_back: seatImages.back || null,
-        seat_image_third_row: seatImages.third || null,
+        seat_image_front: seatImageUrls.front || null,
+        seat_image_back: seatImageUrls.back || null,
+        seat_image_third_row: seatImageUrls.third || null,
         additional_notes: additionalNotes || null,
         payment_type: paymentType,
         deposit_amount: paymentType === "deposit" ? amountToPay : 0,
