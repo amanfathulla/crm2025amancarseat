@@ -478,25 +478,25 @@ export default function RaceDashboard() {
               <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-red-500 opacity-75" />
               <span className="relative inline-flex rounded-full h-2 w-2 bg-red-500" />
             </span>
-            <span className="text-[11px] font-bold tracking-[0.3em] uppercase" style={{ color: "#7A8088" }}>
+            <span className="text-[11px] font-bold tracking-[0.3em] uppercase" style={{ color: "#C9CFD6" }}>
               Live · Jualan Hari Ini
             </span>
           </div>
-          <span className="text-[11px]" style={{ color: "#7A8088" }}>
+          <span className="text-[11px]" style={{ color: "#A8AEB6" }}>
             {new Date().toLocaleDateString("ms-MY", { day: "2-digit", month: "long", year: "numeric" })}
           </span>
         </div>
 
         {/* HERO — centered */}
         <div className="text-center mb-8">
-          <div className="text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: "#7A8088" }}>
+          <div className="text-[11px] tracking-[0.3em] uppercase mb-2" style={{ color: "#C9CFD6" }}>
             Jumlah Jualan Hari Ini
           </div>
           <div
             className="font-black leading-none"
             style={{
               fontFamily: "Oswald, sans-serif",
-              fontSize: "clamp(3.2rem, 14vw, 5.5rem)",
+              fontSize: "clamp(4rem, 18vw, 7rem)",
               color: "#FF7A1A",
               textShadow: "0 0 40px rgba(255,122,26,0.4)",
               letterSpacing: "-0.02em",
@@ -607,13 +607,13 @@ export default function RaceDashboard() {
             className="px-4 pt-4 pb-3 text-[11px] tracking-[0.3em] uppercase"
             style={{ color: "#7A8088" }}
           >
-            Material Telemetri · Hari Ini
+            View Pages Material
           </div>
-          {(data?.materials ?? []).length === 0 ? (
+          {(data?.materials ?? []).filter((m) => m.name !== "Fullsilk").length === 0 ? (
             <div className="px-4 pb-4 text-sm text-[#7A8088]">Tiada data.</div>
           ) : (
             <div>
-              {(data?.materials ?? []).map((m, i) => (
+              {(data?.materials ?? []).filter((m) => m.name !== "Fullsilk").map((m, i) => (
                 <div
                   key={m.name}
                   className="px-4 py-3 grid grid-cols-[1fr_auto] gap-3 items-center"

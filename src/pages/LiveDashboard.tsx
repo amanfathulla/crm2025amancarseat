@@ -12,7 +12,7 @@ type LiveOrder = {
   created_at: string;
 };
 
-const MATERIALS = ["Fullsilk", "Semi Leather Kalis Air", "Kain Nylon", "Kain Mesh"];
+const MATERIALS = ["Semi Leather Kalis Air", "Kain Nylon", "Kain Mesh"];
 
 function startOfToday(): Date {
   const d = new Date();
@@ -150,6 +150,7 @@ export default function LiveDashboard() {
       // Merge fixed materials + any extras discovered in DB
       const allNames = Array.from(new Set([...MATERIALS, ...Object.keys(vmap)]));
       const mats = allNames
+        .filter((name) => name !== "Fullsilk")
         .map((name) => ({ name, views: vmap[name] || 0 }))
         .sort((a, b) => b.views - a.views);
       const vmax = Math.max(1, ...mats.map((m) => m.views));
@@ -327,7 +328,7 @@ export default function LiveDashboard() {
       </div>
 
       {/* Main Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 gap-4">
         {/* Material Views */}
         <div className="rounded-2xl border bg-card p-5 shadow-sm">
           <div className="flex items-center justify-between mb-4">
