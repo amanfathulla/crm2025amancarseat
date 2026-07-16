@@ -62,7 +62,7 @@ BEGIN
 
   -- Per-material aggregation
   WITH known(name) AS (
-    SELECT unnest(ARRAY['Fullsilk','Semi Leather Kalis Air','Kain Nylon','Kain Mesh'])
+    SELECT unnest(ARRAY['Kain Fullsilk','Semi Leather Kalis Air','Kain Nylon','Kain Mesh'])
     UNION
     SELECT DISTINCT material FROM public.page_views WHERE viewed_at >= v_today_start AND material IS NOT NULL AND btrim(material) <> ''
   ),
