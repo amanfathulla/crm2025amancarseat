@@ -627,44 +627,6 @@ function Customers() {
         );
       })()}
 
-      <div className="flex flex-wrap gap-4 mb-8">
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'processing' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('processing')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="secondary" className="h-6 px-3">
-              {customerStats.processingOrders}
-            </Badge>
-            <span className="font-medium">Orders In Process</span>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'completed' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('completed')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="default" className="h-6 px-3">
-              {customerStats.completedOrders}
-            </Badge>
-            <span className="font-medium">Completed Orders</span>
-          </CardContent>
-        </Card>
-        
-        <Card 
-          className={`flex-1 min-w-[180px] cursor-pointer ${statusFilter === 'cancelled' ? 'border-primary' : ''}`}
-          onClick={() => handleStatusFilter('cancelled')}
-        >
-          <CardContent className="p-4 flex items-center gap-3">
-            <Badge variant="destructive" className="h-6 px-3">
-              {customerStats.cancelledOrders}
-            </Badge>
-            <span className="font-medium">Cancelled Orders</span>
-          </CardContent>
-        </Card>
-      </div>
-      
       <Card className="mb-8">
         <CardHeader>
           <CardTitle className="text-lg">Peta Tempahan Mengikut Negeri</CardTitle>

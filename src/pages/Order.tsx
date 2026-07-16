@@ -10,7 +10,6 @@ import { useToast } from "@/hooks/use-toast";
 import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
 import { Upload, X, ImagePlus } from "lucide-react";
-import { QRCodeSVG } from "qrcode.react";
 
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
@@ -1085,16 +1084,13 @@ export default function OrderPage() {
                     </button>
                     {showQr && (
                       <div className="mt-2 flex flex-col items-center gap-2 rounded-xl bg-white p-3">
-                        <QRCodeSVG
-                          value="553038596454"
-                          size={160}
-                          level="M"
-                          includeMargin
-                          bgColor="#ffffff"
-                          fgColor="#0a0a0f"
+                        <img
+                          src="/qr-payment.jpg"
+                          alt="QR Pembayaran Maybank ACS LEGACY"
+                          className="w-40 h-40 object-contain rounded-lg"
                         />
                         <p className="text-[10px] text-gray-600 text-center leading-tight">
-                          Scan dengan app perbankan untuk salin akaun Maybank<br />ACS LEGACY · 553038596454
+                          Scan dengan app perbankan untuk bayar<br />Maybank · ACS LEGACY · 553038596454
                         </p>
                       </div>
                     )}

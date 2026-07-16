@@ -92,6 +92,22 @@ export function PublicDashSettings({ authClient, toast }: Props) {
         </div>
       </div>
 
+      <a
+        href="/live-dashboardacs"
+        target="_blank"
+        rel="noopener noreferrer"
+        className="flex items-center justify-between rounded-xl border border-blue-500/30 bg-blue-500/10 p-3 hover:bg-blue-500/20 transition-colors"
+      >
+        <div className="flex items-center gap-2">
+          <Radio className="h-4 w-4 text-blue-400" />
+          <div>
+            <div className="text-sm font-medium text-blue-300">Buka Live Dashboard</div>
+            <div className="text-xs text-muted-foreground">Klik untuk buka di tab baru</div>
+          </div>
+        </div>
+        <span className="text-xs font-mono text-blue-300">/live-dashboardacs →</span>
+      </a>
+
       {loading ? (
         <div className="flex items-center gap-2 text-sm text-muted-foreground">
           <LoaderCircle className="h-4 w-4 animate-spin" /> Memuatkan…
