@@ -55,15 +55,12 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
   const [model, setModel] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [images, setImages] = useState<File[]>([]);
-  const [selfie, setSelfie] = useState<File | null>(null);
-  const [boxImage, setBoxImage] = useState<File | null>(null);
-  const [video, setVideo] = useState<File | null>(null);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setRating(5); setQuality(5); setPrice(5);
     setAvatar(null); setName(""); setBrand(""); setModel("");
-    setReviewText(""); setImages([]); setSelfie(null); setBoxImage(null); setVideo(null);
+    setReviewText(""); setImages([]);
   };
 
   const handleImages = (files: FileList | null) => {
@@ -82,19 +79,12 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
       toast({ title: "Gambar diperlukan", description: "Minimum 1 gambar siap pasang ACS.", variant: "destructive" });
       return;
     }
-    if (video && video.size > 50 * 1024 * 1024) {
-      toast({ title: "Video terlalu besar", description: "Maksimum 50MB.", variant: "destructive" });
-      return;
-    }
 
     setSubmitting(true);
     try {
-      const [avatarUrl, imageUrls, selfieUrl, boxUrl, videoUrl] = await Promise.all([
+      const [avatarUrl, imageUrls] = await Promise.all([
         avatar ? uploadToReviews(avatar, "avatars") : Promise.resolve(null),
         Promise.all(images.map((f) => uploadToReviews(f, "images"))),
-        selfie ? uploadToReviews(selfie, "selfies") : Promise.resolve(null),
-        boxImage ? uploadToReviews(boxImage, "box") : Promise.resolve(null),
-        video ? uploadToReviews(video, "videos") : Promise.resolve(null),
       ]);
 
       const brandLabel = CAR_BRANDS.find((b) => b.key === brand)?.label ?? "";
@@ -108,10 +98,7 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
         price_rating: price,
         review: reviewText.trim(),
         images: imageUrls,
-        video: videoUrl,
         avatar_url: avatarUrl,
-        selfie_url: selfieUrl,
-        box_image_url: boxUrl,
       });
       if (error) throw error;
 
@@ -205,28 +192,6 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
             <Input type="file" accept="image/*" multiple onChange={(e) => handleImages(e.target.files)}
               className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
             <p className="text-xs text-gray-400 mt-1">{images.length}/5 gambar dipilih</p>
-          </div>
-
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
-            <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
-              <Label className="text-white">Selfie bersama ACS (Pilihan)</Label>
-              <Input type="file" accept="image/*" onChange={(e) => setSelfie(e.target.files?.[0] ?? null)}
-                className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
-              <p className="text-xs text-gray-400 mt-1">{selfie ? "1 gambar dipilih" : "Selfie anda dengan car seat"}</p>
-            </div>
-            <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
-              <Label className="text-white">Gambar Box ACS (Pilihan)</Label>
-              <Input type="file" accept="image/*" onChange={(e) => setBoxImage(e.target.files?.[0] ?? null)}
-                className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
-              <p className="text-xs text-gray-400 mt-1">{boxImage ? "1 gambar dipilih" : "Gambar kotak/packaging ACS"}</p>
-            </div>
-          </div>
-
-          <div className="bg-neutral-900/60 border border-white/10 rounded-xl p-3">
-            <Label className="text-white">Video Produk (Pilihan)</Label>
-            <Input type="file" accept="video/*" onChange={(e) => setVideo(e.target.files?.[0] ?? null)}
-              className="mt-2 bg-neutral-900 border-white/10 text-white file:text-white file:bg-neutral-800 file:border-0 file:rounded file:px-2 file:py-1 file:mr-2" />
-            <p className="text-xs text-gray-400 mt-1">Format yang disokong: MP4, MOV, AVI (maksimum 50MB)</p>
           </div>
 
 
