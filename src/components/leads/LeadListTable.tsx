@@ -6,13 +6,14 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent, AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle } from "@/components/ui/alert-dialog";
 import { useAuth } from "@/hooks/useAuth";
 import { toast } from "sonner";
-import { Phone, User, Calendar, Edit2, Check, Trash2, Car } from "lucide-react";
+import { Phone, User, Calendar, Edit2, Check, Trash2, Car, MapPin } from "lucide-react";
 
 interface Lead {
   id: string;
   name: string;
   phone: string;
   car_model?: string | null;
+  location?: string | null;
   status: string;
   displayStatus?: string;
   created_at: string;
@@ -124,6 +125,7 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
             <TableHead className="font-semibold">Nama</TableHead>
             <TableHead className="font-semibold">No Telefon</TableHead>
             <TableHead className="font-semibold">Model Kereta</TableHead>
+            <TableHead className="font-semibold">Lokasi</TableHead>
             <TableHead className="font-semibold">Tarikh Ditambah</TableHead>
             <TableHead className="font-semibold">Status</TableHead>
             <TableHead className="font-semibold text-right">Tindakan</TableHead>
@@ -150,6 +152,12 @@ export function LeadListTable({ leads, onLeadUpdated }: LeadListTableProps) {
                 <div className="flex items-center gap-2 text-muted-foreground">
                   <Car className="h-4 w-4" />
                   {lead.car_model || <span className="italic text-xs">—</span>}
+                </div>
+              </TableCell>
+              <TableCell>
+                <div className="flex items-center gap-2 text-muted-foreground">
+                  <MapPin className="h-4 w-4" />
+                  {lead.location || <span className="italic text-xs">—</span>}
                 </div>
               </TableCell>
               <TableCell>

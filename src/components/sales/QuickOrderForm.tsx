@@ -4,6 +4,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { MessageCircle, Check, Calculator } from "lucide-react";
 import { DESIGN_COLORS } from "./ColorGallery";
+import { supabase } from "@/integrations/supabase/client";
 
 const SEATER_OPTIONS = [
   { id: "2", label: "2 Seater", price: 130 },
@@ -14,6 +15,7 @@ const SEATER_OPTIONS = [
 export const QuickOrderForm = () => {
   const { language } = useLanguage();
   const [name, setName] = useState("");
+  const [phone, setPhone] = useState("");
   const [carModel, setCarModel] = useState("");
   const [location, setLocation] = useState("");
   const [selectedDesign, setSelectedDesign] = useState<number | null>(null);
@@ -21,7 +23,7 @@ export const QuickOrderForm = () => {
   const [quoteShown, setQuoteShown] = useState(false);
 
   const selectedSeater = SEATER_OPTIONS.find((s) => s.id === seater);
-  const isComplete = name && carModel && location && selectedDesign !== null && seater;
+  const isComplete = name && phone && carModel && location && selectedDesign !== null && seater;
 
   const handleQuote = (e: React.FormEvent) => {
     e.preventDefault();
@@ -29,12 +31,52 @@ export const QuickOrderForm = () => {
     setQuoteShown(true);
   };
 
-  const handleWhatsApp = () => {
+  const handleWhatsApp = async () => {
     if (!isComplete || !selectedSeater) return;
     const design = DESIGN_COLORS[selectedDesign!];
     const designName = language === "bm" ? design.name : design.nameEn;
+
+    // 1. Save lead to CRM (anon key — RLS allows public INSERT)
+    try {
+      const { error } = await supabase.from("leads").insert({
+        name: name.trim(),
+        phone: phone.trim(),
+        car_model: carModel.trim(),
+        location: location.trim(),
+        status: "new",
+      });
+      if (error) console.error("Lead insert error:", error.message);
+    } catch (err) {
+      console.error("Failed to save lead:", err);
+    }
+
+    // 2. Send Telegram notification (fire-and-forget)
+    try {
+      await fetch(
+        "https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/telegram-notify",
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            lead: {
+              name: name.trim(),
+              phone: phone.trim(),
+              car_model: carModel.trim(),
+              location: location.trim(),
+              seater: selectedSeater.label,
+              design: `${design.code} - ${designName}`,
+              price: selectedSeater.price,
+            },
+          }),
+        }
+      );
+    } catch (err) {
+      console.error("Telegram notify failed:", err);
+    }
+
+    // 3. Open WhatsApp with pre-filled message
     const message = encodeURIComponent(
-      `Assalamualaikum, saya berminat dengan Aman Car Seat.\n\nNama: ${name}\nModel Kereta: ${carModel}\nLokasi: ${location}\nJenis Seater: ${selectedSeater.label}\nDesign Pilihan: ${design.code} - ${designName}\nJumlah: RM${selectedSeater.price}`
+      `Assalamualaikum, saya berminat dengan Aman Car Seat.\n\nNama: ${name}\nNo HP: ${phone}\nModel Kereta: ${carModel}\nLokasi: ${location}\nJenis Seater: ${selectedSeater.label}\nDesign Pilihan: ${design.code} - ${designName}\nJumlah: RM${selectedSeater.price}`
     );
     window.open(`https://wa.me/60194503184?text=${message}`, "_blank");
   };
@@ -55,7 +97,7 @@ export const QuickOrderForm = () => {
           </div>
 
           <form onSubmit={handleQuote} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="text"
                 placeholder={language === "bm" ? "Nama Anda" : "Your Name"}
@@ -64,6 +106,16 @@ export const QuickOrderForm = () => {
                 required
                 className="h-12 text-base"
               />
+              <Input
+                type="tel"
+                placeholder={language === "bm" ? "No HP (cth: 0123456789)" : "Phone (e.g., 0123456789)"}
+                value={phone}
+                onChange={(e) => { setPhone(e.target.value); setQuoteShown(false); }}
+                required
+                className="h-12 text-base"
+              />
+            </div>
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               <Input
                 type="text"
                 placeholder={language === "bm" ? "Model Kereta (cth: Myvi, City)" : "Car Model (e.g., Myvi, City)"}

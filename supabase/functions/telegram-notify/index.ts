@@ -74,6 +74,41 @@ Deno.serve(async (req) => {
       });
     }
 
+    // --- Lead notification (from website QuickOrderForm) ---
+    if (body.lead) {
+      const l = body.lead;
+      message =
+        `🔔 *LEAD BARU DARI WEBSITE!*\n\n` +
+        `👤 Nama: ${l.name}\n` +
+        `📱 No HP: ${l.phone}\n` +
+        `🚗 Model Kereta: ${l.car_model || "—"}\n` +
+        `📍 Lokasi: ${l.location || "—"}\n` +
+        `🪑 Seater: ${l.seater || "—"}\n` +
+        `🎨 Design: ${l.design || "—"}\n` +
+        `💰 Harga: RM${l.price || "—"}\n\n` +
+        `_Lead ini juga tersimpan di CRM Lead Management._`;
+
+      const response = await fetch(`${GATEWAY_URL}/sendMessage`, {
+        method: "POST",
+        headers: {
+          Authorization: `Bearer ${LOVABLE_API_KEY}`,
+          "X-Connection-Api-Key": TELEGRAM_API_KEY,
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          chat_id: settings.chat_id,
+          text: message,
+          parse_mode: "Markdown",
+        }),
+      });
+      const result = await response.json();
+      if (!response.ok) throw new Error(`Telegram API failed [${response.status}]: ${JSON.stringify(result)}`);
+      return new Response(JSON.stringify({ ok: true }), {
+        headers: { ...corsHeaders, "Content-Type": "application/json" },
+      });
+    }
+
+    // --- Order notification (from /order page) ---
     const { customer_id, payment_source } = body;
 
     // Fetch customer data
