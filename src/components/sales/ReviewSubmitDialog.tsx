@@ -106,8 +106,9 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
       reset();
       onOpenChange(false);
       onSubmitted?.();
-    } catch (err: any) {
-      toast({ title: "Ralat hantar ulasan", description: err?.message ?? "Cuba lagi.", variant: "destructive" });
+    } catch (err) {
+      const msg = err instanceof Error ? err.message : "Cuba lagi.";
+      toast({ title: "Ralat hantar ulasan", description: msg, variant: "destructive" });
     } finally {
       setSubmitting(false);
     }
