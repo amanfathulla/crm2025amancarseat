@@ -1,7 +1,9 @@
+import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Star, MessageCircle, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingBag, Tag } from "lucide-react";
 import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
 interface Review {
   id: string;
@@ -21,7 +23,20 @@ interface WallOfFameProps {
 
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
-  
+  const [featuredCoupon, setFeaturedCoupon] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("coupons")
+      .select("code")
+      .eq("is_active", true)
+      .eq("is_featured_landing", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setFeaturedCoupon((data as any).code);
+      });
+  }, []);
+
   // Latest 15 "pickup" reviews that have images (newest first).
   const getFeaturedReviews = () => {
     return reviews
@@ -89,12 +104,32 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
           </div>
         )}
 
-        {/* Single CTA button */}
-        <div className="flex items-center justify-center mt-10">
+        {/* CTA buttons */}
+        <div className="flex flex-col items-center justify-center gap-3 mt-10">
           <Button asChild size="lg" className="min-w-[200px] rounded-full">
             <Link to="/testimoni" className="flex items-center gap-2">
               {t.viewAll}
               <ChevronRight className="w-4 h-4" />
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="min-w-[200px] rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground flex-col h-auto py-3 gap-0.5"
+          >
+            <Link to="/order">
+              <span className="flex items-center gap-2 font-semibold">
+                <ShoppingBag className="w-4 h-4" />
+                Order Sekarang & Jimat
+              </span>
+              {featuredCoupon && (
+                <span className="flex items-center gap-1 text-xs font-normal opacity-80">
+                  <Tag className="w-3 h-3" />
+                  Guna kod {featuredCoupon} di checkout
+                </span>
+              )}
             </Link>
           </Button>
         </div>
