@@ -1,122 +1,42 @@
-/* ============================================================
-   AMANCARSEAT — Design System
-   Palette: #0C0E11 ink, #15181D panel, #C8203C stitch red,
-   #CFA227 brass gold, #EEE6D6 paper text, #8B909A ash
-   Fonts: Bebas Neue (display), Inter (body), JetBrains Mono (mono)
-   ============================================================ */
-
-:root {
-  --acs-ink: #0c0e11;
-  --acs-panel: #15181d;
-  --acs-panel-2: #1c2027;
-  --acs-stitch: #c8203c;
-  --acs-stitch-dim: #7a1526;
-  --acs-brass: #cfa227;
-  --acs-brass-dim: #8f7220;
-  --acs-paper: #eee6d6;
-  --acs-ash: #8b909a;
-  --acs-line: rgba(238, 230, 214, 0.09);
+#root {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 2rem;
+  text-align: center;
 }
 
-/* Font utility classes */
-.font-display {
-  font-family: 'Bebas Neue', sans-serif;
-  letter-spacing: 0.02em;
-  text-transform: uppercase;
+.logo {
+  height: 6em;
+  padding: 1.5em;
+  will-change: filter;
+  transition: filter 300ms;
 }
-.font-mono-acs {
-  font-family: 'JetBrains Mono', monospace;
+.logo:hover {
+  filter: drop-shadow(0 0 2em #646cffaa);
 }
-
-/* Color utility classes for landing page */
-.bg-acs-ink { background-color: var(--acs-ink) !important; }
-.bg-acs-panel { background-color: var(--acs-panel) !important; }
-.bg-acs-panel-2 { background-color: var(--acs-panel-2) !important; }
-.text-acs-paper { color: var(--acs-paper) !important; }
-.text-acs-ash { color: var(--acs-ash) !important; }
-.text-acs-stitch { color: var(--acs-stitch) !important; }
-.text-acs-brass { color: var(--acs-brass) !important; }
-.border-acs-line { border-color: var(--acs-line) !important; }
-
-/* Stitch divider — signature element (dashed red line like jahitan) */
-.stitch-divider {
-  width: 100%;
-  height: 28px;
-  display: block;
-  pointer-events: none;
-}
-.stitch-divider path {
-  fill: none;
-  stroke: var(--acs-stitch);
-  stroke-width: 2;
-  stroke-dasharray: 10 8;
-  stroke-linecap: round;
-  opacity: 0.55;
+.logo.react:hover {
+  filter: drop-shadow(0 0 2em #61dafbaa);
 }
 
-/* Eyebrow label (small mono text with brass dash) */
-.acs-eyebrow {
-  font-family: 'JetBrains Mono', monospace;
-  font-size: 11px;
-  letter-spacing: 0.18em;
-  text-transform: uppercase;
-  color: var(--acs-brass);
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-.acs-eyebrow::before {
-  content: '';
-  width: 14px;
-  height: 1px;
-  background: var(--acs-brass);
+@keyframes logo-spin {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
 }
 
-/* CTA button — stitch red */
-.btn-acs-primary {
-  background: var(--acs-stitch);
-  color: var(--acs-paper);
-  font-weight: 700;
-  font-size: 14px;
-  padding: 15px 28px;
-  border-radius: 3px;
-  text-decoration: none;
-  border: none;
-  cursor: pointer;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  transition: all 0.2s;
-}
-.btn-acs-primary:hover {
-  background: #d9233f;
-  transform: translateY(-1px);
+@media (prefers-reduced-motion: no-preference) {
+  a:nth-of-type(2) .logo {
+    animation: logo-spin infinite 20s linear;
+  }
 }
 
-/* Ghost button */
-.btn-acs-ghost {
-  background: transparent;
-  color: var(--acs-paper);
-  font-weight: 600;
-  font-size: 14px;
-  padding: 15px 28px;
-  border-radius: 3px;
-  text-decoration: none;
-  border: 1px solid var(--acs-line);
-  cursor: pointer;
-  transition: all 0.2s;
-}
-.btn-acs-ghost:hover {
-  border-color: var(--acs-brass);
-  color: var(--acs-brass);
+.card {
+  padding: 2em;
 }
 
-/* Landing page wrapper — override #root for landing */
-.landing-root {
-  max-width: none !important;
-  margin: 0 !important;
-  padding: 0 !important;
-  text-align: left !important;
+.read-the-docs {
+  color: #888;
 }
-
-/* Remove old CSS that interferes */

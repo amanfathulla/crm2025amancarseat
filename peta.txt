@@ -1,0 +1,287 @@
+import { useEffect, useMemo, useState } from "react";
+import { geoData } from "krackedmaps/dist/data.esm.js";
+import { supabase } from "@/integrations/supabase/client";
+
+// ---------------------------------------------------------------------------
+// 1. Name mapping: Supabase `leads.state` values -> krackedmaps `slug`
+//    Adjust the LEFT side to match exactly what's stored in your leads table.
+// ---------------------------------------------------------------------------
+const STATE_NAME_TO_SLUG: Record<string, string> = {
+  "Perlis": "perlis",
+  "Kedah": "kedah",
+  "Pulau Pinang": "penang",
+  "Penang": "penang",
+  "Perak": "perak",
+  "Selangor": "selangor",
+  "Kuala Lumpur": "kuala-lumpur",
+  "WP Kuala Lumpur": "kuala-lumpur",
+  "Wilayah Persekutuan Kuala Lumpur": "kuala-lumpur",
+  "Putrajaya": "putrajaya",
+  "Negeri Sembilan": "negeri-sembilan",
+  "Melaka": "melaka",
+  "Malacca": "melaka",
+  "Johor": "johor",
+  "Pahang": "pahang",
+  "Terengganu": "terengganu",
+  "Kelantan": "kelantan",
+  "Sabah": "sabah",
+  "Sarawak": "sarawak",
+  "Labuan": "labuan",
+};
+
+const STATE_DISPLAY_NAME: Record<string, string> = {
+  "perlis": "Perlis",
+  "kedah": "Kedah",
+  "penang": "Pulau Pinang",
+  "perak": "Perak",
+  "selangor": "Selangor",
+  "kuala-lumpur": "Kuala Lumpur",
+  "putrajaya": "Putrajaya",
+  "negeri-sembilan": "Negeri Sembilan",
+  "melaka": "Melaka",
+  "johor": "Johor",
+  "pahang": "Pahang",
+  "terengganu": "Terengganu",
+  "kelantan": "Kelantan",
+  "sabah": "Sabah",
+  "sarawak": "Sarawak",
+  "labuan": "Labuan",
+};
+
+// ---------------------------------------------------------------------------
+// 2. Types
+// ---------------------------------------------------------------------------
+interface StateLeadCount {
+  slug: string;
+  name: string;
+  count: number;
+}
+
+interface ProjectedState {
+  slug: string;
+  name: string;
+  d: string;
+  count: number;
+}
+
+// ---------------------------------------------------------------------------
+// 3. Equirectangular projection: lon/lat -> SVG x/y
+//    krackedmaps ships raw MultiPolygon coords in [lon, lat] pairs.
+// ---------------------------------------------------------------------------
+const VIEW_W = 640;
+const VIEW_H = 400;
+const PAD = 10;
+
+function buildProjector(features: any[]) {
+  let minX = Infinity, maxX = -Infinity, minY = Infinity, maxY = -Infinity;
+  for (const f of features) {
+    const polys =
+      f.geometry.type === "MultiPolygon" ? f.geometry.coordinates : [f.geometry.coordinates];
+    for (const poly of polys) {
+      for (const ring of poly) {
+        for (const [x, y] of ring) {
+          if (x < minX) minX = x;
+          if (x > maxX) maxX = x;
+          if (y < minY) minY = y;
+          if (y > maxY) maxY = y;
+        }
+      }
+    }
+  }
+  const sx = (VIEW_W - PAD * 2) / (maxX - minX);
+  const sy = (VIEW_H - PAD * 2) / (maxY - minY);
+  const s = Math.min(sx, sy);
+
+  return (x: number, y: number): [number, number] => [
+    PAD + (x - minX) * s,
+    VIEW_H - (PAD + (y - minY) * s),
+  ];
+}
+
+function featureToPath(feature: any, project: (x: number, y: number) => [number, number]) {
+  const polys =
+    feature.geometry.type === "MultiPolygon" ? feature.geometry.coordinates : [feature.geometry.coordinates];
+  const parts: string[] = [];
+  for (const poly of polys) {
+    for (const ring of poly) {
+      const pts = ring.map(([x, y]: [number, number]) => project(x, y));
+      parts.push("M " + pts.map(([px, py]: number[]) => `${px.toFixed(1)},${py.toFixed(1)}`).join(" L ") + " Z");
+    }
+  }
+  return parts.join(" ");
+}
+
+// ---------------------------------------------------------------------------
+// 4. Color scale — ACS palette (dark base -> red -> gold for top performer)
+// ---------------------------------------------------------------------------
+function colorForRatio(t: number) {
+  if (t <= 0) return "#2C2C2A";
+  if (t < 0.25) return "#4A1B0C";
+  if (t < 0.5) return "#712B13";
+  if (t < 0.75) return "#993C1D";
+  if (t < 0.95) return "#C8203C";
+  return "#CFA227";
+}
+
+// ---------------------------------------------------------------------------
+// 5. Component
+// ---------------------------------------------------------------------------
+export default function LeadMapView() {
+  const [counts, setCounts] = useState<Record<string, number>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState<string | null>(null);
+  const [selected, setSelected] = useState<ProjectedState | null>(null);
+
+  useEffect(() => {
+    let cancelled = false;
+
+    async function fetchCounts() {
+      setLoading(true);
+      setError(null);
+      const { data, error } = await supabase
+        .from("leads")
+        .select("state");
+
+      if (cancelled) return;
+
+      if (error) {
+        setError(error.message);
+        setLoading(false);
+        return;
+      }
+
+      const tally: Record<string, number> = {};
+      for (const row of data ?? []) {
+        const rawState = (row as { state: string | null }).state;
+        if (!rawState) continue;
+        const slug = STATE_NAME_TO_SLUG[rawState.trim()];
+        if (!slug) continue; // unmapped state name — check STATE_NAME_TO_SLUG
+        tally[slug] = (tally[slug] ?? 0) + 1;
+      }
+
+      setCounts(tally);
+      setLoading(false);
+    }
+
+    fetchCounts();
+    return () => {
+      cancelled = true;
+    };
+  }, []);
+
+  const stateFeatures = useMemo(
+    () => geoData.features.filter((f: any) => f.properties.type === "state"),
+    []
+  );
+
+  const project = useMemo(() => buildProjector(stateFeatures), [stateFeatures]);
+
+  const projectedStates: ProjectedState[] = useMemo(
+    () =>
+      stateFeatures.map((f: any) => {
+        const slug = f.properties.slug as string;
+        return {
+          slug,
+          name: STATE_DISPLAY_NAME[slug] ?? f.properties.name,
+          d: featureToPath(f, project),
+          count: counts[slug] ?? 0,
+        };
+      }),
+    [stateFeatures, project, counts]
+  );
+
+  const maxCount = Math.max(1, ...projectedStates.map((s) => s.count));
+
+  if (loading) {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center", color: "#888780" }}>
+        Memuatkan peta lead...
+      </div>
+    );
+  }
+
+  if (error) {
+    return (
+      <div style={{ padding: "2rem", textAlign: "center", color: "#E24B4A" }}>
+        Ralat memuatkan data: {error}
+      </div>
+    );
+  }
+
+  return (
+    <div style={{ background: "#0C0E11", borderRadius: 12, padding: "1.5rem" }}>
+      <svg viewBox={`0 0 ${VIEW_W} ${VIEW_H}`} role="img" style={{ width: "100%", height: "auto" }}>
+        <title>Peta jumlah lead ikut negeri</title>
+        {projectedStates.map((s) => {
+          const ratio = s.count / maxCount;
+          const h = 3 + ratio * 14;
+          const isSelected = selected?.slug === s.slug;
+          return (
+            <g
+              key={s.slug}
+              style={{ cursor: "pointer" }}
+              onClick={() => setSelected(s)}
+            >
+              <path
+                d={s.d}
+                fill="#000000"
+                opacity={0.35}
+                transform={`translate(${h * 1.4},${h * 1.4})`}
+              />
+              <path
+                d={s.d}
+                fill={colorForRatio(ratio)}
+                stroke={isSelected ? "#CFA227" : "#0C0E11"}
+                strokeWidth={isSelected ? 1.6 : 0.6}
+              />
+            </g>
+          );
+        })}
+      </svg>
+
+      <div
+        style={{
+          marginTop: "1rem",
+          background: "#15181D",
+          border: "0.5px solid #3C3489",
+          borderRadius: 12,
+          padding: "1rem 1.25rem",
+          display: "flex",
+          alignItems: "center",
+          justifyContent: "space-between",
+        }}
+      >
+        <div>
+          <p
+            style={{
+              fontFamily: "'Bebas Neue', sans-serif",
+              fontSize: 20,
+              letterSpacing: 0.5,
+              color: "#F1EFE8",
+              margin: 0,
+            }}
+          >
+            {selected ? selected.name : "Klik satu negeri"}
+          </p>
+          <p style={{ fontSize: 13, color: "#888780", margin: "4px 0 0" }}>
+            Jumlah lead direkod dalam CRM
+          </p>
+        </div>
+        <div style={{ textAlign: "right" }}>
+          <p
+            style={{
+              fontFamily: "'JetBrains Mono', monospace",
+              fontSize: 28,
+              fontWeight: 500,
+              color: "#CFA227",
+              margin: 0,
+            }}
+          >
+            {selected ? selected.count : "-"}
+          </p>
+          <p style={{ fontSize: 12, color: "#888780", margin: "2px 0 0" }}>lead</p>
+        </div>
+      </div>
+    </div>
+  );
+}
