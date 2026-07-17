@@ -100,6 +100,10 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     const file = e.target.files?.[0];
     if (!file) return;
 
+    // Check limit using the latest state via functional update pattern.
+    // We read imageUrls.length here for the toast guard; the actual append
+    // uses setImageUrls(prev => ...) to avoid stale-closure race conditions
+    // when uploading multiple images quickly.
     if (imageUrls.length >= MAX_IMAGES) {
       toast({ title: `Maksimum ${MAX_IMAGES} gambar sahaja`, variant: "destructive" });
       return;
@@ -108,11 +112,19 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
     setUploadingIndex(imageUrls.length);
     try {
       const publicUrl = await uploadProductImage(authClient, file, "product");
-      const newImages = [...imageUrls, publicUrl];
-      setImageUrls(newImages);
+
+      // Use functional update so we always append to the LATEST array,
+      // even if multiple uploads are in-flight concurrently.
+      let newImages: string[] = [];
+      setImageUrls(prev => {
+        newImages = [...prev, publicUrl];
+        return newImages;
+      });
 
       // Auto-persist to DB if editing existing product (so user doesn't lose upload if they close)
       if (isEditing && initialData?.id) {
+        // Small delay to ensure setImageUrls above has flushed.
+        await new Promise(r => setTimeout(r, 0));
         const { error: persistErr } = await authClient
           .from("products")
           .update({
@@ -134,9 +146,13 @@ const ProductForm = ({ onSuccess, initialData, onCancel }: ProductFormProps) => 
   };
 
   const handleRemoveImage = async (index: number) => {
-    const newImages = imageUrls.filter((_, i) => i !== index);
-    setImageUrls(newImages);
+    let newImages: string[] = [];
+    setImageUrls(prev => {
+      newImages = prev.filter((_, i) => i !== index);
+      return newImages;
+    });
     if (isEditing && initialData?.id) {
+      await new Promise(r => setTimeout(r, 0));
       const { error } = await authClient
         .from("products")
         .update({ image_url: newImages[0] || null, image_urls: newImages } as any)

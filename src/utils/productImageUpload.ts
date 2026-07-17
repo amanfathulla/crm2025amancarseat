@@ -1,17 +1,14 @@
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
 const ALLOWED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp", "image/gif"]);
 
-const fileToBase64 = (file: File) =>
-  new Promise<string>((resolve, reject) => {
-    const reader = new FileReader();
-    reader.onload = () => {
-      const result = String(reader.result || "");
-      resolve(result.includes(",") ? result.split(",")[1] : result);
-    };
-    reader.onerror = () => reject(new Error("Gagal membaca fail gambar"));
-    reader.readAsDataURL(file);
-  });
-
+/**
+ * Upload a product image via the admin-upload-product-image Edge Function.
+ *
+ * Uses the File/Blob directly as the request body (application/octet-stream)
+ * instead of Base64-encoding it into JSON.  Base64 inflates the payload by ~33%
+ * and forces the browser to hold the entire file as a string in memory, which
+ * causes blank screens / auto-refreshes when uploading multiple 5 MB images.
+ */
 export async function uploadProductImage(authClient: any, file: File, prefix = "product") {
   if (!ALLOWED_IMAGE_TYPES.has(file.type)) {
     throw new Error("Format gambar tidak disokong. Gunakan JPG, PNG, WEBP atau GIF.");
@@ -21,14 +18,14 @@ export async function uploadProductImage(authClient: any, file: File, prefix = "
     throw new Error("Maksimum saiz fail 5MB.");
   }
 
-  const fileBase64 = await fileToBase64(file);
+  // Send metadata via headers; the raw file goes as the body.
   const { data, error } = await authClient.functions.invoke("admin-upload-product-image", {
-    body: {
-      fileName: file.name,
-      contentType: file.type,
-      fileBase64,
-      prefix,
+    headers: {
+      "x-file-name": encodeURIComponent(file.name),
+      "x-content-type": file.type,
+      "x-prefix": prefix,
     },
+    body: file, // Blob/File — supabase-js sets Content-Type: application/octet-stream
   });
 
   if (error) throw new Error(error.message);

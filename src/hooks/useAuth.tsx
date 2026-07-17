@@ -1,6 +1,6 @@
-import { createContext, useContext, useState, useEffect, useCallback, useRef, ReactNode } from "react";
+import { createContext, useContext, useState, useEffect, useCallback, useRef, useMemo, ReactNode } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { supabase, getAuthenticatedClient } from "@/integrations/supabase/client";
+import { supabase, getAuthenticatedClient, clearAuthenticatedClientCache } from "@/integrations/supabase/client";
 import { User } from "@supabase/supabase-js";
 import { SupabaseClient } from "@supabase/supabase-js";
 import type { Database } from "@/integrations/supabase/types";
@@ -28,10 +28,14 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   const { toast } = useToast();
   const inactivityTimer = useRef<NodeJS.Timeout | null>(null);
 
-  // Derived authenticated client — updated whenever the session token changes
-  const authClient = sessionToken
-    ? getAuthenticatedClient(sessionToken)
-    : supabase;
+  // Derived authenticated client — memoized so the same token always returns
+  // the same SupabaseClient instance.  Without useMemo, every AuthProvider
+  // re-render would create a brand-new client, which triggers useEffect
+  // dependencies across the app (e.g. Products page re-fetches endlessly).
+  const authClient = useMemo(
+    () => (sessionToken ? getAuthenticatedClient(sessionToken) : supabase),
+    [sessionToken],
+  );
 
   const performLogout = useCallback(async (token?: string | null) => {
     const t = token ?? sessionToken;
@@ -46,6 +50,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
     localStorage.removeItem(LAST_ACTIVITY_KEY);
     setSessionToken(null);
     setUser(null);
+    clearAuthenticatedClientCache();
     if (inactivityTimer.current) {
       clearTimeout(inactivityTimer.current);
       inactivityTimer.current = null;

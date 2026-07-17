@@ -3,7 +3,7 @@ import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
 
 const corsHeaders = {
   "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-session",
+  "Access-Control-Allow-Headers": "authorization, x-client-info, apikey, content-type, x-admin-session, x-file-name, x-content-type, x-prefix",
 };
 
 const MAX_IMAGE_SIZE = 5 * 1024 * 1024;
@@ -35,11 +35,17 @@ serve(async (req) => {
     const { data: adminId } = await supabase.rpc("validate_admin_session", { p_token: adminSession });
     if (!adminId) return json({ error: "Sesi admin tidak sah. Sila login semula." }, 401);
 
-    const { fileName, contentType, fileBase64, prefix = "product" } = await req.json().catch(() => ({}));
-    if (!fileName || !contentType || !fileBase64) return json({ error: "Fail gambar tidak lengkap." }, 400);
+    // Metadata comes from headers; the raw file is the request body.
+    const fileName = req.headers.get("x-file-name") ? decodeURIComponent(req.headers.get("x-file-name")!) : "";
+    const contentType = req.headers.get("x-content-type") || "";
+    const prefix = req.headers.get("x-prefix") || "product";
+
+    if (!fileName || !contentType) return json({ error: "Fail gambar tidak lengkap." }, 400);
     if (!ALLOWED_TYPES.has(contentType)) return json({ error: "Format gambar tidak disokong." }, 400);
 
-    const bytes = Uint8Array.from(atob(fileBase64), (char) => char.charCodeAt(0));
+    // Read the raw binary body — no Base64 decoding needed.
+    const bytes = new Uint8Array(await req.arrayBuffer());
+    if (bytes.byteLength === 0) return json({ error: "Fail gambar kosong." }, 400);
     if (bytes.byteLength > MAX_IMAGE_SIZE) return json({ error: "Maksimum saiz fail 5MB." }, 400);
 
     const safePrefix = String(prefix).toLowerCase().replace(/[^a-z0-9-]+/g, "-").slice(0, 40) || "product";
