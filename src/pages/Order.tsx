@@ -152,7 +152,7 @@ export default function OrderPage() {
   const [shippingCosts, setShippingCosts] = useState<{ semenanjung: number; sabahSarawak: number; enabled: boolean }>({ semenanjung: 10, sabahSarawak: 20, enabled: true });
 
   const [couponInput, setCouponInput] = useState("");
-  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string } | null>(null);
+  const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string; applicable_materials: string[] | null } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
 
@@ -313,7 +313,15 @@ export default function OrderPage() {
       if (error || !data) { setCouponError("Kod kupon tidak sah"); return; }
       if (new Date(data.valid_until) < new Date()) { setCouponError("Kupon telah tamat tempoh"); return; }
       if (data.usage_count >= data.usage_limit) { setCouponError("Kupon telah habis digunakan"); return; }
-      setAppliedCoupon({ code: data.code, discount_amount: data.discount_amount, discount_type: data.discount_type });
+      const eligibleMaterials: string[] | null = (data as any).applicable_materials;
+      if (eligibleMaterials && eligibleMaterials.length > 0) {
+        const currentMaterial = selectedCategory?.label;
+        if (!currentMaterial || !eligibleMaterials.includes(currentMaterial)) {
+          setCouponError(`Kod ini hanya sah untuk material: ${eligibleMaterials.join(", ")}`);
+          return;
+        }
+      }
+      setAppliedCoupon({ code: data.code, discount_amount: data.discount_amount, discount_type: data.discount_type, applicable_materials: eligibleMaterials });
       setCouponError("");
       toast({ title: "Kupon berjaya!", description: `Diskaun ${data.discount_type === "fixed" ? `RM${data.discount_amount}` : `${data.discount_amount}%`} telah diaplikasikan` });
     } catch { setCouponError("Gagal mengesahkan kupon"); }
@@ -551,7 +559,7 @@ export default function OrderPage() {
         {/* ── STEP: Product ── */}
         {step === "product" && selectedCategory && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
-            <button onClick={() => setStep("category")}
+            <button onClick={() => { handleRemoveCoupon(); setStep("category"); }}
               className="flex items-center gap-1.5 text-white/50 hover:text-white mb-6 text-sm transition-colors">
               <ArrowLeft className="h-4 w-4" /> Tukar material
             </button>
