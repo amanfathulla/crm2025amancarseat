@@ -1,7 +1,5 @@
 import { useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { MessageCircle, Check, Calculator } from "lucide-react";
 import { DESIGN_COLORS } from "./ColorGallery";
 import { supabase } from "@/integrations/supabase/client";
@@ -36,7 +34,6 @@ export const QuickOrderForm = () => {
     const design = DESIGN_COLORS[selectedDesign!];
     const designName = language === "bm" ? design.name : design.nameEn;
 
-    // 1. Save lead to CRM (anon key — RLS allows public INSERT)
     try {
       const { error } = await supabase.from("leads").insert({
         name: name.trim(),
@@ -50,7 +47,6 @@ export const QuickOrderForm = () => {
       console.error("Failed to save lead:", err);
     }
 
-    // 2. Send Telegram notification (fire-and-forget)
     try {
       await fetch(
         "https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/telegram-notify",
@@ -74,118 +70,107 @@ export const QuickOrderForm = () => {
       console.error("Telegram notify failed:", err);
     }
 
-    // 3. Open WhatsApp with pre-filled message
     const message = encodeURIComponent(
       `Assalamualaikum, saya berminat dengan Aman Car Seat.\n\nNama: ${name}\nNo HP: ${phone}\nModel Kereta: ${carModel}\nLokasi: ${location}\nJenis Seater: ${selectedSeater.label}\nDesign Pilihan: ${design.code} - ${designName}\nJumlah: RM${selectedSeater.price}`
     );
     window.open(`https://wa.me/60194503184?text=${message}`, "_blank");
   };
 
-  return (
-    <section id="quick-order" className="py-12 md:py-16 bg-secondary/30">
-      <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6 md:p-8">
-          <div className="text-center mb-6">
-            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
-              {language === "bm" ? "Dapatkan Sebut Harga Segera" : "Get Instant Quote"}
-            </h3>
-            <p className="text-sm text-muted-foreground">
-              {language === "bm"
-                ? "Isi maklumat ringkas, kami akan hubungi anda"
-                : "Fill in your details, we will contact you"}
-            </p>
-          </div>
+  const inputCls = "w-full px-[14px] py-[13px] rounded text-[14px] text-acs-paper focus:outline-none transition-colors";
+  const inputStyle = { background: 'var(--acs-ink)', border: '1px solid var(--acs-line)' };
 
-          <form onSubmit={handleQuote} className="space-y-6">
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+  return (
+    <section id="quick-order" className="py-[72px] bg-acs-ink">
+      <div className="max-w-[640px] mx-auto px-6">
+        {/* Quote Panel */}
+        <div className="rounded-[10px] p-[36px_30px]" style={{ background: 'var(--acs-panel-2)', border: '1px solid var(--acs-line)' }}>
+          <h3 className="font-display text-acs-paper text-center text-[26px]">Dapatkan Sebut Harga Segera</h3>
+          <p className="text-acs-ash text-center text-[13.5px] mt-2 mb-[26px]">
+            {language === "bm" ? "Isi maklumat ringkas, kami hubungi anda dalam 24 jam." : "Fill in your details, we will contact you within 24 hours."}
+          </p>
+
+          <form onSubmit={handleQuote} className="space-y-3">
+            <span className="font-mono-acs text-[11px] uppercase tracking-wider text-acs-ash block mb-2">Maklumat Anda</span>
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
                 type="text"
                 placeholder={language === "bm" ? "Nama Anda" : "Your Name"}
                 value={name}
                 onChange={(e) => { setName(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className={inputCls}
+                style={inputStyle}
               />
-              <Input
+              <input
                 type="tel"
                 placeholder={language === "bm" ? "No HP (cth: 0123456789)" : "Phone (e.g., 0123456789)"}
                 value={phone}
                 onChange={(e) => { setPhone(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className={inputCls}
+                style={inputStyle}
               />
             </div>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <input
                 type="text"
-                placeholder={language === "bm" ? "Model Kereta (cth: Myvi, City)" : "Car Model (e.g., Myvi, City)"}
+                placeholder={language === "bm" ? "Model Kereta (cth: Myvi)" : "Car Model (e.g., Myvi)"}
                 value={carModel}
                 onChange={(e) => { setCarModel(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className={inputCls}
+                style={inputStyle}
               />
-              <Input
+              <input
                 type="text"
-                placeholder={language === "bm" ? "Lokasi (cth: Shah Alam, JB)" : "Location (e.g., Shah Alam, JB)"}
+                placeholder={language === "bm" ? "Lokasi (cth: Shah Alam)" : "Location (e.g., Shah Alam)"}
                 value={location}
                 onChange={(e) => { setLocation(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className={inputCls}
+                style={inputStyle}
               />
             </div>
 
             {/* Seater Selection */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-3">
+            <div className="pt-3">
+              <span className="font-mono-acs text-[11px] uppercase tracking-wider text-acs-ash block mb-2">
                 {language === "bm" ? "Pilih Jenis Seater:" : "Choose Seater Type:"}
-              </p>
-              <div className="grid grid-cols-3 gap-3">
+              </span>
+              <div className="flex gap-2.5 flex-wrap">
                 {SEATER_OPTIONS.map((opt) => (
                   <button
                     key={opt.id}
                     type="button"
                     onClick={() => { setSeater(opt.id); setQuoteShown(false); }}
-                    className={`p-4 rounded-xl border-2 text-center transition-all ${
-                      seater === opt.id
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                        : "border-border hover:border-primary/50"
-                    }`}
+                    className="flex-1 min-w-[90px] text-center py-3 rounded text-[13px] font-semibold transition-all"
+                    style={{
+                      border: `1px solid ${seater === opt.id ? 'var(--acs-brass)' : 'var(--acs-line)'}`,
+                      color: seater === opt.id ? 'var(--acs-brass)' : 'var(--acs-ash)',
+                      background: seater === opt.id ? 'rgba(207,162,39,0.07)' : 'transparent',
+                    }}
                   >
-                    <div className="font-semibold text-foreground">{opt.label}</div>
+                    {opt.label}
                   </button>
                 ))}
               </div>
             </div>
 
             {/* Design Selection */}
-            <div>
-              <p className="text-sm font-medium text-foreground mb-3">
-                {language === "bm" ? "Pilih Design Anda:" : "Choose Your Design:"}
-              </p>
-              <div className="grid grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
+            <div className="pt-3">
+              <span className="font-mono-acs text-[11px] uppercase tracking-wider text-acs-ash block mb-2">
+                {language === "bm" ? "Pilih Design:" : "Choose Design:"}
+              </span>
+              <div className="flex gap-2 overflow-x-auto pb-1" style={{ scrollbarWidth: 'none' }}>
                 {DESIGN_COLORS.map((design, index) => (
                   <button
                     key={design.id}
                     type="button"
                     onClick={() => { setSelectedDesign(index); setQuoteShown(false); }}
-                    className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-300 ${
-                      selectedDesign === index
-                        ? "border-primary ring-2 ring-primary/30 scale-105"
-                        : "border-border hover:border-primary/50"
-                    }`}
+                    className="flex-shrink-0 w-[60px] h-[44px] rounded border-2 overflow-hidden transition-all"
+                    style={{ borderColor: selectedDesign === index ? 'var(--acs-brass)' : 'transparent' }}
                   >
-                    <img
-                      src={design.image}
-                      alt={language === "bm" ? design.name : design.nameEn}
-                      className="w-full h-full object-cover"
-                    />
-                    {selectedDesign === index && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                        <div className="bg-primary rounded-full p-1">
-                          <Check className="w-3 h-3 md:w-4 md:h-4 text-primary-foreground" />
-                        </div>
-                      </div>
-                    )}
+                    <img src={design.image} alt={design.code} className="w-full h-full object-cover" />
                   </button>
                 ))}
               </div>
@@ -193,41 +178,37 @@ export const QuickOrderForm = () => {
 
             {/* Quote Result */}
             {quoteShown && selectedSeater && selectedDesign !== null && (
-              <div className="bg-primary/5 border-2 border-primary/30 rounded-xl p-5 animate-in fade-in-50 duration-300">
-                <p className="text-sm text-muted-foreground mb-2">
-                  {language === "bm" ? "Sebut Harga Anda:" : "Your Quote:"}
-                </p>
-                <div className="space-y-1 text-sm text-foreground">
-                  <div className="flex justify-between"><span>{language === "bm" ? "Jenis Seater" : "Seater Type"}:</span><span className="font-medium">{selectedSeater.label}</span></div>
+              <div className="rounded-md p-5 mt-3" style={{ background: 'rgba(200,32,60,0.05)', border: '2px solid rgba(200,32,60,0.3)' }}>
+                <p className="text-xs text-acs-ash mb-2">Sebut Harga Anda:</p>
+                <div className="space-y-1 text-sm text-acs-paper">
+                  <div className="flex justify-between"><span>Seater:</span><span className="font-medium">{selectedSeater.label}</span></div>
                   <div className="flex justify-between"><span>Design:</span><span className="font-medium">{DESIGN_COLORS[selectedDesign].code} - {language === "bm" ? DESIGN_COLORS[selectedDesign].name : DESIGN_COLORS[selectedDesign].nameEn}</span></div>
                 </div>
-                <div className="border-t border-border mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-semibold text-foreground">{language === "bm" ? "Jumlah" : "Total"}:</span>
-                  <span className="text-2xl font-bold text-primary">RM{selectedSeater.price}</span>
+                <div className="border-t mt-3 pt-3 flex justify-between items-center" style={{ borderColor: 'var(--acs-line)' }}>
+                  <span className="font-semibold text-acs-paper">Jumlah:</span>
+                  <span className="font-display text-[28px] text-acs-brass">RM{selectedSeater.price}</span>
                 </div>
               </div>
             )}
 
             {!quoteShown ? (
-              <Button
+              <button
                 type="submit"
-                size="lg"
                 disabled={!isComplete}
-                className="w-full h-12 text-base font-semibold disabled:opacity-50"
+                className="btn-acs-primary w-full justify-center py-4 mt-3 disabled:opacity-40"
               >
                 <Calculator className="w-5 h-5 mr-2" />
                 {language === "bm" ? "Sebut Harga" : "Get Quote"}
-              </Button>
+              </button>
             ) : (
-              <Button
+              <button
                 type="button"
                 onClick={handleWhatsApp}
-                size="lg"
-                className="w-full h-12 text-base bg-[#25D366] hover:bg-[#20BD5A] text-white font-semibold"
+                className="btn-acs-primary w-full justify-center py-4 mt-3"
               >
                 <MessageCircle className="w-5 h-5 mr-2" />
                 {language === "bm" ? "Order WhatsApp" : "Order WhatsApp"}
-              </Button>
+              </button>
             )}
           </form>
         </div>

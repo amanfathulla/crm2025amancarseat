@@ -7,6 +7,13 @@ import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
 import { Footer } from "@/components/sales/Footer";
 import { useReviews } from "@/hooks/useReviews";
 
+/** Stitch divider — signature element: dashed red line like jahitan diamond stitch */
+const StitchDivider = () => (
+  <svg className="stitch-divider" viewBox="0 0 2000 28" preserveAspectRatio="none">
+    <path d="M0,14 H2000" />
+  </svg>
+);
+
 const Index = () => {
   const { reviews } = useReviews();
 
@@ -15,12 +22,17 @@ const Index = () => {
   };
 
   return (
-    <div className="dark min-h-screen bg-black text-white w-full">
+    <div className="landing-root dark min-h-screen bg-acs-ink text-acs-paper w-full" style={{ fontFamily: "'Inter', sans-serif" }}>
       <HeroSection onCTAClick={handleCTAClick} totalReviews={Math.max(reviews.length, 369)} />
+      <StitchDivider />
       <BeforeAfterSection />
+      <StitchDivider />
       <WhyFabricSilk />
+      <StitchDivider />
       <ColorGallery />
-      <WallOfFame reviews={reviews as any} />
+      <StitchDivider />
+      <WallOfFame reviews={reviews} />
+      <StitchDivider />
       <QuickOrderForm />
       <Footer />
     </div>

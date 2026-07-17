@@ -1,6 +1,5 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Button } from "@/components/ui/button";
-import { Star, MessageCircle, ChevronRight, Image as ImageIcon } from "lucide-react";
+import { Star, ChevronRight, Image as ImageIcon } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Review {
@@ -17,86 +16,74 @@ interface WallOfFameProps {
   reviews: Review[];
 }
 
-// Featured brands to show on landing page
-
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
   
-  // Latest 15 "pickup" reviews that have images (newest first).
   const getFeaturedReviews = () => {
     return reviews
       .filter(r => r.images && r.images.length > 0)
       .filter(r => r.car_model.toLowerCase().includes("pickup"))
-      .slice(0, 15);
+      .slice(0, 6);
   };
 
   const featuredReviews = getFeaturedReviews();
 
   return (
-    <section className="py-16 md:py-24 bg-secondary/30">
-      <div className="container mx-auto px-4">
+    <section className="py-[72px] bg-acs-ink">
+      <div className="max-w-[1120px] mx-auto px-6">
         {/* Section header */}
-        <div className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
-            <MessageCircle className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">WhatsApp Verified</span>
-          </div>
-          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+        <div className="text-center max-w-[560px] mx-auto mb-10">
+          <div className="acs-eyebrow justify-center mb-3.5">Bukti Pelanggan</div>
+          <h2 className="font-display text-acs-paper mb-2.5" style={{ fontSize: 'clamp(30px,5vw,44px)' }}>
             {t.wallOfFameTitle}
           </h2>
-          <p className="text-muted-foreground max-w-2xl mx-auto">
+          <p className="text-acs-ash text-[15px] leading-relaxed">
             {t.wallOfFameSubtitle}
           </p>
         </div>
 
-        {/* Featured images grid */}
+        {/* Testimonial grid */}
         {featuredReviews.length > 0 && (
-          <div className="mb-12">
-            <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
-              {featuredReviews.map((review) => (
-                <div
-                  key={review.id}
-                  className="group relative aspect-square rounded-xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all cursor-pointer"
-                >
-                  {review.images[0] ? (
-                    <img
-                      src={review.images[0]}
-                      alt={`${review.name}'s car`}
-                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
-                    />
-                  ) : (
-                    <div className="w-full h-full flex items-center justify-center bg-secondary">
-                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
-                    </div>
-                  )}
-                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
-                    <div className="absolute bottom-2 left-2 right-2">
-                      <p className="text-white text-xs font-medium truncate">{review.name}</p>
-                      <p className="text-white/70 text-[10px] truncate">{review.car_model}</p>
-                      <div className="flex gap-0.5 mt-1">
-                        {[...Array(5)].map((_, i) => (
-                          <Star
-                            key={i}
-                            className={`w-2 h-2 ${i < review.rating ? 'fill-primary text-primary' : 'text-white/30'}`}
-                          />
-                        ))}
-                      </div>
-                    </div>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-3 mb-8">
+            {featuredReviews.map((review) => (
+              <div
+                key={review.id}
+                className="group relative aspect-[4/5] rounded-md overflow-hidden border cursor-pointer"
+                style={{ borderColor: 'var(--acs-line)', background: 'linear-gradient(160deg,#2b2622,#141110)' }}
+              >
+                {review.images[0] ? (
+                  <img
+                    src={review.images[0]}
+                    alt={`${review.name}'s car`}
+                    className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                  />
+                ) : (
+                  <div className="w-full h-full flex items-center justify-center" style={{ background: 'var(--acs-panel)' }}>
+                    <ImageIcon className="w-8 h-8 text-acs-ash" />
+                  </div>
+                )}
+                {/* Gradient overlay */}
+                <div className="absolute inset-0 pointer-events-none" style={{ background: 'linear-gradient(to top, rgba(0,0,0,0.75) 0%, transparent 55%)' }} />
+                {/* Tag */}
+                <div className="absolute bottom-2.5 left-2.5 right-2.5 z-10 font-mono-acs text-[10px] text-acs-paper opacity-85">
+                  <span className="text-acs-brass block text-[11px] font-bold mb-0.5">{review.name} · {review.car_model}</span>
+                  <div className="flex gap-0.5">
+                    {[...Array(5)].map((_, i) => (
+                      <Star key={i} className={`w-2.5 h-2.5 ${i < review.rating ? 'fill-[var(--acs-brass)] text-[var(--acs-brass)]' : 'text-white/30'}`} />
+                    ))}
                   </div>
                 </div>
-              ))}
-            </div>
+              </div>
+            ))}
           </div>
         )}
 
-        {/* Single CTA button */}
-        <div className="flex items-center justify-center mt-10">
-          <Button asChild size="lg" className="min-w-[200px] rounded-full">
-            <Link to="/testimoni" className="flex items-center gap-2">
-              {t.viewAll}
-              <ChevronRight className="w-4 h-4" />
-            </Link>
-          </Button>
+        {/* CTA */}
+        <div className="flex justify-center">
+          <Link to="/testimoni" className="btn-acs-ghost flex items-center gap-2">
+            {t.viewAll}
+            <ChevronRight className="w-4 h-4" />
+          </Link>
         </div>
       </div>
     </section>
