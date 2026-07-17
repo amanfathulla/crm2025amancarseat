@@ -1,105 +1,139 @@
+import { useEffect, useState } from "react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Button } from "@/components/ui/button";
+import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingBag, Tag } from "lucide-react";
+import { Link } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
 
-import React, { useEffect } from 'react';
-import {
-  BrowserRouter as Router,
-  Routes,
-  Route,
-  useLocation,
-} from "react-router-dom";
-import {
-  QueryClient,
-  QueryClientProvider,
-} from "@tanstack/react-query";
-import { Toaster } from "@/components/ui/toaster"
-
-import { AuthProvider } from "@/hooks/useAuth";
-import { LanguageProvider } from "@/contexts/LanguageContext";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import LiveDashboard from "@/pages/LiveDashboard";
-import Customers from "@/pages/Customers";
-import Sales from "@/pages/Sales";
-import Products from "@/pages/Products";
-import PaymentGateways from "@/pages/PaymentGateways";
-import Leads from "@/pages/Leads";
-import Marketing from "@/pages/Marketing";
-import Reviews from "@/pages/Reviews";
-import LinkTempahan from "@/pages/LinkTempahan";
-import NotFound from "@/pages/NotFound";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Sidebar } from "@/components/layout/Sidebar";
-
-import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
-import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
-import Order from "@/pages/Order";
-import Testimoni from "@/pages/Testimoni";
-import OrderFullsilk from "@/pages/OrderFullsilk";
-import OrderThankYou from "@/pages/OrderThankYou";
-import RaceDashboard from "@/pages/RaceDashboard";
-
-function ScrollToTop() {
-  const { pathname } = useLocation();
-  useEffect(() => {
-    window.scrollTo({ top: 0, left: 0, behavior: "auto" });
-  }, [pathname]);
-  return null;
+interface Review {
+  id: string;
+  name: string;
+  car_model: string;
+  rating: number;
+  review: string;
+  images: string[];
+  avatar_url?: string | null;
 }
 
-function App() {
-  const queryClient = new QueryClient();
+interface WallOfFameProps {
+  reviews: Review[];
+}
+
+// Featured brands to show on landing page
+
+export const WallOfFame = ({ reviews }: WallOfFameProps) => {
+  const { t } = useLanguage();
+  const [featuredCoupon, setFeaturedCoupon] = useState<string | null>(null);
+
+  useEffect(() => {
+    supabase
+      .from("coupons")
+      .select("code")
+      .eq("is_active", true)
+      .eq("is_featured_landing", true)
+      .maybeSingle()
+      .then(({ data }) => {
+        if (data) setFeaturedCoupon((data as any).code);
+      });
+  }, []);
+
+  // Latest 15 "pickup" reviews that have images (newest first).
+  const getFeaturedReviews = () => {
+    return reviews
+      .filter(r => r.images && r.images.length > 0)
+      .filter(r => r.car_model.toLowerCase().includes("pickup"))
+      .slice(0, 15);
+  };
+
+  const featuredReviews = getFeaturedReviews();
 
   return (
-    <AuthProvider>
-      <LanguageProvider>
-        <QueryClientProvider client={queryClient}>
-          <Router>
-            <ScrollToTop />
-            <div className="flex min-h-screen w-full">
-              <Routes>
-                {/* Routes without sidebar */}
-                <Route path="/" element={<Index />} />
-                <Route path="/admin" element={<Login />} />
-                <Route path="/login" element={<Login />} />
-                <Route path="/order" element={<Order />} />
-                <Route path="/order/:material" element={<Order />} />
-                <Route path="/testimoni" element={<Testimoni />} />
-                <Route path="/testimoni/:brand" element={<Testimoni />} />
-                <Route path="/order-fullsilk" element={<OrderFullsilk />} />
-                <Route path="/order/thank-you" element={<OrderThankYou />} />
-                <Route path="/live-dashboardacs" element={<RaceDashboard />} />
+    <section className="py-16 md:py-24 bg-secondary/30">
+      <div className="container mx-auto px-4">
+        {/* Section header */}
+        <div className="text-center mb-12 md:mb-16">
+          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
+            <MessageCircle className="w-4 h-4 text-primary" />
+            <span className="text-sm font-medium text-primary">WhatsApp Verified</span>
+          </div>
+          <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
+            {t.wallOfFameTitle}
+          </h2>
+          <p className="text-muted-foreground max-w-2xl mx-auto">
+            {t.wallOfFameSubtitle}
+          </p>
+        </div>
 
-                {/* Routes with sidebar and authenticated layout */}
-                <Route path="/" element={
-                  <div className="flex w-full">
-                    <Sidebar />
-                    <MainLayout />
+        {/* Featured images grid */}
+        {featuredReviews.length > 0 && (
+          <div className="mb-12">
+            <div className="grid grid-cols-3 md:grid-cols-5 gap-2 md:gap-3">
+              {featuredReviews.map((review) => (
+                <div
+                  key={review.id}
+                  className="group relative aspect-square rounded-xl overflow-hidden bg-card border border-border hover:border-primary/50 transition-all cursor-pointer"
+                >
+                  {review.images[0] ? (
+                    <img
+                      src={review.images[0]}
+                      alt={`${review.name}'s car`}
+                      className="w-full h-full object-cover group-hover:scale-105 transition-transform duration-300"
+                    />
+                  ) : (
+                    <div className="w-full h-full flex items-center justify-center bg-secondary">
+                      <ImageIcon className="w-8 h-8 text-muted-foreground" />
+                    </div>
+                  )}
+                  <div className="absolute inset-0 bg-gradient-to-t from-black/80 via-transparent to-transparent opacity-0 group-hover:opacity-100 transition-opacity">
+                    <div className="absolute bottom-2 left-2 right-2">
+                      <p className="text-white text-xs font-medium truncate">{review.name}</p>
+                      <p className="text-white/70 text-[10px] truncate">{review.car_model}</p>
+                      <div className="flex gap-0.5 mt-1">
+                        {[...Array(5)].map((_, i) => (
+                          <Star
+                            key={i}
+                            className={`w-2 h-2 ${i < review.rating ? 'fill-primary text-primary' : 'text-white/30'}`}
+                          />
+                        ))}
+                      </div>
+                    </div>
                   </div>
-                }>
-                  <Route path="/dashboard" element={<Dashboard />} />
-                  <Route path="/live-dashboard" element={<LiveDashboard />} />
-                  <Route path="/leads" element={<Leads />} />
-                  <Route path="/marketing" element={<Marketing />} />
-                  <Route path="/customers" element={<Customers />} />
-                  <Route path="/customers/receipt" element={<CustomerReceipt />} />
-                  <Route path="/customers/invoice" element={<CustomerInvoice />} />
-                  <Route path="/sales" element={<Sales />} />
-                  <Route path="/products" element={<Products />} />
-                  <Route path="/payment-gateways" element={<PaymentGateways />} />
-                  <Route path="/reviews" element={<Reviews />} />
-                  <Route path="/link-tempahan" element={<LinkTempahan />} />
-                </Route>
-
-                <Route path="*" element={<NotFound />} />
-              </Routes>
+                </div>
+              ))}
             </div>
-            <Toaster />
-          </Router>
-        </QueryClientProvider>
-      </LanguageProvider>
-    </AuthProvider>
+          </div>
+        )}
+
+        {/* CTA buttons */}
+        <div className="flex flex-col items-center justify-center gap-3 mt-10">
+          <Button asChild size="lg" className="min-w-[200px] rounded-full">
+            <Link to="/testimoni" className="flex items-center gap-2">
+              {t.viewAll}
+              <ChevronRight className="w-4 h-4" />
+            </Link>
+          </Button>
+
+          <Button
+            asChild
+            size="lg"
+            variant="outline"
+            className="min-w-[200px] rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground flex-col h-auto py-3 gap-0.5"
+          >
+            <Link to="/order">
+              <span className="flex items-center gap-2 font-semibold">
+                <ShoppingBag className="w-4 h-4" />
+                Order Sekarang & Jimat
+              </span>
+              {featuredCoupon && (
+                <span className="flex items-center gap-1 text-xs font-normal opacity-80">
+                  <Tag className="w-3 h-3" />
+                  Guna kod {featuredCoupon} di checkout
+                </span>
+              )}
+            </Link>
+          </Button>
+        </div>
+      </div>
+    </section>
   );
-}
-
-export default App;
-
+};
