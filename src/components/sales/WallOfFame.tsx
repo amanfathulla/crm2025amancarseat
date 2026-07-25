@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingBag, Tag } from "lucide-react";
+import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingCart, Ticket } from "lucide-react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 
@@ -33,7 +33,7 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
       .eq("is_featured_landing", true)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setFeaturedCoupon((data as any).code);
+        if (data) setFeaturedCoupon((data as { code: string }).code);
       });
   }, []);
 
@@ -112,24 +112,19 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
               <ChevronRight className="w-4 h-4" />
             </Link>
           </Button>
-
-          <Button
-            asChild
-            size="lg"
-            variant="outline"
-            className="min-w-[200px] rounded-full border-primary/50 text-primary hover:bg-primary hover:text-primary-foreground flex-col h-auto py-3 gap-0.5"
-          >
-            <Link to="/order">
-              <span className="flex items-center gap-2 font-semibold">
-                <ShoppingBag className="w-4 h-4" />
-                Order Sekarang & Jimat
+          {/* Order Terus — CTA-strong, stands out from neutral testimoni button */}
+          <Button asChild size="lg" className="min-w-[280px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
+            <Link to="/order" className="flex flex-col items-center gap-0.5 py-2">
+              <span className="flex items-center gap-2 text-sm">
+                <ShoppingCart className="w-4 h-4" />
+                Order Sekarang di Website
               </span>
-              {featuredCoupon && (
-                <span className="flex items-center gap-1 text-xs font-normal opacity-80">
-                  <Tag className="w-3 h-3" />
-                  Guna kod {featuredCoupon} di checkout
-                </span>
-              )}
+              <span className="flex items-center gap-1 text-xs text-red-600 font-semibold">
+                <Ticket className="w-3 h-3" />
+                {featuredCoupon
+                  ? `Guna Kod: ${featuredCoupon} · Diskaun Terus`
+                  : 'Guna Kod: SPECIALACS · Diskaun RM25 Terus'}
+              </span>
             </Link>
           </Button>
         </div>

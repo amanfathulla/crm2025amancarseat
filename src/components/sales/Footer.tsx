@@ -1,45 +1,15 @@
 import { useLanguage } from "@/contexts/LanguageContext";
-import { MapPin, Phone, Mail, Clock, MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
+import { MapPin, Phone, Mail, Clock } from "lucide-react";
 
 export const Footer = () => {
   const { language } = useLanguage();
 
-  const handleLeatherCatalog = () => {
-    const message = encodeURIComponent(language === 'bm' 
-      ? "Assalamualaikum, saya berminat dengan koleksi Sensico Leather (Minimalist). Boleh saya lihat katalog?" 
-      : "Hi, I'm interested in the Sensico Leather (Minimalist) collection. Can I see the catalog?");
-    window.open(`https://wa.me/60194503184?text=${message}`, '_blank');
-  };
+  const now = new Date();
+  const dateStr = now.toLocaleDateString(language === 'bm' ? 'ms-MY' : 'en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' });
+  const timeStr = now.toLocaleTimeString(language === 'bm' ? 'ms-MY' : 'en-MY', { hour: '2-digit', minute: '2-digit', second: '2-digit', hour12: true });
 
   return (
     <footer className="bg-black text-white border-t border-white/10">
-      {/* Leather Alternative Section */}
-      <div className="bg-zinc-900/60 border-b border-white/10">
-        <div className="container mx-auto px-4 py-8 md:py-10">
-          <div className="max-w-2xl mx-auto text-center">
-            <p className="text-base md:text-lg text-white/90 mb-4">
-              {language === 'bm' 
-                ? 'Nak material kulit? Kami juga ada!' 
-                : 'Want leather material? We have that too!'}
-            </p>
-            <p className="text-sm text-white/80 mb-6">
-              {language === 'bm' 
-                ? 'Koleksi Sensico Leather Premium dengan corak Diamond yang sama – untuk boss yang prefer feel kulit.' 
-                : 'Sensico Leather Premium collection with the same Diamond pattern – for those who prefer the leather feel.'}
-            </p>
-            <Button 
-              size="lg"
-              onClick={handleLeatherCatalog}
-              className="px-8 py-5 rounded-full font-bold bg-white text-black hover:bg-white/90 border-0 transition-all"
-            >
-              <MessageCircle className="w-4 h-4 mr-2" />
-              {language === 'bm' ? 'Lihat Katalog Kulit' : 'View Leather Catalog'}
-            </Button>
-          </div>
-        </div>
-      </div>
-
       <div className="container mx-auto px-4 py-10 md:py-12">
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
           {/* Company Info */}
@@ -52,7 +22,7 @@ export const Footer = () => {
             </div>
             <p className="text-sm text-white/85 leading-relaxed">
               {language === 'bm' 
-                ? 'Pakar sarung tempat duduk kereta premium di Malaysia. Lebih 10 tahun pengalaman dalam industri automotif.'
+                ? 'Pakar sarung tempat duduk kereta premium di Malaysia. Lebih 10 tahun pengalaman dalam industri automotif.' 
                 : 'Premium car seat cover specialist in Malaysia. Over 10 years of experience in the automotive industry.'}
             </p>
           </div>
@@ -110,8 +80,7 @@ export const Footer = () => {
             © {new Date().getFullYear()} Aman Car Seat. {language === 'bm' ? 'Hak Cipta Terpelihara.' : 'All Rights Reserved.'}
           </p>
           <p className="text-xs text-white/70">
-            {new Date().toLocaleDateString(language === 'bm' ? 'ms-MY' : 'en-MY', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}{' '}
-            | {new Date().toLocaleTimeString(language === 'bm' ? 'ms-MY' : 'en-MY', { hour: '2-digit', minute: '2-digit', hour12: true })}
+            {dateStr} | {timeStr}
           </p>
         </div>
       </div>

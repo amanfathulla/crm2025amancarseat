@@ -25,6 +25,7 @@ interface Coupon {
   valid_from: string;
   valid_until: string;
   is_active: boolean;
+  eligible_materials?: string[] | null;
 }
 
 interface TelegramSettings {
@@ -62,6 +63,9 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   const [couponType, setCouponType] = useState<"fixed" | "percentage">("fixed");
   const [couponLimit, setCouponLimit] = useState("100");
   const [couponValidUntil, setCouponValidUntil] = useState("");
+  const [couponMaterials, setCouponMaterials] = useState<string[]>([]);
+
+  const MATERIAL_CATEGORIES = ["Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"];
 
   // Telegram form
   const [telegramSettings, setTelegramSettings] = useState<TelegramSettings | null>(null);
@@ -121,8 +125,8 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
     setPassword(""); setNewEmail("");
     setShowCurrentPw(false); setShowNewPw(false); setShowEmailPw(false);
     setTelegramSaved(false);
-    setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
-  };
+    setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil(""); setCouponMaterials([]);
+    };
 
   // ---- Password ----
   const handleUpdatePassword = async () => {
@@ -225,10 +229,11 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         usage_limit: parseInt(couponLimit) || 100,
         valid_until: new Date(couponValidUntil).toISOString(),
         is_active: true,
+        eligible_materials: couponMaterials.length > 0 ? couponMaterials : null,
       });
       if (error) throw error;
       toast({ title: "Berjaya!", description: "Kupon telah ditambah" });
-      setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil("");
+      setCouponCode(""); setCouponAmount(""); setCouponLimit("100"); setCouponValidUntil(""); setCouponMaterials([]);
       fetchCoupons();
     } catch (err: any) {
       const msg = err?.message?.includes("duplicate") ? "Kod kupon sudah wujud" : "Gagal tambah kupon";
@@ -403,6 +408,35 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                     className="text-sm" />
                 </div>
               </div>
+
+              {/* Material Eligibility */}
+              <div className="space-y-2 pt-1">
+                <Label className="text-xs">Material Eligibility (pilih untuk hadkan)</Label>
+                <div className="grid grid-cols-2 gap-2">
+                  {MATERIAL_CATEGORIES.map((mat) => {
+                    const checked = couponMaterials.includes(mat);
+                    return (
+                      <label key={mat} className="flex items-center gap-2 p-2 rounded-md border border-input bg-background cursor-pointer hover:bg-muted/30 transition-colors">
+                        <input
+                          type="checkbox"
+                          checked={checked}
+                          onChange={(e) => {
+                            if (e.target.checked) {
+                              setCouponMaterials([...couponMaterials, mat]);
+                            } else {
+                              setCouponMaterials(couponMaterials.filter(m => m !== mat));
+                            }
+                          }}
+                          className="rounded"
+                        />
+                        <span className="text-xs">{mat}</span>
+                      </label>
+                    );
+                  })}
+                </div>
+                <p className="text-[10px] text-muted-foreground">Jika kosong, kupon sah untuk semua material</p>
+              </div>
+
               <Button onClick={handleAddCoupon} disabled={isSavingCoupon} size="sm" className="w-full">
                 {isSavingCoupon ? <><LoaderCircle className="mr-2 h-3.5 w-3.5 animate-spin" />Menambah...</> : "Tambah Kupon"}
               </Button>
@@ -434,6 +468,13 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                           {c.usage_count}/{c.usage_limit} diguna · 
                           Sah: {new Date(c.valid_until).toLocaleDateString("ms-MY")}
                         </p>
+                        {c.eligible_materials && c.eligible_materials.length > 0 && (
+                          <div className="flex flex-wrap gap-1 mt-1">
+                            {c.eligible_materials.map((m: string) => (
+                              <span key={m} className="text-[9px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded">{m}</span>
+                            ))}
+                          </div>
+                        )}
                       </div>
                       <div className="flex items-center gap-1 ml-2">
                         <Button variant="ghost" size="icon" className="h-7 w-7"
