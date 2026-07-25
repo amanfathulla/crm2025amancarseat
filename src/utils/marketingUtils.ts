@@ -1,5 +1,8 @@
 
-import { supabase } from '@/integrations/supabase/client';
+import { getAuthenticatedClient } from '@/integrations/supabase/client';
+
+// Admin-authenticated client (marketing_content is admin-only via RLS)
+const adminClient = () => getAuthenticatedClient(localStorage.getItem('adminSessionToken') || '');
 import { formatDateToYYYYMMDD } from '@/utils/dateUtils';
 
 // Define strict types
@@ -34,7 +37,7 @@ export const getNotesToDelete = async () => {
     const threeDaysAgoStr = formatDateToYYYYMMDD(threeDaysAgo);
     
     // Count completed notes older than 3 days
-    const { data, error } = await supabase
+    const { data, error } = await adminClient()
       .from('marketing_content')
       .select('id')
       .eq('status', 'completed')
@@ -62,7 +65,7 @@ export const deleteOldMarketingNotes = async () => {
     threeDaysAgo.setDate(threeDaysAgo.getDate() - 3);
     const threeDaysAgoStr = formatDateToYYYYMMDD(threeDaysAgo);
     
-    const { data, error } = await supabase
+    const { data, error } = await adminClient()
       .from('marketing_content')
       .delete()
       .eq('status', 'completed')
@@ -88,7 +91,7 @@ export const deleteOldMarketingNotes = async () => {
  */
 export const getMarketingNotes = async (startDate: string, endDate: string): Promise<MarketingContent[]> => {
   try {
-    const { data, error } = await supabase
+    const { data, error } = await adminClient()
       .from('marketing_content')
       .select('*')
       .gte('content_date', startDate)
@@ -155,7 +158,7 @@ export const createMarketingNote = async (note: Omit<MarketingContent, 'id' | 'c
     
     console.log('Validated note:', validatedNote);
     
-    const { data, error } = await supabase
+    const { data, error } = await adminClient()
       .from('marketing_content')
       .insert(validatedNote)
       .select()
@@ -207,7 +210,7 @@ export const updateMarketingNoteStatus = async (id: string, status: MarketingCon
       updateData.completed_at = null;
     }
     
-    const { error } = await supabase
+    const { error } = await adminClient()
       .from('marketing_content')
       .update(updateData)
       .eq('id', id);
@@ -229,7 +232,7 @@ export const updateMarketingNoteStatus = async (id: string, status: MarketingCon
  */
 export const updateMarketingNote = async (id: string, updates: Partial<MarketingContent>) => {
   try {
-    const { error } = await supabase
+    const { error } = await adminClient()
       .from('marketing_content')
       .update({
         ...updates,
@@ -254,7 +257,7 @@ export const updateMarketingNote = async (id: string, updates: Partial<Marketing
  */
 export const deleteMarketingNote = async (id: string) => {
   try {
-    const { error } = await supabase
+    const { error } = await adminClient()
       .from('marketing_content')
       .delete()
       .eq('id', id);
