@@ -46,6 +46,7 @@ import AffiliateRegister from "@/pages/AffiliateRegister";
 import AffiliateLogin from "@/pages/AffiliateLogin";
 import AffiliateLayout from "@/components/layout/AffiliateLayout";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import AffiliateReferralCenter from "@/pages/AffiliateReferralCenter";
 import AffiliateProducts from "@/pages/AffiliateProducts";
 import AffiliateOrders from "@/pages/AffiliateOrders";
 import AffiliateCommissions from "@/pages/AffiliateCommissions";
