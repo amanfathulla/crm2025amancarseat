@@ -57,6 +57,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
   // Coupon form
   const [coupons, setCoupons] = useState<Coupon[]>([]);
   const [isLoadingCoupons, setIsLoadingCoupons] = useState(false);
+  const [couponFilter, setCouponFilter] = useState<"all" | "active" | "expired">("all");
   const [isSavingCoupon, setIsSavingCoupon] = useState(false);
   const [couponCode, setCouponCode] = useState("");
   const [couponAmount, setCouponAmount] = useState("");
@@ -452,18 +453,34 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
             {/* Coupon summary cards */}
             <div className="grid grid-cols-2 gap-3">
-              <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3">
+              <button
+                type="button"
+                onClick={() => setCouponFilter(couponFilter === "active" ? "all" : "active")}
+                className={`rounded-xl border p-3 text-left transition-colors ${
+                  couponFilter === "active"
+                    ? "border-green-500 bg-green-500/20"
+                    : "border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
+                }`}
+              >
                 <p className="text-xs text-muted-foreground">Kupon Aktif</p>
                 <p className="text-2xl font-bold text-green-600">
                   {coupons.filter(c => c.is_active && new Date(c.valid_until) >= new Date() && c.usage_count < c.usage_limit).length}
                 </p>
-              </div>
-              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
+              </button>
+              <button
+                type="button"
+                onClick={() => setCouponFilter(couponFilter === "expired" ? "all" : "expired")}
+                className={`rounded-xl border p-3 text-left transition-colors ${
+                  couponFilter === "expired"
+                    ? "border-red-500 bg-red-500/20"
+                    : "border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
+                }`}
+              >
                 <p className="text-xs text-muted-foreground">Kupon Tamat</p>
                 <p className="text-2xl font-bold text-red-600">
                   {coupons.filter(c => new Date(c.valid_until) < new Date() || c.usage_count >= c.usage_limit || !c.is_active).length}
                 </p>
-              </div>
+              </button>
             </div>
 
             {/* Coupon list */}
@@ -473,7 +490,17 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               <p className="text-center text-muted-foreground text-sm py-4">Tiada kupon lagi.</p>
             ) : (
               <div className="space-y-2 max-h-52 overflow-y-auto">
-                {coupons.map(c => {
+                {coupons
+                  .filter((c) => {
+                    if (couponFilter === "active") {
+                      return c.is_active && new Date(c.valid_until) >= new Date() && c.usage_count < c.usage_limit;
+                    }
+                    if (couponFilter === "expired") {
+                      return new Date(c.valid_until) < new Date() || c.usage_count >= c.usage_limit || !c.is_active;
+                    }
+                    return true;
+                  })
+                  .map(c => {
                   const expired = new Date(c.valid_until) < new Date();
                   const exhausted = c.usage_count >= c.usage_limit;
                   return (
