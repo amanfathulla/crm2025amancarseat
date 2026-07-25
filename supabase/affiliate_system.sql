@@ -146,8 +146,7 @@ CREATE POLICY "affiliate_withdrawals owner" ON public.affiliate_withdrawals
 
 DROP POLICY IF EXISTS "affiliate_settings admin" ON public.affiliate_settings;
 CREATE POLICY "affiliate_settings admin" ON public.affiliate_settings
-  FOR SELECT USING (public.is_admin_session() OR true)
-  WITH CHECK (public.is_admin_session());
+  FOR SELECT USING (public.is_admin_session() OR true);
 
 -- ------------------------------------------------------------
 -- RPC: admin approves / rejects an affiliate
