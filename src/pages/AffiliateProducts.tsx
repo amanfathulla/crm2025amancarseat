@@ -4,7 +4,17 @@ import { Copy, Check, Package, Link2, BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AFF_REF = "affiliateReferral";
-const SITE = "https://amanfathulla.github.io/Salessss-testing/";
+const SITE = "https://www.amancarseat.com/";
+
+// material category -> URL slug (matches amancarseat.com/order/materialXXX)
+const MATERIAL_SLUG: Record<string, string> = {
+  "Kain Mesh": "materialmesh",
+  "Kain Nylon": "materialnylon",
+  "Kain Fullsilk": "materialfullsilk",
+  "Semi Leather Kalis Air": "materialsemi-leather",
+};
+const slugFor = (cat: string | null) =>
+  MATERIAL_SLUG[cat || ""] || "order";
 
 type Prod = {
   id: string;
@@ -47,7 +57,7 @@ export default function AffiliateProducts() {
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((p) => {
           const commission = p.affiliate_commission ?? 0;
-          const link = `${SITE}order?ref=${ref}&product=${p.id}&material=${encodeURIComponent(p.category || "")}`;
+          const link = `${SITE}${slugFor(p.category)}?ref=${ref}&product=${p.id}`;
           return (
             <div key={p.id} className="rounded-xl border border-white/10 bg-slate-900/60 p-4 space-y-3">
               <div className="flex gap-3">

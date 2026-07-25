@@ -6,7 +6,7 @@ import { Input } from "@/components/ui/input";
 
 const AFF_TOKEN = "affiliateToken";
 const AFF_REF = "affiliateReferral";
-const SITE = "https://amanfathulla.github.io/Salessss-testing/";
+const SITE = "https://www.amancarseat.com/";
 
 export default function AffiliateReferralCenter() {
   const [copied, setCopied] = useState<string | null>(null);
