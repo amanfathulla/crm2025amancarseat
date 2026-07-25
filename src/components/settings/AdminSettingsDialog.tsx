@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send, Radio, Copy, RefreshCw } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send, Radio, Copy, RefreshCw, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { PublicDashSettings } from "@/components/settings/PublicDashSettings";
 
@@ -229,7 +229,7 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         usage_limit: parseInt(couponLimit) || 100,
         valid_until: new Date(couponValidUntil).toISOString(),
         is_active: true,
-        eligible_materials: couponMaterials.length > 0 ? couponMaterials : null,
+        applicable_materials: couponMaterials.length > 0 ? couponMaterials : null,
       });
       if (error) throw error;
       toast({ title: "Berjaya!", description: "Kupon telah ditambah" });
@@ -411,26 +411,34 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
 
               {/* Material Eligibility */}
               <div className="space-y-2 pt-1">
-                <Label className="text-xs">Material Eligibility (pilih untuk hadkan)</Label>
-                <div className="grid grid-cols-2 gap-2">
+                <Label className="text-xs">Material Layak (pilih untuk hadkan)</Label>
+                <div className="flex flex-wrap gap-2">
                   {MATERIAL_CATEGORIES.map((mat) => {
                     const checked = couponMaterials.includes(mat);
                     return (
-                      <label key={mat} className="flex items-center gap-2 p-2 rounded-md border border-input bg-background cursor-pointer hover:bg-muted/30 transition-colors">
-                        <input
-                          type="checkbox"
-                          checked={checked}
-                          onChange={(e) => {
-                            if (e.target.checked) {
-                              setCouponMaterials([...couponMaterials, mat]);
-                            } else {
-                              setCouponMaterials(couponMaterials.filter(m => m !== mat));
-                            }
-                          }}
-                          className="rounded"
-                        />
-                        <span className="text-xs">{mat}</span>
-                      </label>
+                      <button
+                        type="button"
+                        key={mat}
+                        onClick={() =>
+                          checked
+                            ? setCouponMaterials(couponMaterials.filter((m) => m !== mat))
+                            : setCouponMaterials([...couponMaterials, mat])
+                        }
+                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
+                          checked
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-background text-foreground border-border hover:bg-muted"
+                        }`}
+                      >
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            checked ? "border-primary-foreground bg-primary-foreground text-primary" : "border-muted-foreground"
+                          }`}
+                        >
+                          {checked && <Check className="h-3 w-3" />}
+                        </span>
+                        {mat}
+                      </button>
                     );
                   })}
                 </div>
