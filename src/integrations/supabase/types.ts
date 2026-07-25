@@ -1028,18 +1028,21 @@ export type Database = {
           id: number
           freeze_months: number
           custom_freeze_date: string | null
+          marketing_note: string | null
           updated_at: string
         }
         Insert: {
           id?: number
           freeze_months?: number
           custom_freeze_date?: string | null
+          marketing_note?: string | null
           updated_at?: string
         }
         Update: {
           id?: number
           freeze_months?: number
           custom_freeze_date?: string | null
+          marketing_note?: string | null
           updated_at?: string
         }
         Relationships: []
