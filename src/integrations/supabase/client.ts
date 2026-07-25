@@ -39,3 +39,24 @@ export function getAuthenticatedClient(sessionToken: string) {
 export function clearAuthenticatedClientCache() {
   clientCache.clear();
 }
+
+/**
+ * Returns a Supabase client that includes the affiliate session token
+ * in the request headers (x-affiliate-session) so RLS policies
+ * can validate the session. Mirrors getAuthenticatedClient.
+ */
+export function getAffiliateClient(sessionToken: string) {
+  const key = `aff:${sessionToken}`;
+  let cached = clientCache.get(key);
+  if (!cached) {
+    cached = createClient<Database>(SUPABASE_URL, SUPABASE_PUBLISHABLE_KEY, {
+      global: {
+        headers: {
+          "x-affiliate-session": sessionToken,
+        },
+      },
+    });
+    clientCache.set(key, cached);
+  }
+  return cached;
+}

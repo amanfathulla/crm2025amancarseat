@@ -7,43 +7,11 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Loader2, CheckCircle2 } from "lucide-react";
 
-// Build a referral code from a name: uppercase, A-Z only, 4-20 chars.
-const slugifyName = (name: string) =>
-  name.replace(/[^a-zA-Z]/g, "").toUpperCase().slice(0, 20) || "AFFILIATE";
-
-// Find a unique referral code by appending 01, 02, ... if taken.
-const uniqueReferralCode = async (base: string): Promise<string> => {
-  const root = base.length >= 4 ? base : base.padEnd(4, "X");
-  const { data } = await supabase
-    .from("affiliates")
-    .select("referral_code")
-    .like("referral_code", `${root}%`)
-    .order("referral_code", { ascending: true });
-  const taken = new Set((data || []).map((r: any) => r.referral_code as string));
-  if (!taken.has(root)) return root;
-  let i = 1;
-  let candidate = "";
-  do {
-    candidate = `${root}${String(i).padStart(2, "0")}`;
-    i++;
-  } while (taken.has(candidate) && i < 999);
-  return candidate;
-};
-
-// Generate next affiliate_id: AFF00001, AFF00002, ...
-const nextAffiliateId = async (): Promise<string> => {
-  const { data } = await supabase
-    .from("affiliates")
-    .select("affiliate_id")
-    .order("affiliate_id", { ascending: false })
-    .limit(1);
-  const last = (data || [])[0]?.affiliate_id as string | undefined;
-  let n = 1;
-  if (last && /^AFF(\d+)$/.test(last)) {
-    n = parseInt(last.replace("AFF", ""), 10) + 1;
-  }
-  return `AFF${String(n).padStart(5, "0")}`;
-};
+const AFF_TOKEN = "affiliateToken";
+const AFF_ID = "affiliateId";
+const AFF_NAME = "affiliateName";
+const AFF_STATUS = "affiliateStatus";
+const AFF_REF = "affiliateReferral";
 
 export default function AffiliateRegister() {
   const { toast } = useToast();
@@ -67,33 +35,22 @@ export default function AffiliateRegister() {
     }
     setLoading(true);
     try {
-      const finalEmail =
-        email.trim() ||
-        `${phone.replace(/[^0-9]/g, "")}@amancarseat.app`;
-      const referralCode = await uniqueReferralCode(slugifyName(name));
-      const affiliateId = await nextAffiliateId();
-
-      // 1. Create auth user (password hashed server-side by Supabase)
-      const { data: authData, error: authErr } = await supabase.auth.signUp({
-        email: finalEmail,
-        password,
-        options: { data: { name, phone, whatsapp, referral_code: referralCode } },
+      const { data, error } = await supabase.rpc("register_affiliate", {
+        p_name: name.trim(),
+        p_phone: phone.trim(),
+        p_whatsapp: whatsapp.trim() || phone.trim(),
+        p_email: email.trim() || null,
+        p_password: password,
       });
-      if (authErr) throw authErr;
-      if (!authData.user) throw new Error("Gagal mencipta akaun.");
+      if (error) throw error;
 
-      // 2. Create pending affiliate profile (RLS: owner = auth.uid())
-      const { error: insErr } = await supabase.from("affiliates").insert({
-        user_id: authData.user.id,
-        affiliate_id: affiliateId,
-        referral_code: referralCode,
-        name: name.trim(),
-        phone: phone.trim(),
-        whatsapp: whatsapp.trim() || phone.trim(),
-        email: email.trim() || null,
-        status: "pending",
-      });
-      if (insErr) throw insErr;
+      const res = data as { affiliate_id: string; referral_code: string } | null;
+      if (!res) throw new Error("Pendaftaran gagal.");
+
+      localStorage.setItem(AFF_ID, res.affiliate_id);
+      localStorage.setItem(AFF_REF, res.referral_code);
+      localStorage.setItem(AFF_NAME, name.trim());
+      localStorage.setItem(AFF_STATUS, "pending");
 
       setDone(true);
       toast({
@@ -113,24 +70,22 @@ export default function AffiliateRegister() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4">
-      <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 shadow-2xl p-6 space-y-5">
-        <div className="text-center space-y-1">
+    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 flex flex-col">
+      <div className="w-full max-w-md">
+        <div className="mb-4">
           <img
             src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png"
             alt="ACS Legacy"
-            className="h-14 w-14 object-contain mx-auto mb-2"
+            className="h-14 w-14 object-contain mb-3"
           />
           <h1 className="text-xl font-bold text-white">Daftar Affiliate</h1>
           <p className="text-sm text-slate-400">Jadi rakan kongsi ACS Legacy</p>
         </div>
 
         {done ? (
-          <div className="text-center space-y-3 py-6">
-            <CheckCircle2 className="h-14 w-14 text-green-400 mx-auto" />
-            <p className="text-white font-medium">
-              Pendaftaran berjaya.
-            </p>
+          <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-3">
+            <CheckCircle2 className="h-12 w-12 text-green-400" />
+            <p className="text-white font-medium">Pendaftaran berjaya.</p>
             <p className="text-sm text-slate-400">
               Akaun anda sedang menunggu pengesahan admin.
             </p>
@@ -142,7 +97,10 @@ export default function AffiliateRegister() {
             </Link>
           </div>
         ) : (
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form
+            onSubmit={handleSubmit}
+            className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-4"
+          >
             <div className="space-y-1.5">
               <Label className="text-slate-300">Nama Penuh</Label>
               <Input
@@ -202,15 +160,14 @@ export default function AffiliateRegister() {
                 "Daftar Sebagai Affiliate"
               )}
             </Button>
+            <p className="text-center text-xs text-slate-500">
+              Sudah ada akaun?{" "}
+              <Link to="/affiliate/login" className="text-blue-400 hover:underline">
+                Log masuk
+              </Link>
+            </p>
           </form>
         )}
-
-        <p className="text-center text-xs text-slate-500">
-          Sudah ada akaun?{" "}
-          <Link to="/affiliate/login" className="text-blue-400 hover:underline">
-            Log masuk
-          </Link>
-        </p>
       </div>
     </div>
   );
