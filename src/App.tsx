@@ -37,6 +37,8 @@ import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
+import AffiliateRegister from "@/pages/AffiliateRegister";
+import AffiliateLogin from "@/pages/AffiliateLogin";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -68,6 +70,8 @@ function App() {
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
                 <Route path="/live-dashboardacs" element={<RaceDashboard />} />
+                <Route path="/affiliate/register" element={<AffiliateRegister />} />
+                <Route path="/affiliate/login" element={<AffiliateLogin />} />
 
                 {/* Routes with sidebar and authenticated layout */}
                 <Route path="/" element={
