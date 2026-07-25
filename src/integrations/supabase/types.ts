@@ -162,6 +162,8 @@ export type Database = {
           discount_type: string
           id: string
           is_active: boolean
+          is_featured_landing: boolean
+          applicable_materials: string[] | null
           updated_at: string | null
           usage_count: number
           usage_limit: number
@@ -175,6 +177,8 @@ export type Database = {
           discount_type?: string
           id?: string
           is_active?: boolean
+          is_featured_landing?: boolean
+          applicable_materials?: string[] | null
           updated_at?: string | null
           usage_count?: number
           usage_limit?: number
