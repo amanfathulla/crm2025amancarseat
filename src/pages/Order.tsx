@@ -1104,7 +1104,7 @@ export default function OrderPage() {
                         <img
                           src="/qr-payment.jpg"
                           alt="QR Pembayaran Maybank ACS LEGACY"
-                          className="w-40 h-40 object-contain rounded-lg"
+                          className="w-48 h-48 sm:w-60 sm:h-60 md:w-64 md:h-64 max-w-full object-contain rounded-lg"
                         />
                         <p className="text-[10px] text-gray-600 text-center leading-tight">
                           Scan dengan app perbankan untuk bayar<br />Maybank · ACS LEGACY · 553038596454
