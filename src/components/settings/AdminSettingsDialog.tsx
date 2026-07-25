@@ -450,6 +450,22 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               </Button>
             </div>
 
+            {/* Coupon summary cards */}
+            <div className="grid grid-cols-2 gap-3">
+              <div className="rounded-xl border border-green-500/30 bg-green-500/10 p-3">
+                <p className="text-xs text-muted-foreground">Kupon Aktif</p>
+                <p className="text-2xl font-bold text-green-600">
+                  {coupons.filter(c => c.is_active && new Date(c.valid_until) >= new Date() && c.usage_count < c.usage_limit).length}
+                </p>
+              </div>
+              <div className="rounded-xl border border-red-500/30 bg-red-500/10 p-3">
+                <p className="text-xs text-muted-foreground">Kupon Tamat</p>
+                <p className="text-2xl font-bold text-red-600">
+                  {coupons.filter(c => new Date(c.valid_until) < new Date() || c.usage_count >= c.usage_limit || !c.is_active).length}
+                </p>
+              </div>
+            </div>
+
             {/* Coupon list */}
             {isLoadingCoupons ? (
               <div className="flex justify-center py-4"><LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" /></div>
@@ -476,9 +492,9 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                           {c.usage_count}/{c.usage_limit} diguna · 
                           Sah: {new Date(c.valid_until).toLocaleDateString("ms-MY")}
                         </p>
-                        {c.eligible_materials && c.eligible_materials.length > 0 && (
+                        {c.applicable_materials && c.applicable_materials.length > 0 && (
                           <div className="flex flex-wrap gap-1 mt-1">
-                            {c.eligible_materials.map((m: string) => (
+                            {c.applicable_materials.map((m: string) => (
                               <span key={m} className="text-[9px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded">{m}</span>
                             ))}
                           </div>
