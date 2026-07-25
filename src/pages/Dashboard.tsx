@@ -365,48 +365,7 @@ export default function Dashboard() {
         <AdsRoasCard />
       </div>
 
-      {/* Affiliate Approvals */}
-      <section className="animate-slide-up rounded-2xl border border-white/10 bg-slate-900/60 p-4 md:p-5 space-y-3">
-        <div className="flex items-center justify-between">
-          <h2 className="text-lg font-semibold text-white">Kelulusan Affiliate</h2>
-          <span className="text-xs text-muted-foreground">{pendingAffiliates.length} menunggu</span>
-        </div>
-        {pendingAffiliates.length === 0 ? (
-          <p className="text-sm text-muted-foreground py-3">Tiada affiliate menunggu kelulusan.</p>
-        ) : (
-          <div className="space-y-2">
-            {pendingAffiliates.map((a) => (
-              <div
-                key={a.affiliate_id}
-                className="flex flex-col sm:flex-row sm:items-center gap-2 rounded-xl border border-white/10 bg-slate-800/40 p-3"
-              >
-                <div className="flex-1 min-w-0">
-                  <p className="font-medium text-white">{a.name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    {a.whatsapp || a.email || "-"} · {new Date(a.created_at).toLocaleDateString("ms-MY")}
-                  </p>
-                </div>
-                <div className="flex gap-2 shrink-0">
-                  <Button
-                    size="sm"
-                    className="bg-green-600 hover:bg-green-500"
-                    onClick={() => handleAffiliateStatus(a.affiliate_id, "active")}
-                  >
-                    Approve
-                  </Button>
-                  <Button
-                    size="sm"
-                    variant="destructive"
-                    onClick={() => handleAffiliateStatus(a.affiliate_id, "rejected")}
-                  >
-                    Reject
-                  </Button>
-                </div>
-              </div>
-            ))}
-          </div>
-        )}
-      </section>
+      {/* Affiliate Approvals — moved to sidebar > Affiliate Management > Affiliate List */}
 
       {/* Sales Target — di bawah sekali */}
       <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />
