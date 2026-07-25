@@ -5,7 +5,6 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Switch } from "@/components/ui/switch";
-import { Checkbox } from "@/components/ui/checkbox";
 import { Badge } from "@/components/ui/badge";
 import {
   Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter, DialogTrigger,
@@ -16,7 +15,7 @@ import {
 import {
   Table, TableBody, TableCell, TableHead, TableHeader, TableRow,
 } from "@/components/ui/table";
-import { Loader2, Tag, Plus, Pencil, Trash2, Star } from "lucide-react";
+import { Loader2, Tag, Plus, Pencil, Trash2, Star, Check } from "lucide-react";
 
 // Must match the material labels used in the storefront (src/pages/Order.tsx)
 const ALL_MATERIALS = ["Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"];
@@ -283,25 +282,29 @@ export default function Coupons() {
                 <p className="text-xs text-muted-foreground -mt-1">
                   Tak tick mana-mana = kupon sah untuk SEMUA material.
                 </p>
-                <div className={`space-y-2 rounded-lg border p-3 ${form.materials.length ? "border-primary/30" : ""}`}>
+                <div className="flex flex-wrap gap-2">
                   {ALL_MATERIALS.map((mat) => {
                     const selected = form.materials.includes(mat);
                     return (
-                      <div
+                      <button
+                        type="button"
                         key={mat}
-                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
-                          selected ? "bg-primary/15 ring-1 ring-primary/40" : "hover:bg-muted"
+                        onClick={() => toggleMaterial(mat)}
+                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-sm font-medium transition-colors ${
+                          selected
+                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
+                            : "bg-background text-foreground border-border hover:bg-muted"
                         }`}
                       >
-                        <Checkbox
-                          id={`mat-${mat}`}
-                          checked={selected}
-                          onCheckedChange={() => toggleMaterial(mat)}
-                        />
-                        <label htmlFor={`mat-${mat}`} className={`text-sm cursor-pointer select-none flex-1 ${selected ? "font-medium text-primary" : ""}`}>
-                          {mat}
-                        </label>
-                      </div>
+                        <span
+                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
+                            selected ? "border-primary-foreground bg-primary-foreground text-primary" : "border-muted-foreground"
+                          }`}
+                        >
+                          {selected && <Check className="h-3 w-3" />}
+                        </span>
+                        {mat}
+                      </button>
                     );
                   })}
                 </div>
