@@ -283,19 +283,27 @@ export default function Coupons() {
                 <p className="text-xs text-muted-foreground -mt-1">
                   Tak tick mana-mana = kupon sah untuk SEMUA material.
                 </p>
-                <div className="space-y-2 rounded-lg border p-3">
-                  {ALL_MATERIALS.map((mat) => (
-                    <div key={mat} className="flex items-center gap-2">
-                      <Checkbox
-                        id={`mat-${mat}`}
-                        checked={form.materials.includes(mat)}
-                        onCheckedChange={() => toggleMaterial(mat)}
-                      />
-                      <label htmlFor={`mat-${mat}`} className="text-sm cursor-pointer select-none">
-                        {mat}
-                      </label>
-                    </div>
-                  ))}
+                <div className={`space-y-2 rounded-lg border p-3 ${form.materials.length ? "border-primary/30" : ""}`}>
+                  {ALL_MATERIALS.map((mat) => {
+                    const selected = form.materials.includes(mat);
+                    return (
+                      <div
+                        key={mat}
+                        className={`flex items-center gap-2 rounded-lg px-2 py-1.5 transition-colors ${
+                          selected ? "bg-primary/15 ring-1 ring-primary/40" : "hover:bg-muted"
+                        }`}
+                      >
+                        <Checkbox
+                          id={`mat-${mat}`}
+                          checked={selected}
+                          onCheckedChange={() => toggleMaterial(mat)}
+                        />
+                        <label htmlFor={`mat-${mat}`} className={`text-sm cursor-pointer select-none flex-1 ${selected ? "font-medium text-primary" : ""}`}>
+                          {mat}
+                        </label>
+                      </div>
+                    );
+                  })}
                 </div>
               </div>
 
