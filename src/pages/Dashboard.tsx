@@ -262,8 +262,14 @@ export default function Dashboard() {
       )
       .subscribe();
 
+    // Fallback poll so the Jualan cards update live without a manual refresh
+    // (mirrors LiveDashboard). Realtime events alone can be missed if the
+    // table isn't in the publication; the 15s poll keeps numbers current.
+    const poll = setInterval(() => fetchDashboardData(), 15000);
+
     return () => {
       authClient.removeChannel(channel);
+      clearInterval(poll);
     };
   }, []);
 
