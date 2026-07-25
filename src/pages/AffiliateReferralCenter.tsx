@@ -1,10 +1,8 @@
 import { useState } from "react";
-import { getAffiliateClient } from "@/integrations/supabase/client";
 import { Copy, Check, Link2, QrCode } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 
-const AFF_TOKEN = "affiliateToken";
 const AFF_REF = "affiliateReferral";
 const SITE = "https://www.amancarseat.com/";
 
@@ -19,14 +17,6 @@ export default function AffiliateReferralCenter() {
       setCopied(key);
       setTimeout(() => setCopied(null), 1500);
     } catch {}
-  };
-
-  const track = async (source: string, link: string) => {
-    const token = localStorage.getItem(AFF_TOKEN);
-    if (!token) return;
-    const c = getAffiliateClient(token);
-    await c.from("affiliate_clicks").insert({ affiliate_id: localStorage.getItem("affiliateId")!, source });
-    copy(link, source);
   };
 
   const links = [
@@ -53,7 +43,7 @@ export default function AffiliateReferralCenter() {
             {copied === "base" ? <><Check className="h-4 w-4 text-green-400" />Copied</> : <><Copy className="h-4 w-4" />Copy</>}
           </Button>
         </div>
-        <p className="text-xs text-slate-500">Klik pada pautan di bawah akan rekod &amp; salin ke clipboard.</p>
+        <p className="text-xs text-slate-500">Salin pautan di bawah untuk kongsi ke pelanggan.</p>
       </div>
 
       <div className="grid gap-3">
@@ -66,7 +56,7 @@ export default function AffiliateReferralCenter() {
               <p className="text-sm font-medium">{l.label}</p>
               <p className="text-xs text-slate-500 truncate">{l.url}</p>
             </div>
-            <Button size="sm" variant="ghost" onClick={() => track(l.key, l.url)}>
+            <Button size="sm" variant="ghost" onClick={() => copy(l.url, l.key)}>
               {copied === l.key ? <><Check className="h-4 w-4 text-green-400" />Copied</> : <><Copy className="h-4 w-4" />Copy</>}
             </Button>
           </div>
