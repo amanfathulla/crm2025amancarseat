@@ -46,7 +46,11 @@ import AffiliateRegister from "@/pages/AffiliateRegister";
 import AffiliateLogin from "@/pages/AffiliateLogin";
 import AffiliateLayout from "@/components/layout/AffiliateLayout";
 import AffiliateDashboard from "@/pages/AffiliateDashboard";
-import AffiliateReferralCenter from "@/pages/AffiliateReferralCenter";
+import AffiliateProducts from "@/pages/AffiliateProducts";
+import AffiliateOrders from "@/pages/AffiliateOrders";
+import AffiliateCommissions from "@/pages/AffiliateCommissions";
+import AffiliateWithdraw from "@/pages/AffiliateWithdraw";
+import AffiliateProfile from "@/pages/AffiliateProfile";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -83,11 +87,11 @@ function App() {
                 <Route path="/affiliate" element={<AffiliateLayout />}>
                   <Route path="dashboard" element={<AffiliateDashboard />} />
                   <Route path="referral" element={<AffiliateReferralCenter />} />
-                  <Route path="products" element={<AffiliateDashboard />} />
-                  <Route path="orders" element={<AffiliateDashboard />} />
-                  <Route path="commissions" element={<AffiliateDashboard />} />
-                  <Route path="withdraw" element={<AffiliateDashboard />} />
-                  <Route path="profile" element={<AffiliateDashboard />} />
+                  <Route path="products" element={<AffiliateProducts />} />
+                  <Route path="orders" element={<AffiliateOrders />} />
+                  <Route path="commissions" element={<AffiliateCommissions />} />
+                  <Route path="withdraw" element={<AffiliateWithdraw />} />
+                  <Route path="profile" element={<AffiliateProfile />} />
                 </Route>
 
                 {/* Routes with sidebar and authenticated layout */}
