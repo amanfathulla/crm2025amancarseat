@@ -65,6 +65,9 @@ export default function OrderPage() {
   const [seatImageUrls, setSeatImageUrls] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
   const [additionalNotes, setAdditionalNotes] = useState("");
+
+  // Affiliate referral code captured from ?ref= (set once on load)
+  const [referralCode, setReferralCode] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
   const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
@@ -195,6 +198,12 @@ export default function OrderPage() {
     if (enabledCategories === null) return;
     const params = new URLSearchParams(window.location.search);
     let mat = params.get("material");
+    // Capture affiliate referral code (?ref=CODE)
+    const ref = params.get("ref");
+    if (ref) {
+      setReferralCode(ref);
+      (supabase.rpc as any)("record_affiliate_click", { p_ref: ref }).then(() => {}).catch(() => {});
+    }
     if (!mat) {
       // Path-based: /order/materialmesh, /order/mesh, /order/kain-mesh
       const parts = window.location.pathname.split("/").filter(Boolean);
@@ -444,6 +453,26 @@ export default function OrderPage() {
       if (error) throw error;
       const orderNumber = (inserted as any)?.order_number;
       const orderRef = orderNumber ? `#${orderNumber}` : customerId.slice(-6).toUpperCase();
+
+      // Affiliate commission (if referred)
+      if (referralCode && selectedProduct?.id) {
+        try {
+          const { data: prod } = await supabase
+            .from("products")
+            .select("affiliate_commission")
+            .eq("id", selectedProduct.id)
+            .single();
+          const commission = (prod?.affiliate_commission as number) ?? 0;
+          await (supabase.rpc as any)("record_affiliate_order", {
+            p_ref: referralCode,
+            p_order_id: orderRef,
+            p_material: selectedCategory?.label || null,
+            p_order_amount: finalPrice,
+            p_commission_amount: commission,
+            p_customer_name: form.name,
+          }).catch(() => {});
+        } catch {}
+      }
 
       if (appliedCoupon?.code) {
         await supabase.rpc("increment_coupon_usage", { p_code: appliedCoupon.code });
