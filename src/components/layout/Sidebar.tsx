@@ -358,8 +358,8 @@ export function Sidebar() {
 
 
 
-          {/* Affiliate Management - collapsible */}
-          <div className="rounded-lg overflow-hidden">
+          {/* Affiliate Management - collapsible (HIDDEN: set false->true to show) */}
+          {false && <div className="rounded-lg overflow-hidden">
             <button
               onClick={() => setAffOpen(!affOpen)}
               className="flex h-11 w-full items-center rounded-lg px-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200"
@@ -405,7 +405,7 @@ export function Sidebar() {
                 ))}
               </div>
             )}
-          </div>
+          </div>}
 
         </nav>
 
