@@ -1,12 +1,19 @@
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { Copy, Check, Package, Link2 } from "lucide-react";
+import { Copy, Check, Package, Link2, BadgeDollarSign } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
 const AFF_REF = "affiliateReferral";
 const SITE = "https://amanfathulla.github.io/Salessss-testing/";
 
-type Prod = { id: string; name: string; price: number; category: string | null; image_url: string | null };
+type Prod = {
+  id: string;
+  name: string;
+  price: number;
+  category: string | null;
+  image_url: string | null;
+  affiliate_commission: number | null;
+};
 
 export default function AffiliateProducts() {
   const [list, setList] = useState<Prod[]>([]);
@@ -16,7 +23,7 @@ export default function AffiliateProducts() {
   useEffect(() => {
     supabase
       .from("products")
-      .select("id,name,price,category,image_url")
+      .select("id,name,price,category,image_url,affiliate_commission")
       .eq("status", "active")
       .order("name")
       .then(({ data }) => setList((data as Prod[]) || []));
@@ -34,12 +41,13 @@ export default function AffiliateProducts() {
     <div className="space-y-6">
       <div>
         <h1 className="text-2xl font-bold">Product Focus Link</h1>
-        <p className="text-sm text-slate-400">Pilih produk &amp; jana pautan rujukan spesifik</p>
+        <p className="text-sm text-slate-400">Pilih produk &amp; jana pautan rujukan spesifik (dengan komisen)</p>
       </div>
 
       <div className="grid gap-3 sm:grid-cols-2 lg:grid-cols-3">
         {list.map((p) => {
-          const link = `${SITE}?ref=${ref}&material=${encodeURIComponent(p.category || "")}&product=${p.id}`;
+          const commission = p.affiliate_commission ?? 0;
+          const link = `${SITE}order?ref=${ref}&product=${p.id}&material=${encodeURIComponent(p.category || "")}`;
           return (
             <div key={p.id} className="rounded-xl border border-white/10 bg-slate-900/60 p-4 space-y-3">
               <div className="flex gap-3">
@@ -56,6 +64,12 @@ export default function AffiliateProducts() {
                   <p className="text-xs text-slate-500">{p.category}</p>
                 </div>
               </div>
+
+              <div className="flex items-center gap-2 rounded-lg bg-green-500/10 border border-green-500/20 px-3 py-1.5">
+                <BadgeDollarSign className="h-4 w-4 text-green-400" />
+                <span className="text-sm font-semibold text-green-300">Komisen: RM{commission.toFixed(2)}</span>
+              </div>
+
               <Button size="sm" variant="outline" className="w-full" onClick={() => copy(link, p.id)}>
                 {copied === p.id ? <><Check className="h-4 w-4 text-green-400" />Copied</> : <><Link2 className="h-4 w-4" />Copy Focus Link</>}
               </Button>

@@ -11,7 +11,7 @@ const SITE = "https://amanfathulla.github.io/Salessss-testing/";
 export default function AffiliateReferralCenter() {
   const [copied, setCopied] = useState<string | null>(null);
   const ref = localStorage.getItem(AFF_REF) || "";
-  const baseLink = `${SITE}?ref=${ref}`;
+  const baseLink = `${SITE}order?ref=${ref}`;
 
   const copy = async (text: string, key: string) => {
     try {
