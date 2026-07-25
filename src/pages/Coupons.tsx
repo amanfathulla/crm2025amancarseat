@@ -215,7 +215,7 @@ export default function Coupons() {
               <Plus className="h-4 w-4 mr-2" /> Kupon Baru
             </Button>
           </DialogTrigger>
-          <DialogContent className="max-w-md">
+          <DialogContent className="max-w-md max-h-[85vh] overflow-y-auto">
             <DialogHeader>
               <DialogTitle>{editingId ? "Edit Kupon" : "Kupon Baru"}</DialogTitle>
             </DialogHeader>
