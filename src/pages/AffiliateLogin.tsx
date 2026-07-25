@@ -100,6 +100,11 @@ export default function AffiliateLogin() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 shadow-2xl p-6 space-y-5">
         <div className="text-center space-y-1">
+          <img
+            src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png"
+            alt="ACS Legacy"
+            className="h-14 w-14 object-contain mx-auto mb-2"
+          />
           <h1 className="text-xl font-bold text-white">Log Masuk Affiliate</h1>
           <p className="text-sm text-slate-400">ACS Legacy Affiliate</p>
         </div>

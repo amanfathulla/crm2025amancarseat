@@ -5,7 +5,7 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { UserPlus, Loader2, CheckCircle2 } from "lucide-react";
+import { Loader2, CheckCircle2 } from "lucide-react";
 
 // Build a referral code from a name: uppercase, A-Z only, 4-20 chars.
 const slugifyName = (name: string) =>
@@ -116,9 +116,11 @@ export default function AffiliateRegister() {
     <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-4">
       <div className="w-full max-w-md rounded-2xl border border-white/10 bg-slate-900/80 shadow-2xl p-6 space-y-5">
         <div className="text-center space-y-1">
-          <div className="inline-grid place-content-center h-12 w-12 rounded-xl bg-blue-600/20 mb-1">
-            <UserPlus className="h-6 w-6 text-blue-400" />
-          </div>
+          <img
+            src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png"
+            alt="ACS Legacy"
+            className="h-14 w-14 object-contain mx-auto mb-2"
+          />
           <h1 className="text-xl font-bold text-white">Daftar Affiliate</h1>
           <p className="text-sm text-slate-400">Jadi rakan kongsi ACS Legacy</p>
         </div>
