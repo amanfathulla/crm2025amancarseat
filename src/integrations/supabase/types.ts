@@ -699,6 +699,7 @@ export type Database = {
           status: string | null
           updated_at: string | null
           youtube_url: string | null
+          affiliate_commission: number | null
         }
         Insert: {
           category?: string | null
@@ -716,6 +717,7 @@ export type Database = {
           status?: string | null
           updated_at?: string | null
           youtube_url?: string | null
+          affiliate_commission?: number | null
         }
         Update: {
           category?: string | null
@@ -883,6 +885,183 @@ export type Database = {
           total_profit?: number
           total_revenue?: number
           year?: number
+        }
+        Relationships: []
+      }
+      affiliates: {
+        Row: {
+          affiliate_id: string
+          referral_code: string
+          name: string
+          phone: string | null
+          whatsapp: string | null
+          email: string | null
+          password: string | null
+          status: string
+          user_id: string | null
+          created_at: string
+        }
+        Insert: {
+          affiliate_id: string
+          referral_code: string
+          name: string
+          phone?: string | null
+          whatsapp?: string | null
+          email?: string | null
+          password?: string | null
+          status?: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          affiliate_id?: string
+          referral_code?: string
+          name?: string
+          phone?: string | null
+          whatsapp?: string | null
+          email?: string | null
+          password?: string | null
+          status?: string
+          user_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
+      affiliate_clicks: {
+        Row: {
+          id: string
+          affiliate_id: string
+          clicked_at: string
+          source: string | null
+        }
+        Insert: {
+          id?: string
+          affiliate_id: string
+          clicked_at?: string
+          source?: string | null
+        }
+        Update: {
+          id?: string
+          affiliate_id?: string
+          clicked_at?: string
+          source?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_commissions: {
+        Row: {
+          id: string
+          affiliate_id: string
+          order_id: string | null
+          customer_name_masked: string | null
+          car_model: string | null
+          material: string | null
+          order_amount: number | null
+          commission_amount: number | null
+          status: string
+          created_at: string
+          paid_at: string | null
+        }
+        Insert: {
+          id?: string
+          affiliate_id: string
+          order_id?: string | null
+          customer_name_masked?: string | null
+          car_model?: string | null
+          material?: string | null
+          order_amount?: number | null
+          commission_amount?: number | null
+          status?: string
+          created_at?: string
+          paid_at?: string | null
+        }
+        Update: {
+          id?: string
+          affiliate_id?: string
+          order_id?: string | null
+          customer_name_masked?: string | null
+          car_model?: string | null
+          material?: string | null
+          order_amount?: number | null
+          commission_amount?: number | null
+          status?: string
+          created_at?: string
+          paid_at?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_withdrawals: {
+        Row: {
+          id: string
+          affiliate_id: string
+          amount: number
+          status: string
+          requested_at: string
+          processed_at: string | null
+          method: string | null
+          account: string | null
+        }
+        Insert: {
+          id?: string
+          affiliate_id: string
+          amount: number
+          status?: string
+          requested_at?: string
+          processed_at?: string | null
+          method?: string | null
+          account?: string | null
+        }
+        Update: {
+          id?: string
+          affiliate_id?: string
+          amount?: number
+          status?: string
+          requested_at?: string
+          processed_at?: string | null
+          method?: string | null
+          account?: string | null
+        }
+        Relationships: []
+      }
+      affiliate_settings: {
+        Row: {
+          id: number
+          freeze_months: number
+          custom_freeze_date: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          freeze_months?: number
+          custom_freeze_date?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          freeze_months?: number
+          custom_freeze_date?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      affiliate_sessions: {
+        Row: {
+          token: string
+          affiliate_id: string
+          created_at: string
+          expires_at: string
+        }
+        Insert: {
+          token: string
+          affiliate_id: string
+          created_at?: string
+          expires_at?: string
+        }
+        Update: {
+          token?: string
+          affiliate_id?: string
+          created_at?: string
+          expires_at?: string
         }
         Relationships: []
       }

@@ -27,6 +27,10 @@ import Marketing from "@/pages/Marketing";
 import Reviews from "@/pages/Reviews";
 import LinkTempahan from "@/pages/LinkTempahan";
 import AdminAffiliates from "@/pages/AdminAffiliates";
+import AdminAffiliateDashboard from "@/pages/AdminAffiliateDashboard";
+import AdminAffiliateProducts from "@/pages/AdminAffiliateProducts";
+import AdminAffiliateMarketing from "@/pages/AdminAffiliateMarketing";
+import AdminAffiliateSettings from "@/pages/AdminAffiliateSettings";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -94,10 +98,10 @@ function App() {
                   <Route path="/reviews" element={<Reviews />} />
                   <Route path="/link-tempahan" element={<LinkTempahan />} />
                 <Route path="/admin/affiliates" element={<AdminAffiliates />} />
-                <Route path="/admin/affiliates/dashboard" element={<AdminAffiliates />} />
-                <Route path="/admin/affiliates/products" element={<AdminAffiliates />} />
-                <Route path="/admin/affiliates/marketing" element={<AdminAffiliates />} />
-                <Route path="/admin/affiliates/settings" element={<AdminAffiliates />} />
+                <Route path="/admin/affiliates/dashboard" element={<AdminAffiliateDashboard />} />
+                <Route path="/admin/affiliates/products" element={<AdminAffiliateProducts />} />
+                <Route path="/admin/affiliates/marketing" element={<AdminAffiliateMarketing />} />
+                <Route path="/admin/affiliates/settings" element={<AdminAffiliateSettings />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
