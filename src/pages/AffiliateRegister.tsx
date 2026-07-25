@@ -5,7 +5,9 @@ import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader2, CheckCircle2 } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { Loader2, CheckCircle2, UserPlus } from "lucide-react";
 
 const AFF_TOKEN = "affiliateToken";
 const AFF_ID = "affiliateId";
@@ -70,105 +72,121 @@ export default function AffiliateRegister() {
   };
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 flex flex-col">
-      <div className="w-full max-w-md">
-        <div className="mb-4">
+    <div className="relative min-h-screen w-full bg-black flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxMTEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djFjMCAyLjItMS44IDQtNCA0aC0yYy0yLjIgMC00LTEuOC00LTR2LTFjMC0yLjIgMS44LTQgNC00aDJjMi4yIDAgNCAxLjggNCA0ek0yIDJ2MWMwIDIuMi0xLjggNC00IDRoLTJjLTIuMiAwLTQtMS44LTQtNHYtMWMwLTIuMiAxLjgtNCA0LTRoMmMyLjIgMCA0IDEuOCA0IDR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10"></div>
+
+      {/* Logo */}
+      <div className="relative z-10 w-full max-w-[240px] mb-6">
+        <AspectRatio ratio={1 / 1}>
           <img
             src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png"
             alt="ACS Legacy"
-            className="h-14 w-14 object-contain mb-3"
+            className="w-full h-full object-contain"
           />
-          <h1 className="text-xl font-bold text-white">Daftar Affiliate</h1>
-          <p className="text-sm text-slate-400">Jadi rakan kongsi ACS Legacy</p>
-        </div>
-
-        {done ? (
-          <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-3">
-            <CheckCircle2 className="h-12 w-12 text-green-400" />
-            <p className="text-white font-medium">Pendaftaran berjaya.</p>
-            <p className="text-sm text-slate-400">
-              Akaun anda sedang menunggu pengesahan admin.
-            </p>
-            <Link
-              to="/affiliate/login"
-              className="inline-block text-blue-400 hover:underline text-sm"
-            >
-              Pergi ke log masuk →
-            </Link>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-4"
-          >
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">Nama Penuh</Label>
-              <Input
-                value={name}
-                onChange={(e) => setName(e.target.value)}
-                placeholder="Ahmad Zaki"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">No Telefon / WhatsApp</Label>
-              <Input
-                value={phone}
-                onChange={(e) => setPhone(e.target.value)}
-                placeholder="0123456789"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">WhatsApp (jika lain)</Label>
-              <Input
-                value={whatsapp}
-                onChange={(e) => setWhatsapp(e.target.value)}
-                placeholder="0123456789"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">Email (pilihan)</Label>
-              <Input
-                value={email}
-                onChange={(e) => setEmail(e.target.value)}
-                placeholder="email@contoh.com"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Min 6 aksara"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Mendaftar...
-                </>
-              ) : (
-                "Daftar Sebagai Affiliate"
-              )}
-            </Button>
-            <p className="text-center text-xs text-slate-500">
-              Sudah ada akaun?{" "}
-              <Link to="/affiliate/login" className="text-blue-400 hover:underline">
-                Log masuk
-              </Link>
-            </p>
-          </form>
-        )}
+        </AspectRatio>
       </div>
+
+      <Card className="relative z-10 w-full max-w-[400px] shadow-2xl border-none overflow-hidden bg-black/50 backdrop-blur-md border-t border-white/10">
+        <CardContent className="p-6 space-y-5">
+          {done ? (
+            <div className="text-center space-y-3 py-4">
+              <div className="grid place-content-center h-14 w-14 rounded-full bg-green-500/15 mx-auto">
+                <CheckCircle2 className="h-8 w-8 text-green-400" />
+              </div>
+              <div>
+                <p className="text-white font-semibold">Pendaftaran berjaya</p>
+                <p className="text-sm text-slate-400 mt-1">
+                  Akaun anda sedang menunggu pengesahan admin.
+                </p>
+              </div>
+              <Link
+                to="/affiliate/login"
+                className="inline-block text-blue-400 hover:underline text-sm font-medium"
+              >
+                Pergi ke log masuk →
+              </Link>
+            </div>
+          ) : (
+            <>
+              <div className="text-center space-y-1">
+                <h1 className="text-xl font-bold text-white">Daftar Affiliate</h1>
+                <p className="text-sm text-slate-400">Jadi rakan kongsi ACS Legacy</p>
+              </div>
+
+              <form onSubmit={handleSubmit} className="space-y-4">
+                <div className="space-y-1.5">
+                  <Label className="text-slate-300">Nama Penuh</Label>
+                  <Input
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    placeholder="Ahmad Zaki"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-slate-300">No Telefon / WhatsApp</Label>
+                  <Input
+                    value={phone}
+                    onChange={(e) => setPhone(e.target.value)}
+                    placeholder="0123456789"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-slate-300">WhatsApp (jika lain)</Label>
+                  <Input
+                    value={whatsapp}
+                    onChange={(e) => setWhatsapp(e.target.value)}
+                    placeholder="0123456789"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-slate-300">Email (pilihan)</Label>
+                  <Input
+                    value={email}
+                    onChange={(e) => setEmail(e.target.value)}
+                    placeholder="email@contoh.com"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <div className="space-y-1.5">
+                  <Label className="text-slate-300">Password</Label>
+                  <Input
+                    type="password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    placeholder="Min 6 aksara"
+                    className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                  />
+                </div>
+                <Button
+                  type="submit"
+                  disabled={loading}
+                  className="w-full h-11 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-md transition-all rounded-md flex items-center justify-center gap-2"
+                >
+                  {loading ? (
+                    <><Loader2 className="h-5 w-5 animate-spin" /><span>Mendaftar...</span></>
+                  ) : (
+                    <><UserPlus className="h-5 w-5" /><span>Daftar Sebagai Affiliate</span></>
+                  )}
+                </Button>
+                <p className="text-center text-xs text-slate-500">
+                  Sudah ada akaun?{" "}
+                  <Link to="/affiliate/login" className="text-blue-400 hover:underline">
+                    Log masuk
+                  </Link>
+                </p>
+              </form>
+            </>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="relative z-10 text-xs text-white/30 mt-6">
+        &copy; {new Date().getFullYear()} AMAN CAR SEAT. All rights reserved.
+      </p>
     </div>
   );
 }

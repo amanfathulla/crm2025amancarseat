@@ -1,11 +1,13 @@
 import { useState } from "react";
 import { Link, useNavigate } from "react-router-dom";
-import { supabase, getAffiliateClient } from "@/integrations/supabase/client";
+import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { LogIn, Loader2, AlertCircle } from "lucide-react";
+import { Card, CardContent } from "@/components/ui/card";
+import { AspectRatio } from "@/components/ui/aspect-ratio";
+import { LogIn, Loader2, AlertCircle, ShieldCheck } from "lucide-react";
 
 const AFF_TOKEN = "affiliateToken";
 const AFF_ID = "affiliateId";
@@ -106,85 +108,93 @@ export default function AffiliateLogin() {
   const isAuthed = !!localStorage.getItem(AFF_TOKEN);
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 p-6 flex flex-col">
-      <div className="w-full max-w-md">
-        <div className="mb-4">
+    <div className="relative min-h-screen w-full bg-black flex flex-col items-center justify-center px-4 py-8 overflow-hidden">
+      {/* Background pattern */}
+      <div className="absolute inset-0 bg-[url('data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHdpZHRoPSI2MCIgaGVpZ2h0PSI2MCIgdmlld0JveD0iMCAwIDYwIDYwIj48ZyBmaWxsPSJub25lIiBmaWxsLXJ1bGU9ImV2ZW5vZGQiPjxnIGZpbGw9IiMxMTEiIGZpbGwtb3BhY2l0eT0iMC4wNCI+PHBhdGggZD0iTTM2IDM0djFjMCAyLjItMS44IDQtNCA0aC0yYy0yLjIgMC00LTEuOC00LTR2LTFjMC0yLjIgMS44LTQgNC00aDJjMi4yIDAgNCAxLjggNCA0ek0yIDJ2MWMwIDIuMi0xLjggNC00IDRoLTJjLTIuMiAwLTQtMS44LTQtNHYtMWMwLTIuMiAxLjgtNCA0LTRoMmMyLjIgMCA0IDEuOCA0IDR6Ii8+PC9nPjwvZz48L3N2Zz4=')] opacity-10"></div>
+
+      {/* Logo */}
+      <div className="relative z-10 w-full max-w-[240px] mb-6">
+        <AspectRatio ratio={1 / 1}>
           <img
             src="/lovable-uploads/c601d9f9-1e06-4854-83de-2fcd1b040c9c.png"
             alt="ACS Legacy"
-            className="h-14 w-14 object-contain mb-3"
+            className="w-full h-full object-contain"
           />
-          <h1 className="text-xl font-bold text-white">Log Masuk Affiliate</h1>
-          <p className="text-sm text-slate-400">ACS Legacy Affiliate</p>
-        </div>
-
-        {blocked && (
-          <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm p-3 mb-4">
-            <AlertCircle className="h-4 w-4 shrink-0" />
-            <span>{blocked}</span>
-          </div>
-        )}
-
-        {isAuthed ? (
-          <div className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-3">
-            <p className="text-white">Anda sudah log masuk.</p>
-            <div className="flex gap-2">
-              <Button className="bg-blue-600 hover:bg-blue-500" onClick={() => navigate("/affiliate/dashboard")}>
-                Pergi Dashboard
-              </Button>
-              <Button variant="outline" onClick={handleLogout}>
-                Logout
-              </Button>
-            </div>
-          </div>
-        ) : (
-          <form
-            onSubmit={handleSubmit}
-            className="rounded-2xl border border-white/10 bg-slate-900/80 p-6 space-y-4"
-          >
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">No Telefon / Email</Label>
-              <Input
-                value={login}
-                onChange={(e) => setLogin(e.target.value)}
-                placeholder="0123456789 atau email@contoh.com"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <div className="space-y-1.5">
-              <Label className="text-slate-300">Password</Label>
-              <Input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="Kata laluan"
-                className="bg-slate-800 border-white/10 text-white"
-              />
-            </div>
-            <Button
-              type="submit"
-              disabled={loading}
-              className="w-full bg-blue-600 hover:bg-blue-500"
-            >
-              {loading ? (
-                <>
-                  <Loader2 className="mr-2 h-4 w-4 animate-spin" /> Memeriksa...
-                </>
-              ) : (
-                <>
-                  <LogIn className="mr-2 h-4 w-4" /> Login
-                </>
-              )}
-            </Button>
-            <p className="text-center text-xs text-slate-500">
-              Belum daftar?{" "}
-              <Link to="/affiliate/register" className="text-blue-400 hover:underline">
-                Daftar di sini
-              </Link>
-            </p>
-          </form>
-        )}
+        </AspectRatio>
       </div>
+
+      <Card className="relative z-10 w-full max-w-[400px] shadow-2xl border-none overflow-hidden bg-black/50 backdrop-blur-md border-t border-white/10">
+        <CardContent className="p-6 space-y-5">
+          <div className="text-center space-y-1">
+            <h1 className="text-xl font-bold text-white">Log Masuk Affiliate</h1>
+            <p className="text-sm text-slate-400">ACS Legacy Affiliate</p>
+          </div>
+
+          {blocked && (
+            <div className="flex items-center gap-2 rounded-lg bg-amber-500/10 border border-amber-500/30 text-amber-300 text-sm p-3">
+              <AlertCircle className="h-4 w-4 shrink-0" />
+              <span>{blocked}</span>
+            </div>
+          )}
+
+          {isAuthed ? (
+            <div className="space-y-3 text-center">
+              <p className="text-white">Anda sudah log masuk.</p>
+              <div className="flex gap-2 justify-center">
+                <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => navigate("/affiliate/dashboard")}>
+                  Pergi Dashboard
+                </Button>
+                <Button variant="outline" onClick={handleLogout}>
+                  Logout
+                </Button>
+              </div>
+            </div>
+          ) : (
+            <form onSubmit={handleSubmit} className="space-y-4">
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">No Telefon / Email</Label>
+                <Input
+                  value={login}
+                  onChange={(e) => setLogin(e.target.value)}
+                  placeholder="0123456789 atau email@contoh.com"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                />
+              </div>
+              <div className="space-y-1.5">
+                <Label className="text-slate-300">Password</Label>
+                <Input
+                  type="password"
+                  value={password}
+                  onChange={(e) => setPassword(e.target.value)}
+                  placeholder="Kata laluan"
+                  className="bg-white/5 border-white/10 text-white placeholder:text-white/30"
+                />
+              </div>
+              <Button
+                type="submit"
+                disabled={loading}
+                className="w-full h-11 text-base font-medium bg-gradient-to-r from-blue-600 to-indigo-700 hover:from-blue-700 hover:to-indigo-800 shadow-md transition-all rounded-md flex items-center justify-center gap-2"
+              >
+                {loading ? (
+                  <><Loader2 className="h-5 w-5 animate-spin" /><span>Memeriksa...</span></>
+                ) : (
+                  <><LogIn className="h-5 w-5" /><span>Login</span></>
+                )}
+              </Button>
+              <p className="text-center text-xs text-slate-500">
+                Belum daftar?{" "}
+                <Link to="/affiliate/register" className="text-blue-400 hover:underline">
+                  Daftar di sini
+                </Link>
+              </p>
+            </form>
+          )}
+        </CardContent>
+      </Card>
+
+      <p className="relative z-10 text-xs text-white/30 mt-6">
+        &copy; {new Date().getFullYear()} AMAN CAR SEAT. All rights reserved.
+      </p>
     </div>
   );
 }
