@@ -44,6 +44,9 @@ import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
 import AffiliateRegister from "@/pages/AffiliateRegister";
 import AffiliateLogin from "@/pages/AffiliateLogin";
+import AffiliateLayout from "@/components/layout/AffiliateLayout";
+import AffiliateDashboard from "@/pages/AffiliateDashboard";
+import AffiliateReferralCenter from "@/pages/AffiliateReferralCenter";
 
 function ScrollToTop() {
   const { pathname } = useLocation();
@@ -77,6 +80,15 @@ function App() {
                 <Route path="/live-dashboardacs" element={<RaceDashboard />} />
                 <Route path="/affiliate/register" element={<AffiliateRegister />} />
                 <Route path="/affiliate/login" element={<AffiliateLogin />} />
+                <Route path="/affiliate" element={<AffiliateLayout />}>
+                  <Route path="dashboard" element={<AffiliateDashboard />} />
+                  <Route path="referral" element={<AffiliateReferralCenter />} />
+                  <Route path="products" element={<AffiliateDashboard />} />
+                  <Route path="orders" element={<AffiliateDashboard />} />
+                  <Route path="commissions" element={<AffiliateDashboard />} />
+                  <Route path="withdraw" element={<AffiliateDashboard />} />
+                  <Route path="profile" element={<AffiliateDashboard />} />
+                </Route>
 
                 {/* Routes with sidebar and authenticated layout */}
                 <Route path="/" element={
