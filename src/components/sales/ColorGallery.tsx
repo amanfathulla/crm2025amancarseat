@@ -23,7 +23,7 @@ export const ColorGallery = () => {
   const [activeColor, setActiveColor] = useState(0);
 
   return (
-    <section id="color-gallery" className="py-12 md:py-16 bg-secondary/30">
+    <section id="color-gallery" className="py-12 md:py-16 bg-black">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-8">

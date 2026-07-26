@@ -48,7 +48,7 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const featuredReviews = getFeaturedReviews();
 
   return (
-    <section className="py-16 md:py-24 bg-secondary/30">
+    <section className="py-16 md:py-24 bg-black">
       <div className="container mx-auto px-4">
         {/* Section header */}
         <div className="text-center mb-12 md:mb-16">

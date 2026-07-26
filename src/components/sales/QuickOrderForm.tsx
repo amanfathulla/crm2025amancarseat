@@ -98,45 +98,61 @@ export const QuickOrderForm = () => {
 
           <form onSubmit={handleQuote} className="space-y-6">
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="text"
-                placeholder={language === "bm" ? "Nama Anda" : "Your Name"}
-                value={name}
-                onChange={(e) => { setName(e.target.value); setQuoteShown(false); }}
-                required
-                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              />
-              <Input
-                type="tel"
-                placeholder={language === "bm" ? "No HP (cth: 0123456789)" : "Phone (e.g., 0123456789)"}
-                value={phone}
-                onChange={(e) => { setPhone(e.target.value); setQuoteShown(false); }}
-                required
-                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              />
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                  {language === "bm" ? "Nama Anda" : "Your Name"}
+                </label>
+                <Input
+                  type="text"
+                  value={name}
+                  onChange={(e) => { setName(e.target.value); setQuoteShown(false); }}
+                  required
+                  className="h-12 text-base bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-zinc-900 focus:ring-0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                  {language === "bm" ? "No HP" : "Phone"}
+                </label>
+                <Input
+                  type="tel"
+                  value={phone}
+                  onChange={(e) => { setPhone(e.target.value); setQuoteShown(false); }}
+                  required
+                  className="h-12 text-base bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-zinc-900 focus:ring-0"
+                />
+              </div>
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-              <Input
-                type="text"
-                placeholder={language === "bm" ? "Model Kereta (cth: Myvi, City)" : "Car Model (e.g., Myvi, City)"}
-                value={carModel}
-                onChange={(e) => { setCarModel(e.target.value); setQuoteShown(false); }}
-                required
-                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              />
-              <Input
-                type="text"
-                placeholder={language === "bm" ? "Lokasi (cth: Shah Alam, JB)" : "Location (e.g., Shah Alam, JB)"}
-                value={location}
-                onChange={(e) => { setLocation(e.target.value); setQuoteShown(false); }}
-                required
-                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
-              />
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                  {language === "bm" ? "Model Kereta" : "Car Model"}
+                </label>
+                <Input
+                  type="text"
+                  value={carModel}
+                  onChange={(e) => { setCarModel(e.target.value); setQuoteShown(false); }}
+                  required
+                  className="h-12 text-base bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-zinc-900 focus:ring-0"
+                />
+              </div>
+              <div>
+                <label className="block text-sm font-bold text-gray-900 mb-1.5">
+                  {language === "bm" ? "Lokasi" : "Location"}
+                </label>
+                <Input
+                  type="text"
+                  value={location}
+                  onChange={(e) => { setLocation(e.target.value); setQuoteShown(false); }}
+                  required
+                  className="h-12 text-base bg-white border-2 border-gray-300 text-gray-900 placeholder:text-gray-400 focus:border-zinc-900 focus:ring-0"
+                />
+              </div>
             </div>
 
             {/* Seater Selection */}
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-3">
+              <p className="text-sm font-bold text-gray-900 mb-3">
                 {language === "bm" ? "Pilih Jenis Seater:" : "Choose Seater Type:"}
               </p>
               <div className="grid grid-cols-3 gap-3">
@@ -147,11 +163,12 @@ export const QuickOrderForm = () => {
                     onClick={() => { setSeater(opt.id); setQuoteShown(false); }}
                     className={`p-4 rounded-xl border-2 text-center transition-all ${
                       seater === opt.id
-                        ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                        : "border-gray-200 bg-white hover:border-primary/50"
+                        ? "border-zinc-900 bg-zinc-900/[0.06] ring-2 ring-zinc-900/20"
+                        : "border-gray-300 bg-white hover:border-zinc-900/50"
                     }`}
                   >
-                    <div className="font-semibold text-gray-900">{opt.label}</div>
+                    <div className={`font-bold ${seater === opt.id ? "text-zinc-900" : "text-gray-900"}`}>{opt.label}</div>
+                    <div className="text-xs text-gray-500 mt-0.5">RM{opt.price}</div>
                   </button>
                 ))}
               </div>
@@ -159,7 +176,7 @@ export const QuickOrderForm = () => {
 
             {/* Design Selection */}
             <div>
-              <p className="text-sm font-medium text-gray-900 mb-3">
+              <p className="text-sm font-bold text-gray-900 mb-3">
                 {language === "bm" ? "Pilih Design Anda:" : "Choose Your Design:"}
               </p>
               <div className="grid grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
@@ -170,8 +187,8 @@ export const QuickOrderForm = () => {
                     onClick={() => { setSelectedDesign(index); setQuoteShown(false); }}
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedDesign === index
-                        ? "border-primary ring-2 ring-primary/30 scale-105"
-                        : "border-gray-200 hover:border-primary/50"
+                        ? "border-zinc-900 ring-2 ring-zinc-900/20 scale-105"
+                        : "border-gray-300 hover:border-zinc-900/50"
                     }`}
                   >
                     <img
@@ -180,9 +197,9 @@ export const QuickOrderForm = () => {
                       className="w-full h-full object-cover"
                     />
                     {selectedDesign === index && (
-                      <div className="absolute inset-0 bg-primary/20 flex items-center justify-center">
-                        <div className="bg-primary rounded-full p-1">
-                          <Check className="w-3 h-3 md:w-4 md:h-4 text-primary-foreground" />
+                      <div className="absolute inset-0 bg-zinc-900/20 flex items-center justify-center">
+                        <div className="bg-zinc-900 rounded-full p-1">
+                          <Check className="w-3 h-3 md:w-4 md:h-4 text-white" />
                         </div>
                       </div>
                     )}
@@ -193,17 +210,17 @@ export const QuickOrderForm = () => {
 
             {/* Quote Result */}
             {quoteShown && selectedSeater && selectedDesign !== null && (
-              <div className="bg-primary/5 border-2 border-primary/30 rounded-xl p-5 animate-in fade-in-50 duration-300">
-                <p className="text-sm text-gray-500 mb-2">
+              <div className="bg-zinc-900/[0.04] border-2 border-zinc-900/30 rounded-xl p-5 animate-in fade-in-50 duration-300">
+                <p className="text-sm font-semibold text-gray-500 mb-2">
                   {language === "bm" ? "Sebut Harga Anda:" : "Your Quote:"}
                 </p>
                 <div className="space-y-1 text-sm text-gray-900">
-                  <div className="flex justify-between"><span>{language === "bm" ? "Jenis Seater" : "Seater Type"}:</span><span className="font-medium">{selectedSeater.label}</span></div>
-                  <div className="flex justify-between"><span>Design:</span><span className="font-medium">{DESIGN_COLORS[selectedDesign].code} - {language === "bm" ? DESIGN_COLORS[selectedDesign].name : DESIGN_COLORS[selectedDesign].nameEn}</span></div>
+                  <div className="flex justify-between"><span>{language === "bm" ? "Jenis Seater" : "Seater Type"}:</span><span className="font-semibold">{selectedSeater.label}</span></div>
+                  <div className="flex justify-between"><span>Design:</span><span className="font-semibold">{DESIGN_COLORS[selectedDesign].code} - {language === "bm" ? DESIGN_COLORS[selectedDesign].name : DESIGN_COLORS[selectedDesign].nameEn}</span></div>
                 </div>
                 <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-semibold text-gray-900">{language === "bm" ? "Jumlah" : "Total"}:</span>
-                  <span className="text-2xl font-bold text-primary">RM{selectedSeater.price}</span>
+                  <span className="font-bold text-gray-900">{language === "bm" ? "Jumlah" : "Total"}:</span>
+                  <span className="text-2xl font-extrabold text-zinc-900">RM{selectedSeater.price}</span>
                 </div>
               </div>
             )}
@@ -213,7 +230,7 @@ export const QuickOrderForm = () => {
                 type="submit"
                 size="lg"
                 disabled={!isComplete}
-                className="w-full h-12 text-base font-semibold disabled:opacity-50"
+                className="w-full h-12 text-base font-bold disabled:opacity-50 bg-zinc-900 hover:bg-black text-white"
               >
                 <Calculator className="w-5 h-5 mr-2" />
                 {language === "bm" ? "Sebut Harga" : "Get Quote"}

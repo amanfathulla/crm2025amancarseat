@@ -29,7 +29,7 @@ export const WhyFabricSilk = () => {
   const { language } = useLanguage();
 
   return (
-    <section className="py-12 md:py-16 bg-background">
+    <section className="py-12 md:py-16 bg-black">
       <div className="container mx-auto px-4">
         {/* Section Header */}
         <div className="text-center mb-10">
