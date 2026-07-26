@@ -4,7 +4,7 @@ import { ColorGallery } from "@/components/sales/ColorGallery";
 import { WhyFabricSilk } from "@/components/sales/WhyFabricSilk";
 import { WallOfFame } from "@/components/sales/WallOfFame";
 import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
-import { Footer } from "@/components/sales/Footer";
+import LiveFooter from "@/components/LiveFooter";
 import { useReviews } from "@/hooks/useReviews";
 
 const Index = () => {
@@ -22,7 +22,7 @@ const Index = () => {
       <ColorGallery />
       <WallOfFame reviews={reviews as any} />
       <QuickOrderForm />
-      <Footer />
+      <LiveFooter />
     </div>
   );
 };

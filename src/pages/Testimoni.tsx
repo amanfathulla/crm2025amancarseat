@@ -7,7 +7,7 @@ import { useReviews } from "@/hooks/useReviews";
 import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
 import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
-import { Footer } from "@/components/sales/Footer";
+import LiveFooter from "@/components/LiveFooter";
 
 const PAGE_SIZE = 12;
 
@@ -146,7 +146,7 @@ export default function Testimoni() {
         <QuickOrderForm />
       </section>
 
-      <Footer />
+      <LiveFooter />
 
       <ReviewSubmitDialog open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>

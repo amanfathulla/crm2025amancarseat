@@ -1,29 +1,10 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
+import { Loader2, Plus, Search, Star } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
-import {
-  Dialog,
-  DialogContent,
-  DialogDescription,
-  DialogFooter,
-  DialogHeader,
-  DialogTitle,
-} from "@/components/ui/dialog";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-} from "@/components/ui/alert-dialog";
 
 const PAGE_SIZE = 20;
 
@@ -34,9 +15,6 @@ export default function Reviews() {
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [submitOpen, setSubmitOpen] = useState(false);
-  const [editing, setEditing] = useState<Review | null>(null);
-  const [deleting, setDeleting] = useState<Review | null>(null);
-  const [saving, setSaving] = useState(false);
 
   const load = async () => {
     setLoading(true);
@@ -72,52 +50,13 @@ export default function Reviews() {
   const current = Math.min(page, totalPages);
   const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  const handleSaveEdit = async () => {
-    if (!editing) return;
-    setSaving(true);
-    try {
-      const { error } = await reviewsSupabase
-        .from("reviews")
-        .update({
-          name: editing.name,
-          car_model: editing.car_model,
-          rating: editing.rating,
-          quality_rating: editing.quality_rating,
-          price_rating: editing.price_rating,
-          review: editing.review,
-        })
-        .eq("id", editing.id);
-      if (error) throw error;
-      toast({ title: "✅ Review dikemas kini" });
-      setEditing(null);
-      load();
-    } catch (e: any) {
-      toast({ title: "Ralat kemas kini", description: e.message, variant: "destructive" });
-    } finally {
-      setSaving(false);
-    }
-  };
-
-  const handleDelete = async () => {
-    if (!deleting) return;
-    try {
-      const { error } = await reviewsSupabase.from("reviews").delete().eq("id", deleting.id);
-      if (error) throw error;
-      toast({ title: "🗑️ Review dipadam" });
-      setDeleting(null);
-      load();
-    } catch (e: any) {
-      toast({ title: "Ralat padam", description: e.message, variant: "destructive" });
-    }
-  };
-
   return (
     <div className="p-4 md:p-6 space-y-6">
       <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold">Reviews</h1>
           <p className="text-muted-foreground text-sm">
-            Senarai semua testimoni pelanggan. Edit, padam atau tambah review baru.
+            Senarai semua testimoni pelanggan. Tambah review baru di bawah.
           </p>
         </div>
         <Button onClick={() => setSubmitOpen(true)} className="gap-2">
@@ -186,14 +125,6 @@ export default function Reviews() {
                       </div>
                     )}
                   </div>
-                  <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
-                    <Button variant="outline" size="sm" onClick={() => setEditing({ ...r })} className="gap-1">
-                      <Pencil className="h-3 w-3" /> Edit
-                    </Button>
-                    <Button variant="outline" size="sm" onClick={() => setDeleting(r)} className="gap-1 text-destructive">
-                      <Trash2 className="h-3 w-3" /> Padam
-                    </Button>
-                  </div>
                 </div>
               );
             })}
@@ -212,74 +143,6 @@ export default function Reviews() {
       </div>
 
       <ReviewSubmitDialog open={submitOpen} onOpenChange={setSubmitOpen} onSubmitted={load} />
-
-      {/* Edit Dialog */}
-      <Dialog open={!!editing} onOpenChange={(v) => !v && setEditing(null)}>
-        <DialogContent className="max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Edit Review</DialogTitle>
-            <DialogDescription>Kemas kini maklumat review pelanggan.</DialogDescription>
-          </DialogHeader>
-          {editing && (
-            <div className="space-y-3">
-              <div>
-                <label className="text-sm font-medium">Nama</label>
-                <Input value={editing.name || ""} onChange={(e) => setEditing({ ...editing, name: e.target.value })} />
-              </div>
-              <div>
-                <label className="text-sm font-medium">Model Kereta</label>
-                <Input value={editing.car_model || ""} onChange={(e) => setEditing({ ...editing, car_model: e.target.value })} />
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <label className="text-sm font-medium">Rating</label>
-                  <Input type="number" min={1} max={5} value={editing.rating || 5}
-                    onChange={(e) => setEditing({ ...editing, rating: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Kualiti</label>
-                  <Input type="number" min={1} max={5} value={editing.quality_rating ?? 5}
-                    onChange={(e) => setEditing({ ...editing, quality_rating: Number(e.target.value) })} />
-                </div>
-                <div>
-                  <label className="text-sm font-medium">Harga</label>
-                  <Input type="number" min={1} max={5} value={editing.price_rating ?? 5}
-                    onChange={(e) => setEditing({ ...editing, price_rating: Number(e.target.value) })} />
-                </div>
-              </div>
-              <div>
-                <label className="text-sm font-medium">Ulasan</label>
-                <Textarea rows={4} value={editing.review || ""} onChange={(e) => setEditing({ ...editing, review: e.target.value })} />
-              </div>
-            </div>
-          )}
-          <DialogFooter>
-            <Button variant="outline" onClick={() => setEditing(null)}>Batal</Button>
-            <Button onClick={handleSaveEdit} disabled={saving}>
-              {saving ? <Loader2 className="h-4 w-4 animate-spin mr-2" /> : null}
-              Simpan
-            </Button>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-
-      {/* Delete Confirm */}
-      <AlertDialog open={!!deleting} onOpenChange={(v) => !v && setDeleting(null)}>
-        <AlertDialogContent>
-          <AlertDialogHeader>
-            <AlertDialogTitle>Padam review?</AlertDialogTitle>
-            <AlertDialogDescription>
-              Review daripada <strong>{deleting?.name}</strong> akan dipadam kekal.
-            </AlertDialogDescription>
-          </AlertDialogHeader>
-          <AlertDialogFooter>
-            <AlertDialogCancel>Batal</AlertDialogCancel>
-            <AlertDialogAction onClick={handleDelete} className="bg-destructive text-destructive-foreground">
-              Padam
-            </AlertDialogAction>
-          </AlertDialogFooter>
-        </AlertDialogContent>
-      </AlertDialog>
     </div>
   );
 }
