@@ -20,7 +20,7 @@ INSERT INTO public.coupons (
 )
 VALUES (
   'SPECIALACS',
-  30,                          -- RM30 off; change anytime via UPDATE
+  25,                          -- RM25 off; change anytime via UPDATE
   'fixed',                     -- or 'percentage'
   999999,                      -- effectively unlimited usage
   now(),

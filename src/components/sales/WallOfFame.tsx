@@ -19,21 +19,33 @@ interface WallOfFameProps {
   reviews: Review[];
 }
 
-// Featured brands to show on landing page
+interface FeaturedCoupon {
+  code: string;
+  discount_amount: number;
+  discount_type: string;
+}
+
+const formatDiscount = (c: FeaturedCoupon) =>
+  c.discount_type === "percentage"
+    ? `${c.discount_amount}%`
+    : `RM${c.discount_amount}`;
 
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
-  const [featuredCoupon, setFeaturedCoupon] = useState<string | null>(null);
+  const [featuredCoupon, setFeaturedCoupon] = useState<FeaturedCoupon | null>(null);
 
   useEffect(() => {
     supabase
       .from("coupons")
-      .select("code")
+      .select("code, discount_amount, discount_type")
       .eq("is_active", true)
       .eq("is_featured_landing", true)
       .maybeSingle()
       .then(({ data }) => {
-        if (data) setFeaturedCoupon((data as { code: string }).code);
+        if (data) {
+          const d = data as { code: string; discount_amount: number; discount_type: string };
+          setFeaturedCoupon({ code: d.code, discount_amount: d.discount_amount, discount_type: d.discount_type });
+        }
       });
   }, []);
 
@@ -113,17 +125,17 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
             </Link>
           </Button>
           {/* Order Terus — CTA-strong, stands out from neutral testimoni button */}
-          <Button asChild size="lg" className="min-w-[280px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
-            <Link to="/order" className="flex flex-col items-center gap-0.5 py-2">
-              <span className="flex items-center gap-2 text-sm">
-                <ShoppingCart className="w-4 h-4" />
+          <Button asChild size="lg" className="min-w-[340px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
+            <Link to="/order" className="flex flex-col items-center gap-0.5 py-3">
+              <span className="flex items-center gap-2 text-base">
+                <ShoppingCart className="w-5 h-5" />
                 Order Sekarang di Website
               </span>
-              <span className="flex items-center gap-1 text-xs text-red-600 font-semibold">
-                <Ticket className="w-3 h-3" />
+              <span className="flex items-center gap-1 text-sm text-red-600 font-semibold">
+                <Ticket className="w-3.5 h-3.5" />
                 {featuredCoupon
-                  ? `Guna Kod: ${featuredCoupon} · Diskaun Terus`
-                  : 'Guna Kod: SPECIALACS · Diskaun RM25 Terus'}
+                  ? `Guna Kod: ${featuredCoupon.code} · Diskaun ${formatDiscount(featuredCoupon)} Terus`
+                  : 'Guna Kod Promo · Diskaun Terus'}
               </span>
             </Link>
           </Button>
