@@ -123,7 +123,7 @@ export default function PaymentGateways() {
   }
 
   return (
-    <div className="p-4 md:p-6 space-y-6">
+    <div className="p-4 md:p-6 space-y-4">
       <div className="flex items-center gap-3">
         <CreditCard className="h-7 w-7 text-primary" />
         <div>
@@ -134,46 +134,44 @@ export default function PaymentGateways() {
         </div>
       </div>
 
-      <div className="grid gap-4 lg:grid-cols-2">
+      <div className="grid gap-3 lg:grid-cols-2 xl:grid-cols-3">
         {rows.map((row) => {
           const fields = FIELD_SPEC[row.provider] || [];
           const info = PROVIDER_INFO[row.provider];
           return (
-            <Card key={row.id} className={row.is_enabled ? "border-primary/40" : ""}>
-              <CardHeader>
-                <div className="flex items-start justify-between">
-                  <div>
-                    <CardTitle className="flex items-center gap-2">
-                      {row.display_name}
-                      {row.is_enabled ? (
-                        <Badge className="bg-emerald-600">Aktif</Badge>
-                      ) : (
-                        <Badge variant="outline">Tidak aktif</Badge>
-                      )}
-                      {row.sandbox_mode && <Badge variant="secondary">Sandbox</Badge>}
-                    </CardTitle>
-                    {info && (
-                      <CardDescription>
-                        <a
-                          href={info.docs}
-                          target="_blank"
-                          rel="noreferrer"
-                          className="inline-flex items-center gap-1 text-xs hover:underline"
-                        >
-                          Lihat docs <ExternalLink className="h-3 w-3" />
-                        </a>
-                      </CardDescription>
+            <Card key={row.id} className={row.is_enabled ? "border-primary/40 shadow-sm" : "shadow-sm"}>
+              <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-1.5">
+                    <span className="font-semibold text-sm truncate">{row.display_name}</span>
+                    {row.is_enabled ? (
+                      <Badge className="bg-emerald-600 text-white text-[10px] h-5 px-1.5">Aktif</Badge>
+                    ) : (
+                      <Badge variant="outline" className="text-[10px] h-5 px-1.5">Tidak aktif</Badge>
+                    )}
+                    {row.sandbox_mode && (
+                      <Badge variant="secondary" className="text-[10px] h-5 px-1.5">Sandbox</Badge>
                     )}
                   </div>
-                  <Switch
-                    checked={row.is_enabled}
-                    onCheckedChange={(v) => toggleEnable(row, v)}
-                  />
+                  {info && (
+                    <a
+                      href={info.docs}
+                      target="_blank"
+                      rel="noreferrer"
+                      className="inline-flex items-center gap-1 text-[11px] text-muted-foreground hover:underline mt-0.5"
+                    >
+                      Lihat docs <ExternalLink className="h-3 w-3" />
+                    </a>
+                  )}
                 </div>
-              </CardHeader>
-              <CardContent className="space-y-3">
+                <Switch
+                  checked={row.is_enabled}
+                  onCheckedChange={(v) => toggleEnable(row, v)}
+                />
+              </div>
+              <CardContent className="px-4 py-3 space-y-2.5">
                 <div className="flex items-center justify-between">
-                  <Label className="text-xs">Mode Sandbox</Label>
+                  <Label className="text-xs text-muted-foreground">Mode Sandbox</Label>
                   <Switch
                     checked={row.sandbox_mode}
                     onCheckedChange={(v) => updateLocal(row.id, { sandbox_mode: v })}
@@ -181,25 +179,26 @@ export default function PaymentGateways() {
                 </div>
                 {fields.map((f) => (
                   <div key={f.label} className="space-y-1">
-                    <Label className="text-xs">{f.label}</Label>
+                    <Label className="text-[11px] text-muted-foreground">{f.label}</Label>
                     <Input
                       type={f.type || "text"}
                       value={row.credentials[f.label] || ""}
                       onChange={(e) => updateCred(row.id, f.label, e.target.value)}
                       placeholder={f.placeholder}
+                      className="h-8 text-sm"
                     />
                   </div>
                 ))}
                 <Button
                   onClick={() => saveRow(row)}
                   disabled={saving === row.id}
-                  className="w-full"
                   size="sm"
+                  className="w-full h-8"
                 >
                   {saving === row.id ? (
-                    <Loader2 className="h-4 w-4 animate-spin mr-2" />
+                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
                   ) : (
-                    <Save className="h-4 w-4 mr-2" />
+                    <Save className="h-3.5 w-3.5 mr-1.5" />
                   )}
                   Simpan {row.display_name}
                 </Button>
