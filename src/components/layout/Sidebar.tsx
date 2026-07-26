@@ -19,6 +19,7 @@ import {
   CreditCard,
   Star,
   Radio,
+  Tag,
   Network,
   ChevronDown,
   ChevronRight,
@@ -160,6 +161,7 @@ export function Sidebar() {
     { title: "Products", path: "/products", icon: Package },
     { title: "Reviews", path: "/reviews", icon: Star },
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
+    { title: "Kupon", path: "/coupons", icon: Tag },
   ];
 
   const orderPageUrl = "/order";
