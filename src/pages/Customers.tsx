@@ -901,6 +901,13 @@ function Customers() {
           ) : (
             <>
               <Accordion type="single" collapsible className="w-full">
+                <div className="hidden sm:flex items-center gap-4 px-4 py-2 text-[11px] font-semibold uppercase tracking-wide text-muted-foreground border-b border-border">
+                  <div className="flex-1">Nama Pelanggan</div>
+                  <div className="w-32 text-right">Jumlah Belanja</div>
+                  <div className="w-20 text-center">Order</div>
+                  <div className="w-28 text-center">Status</div>
+                  <div className="w-[120px]" />
+                </div>
                 {listData.map((entry, index) => {
                   if (groupByPhone) {
                     const g = entry as any;
@@ -911,33 +918,35 @@ function Customers() {
                         ? "bg-red-500/15 text-red-600 border-red-500/30"
                         : "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
                     return (
-                      <div key={g.phone} className="flex items-start gap-4 py-3 border-b border-border last:border-0">
+                      <div key={g.phone} className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
                         <div className="flex-1 min-w-0">
-                          <div className="flex items-center gap-2 flex-wrap">
-                            <button
-                              onClick={() => setOrdersPhone(g.phone)}
-                              className="font-semibold text-foreground hover:text-primary hover:underline"
-                            >
-                              {g.name || "—"}
-                            </button>
-                            <button
-                              onClick={() => setOrdersPhone(g.phone)}
-                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
-                            >
-                              {g.phone}
-                            </button>
-                            <Badge variant="secondary" className="text-xs">
-                              {g.orderCount} order
-                            </Badge>
-                            <span className={`inline-block rounded-full border px-2 py-0.5 text-xs ${statusBadge}`}>
-                              {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
-                            </span>
-                          </div>
-                          <p className="mt-1 text-xs text-muted-foreground">
-                            Jumlah dibelanjakan: <span className="font-medium text-foreground">{formatCurrency(g.totalSpent)}</span>
-                          </p>
+                          <button
+                            onClick={() => setOrdersPhone(g.phone)}
+                            className="block truncate text-sm font-semibold text-foreground hover:text-primary hover:underline"
+                          >
+                            {g.name || "—"}
+                          </button>
+                          <button
+                            onClick={() => setOrdersPhone(g.phone)}
+                            className="block truncate text-xs text-muted-foreground hover:text-primary hover:underline mt-0.5"
+                          >
+                            {g.phone}
+                          </button>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)}>
+                        <div className="hidden sm:block w-32 text-right shrink-0">
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Jumlah</div>
+                          <div className="text-sm font-semibold text-foreground">{formatCurrency(g.totalSpent)}</div>
+                        </div>
+                        <div className="hidden sm:block w-20 text-center shrink-0">
+                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Order</div>
+                          <div className="text-sm font-medium text-foreground">{g.orderCount}</div>
+                        </div>
+                        <div className="w-28 flex justify-center shrink-0">
+                          <span className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium min-w-[88px] ${statusBadge}`}>
+                            {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
+                          </span>
+                        </div>
+                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)} className="w-[120px] shrink-0">
                           Lihat Order
                         </Button>
                       </div>
