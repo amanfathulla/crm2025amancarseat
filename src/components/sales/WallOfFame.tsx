@@ -1,6 +1,6 @@
 import { Button } from "@/components/ui/button";
 import { useLanguage } from "@/contexts/LanguageContext";
-import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingCart } from "lucide-react";
+import { Star, ChevronRight, Image as ImageIcon, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
 
 interface Review {
@@ -37,10 +37,6 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
       <div className="container mx-auto px-4">
         {/* Section header */}
         <div className="text-center mb-12 md:mb-16">
-          <div className="inline-flex items-center gap-2 bg-primary/10 rounded-full px-4 py-2 mb-4">
-            <MessageCircle className="w-4 h-4 text-primary" />
-            <span className="text-sm font-medium text-primary">WhatsApp Verified</span>
-          </div>
           <h2 className="text-3xl md:text-4xl lg:text-5xl font-bold text-foreground mb-4">
             {t.wallOfFameTitle}
           </h2>
