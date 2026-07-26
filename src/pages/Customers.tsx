@@ -46,6 +46,7 @@ import {
   ResponsiveContainer,
   Cell
 } from "recharts";
+import { Accordion } from "@/components/ui/accordion";
 import { CustomerDetails } from "@/components/customers/CustomerDetails";
 import { CustomerOrdersDialog } from "@/components/customers/CustomerOrdersDialog";
 import { compareDates, formatCurrency } from "@/lib/utils";
@@ -918,7 +919,7 @@ function Customers() {
             </div>
           ) : (
             <>
-              <div className="w-full space-y-3">
+              <Accordion type="single" collapsible className="w-full space-y-3">
                 {listData.map((entry, index) => {
                   if (groupByPhone) {
                     const g = entry as any;
@@ -983,9 +984,9 @@ function Customers() {
                     </div>
                   );
                 })}
-              </div>
+                  </Accordion>
               
-              {totalPages > 1 && (
+                  {totalPages > 1 && (
                 <Pagination className="mt-6">
                   <PaginationContent>
                     <PaginationItem>

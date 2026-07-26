@@ -38,7 +38,6 @@ import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
-import NotFound from "@/pages/NotFound";
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
