@@ -43,6 +43,7 @@ type FormState = {
   valid_until: string; // yyyy-mm-dd, only used when not lifetime
   materials: string[]; // empty = all materials
   is_featured_landing: boolean;
+  banner_theme: "orange" | "red" | "black" | "white";
 };
 
 const LIFETIME_DATE = "2099-12-31T23:59:59+08:00";
@@ -56,6 +57,7 @@ const emptyForm = (): FormState => ({
   valid_until: "",
   materials: [],
   is_featured_landing: false,
+  banner_theme: "orange",
 });
 
 /**
@@ -111,6 +113,7 @@ export default function CouponManager() {
       valid_until: isLifetime ? "" : row.valid_until.slice(0, 10),
       materials: row.applicable_materials || [],
       is_featured_landing: row.is_featured_landing,
+      banner_theme: (row.banner_theme as FormState["banner_theme"]) || "orange",
     });
     setDialogOpen(true);
   };
@@ -146,6 +149,7 @@ export default function CouponManager() {
       is_active: form.is_active,
       applicable_materials: form.materials.length > 0 ? form.materials : null,
       is_featured_landing: form.is_featured_landing,
+      banner_theme: form.banner_theme,
     };
 
     // Only one coupon can be featured on the landing page at a time.
@@ -328,6 +332,35 @@ export default function CouponManager() {
                   checked={form.is_featured_landing}
                   onCheckedChange={(v) => setForm((p) => ({ ...p, is_featured_landing: v }))}
                 />
+              </div>
+
+              <div className="space-y-2 rounded-lg border p-3">
+                <Label className="text-sm">Warna Banner Promo</Label>
+                <p className="text-xs text-muted-foreground">Pilih tema warna untuk banner di laman web utama.</p>
+                <div className="flex flex-wrap gap-2">
+                  {(["orange", "red", "black", "white"] as const).map((t) => (
+                    <button
+                      type="button"
+                      key={t}
+                      onClick={() => setForm((p) => ({ ...p, banner_theme: t }))}
+                      className={`flex items-center gap-2 rounded-full border px-3 py-1.5 text-sm font-medium capitalize transition-colors ${
+                        form.banner_theme === t
+                          ? "border-primary bg-primary/10 text-foreground"
+                          : "border-border text-muted-foreground hover:bg-muted"
+                      }`}
+                    >
+                      <span
+                        className={`h-3.5 w-3.5 rounded-full border ${
+                          t === "orange" ? "bg-gradient-to-r from-red-600 to-amber-500" :
+                          t === "red" ? "bg-red-600" :
+                          t === "black" ? "bg-zinc-900" :
+                          "bg-white"
+                        } ${t === "white" ? "border-gray-300" : "border-transparent"}`}
+                      />
+                      {t === "orange" ? "Oren" : t === "red" ? "Merah" : t === "black" ? "Hitam" : "Putih"}
+                    </button>
+                  ))}
+                </div>
               </div>
 
               <div className="flex items-center justify-between rounded-lg border p-3">
