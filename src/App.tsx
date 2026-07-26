@@ -27,7 +27,6 @@ import Marketing from "@/pages/Marketing";
 import Reviews from "@/pages/Reviews";
 import LinkTempahan from "@/pages/LinkTempahan";
 import Coupons from "@/pages/Coupons";
-import Leads from "@/pages/Leads";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -90,7 +89,6 @@ function App() {
                   <Route path="/payment-gateways" element={<PaymentGateways />} />
                   <Route path="/reviews" element={<Reviews />} />
                   <Route path="/coupons" element={<Coupons />} />
-                  <Route path="/leads" element={<Leads />} />
                   <Route path="/link-tempahan" element={<LinkTempahan />} />
                 </Route>
 

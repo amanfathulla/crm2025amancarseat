@@ -12,7 +12,6 @@ import {
   ChevronsRight,
   X,
   Menu,
-  Target,
   Megaphone,
   LogOut,
   ShoppingBag,
@@ -156,7 +155,6 @@ export function Sidebar() {
   const mainItems: SidebarItemType[] = [
     { title: "Dashboard", path: "/dashboard", icon: Home },
     { title: "Live Dashboard", path: "/live-dashboard", icon: Radio },
-    { title: "Lead Management", path: "/leads", icon: Target },
     { title: "Marketing", path: "/marketing", icon: Megaphone },
     { title: "Products", path: "/products", icon: Package },
     { title: "Reviews", path: "/reviews", icon: Star },
