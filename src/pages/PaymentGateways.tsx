@@ -139,8 +139,8 @@ export default function PaymentGateways() {
           const fields = FIELD_SPEC[row.provider] || [];
           const info = PROVIDER_INFO[row.provider];
           return (
-            <Card key={row.id} className={row.is_enabled ? "border-primary/40 shadow-sm" : "shadow-sm"}>
-              <div className="flex items-center justify-between gap-2 px-4 py-3 border-b">
+            <Card key={row.id} className={`flex flex-col h-full ${row.is_enabled ? "border-primary/40 shadow-sm" : "shadow-sm"}`}>
+              <div className="flex items-center justify-between gap-2 px-4 py-3 border-b shrink-0">
                 <div className="min-w-0">
                   <div className="flex items-center gap-1.5">
                     <span className="font-semibold text-sm truncate">{row.display_name}</span>
@@ -169,7 +169,7 @@ export default function PaymentGateways() {
                   onCheckedChange={(v) => toggleEnable(row, v)}
                 />
               </div>
-              <CardContent className="px-4 py-3 space-y-2.5">
+              <CardContent className="px-4 py-3 flex-1 flex flex-col space-y-2.5">
                 <div className="flex items-center justify-between">
                   <Label className="text-xs text-muted-foreground">Mode Sandbox</Label>
                   <Switch
@@ -189,19 +189,21 @@ export default function PaymentGateways() {
                     />
                   </div>
                 ))}
-                <Button
-                  onClick={() => saveRow(row)}
-                  disabled={saving === row.id}
-                  size="sm"
-                  className="w-full h-8"
-                >
-                  {saving === row.id ? (
-                    <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
-                  ) : (
-                    <Save className="h-3.5 w-3.5 mr-1.5" />
-                  )}
-                  Simpan {row.display_name}
-                </Button>
+                <div className="mt-auto pt-2">
+                  <Button
+                    onClick={() => saveRow(row)}
+                    disabled={saving === row.id}
+                    size="sm"
+                    className="w-full h-8"
+                  >
+                    {saving === row.id ? (
+                      <Loader2 className="h-3.5 w-3.5 animate-spin mr-1.5" />
+                    ) : (
+                      <Save className="h-3.5 w-3.5 mr-1.5" />
+                    )}
+                    Simpan {row.display_name}
+                  </Button>
+                </div>
               </CardContent>
             </Card>
           );
