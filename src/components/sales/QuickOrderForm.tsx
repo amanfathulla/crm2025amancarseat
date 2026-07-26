@@ -82,14 +82,14 @@ export const QuickOrderForm = () => {
   };
 
   return (
-    <section id="quick-order" className="py-12 md:py-16 bg-secondary/30">
+    <section id="quick-order" className="py-12 md:py-16 bg-gray-50">
       <div className="container mx-auto px-4">
-        <div className="max-w-2xl mx-auto bg-card rounded-2xl shadow-lg border border-border p-6 md:p-8">
+        <div className="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-200 p-6 md:p-8">
           <div className="text-center mb-6">
-            <h3 className="text-xl md:text-2xl font-bold text-foreground mb-2">
+            <h3 className="text-xl md:text-2xl font-bold text-gray-900 mb-2">
               {language === "bm" ? "Dapatkan Sebut Harga Segera" : "Get Instant Quote"}
             </h3>
-            <p className="text-sm text-muted-foreground">
+            <p className="text-sm text-gray-500">
               {language === "bm"
                 ? "Isi maklumat ringkas, kami akan hubungi anda"
                 : "Fill in your details, we will contact you"}
@@ -104,7 +104,7 @@ export const QuickOrderForm = () => {
                 value={name}
                 onChange={(e) => { setName(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
               />
               <Input
                 type="tel"
@@ -112,7 +112,7 @@ export const QuickOrderForm = () => {
                 value={phone}
                 onChange={(e) => { setPhone(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
               />
             </div>
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
@@ -122,7 +122,7 @@ export const QuickOrderForm = () => {
                 value={carModel}
                 onChange={(e) => { setCarModel(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
               />
               <Input
                 type="text"
@@ -130,13 +130,13 @@ export const QuickOrderForm = () => {
                 value={location}
                 onChange={(e) => { setLocation(e.target.value); setQuoteShown(false); }}
                 required
-                className="h-12 text-base"
+                className="h-12 text-base bg-white border-gray-300 text-gray-900 placeholder:text-gray-400"
               />
             </div>
 
             {/* Seater Selection */}
             <div>
-              <p className="text-sm font-medium text-foreground mb-3">
+              <p className="text-sm font-medium text-gray-900 mb-3">
                 {language === "bm" ? "Pilih Jenis Seater:" : "Choose Seater Type:"}
               </p>
               <div className="grid grid-cols-3 gap-3">
@@ -148,10 +148,10 @@ export const QuickOrderForm = () => {
                     className={`p-4 rounded-xl border-2 text-center transition-all ${
                       seater === opt.id
                         ? "border-primary bg-primary/10 ring-2 ring-primary/30"
-                        : "border-border hover:border-primary/50"
+                        : "border-gray-200 bg-white hover:border-primary/50"
                     }`}
                   >
-                    <div className="font-semibold text-foreground">{opt.label}</div>
+                    <div className="font-semibold text-gray-900">{opt.label}</div>
                   </button>
                 ))}
               </div>
@@ -159,7 +159,7 @@ export const QuickOrderForm = () => {
 
             {/* Design Selection */}
             <div>
-              <p className="text-sm font-medium text-foreground mb-3">
+              <p className="text-sm font-medium text-gray-900 mb-3">
                 {language === "bm" ? "Pilih Design Anda:" : "Choose Your Design:"}
               </p>
               <div className="grid grid-cols-4 md:grid-cols-7 gap-2 md:gap-3">
@@ -171,7 +171,7 @@ export const QuickOrderForm = () => {
                     className={`relative aspect-square rounded-lg overflow-hidden border-2 transition-all duration-300 ${
                       selectedDesign === index
                         ? "border-primary ring-2 ring-primary/30 scale-105"
-                        : "border-border hover:border-primary/50"
+                        : "border-gray-200 hover:border-primary/50"
                     }`}
                   >
                     <img
@@ -194,15 +194,15 @@ export const QuickOrderForm = () => {
             {/* Quote Result */}
             {quoteShown && selectedSeater && selectedDesign !== null && (
               <div className="bg-primary/5 border-2 border-primary/30 rounded-xl p-5 animate-in fade-in-50 duration-300">
-                <p className="text-sm text-muted-foreground mb-2">
+                <p className="text-sm text-gray-500 mb-2">
                   {language === "bm" ? "Sebut Harga Anda:" : "Your Quote:"}
                 </p>
-                <div className="space-y-1 text-sm text-foreground">
+                <div className="space-y-1 text-sm text-gray-900">
                   <div className="flex justify-between"><span>{language === "bm" ? "Jenis Seater" : "Seater Type"}:</span><span className="font-medium">{selectedSeater.label}</span></div>
                   <div className="flex justify-between"><span>Design:</span><span className="font-medium">{DESIGN_COLORS[selectedDesign].code} - {language === "bm" ? DESIGN_COLORS[selectedDesign].name : DESIGN_COLORS[selectedDesign].nameEn}</span></div>
                 </div>
-                <div className="border-t border-border mt-3 pt-3 flex justify-between items-center">
-                  <span className="font-semibold text-foreground">{language === "bm" ? "Jumlah" : "Total"}:</span>
+                <div className="border-t border-gray-200 mt-3 pt-3 flex justify-between items-center">
+                  <span className="font-semibold text-gray-900">{language === "bm" ? "Jumlah" : "Total"}:</span>
                   <span className="text-2xl font-bold text-primary">RM{selectedSeater.price}</span>
                 </div>
               </div>
