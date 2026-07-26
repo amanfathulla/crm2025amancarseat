@@ -28,14 +28,15 @@ interface CategoryConfig {
   name: string;
   gradient: string;
   icon: string;
+  accent: string;
   hotSelling?: boolean;
 }
 
 const materialCategories: CategoryConfig[] = [
-  { name: "Kain Mesh", gradient: "from-blue-500 to-blue-600", icon: "🔵" },
-  { name: "Kain Nylon", gradient: "from-emerald-500 to-emerald-600", icon: "🟢" },
-  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣", hotSelling: true },
-  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡", hotSelling: true },
+  { name: "Kain Mesh", gradient: "from-blue-500 to-blue-600", icon: "🔵", accent: "bg-blue-500" },
+  { name: "Kain Nylon", gradient: "from-emerald-500 to-emerald-600", icon: "🟢", accent: "bg-emerald-500" },
+  { name: "Kain Fullsilk", gradient: "from-purple-500 to-purple-600", icon: "🟣", hotSelling: true, accent: "bg-purple-500" },
+  { name: "Semi Leather Kalis Air", gradient: "from-amber-500 to-amber-600", icon: "🟡", hotSelling: true, accent: "bg-amber-500" },
 ];
 
 export default function Products() {
@@ -211,118 +212,106 @@ export default function Products() {
       </div>
 
       {/* Category Cards Grid */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
         {materialCategories.map((category) => {
           const count = getCategoryCount(category.name);
           const isEnabled = categoryEnabled[category.name] !== false;
           const isToggling = togglingCategory === category.name;
+          const img = categoryImages[category.name];
 
           return (
-            <div key={category.name} className={`relative overflow-hidden rounded-2xl border transition-all duration-300 ${isEnabled ? "" : "opacity-60"}`}>
-              {/* Card clickable area */}
-              <button
-                onClick={() => setSelectedCategory(category.name)}
-                className={`w-full relative overflow-hidden bg-gradient-to-br ${category.gradient} p-5 text-white text-left group`}
-              >
-                {/* Background decoration */}
-                <div className="absolute top-0 right-0 -mt-4 -mr-4 w-24 h-24 rounded-full bg-white/10 group-hover:scale-110 transition-transform" />
-
-                {/* Hot Selling Badge */}
-                {category.hotSelling && isEnabled && (
-                  <div className="absolute top-3 right-3 z-20 flex items-center gap-1 bg-red-500 text-white text-xs font-bold px-2 py-1 rounded-full shadow-md animate-pulse">
-                    🔥 Paling Hot
-                  </div>
-                )}
-
-                <div className="relative z-10">
-                  <span className="text-3xl mb-2 block">{category.icon}</span>
-                  <h3 className="text-lg font-semibold mb-0.5 leading-tight">{category.name}</h3>
-                  <p className="text-white/80 text-sm">{count} produk</p>
-                </div>
-              </button>
-
-              {/* Material Hero Image uploader */}
-              <div className="px-4 py-3 bg-card border-t space-y-2">
-                <div className="flex items-center justify-between">
-                  <span className="text-xs font-medium text-muted-foreground">Gambar Utama Material</span>
-                  {categoryImages[category.name] && (
-                    <button
-                      onClick={() => handleRemoveCategoryImage(category.name)}
-                      className="text-xs text-destructive hover:underline flex items-center gap-1"
-                      disabled={uploadingCategoryImage === category.name}
-                    >
-                      <X className="h-3 w-3" /> Buang
-                    </button>
-                  )}
-                </div>
-                {categoryImages[category.name] ? (
-                  <div className="relative w-full bg-muted/30 rounded-lg overflow-hidden">
-                    <img
-                      src={categoryImages[category.name]}
-                      alt={category.name}
-                      className="w-full h-auto max-h-40 object-contain"
-                    />
-                  </div>
-                ) : (
-                  <label className="flex flex-col items-center justify-center w-full py-4 border-2 border-dashed border-border rounded-lg cursor-pointer hover:bg-muted/40 transition-colors">
-                    {uploadingCategoryImage === category.name ? (
-                      <Loader2 className="h-5 w-5 animate-spin text-muted-foreground" />
-                    ) : (
-                      <>
-                        <ImagePlus className="h-5 w-5 text-muted-foreground mb-1" />
-                        <span className="text-xs text-muted-foreground">Muat naik gambar (ikut ratio asal)</span>
-                      </>
+            <div key={category.name} className="flex flex-col h-full rounded-2xl border border-border bg-card shadow-sm overflow-hidden transition-all hover:shadow-md">
+              {/* Top: name, count, hot badge, toggle */}
+              <div className="flex items-start justify-between gap-3 px-4 pt-4">
+                <div className="min-w-0">
+                  <div className="flex items-center gap-2">
+                    <span className={`h-2.5 w-2.5 rounded-full ${category.accent} shrink-0`} />
+                    <h3 className="font-semibold text-foreground truncate">{category.name}</h3>
+                    {category.hotSelling && isEnabled && (
+                      <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shrink-0">🔥 Paling Hot</span>
                     )}
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploadingCategoryImage === category.name}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleCategoryImageUpload(category.name, f);
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
-                )}
-                {categoryImages[category.name] && (
-                  <label className="flex items-center justify-center gap-1 text-xs text-primary hover:underline cursor-pointer">
-                    <ImagePlus className="h-3 w-3" /> Tukar gambar
-                    <input
-                      type="file"
-                      accept="image/*"
-                      className="hidden"
-                      disabled={uploadingCategoryImage === category.name}
-                      onChange={(e) => {
-                        const f = e.target.files?.[0];
-                        if (f) handleCategoryImageUpload(category.name, f);
-                        e.target.value = "";
-                      }}
-                    />
-                  </label>
-                )}
-              </div>
-
-              {/* Enable/Disable Toggle bar */}
-              <div className={`flex items-center justify-between px-4 py-2.5 bg-card border-t`}>
-                <div className="flex items-center gap-2">
-                  {isEnabled
-                    ? <Eye className="h-4 w-4 text-primary" />
-                    : <EyeOff className="h-4 w-4 text-muted-foreground" />
-                  }
-                  <span className={`text-sm font-medium ${isEnabled ? "text-foreground" : "text-muted-foreground"}`}>
-                    {isEnabled ? "Aktif dalam laman tempahan" : "Disembunyikan"}
-                  </span>
+                  </div>
+                  <p className="text-xs text-muted-foreground mt-1">{count} produk</p>
                 </div>
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-1.5 shrink-0">
                   {isToggling && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
                   <Switch
                     checked={isEnabled}
-                    onCheckedChange={(val) => handleToggleCategory(category.name, val)}
+                    onCheckedChange={(v) => handleToggleCategory(category.name, v)}
                     disabled={isToggling}
                   />
                 </div>
+              </div>
+
+              {/* Middle: thumbnail focus */}
+              <div className="px-4 pt-3">
+                <div className="relative w-full aspect-[16/10] rounded-xl overflow-hidden bg-muted/40 border border-border">
+                  {img ? (
+                    <img
+                      src={img}
+                      alt={category.name}
+                      className="w-full h-full object-cover"
+                    />
+                  ) : (
+                    <label className="flex flex-col items-center justify-center w-full h-full cursor-pointer hover:bg-muted/60 transition-colors gap-1">
+                      {uploadingCategoryImage === category.name ? (
+                        <Loader2 className="h-6 w-6 animate-spin text-muted-foreground" />
+                      ) : (
+                        <>
+                          <ImagePlus className="h-6 w-6 text-muted-foreground" />
+                          <span className="text-xs text-muted-foreground">Muat naik gambar</span>
+                        </>
+                      )}
+                      <input
+                        type="file"
+                        accept="image/*"
+                        className="hidden"
+                        disabled={uploadingCategoryImage === category.name}
+                        onChange={(e) => {
+                          const f = e.target.files?.[0];
+                          if (f) handleCategoryImageUpload(category.name, f);
+                          e.target.value = "";
+                        }}
+                      />
+                    </label>
+                  )}
+                </div>
+              </div>
+
+              {/* Bottom: actions */}
+              <div className="px-4 py-3 mt-auto flex items-center justify-between gap-2 border-t border-border">
+                <div className="flex items-center gap-3 min-w-0">
+                  {img ? (
+                    <>
+                      <label className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer shrink-0">
+                        <ImagePlus className="h-3.5 w-3.5" /> Tukar Gambar
+                        <input
+                          type="file"
+                          accept="image/*"
+                          className="hidden"
+                          disabled={uploadingCategoryImage === category.name}
+                          onChange={(e) => {
+                            const f = e.target.files?.[0];
+                            if (f) handleCategoryImageUpload(category.name, f);
+                            e.target.value = "";
+                          }}
+                        />
+                      </label>
+                      <button
+                        onClick={() => handleRemoveCategoryImage(category.name)}
+                        disabled={uploadingCategoryImage === category.name}
+                        className="inline-flex items-center gap-1 text-xs text-destructive hover:underline shrink-0"
+                      >
+                        <X className="h-3.5 w-3.5" /> Buang
+                      </button>
+                    </>
+                  ) : (
+                    <span className="text-xs text-muted-foreground">Tiada gambar utama</span>
+                  )}
+                </div>
+                <Button variant="outline" size="sm" onClick={() => setSelectedCategory(category.name)} className="shrink-0 gap-1">
+                  Lihat Produk
+                </Button>
               </div>
             </div>
           );
@@ -503,57 +492,6 @@ export default function Products() {
   return (
     <div className="p-4 md:p-6">
       {selectedCategory ? renderProductList() : renderCategoryCards()}
-
-      {/* Add Product Dialog */}
-      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
-        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-          <DialogHeader>
-            <DialogTitle>Tambah Produk Baru</DialogTitle>
-            <DialogDescription>Isi maklumat untuk membuat produk baru.</DialogDescription>
-          </DialogHeader>
-          <ProductForm
-            onSuccess={handleAddSuccess}
-            onCancel={() => setIsAddDialogOpen(false)}
-          />
-        </DialogContent>
-      </Dialog>
-
-      {/* Edit Product Dialog */}
-      {selectedProduct && (
-        <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
-          <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
-            <DialogHeader>
-              <DialogTitle>Edit Produk</DialogTitle>
-              <DialogDescription>Kemaskini maklumat produk {selectedProduct.name}.</DialogDescription>
-            </DialogHeader>
-            <ProductForm
-              onSuccess={handleEditSuccess}
-              onCancel={() => setIsEditDialogOpen(false)}
-              initialData={{
-                id: selectedProduct.id,
-                name: selectedProduct.name,
-                image_url: selectedProduct.image_url || "",
-                image_urls: selectedProduct.image_urls || [],
-                category: selectedProduct.category || "",
-                description: selectedProduct.description || "",
-                youtube_url: selectedProduct.youtube_url || "",
-                variations: selectedProduct.variations || [],
-              }}
-            />
-          </DialogContent>
-        </Dialog>
-      )}
-
-      {/* Delete Product Dialog */}
-      {selectedProduct && (
-        <DeleteProductDialog
-          isOpen={isDeleteDialogOpen}
-          onClose={() => setIsDeleteDialogOpen(false)}
-          productId={selectedProduct.id}
-          productName={selectedProduct.name}
-          onSuccess={handleDeleteSuccess}
-        />
-      )}
     </div>
   );
 }
