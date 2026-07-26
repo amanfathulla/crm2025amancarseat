@@ -162,6 +162,7 @@ export function Sidebar() {
     { title: "Reviews", path: "/reviews", icon: Star },
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
     { title: "Kupon", path: "/coupons", icon: Tag },
+    { title: "Lead Management", path: "/leads", icon: Users },
   ];
 
   const orderPageUrl = "/order";
