@@ -1,4 +1,5 @@
 import { HeroSection } from "@/components/sales/HeroSection";
+import PromoBanner from "@/components/sales/PromoBanner";
 import { BeforeAfterSection } from "@/components/sales/BeforeAfterSection";
 import { ColorGallery } from "@/components/sales/ColorGallery";
 import { WhyFabricSilk } from "@/components/sales/WhyFabricSilk";
@@ -17,6 +18,7 @@ const Index = () => {
   return (
     <div className="dark min-h-screen bg-black text-white w-full">
       <HeroSection onCTAClick={handleCTAClick} totalReviews={Math.max(reviews.length, 369)} />
+      <PromoBanner />
       <BeforeAfterSection />
       <WhyFabricSilk />
       <ColorGallery />

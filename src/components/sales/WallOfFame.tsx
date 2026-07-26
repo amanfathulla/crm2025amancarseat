@@ -1,9 +1,7 @@
-import { useEffect, useState } from "react";
-import { useLanguage } from "@/contexts/LanguageContext";
 import { Button } from "@/components/ui/button";
-import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingCart, Ticket } from "lucide-react";
+import { useLanguage } from "@/contexts/LanguageContext";
+import { Star, MessageCircle, ChevronRight, Image as ImageIcon, ShoppingCart } from "lucide-react";
 import { Link } from "react-router-dom";
-import { supabase } from "@/integrations/supabase/client";
 
 interface Review {
   id: string;
@@ -19,35 +17,10 @@ interface WallOfFameProps {
   reviews: Review[];
 }
 
-interface FeaturedCoupon {
-  code: string;
-  discount_amount: number;
-  discount_type: string;
-}
-
-const formatDiscount = (c: FeaturedCoupon) =>
-  c.discount_type === "percentage"
-    ? `${c.discount_amount}%`
-    : `RM${c.discount_amount}`;
+// Featured brands to show on landing page
 
 export const WallOfFame = ({ reviews }: WallOfFameProps) => {
   const { t } = useLanguage();
-  const [featuredCoupon, setFeaturedCoupon] = useState<FeaturedCoupon | null>(null);
-
-  useEffect(() => {
-    supabase
-      .from("coupons")
-      .select("code, discount_amount, discount_type")
-      .eq("is_active", true)
-      .eq("is_featured_landing", true)
-      .maybeSingle()
-      .then(({ data }) => {
-        if (data) {
-          const d = data as { code: string; discount_amount: number; discount_type: string };
-          setFeaturedCoupon({ code: d.code, discount_amount: d.discount_amount, discount_type: d.discount_type });
-        }
-      });
-  }, []);
 
   // Latest 15 "pickup" reviews that have images (newest first).
   const getFeaturedReviews = () => {
@@ -126,17 +99,9 @@ export const WallOfFame = ({ reviews }: WallOfFameProps) => {
           </Button>
           {/* Order Terus — CTA-strong, stands out from neutral testimoni button */}
           <Button asChild size="lg" className="min-w-[340px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
-            <Link to="/order" className="flex flex-col items-center gap-0.5 py-3">
-              <span className="flex items-center gap-2 text-base">
-                <ShoppingCart className="w-5 h-5" />
-                Order Sekarang di Website
-              </span>
-              <span className="flex items-center gap-1 text-sm text-red-600 font-semibold">
-                <Ticket className="w-3.5 h-3.5" />
-                {featuredCoupon
-                  ? `Guna Kod: ${featuredCoupon.code} · Diskaun ${formatDiscount(featuredCoupon)} Terus`
-                  : 'Guna Kod Promo · Diskaun Terus'}
-              </span>
+            <Link to="/order" className="flex items-center gap-2 py-3 text-base">
+              <ShoppingCart className="w-5 h-5" />
+              Order Sekarang di Website
             </Link>
           </Button>
         </div>
