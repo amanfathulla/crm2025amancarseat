@@ -372,11 +372,14 @@ export default function Coupons() {
             </div>
             <div className="flex items-center gap-2">
               <Switch checked={featured.is_active} onCheckedChange={(v) => toggleActive(featured, v)} />
-              <Button size="sm" variant="outline" onClick={() => openEdit(featured)}>
-                <Pencil className="h-4 w-4 mr-1" /> Edit
-              </Button>
             </div>
           </div>
+          <p className="text-xs text-muted-foreground mt-3">
+            Ini kupon yang dipaparkan sebagai banner promo di laman web utama. Edit kod atau diskaun di bawah.
+          </p>
+          <Button variant="default" className="w-full mt-3" onClick={() => openEdit(featured)}>
+            <Pencil className="h-4 w-4 mr-2" /> Edit Kupon Utama
+          </Button>
         </div>
       )}
 

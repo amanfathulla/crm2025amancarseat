@@ -22,6 +22,7 @@ const Index = () => {
       <BeforeAfterSection />
       <WhyFabricSilk />
       <ColorGallery />
+      <PromoBanner />
       <WallOfFame reviews={reviews as any} />
       <QuickOrderForm />
       <LiveFooter />
