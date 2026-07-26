@@ -14,8 +14,8 @@ import { Upload, X, ImagePlus } from "lucide-react";
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
   { id: "kain-nylon",     label: "Kain Nylon",             emoji: "🟢", gradient: "from-green-500 to-green-700",   border: "border-green-500/40",  glow: "shadow-green-500/20",  desc: "Tahan lama, mudah dicuci" },
-  { id: "kain-fullsilk",  label: "Kain Fullsilk",          emoji: "🟣", gradient: "from-purple-500 to-purple-700", border: "border-purple-500/40", glow: "shadow-purple-500/20", desc: "Mewah, lembut & tahan panas" },
-  { id: "semi-leather",   label: "Semi Leather Kalis Air", emoji: "🟡", gradient: "from-amber-500 to-amber-700",   border: "border-amber-500/40",  glow: "shadow-amber-500/20",  desc: "Kalis air, mudah dibersihkan" },
+  { id: "kain-fullsilk",  label: "Kain Fullsilk",          emoji: "🟣", gradient: "from-purple-500 to-purple-700", border: "border-purple-500/40", glow: "shadow-purple-500/20", bestSeller: true, desc: "Mewah, lembut & tahan panas" },
+  { id: "semi-leather",   label: "Semi Leather Kalis Air", emoji: "🟡", gradient: "from-amber-500 to-amber-700",   border: "border-amber-500/40",  glow: "shadow-amber-500/20",  bestSeller: true, desc: "Kalis air, mudah dibersihkan" },
 ];
 
 const STATES_MY = [
@@ -569,7 +569,10 @@ export default function OrderPage() {
                   className={`group relative overflow-hidden rounded-2xl border ${cat.border} text-left transition-all duration-200 hover:scale-[1.02] active:scale-[0.99] shadow-xl ${cat.glow}`}
                 >
                   <div className={`absolute inset-0 bg-gradient-to-br ${cat.gradient} opacity-85`} />
-                  <div className="absolute inset-0 bg-black/20" />
+                  <div className={`absolute inset-0 bg-black/20`} />
+                  {cat.bestSeller && (
+                    <span className="absolute top-3 right-3 z-20 text-[10px] font-bold bg-white text-red-600 px-2 py-1 rounded-full shadow">🔥 Best Seller</span>
+                  )}
                   <div className="relative z-10 p-6">
                     <span className="text-4xl mb-4 block">{cat.emoji}</span>
                     <h3 className="text-white font-bold text-lg mb-1">{cat.label}</h3>

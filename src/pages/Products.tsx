@@ -228,7 +228,7 @@ export default function Products() {
                     <span className={`h-2.5 w-2.5 rounded-full ${category.accent} shrink-0`} />
                     <h3 className="font-semibold text-foreground truncate">{category.name}</h3>
                     {category.hotSelling && isEnabled && (
-                      <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shrink-0">🔥 Paling Hot</span>
+                      <span className="text-[10px] font-bold bg-red-500 text-white px-2 py-0.5 rounded-full shrink-0">🔥 Best Seller</span>
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{count} produk</p>
