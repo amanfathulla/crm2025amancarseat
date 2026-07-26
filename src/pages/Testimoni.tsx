@@ -71,17 +71,6 @@ export default function Testimoni() {
         </div>
       </header>
 
-      <PromoBanner />
-
-      <section className="container mx-auto px-4 pt-8 pb-2 text-center">
-        <Button asChild size="lg" className="min-w-[340px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
-          <Link to="/order" className="flex items-center gap-2 py-3 text-base">
-            <ShoppingCart className="w-5 h-5" />
-            Order Sekarang di Website
-          </Link>
-        </Button>
-      </section>
-
       <section className="container mx-auto px-4 py-10 md:py-14 text-center">
         <h1 className="text-4xl md:text-5xl font-black mb-2">Galeri Testimoni</h1>
         <p className="text-gray-400">{counts.all}+ Testimoni Sebenar</p>
@@ -152,6 +141,17 @@ export default function Testimoni() {
         {totalPages > 1 && (
           <Pagination page={currentPage} totalPages={totalPages} onChange={setPage} />
         )}
+      </section>
+
+      <PromoBanner />
+
+      <section className="container mx-auto px-4 pt-8 pb-2 text-center">
+        <Button asChild size="lg" className="min-w-[340px] rounded-full bg-white text-black hover:bg-white/90 border-2 border-red-500 font-bold shadow-lg">
+          <Link to="/order" className="flex items-center gap-2 py-3 text-base">
+            <ShoppingCart className="w-5 h-5" />
+            Order Sekarang di Website
+          </Link>
+        </Button>
       </section>
 
       <section id="quick-order" className="border-t border-white/10">
