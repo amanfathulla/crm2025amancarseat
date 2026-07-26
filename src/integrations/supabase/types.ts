@@ -1068,6 +1068,258 @@ export type Database = {
         }
         Relationships: []
       }
+      whatsapp_senders: {
+        Row: {
+          id: string
+          label: string
+          phone_number: string
+          is_active: boolean
+          gap_seconds: number
+          daily_limit: number
+          current_lead_count: number
+          last_sent_at: string | null
+          connection_status: string
+          last_checked_at: string | null
+          consecutive_failures: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          label: string
+          phone_number: string
+          is_active?: boolean
+          gap_seconds?: number
+          daily_limit?: number
+          current_lead_count?: number
+          last_sent_at?: string | null
+          connection_status?: string
+          last_checked_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          label?: string
+          phone_number?: string
+          is_active?: boolean
+          gap_seconds?: number
+          daily_limit?: number
+          current_lead_count?: number
+          last_sent_at?: string | null
+          connection_status?: string
+          last_checked_at?: string | null
+          consecutive_failures?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_settings: {
+        Row: {
+          id: number
+          automation_enabled: boolean
+          sender_number: string | null
+          api_key_configured: boolean
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          automation_enabled?: boolean
+          sender_number?: string | null
+          api_key_configured?: boolean
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          automation_enabled?: boolean
+          sender_number?: string | null
+          api_key_configured?: boolean
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      whatsapp_credentials: {
+        Row: {
+          id: number
+          api_key: string | null
+          sender_number: string | null
+          updated_by: string | null
+          updated_at: string
+        }
+        Insert: {
+          id?: number
+          api_key?: string | null
+          sender_number?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Update: {
+          id?: number
+          api_key?: string | null
+          sender_number?: string | null
+          updated_by?: string | null
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      followup_sequences: {
+        Row: {
+          id: string
+          name: string
+          description: string | null
+          is_active: boolean
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          name: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          name?: string
+          description?: string | null
+          is_active?: boolean
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      followup_steps: {
+        Row: {
+          id: string
+          sequence_id: string
+          step_order: number
+          day_offset: number
+          message_template: string
+          media_type: string | null
+          media_url: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          sequence_id: string
+          step_order: number
+          day_offset: number
+          message_template: string
+          media_type?: string | null
+          media_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          sequence_id?: string
+          step_order?: number
+          day_offset?: number
+          message_template?: string
+          media_type?: string | null
+          media_url?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_followups: {
+        Row: {
+          id: string
+          lead_id: string
+          sequence_id: string | null
+          step_id: string | null
+          step_order: number | null
+          day_offset: number | null
+          scheduled_at: string
+          sent_at: string | null
+          status: string
+          provider_message_id: string | null
+          error_message: string | null
+          rendered_message: string | null
+          sender_id_used: string | null
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          sequence_id?: string | null
+          step_id?: string | null
+          step_order?: number | null
+          day_offset?: number | null
+          scheduled_at: string
+          sent_at?: string | null
+          status?: string
+          provider_message_id?: string | null
+          error_message?: string | null
+          rendered_message?: string | null
+          sender_id_used?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          sequence_id?: string | null
+          step_id?: string | null
+          step_order?: number | null
+          day_offset?: number | null
+          scheduled_at?: string
+          sent_at?: string | null
+          status?: string
+          provider_message_id?: string | null
+          error_message?: string | null
+          rendered_message?: string | null
+          sender_id_used?: string | null
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      lead_messages: {
+        Row: {
+          id: string
+          lead_id: string
+          sender_id: string | null
+          direction: string
+          message_type: string
+          content: string | null
+          media_url: string | null
+          is_read: boolean
+          provider_message_id: string | null
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          lead_id: string
+          sender_id?: string | null
+          direction: string
+          message_type?: string
+          content?: string | null
+          media_url?: string | null
+          is_read?: boolean
+          provider_message_id?: string | null
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          lead_id?: string
+          sender_id?: string | null
+          direction?: string
+          message_type?: string
+          content?: string | null
+          media_url?: string | null
+          is_read?: boolean
+          provider_message_id?: string | null
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_product_variations: {

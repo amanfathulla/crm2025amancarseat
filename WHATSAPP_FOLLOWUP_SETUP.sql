@@ -2,13 +2,18 @@
 --  AMANCARSEAT — WhatsApp Follow-up System (clean consolidated setup)
 --  Run this ONCE in the Supabase SQL Editor (project ywjblrnqygowfixxmigw).
 --  Idempotent: safe to re-run. Does NOT recreate public.leads (CRM already has it).
---  ORDER MATTERS: referenced tables are created before anything that uses them.
+--  ORDER MATTERS: columns/tables are created before anything that references them.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
 -- 1) Roles + RBAC helpers (CRM does not have these yet; WhatsApp RLS needs them)
 -- ---------------------------------------------------------------------------
-CREATE TYPE public.app_role AS ENUM ('admin', 'staff');
+DO $$
+BEGIN
+  IF NOT EXISTS (SELECT 1 FROM pg_type t JOIN pg_namespace n ON n.oid = t.typnamespace WHERE t.typname = 'app_role' AND n.nspname = 'public') THEN
+    CREATE TYPE public.app_role AS ENUM ('admin', 'staff');
+  END IF;
+END $$;
 
 CREATE TABLE IF NOT EXISTS public.user_roles (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -77,7 +82,11 @@ END;
 $$;
 
 -- ---------------------------------------------------------------------------
--- 3) followup_sequences (created BEFORE leads references it)
+-- 3) Phone normalizers (functions only; leads columns added later, after FK targets exist)
+-- ---------------------------------------------------------------------------
+
+-- ---------------------------------------------------------------------------
+-- 4) followup_sequences (must exist before leads.followup_sequence_id FK + steps)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.followup_sequences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -96,7 +105,7 @@ DROP POLICY IF EXISTS "admin can manage sequences" ON public.followup_sequences;
 CREATE POLICY "admin can manage sequences" ON public.followup_sequences FOR ALL TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 
 -- ---------------------------------------------------------------------------
--- 4) followup_steps
+-- 5) followup_steps
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.followup_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -122,7 +131,7 @@ DROP POLICY IF EXISTS "admin can manage steps" ON public.followup_steps;
 CREATE POLICY "admin can manage steps" ON public.followup_steps FOR ALL TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 
 -- ---------------------------------------------------------------------------
--- 5) whatsapp_senders (created BEFORE leads/lead_followups reference it)
+-- 6) whatsapp_senders (assigned_sender_id FK target must exist — it does, from section 3)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.whatsapp_senders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -199,28 +208,6 @@ DROP TRIGGER IF EXISTS trg_leads_bump_sender_del ON public.leads;
 CREATE TRIGGER trg_leads_bump_sender_del AFTER DELETE ON public.leads FOR EACH ROW EXECUTE FUNCTION public.bump_sender_count();
 DROP TRIGGER IF EXISTS trg_leads_bump_sender_upd ON public.leads;
 CREATE TRIGGER trg_leads_bump_sender_upd AFTER UPDATE OF assigned_sender_id ON public.leads FOR EACH ROW EXECUTE FUNCTION public.bump_sender_count();
-
--- ---------------------------------------------------------------------------
--- 6) EXTEND existing public.leads (now followup_sequences & whatsapp_senders exist)
--- ---------------------------------------------------------------------------
-ALTER TABLE public.leads
-  ADD COLUMN IF NOT EXISTS product TEXT,
-  ADD COLUMN IF NOT EXISTS notes TEXT,
-  ADD COLUMN IF NOT EXISTS followup_sequence_id UUID REFERENCES public.followup_sequences(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS followup_status TEXT NOT NULL DEFAULT 'active',
-  ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS assigned_sender_id UUID REFERENCES public.whatsapp_senders(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS chatbot_paused BOOLEAN NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS whatsapp_name TEXT,
-  ADD COLUMN IF NOT EXISTS whatsapp_pp_url TEXT;
-
-CREATE INDEX IF NOT EXISTS idx_leads_assigned_sender ON public.leads(assigned_sender_id);
-CREATE INDEX IF NOT EXISTS idx_leads_followup_status ON public.leads(followup_status);
-
-DROP TRIGGER IF EXISTS trg_leads_normalize_phone ON public.leads;
-CREATE TRIGGER trg_leads_normalize_phone
-  BEFORE INSERT OR UPDATE ON public.leads
-  FOR EACH ROW EXECUTE FUNCTION public.leads_normalize_phone();
 
 -- ---------------------------------------------------------------------------
 -- 7) lead_followups (references leads, sequences, steps, senders — all exist)
