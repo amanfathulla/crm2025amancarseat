@@ -51,15 +51,15 @@ export const WhyFabricSilk = () => {
           {features.map((feature, index) => (
             <div 
               key={index}
-              className="bg-card border border-border rounded-2xl p-6 text-center hover:border-primary/50 transition-all duration-300 hover:shadow-lg"
+              className="bg-white border border-gray-200 rounded-2xl p-6 text-center hover:border-black/30 transition-all duration-300 hover:shadow-lg"
             >
-              <div className="w-14 h-14 mx-auto mb-4 bg-primary/10 rounded-xl flex items-center justify-center">
-                <feature.icon className="w-7 h-7 text-primary" />
+              <div className="w-14 h-14 mx-auto mb-4 bg-gray-100 rounded-xl flex items-center justify-center">
+                <feature.icon className="w-7 h-7 text-black" />
               </div>
-              <h3 className="text-lg font-bold text-foreground mb-2">
+              <h3 className="text-lg font-bold text-black mb-2">
                 {language === 'bm' ? feature.titleBm : feature.titleEn}
               </h3>
-              <p className="text-sm text-muted-foreground">
+              <p className="text-sm text-gray-600">
                 {language === 'bm' ? feature.descBm : feature.descEn}
               </p>
             </div>

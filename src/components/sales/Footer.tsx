@@ -15,8 +15,8 @@ export const Footer = () => {
           {/* Company Info */}
           <div className="space-y-4">
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center">
-                <span className="text-black font-bold text-lg">A</span>
+              <div className="w-10 h-10 bg-white rounded-lg flex items-center justify-center p-1">
+                <img src="/acs-logo.png" alt="AmanCarSeat" className="w-full h-full object-contain" />
               </div>
               <span className="font-bold text-xl text-white">AMANCARSEAT</span>
             </div>
