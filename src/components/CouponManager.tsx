@@ -43,7 +43,7 @@ type FormState = {
   valid_until: string; // yyyy-mm-dd, only used when not lifetime
   materials: string[]; // empty = all materials
   is_featured_landing: boolean;
-  banner_theme: "orange" | "red" | "black" | "white";
+  banner_theme: "orange" | "red" | "black" | "white" | "yellow";
 };
 
 const LIFETIME_DATE = "2099-12-31T23:59:59+08:00";
@@ -338,7 +338,7 @@ export default function CouponManager() {
                 <Label className="text-sm">Warna Banner Promo</Label>
                 <p className="text-xs text-muted-foreground">Pilih tema warna untuk banner di laman web utama.</p>
                 <div className="flex flex-wrap gap-2">
-                  {(["orange", "red", "black", "white"] as const).map((t) => (
+                  {(["orange", "red", "black", "white", "yellow"] as const).map((t) => (
                     <button
                       type="button"
                       key={t}
@@ -357,7 +357,7 @@ export default function CouponManager() {
                           "bg-white"
                         } ${t === "white" ? "border-gray-300" : "border-transparent"}`}
                       />
-                      {t === "orange" ? "Oren" : t === "red" ? "Merah" : t === "black" ? "Hitam" : "Putih"}
+                      {t === "orange" ? "Oren" : t === "red" ? "Merah" : t === "black" ? "Hitam" : t === "white" ? "Putih" : "Kuning"}
                     </button>
                   ))}
                 </div>

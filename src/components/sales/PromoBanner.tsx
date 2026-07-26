@@ -54,6 +54,13 @@ const THEMES: Record<string, Theme> = {
     btnBg: "bg-red-600 hover:bg-red-500",
     btnText: "text-white",
   },
+  yellow: {
+    wrap: "bg-gradient-to-r from-yellow-300 via-yellow-400 to-amber-400",
+    badge: "bg-black/10 text-black",
+    text: "text-zinc-900",
+    btnBg: "bg-zinc-900 hover:bg-zinc-800",
+    btnText: "text-white",
+  },
 };
 
 /**
