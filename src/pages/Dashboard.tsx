@@ -11,7 +11,6 @@ import { MaterialViewsCard } from "./dashboard/MaterialViewsCard";
 import { AdsRoasCard } from "./dashboard/AdsRoasCard";
 import { getDailyQuote } from "@/utils/motivationalQuotes";
 import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
-import CouponManager from "@/components/CouponManager";
 
 export default function Dashboard() {
   const { authClient } = useAuth();
@@ -335,9 +334,6 @@ export default function Dashboard() {
         <MaterialViewsCard />
         <AdsRoasCard />
       </div>
-
-      {/* Kupon — urus kod promo & kupon utama laman web */}
-      <CouponManager />
 
       {/* Sales Target — di bawah sekali */}
       <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />
