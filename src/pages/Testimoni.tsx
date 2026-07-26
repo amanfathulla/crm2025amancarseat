@@ -156,7 +156,7 @@ export default function Testimoni() {
 function ReviewCard({ review }: { review: Review }) {
   const images = (review.images ?? []).filter(Boolean);
   return (
-    <div className="bg-neutral-950 border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
+    <div className="bg-black border border-white/10 rounded-2xl p-4 flex flex-col gap-3">
       <div className="flex items-start justify-between gap-2">
         <div className="min-w-0">
           <p className="font-bold truncate">{review.name || "ACS Customer"}</p>

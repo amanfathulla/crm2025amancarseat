@@ -513,15 +513,14 @@ export default function OrderPage() {
 
   return (
     /* Full-screen fixed background — covers everything */
-    <div ref={pageScrollRef} className="fixed inset-0 bg-[#0a0a0f] overflow-y-auto">
-      {/* Ambient glow top */}
+    <div ref={pageScrollRef} className="fixed inset-0 bg-black overflow-y-auto">
+      {/* Ambient glow top — subtle neutral, no blue/purple */}
       <div className="pointer-events-none fixed inset-0 overflow-hidden">
-        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-blue-600/10 blur-[120px]" />
-        <div className="absolute top-1/3 -right-20 w-[400px] h-[400px] rounded-full bg-purple-600/8 blur-[100px]" />
+        <div className="absolute -top-40 left-1/2 -translate-x-1/2 w-[700px] h-[400px] rounded-full bg-white/5 blur-[120px]" />
       </div>
 
       {/* ── Sticky Header ─────────────────────────────────── */}
-      <header className="sticky top-0 z-20 bg-[#0a0a0f]/80 backdrop-blur-xl border-b border-white/8">
+      <header className="sticky top-0 z-20 bg-black/80 backdrop-blur-xl border-b border-white/8">
         <div className="max-w-3xl mx-auto px-4 h-14 flex items-center gap-3">
           <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
           <div className="flex-1 min-w-0">
