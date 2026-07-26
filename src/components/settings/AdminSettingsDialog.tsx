@@ -6,7 +6,7 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Tag, Trash2, Plus, Send, Radio, Copy, RefreshCw, Check } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Trash2, Plus, Send, Radio, Copy, RefreshCw, Check } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { PublicDashSettings } from "@/components/settings/PublicDashSettings";
 
@@ -267,14 +267,10 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         </DialogHeader>
 
         <Tabs defaultValue="telegram" className="w-full">
-          <TabsList className="grid w-full grid-cols-5">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="telegram" className="flex items-center gap-1 text-xs">
               <Send className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Telegram</span>
-            </TabsTrigger>
-            <TabsTrigger value="coupon" className="flex items-center gap-1 text-xs">
-              <Tag className="h-3.5 w-3.5" />
-              <span className="hidden sm:inline">Kupon</span>
             </TabsTrigger>
             <TabsTrigger value="password" className="flex items-center gap-1 text-xs">
               <Lock className="h-3.5 w-3.5" />
@@ -365,182 +361,6 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
                   </Button>
                 </div>
               </>
-            )}
-          </TabsContent>
-
-          {/* ── Coupon Tab ── */}
-          <TabsContent value="coupon" className="space-y-4 pt-2">
-            <p className="text-sm text-muted-foreground">Cipta kupon diskaun untuk pelanggan.</p>
-
-            {/* Add coupon form */}
-            <div className="space-y-3 p-4 rounded-xl border bg-muted/30">
-              <p className="text-xs font-semibold text-foreground flex items-center gap-1.5">
-                <Plus className="h-3.5 w-3.5" /> Tambah Kupon Baru
-              </p>
-              <div className="grid grid-cols-2 gap-3">
-                <div>
-                  <Label className="text-xs">Kod Kupon</Label>
-                  <Input value={couponCode} onChange={e => setCouponCode(e.target.value)}
-                    placeholder="cth: DISKAUN10" className="text-sm uppercase" />
-                </div>
-                <div>
-                  <Label className="text-xs">Jenis Diskaun</Label>
-                  <select value={couponType} onChange={e => setCouponType(e.target.value as "fixed" | "percentage")}
-                    className="w-full h-10 rounded-md border border-input bg-background px-3 text-sm">
-                    <option value="fixed">RM (Tetap)</option>
-                    <option value="percentage">% (Peratus)</option>
-                  </select>
-                </div>
-              </div>
-              <div className="grid grid-cols-3 gap-3">
-                <div>
-                  <Label className="text-xs">Jumlah</Label>
-                  <Input type="number" value={couponAmount} onChange={e => setCouponAmount(e.target.value)}
-                    placeholder={couponType === "fixed" ? "10" : "5"} className="text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs">Had Guna</Label>
-                  <Input type="number" value={couponLimit} onChange={e => setCouponLimit(e.target.value)}
-                    placeholder="100" className="text-sm" />
-                </div>
-                <div>
-                  <Label className="text-xs">Sah Sehingga</Label>
-                  <Input type="date" value={couponValidUntil} onChange={e => setCouponValidUntil(e.target.value)}
-                    className="text-sm" />
-                </div>
-              </div>
-
-              {/* Material Eligibility */}
-              <div className="space-y-2 pt-1">
-                <Label className="text-xs">Material Layak (pilih untuk hadkan)</Label>
-                <div className="flex flex-wrap gap-2">
-                  {MATERIAL_CATEGORIES.map((mat) => {
-                    const checked = couponMaterials.includes(mat);
-                    return (
-                      <button
-                        type="button"
-                        key={mat}
-                        onClick={() =>
-                          checked
-                            ? setCouponMaterials(couponMaterials.filter((m) => m !== mat))
-                            : setCouponMaterials([...couponMaterials, mat])
-                        }
-                        className={`flex items-center gap-2 rounded-full border px-3 py-2 text-xs font-medium transition-colors ${
-                          checked
-                            ? "bg-primary text-primary-foreground border-primary shadow-sm"
-                            : "bg-background text-foreground border-border hover:bg-muted"
-                        }`}
-                      >
-                        <span
-                          className={`flex h-4 w-4 items-center justify-center rounded-full border ${
-                            checked ? "border-primary-foreground bg-primary-foreground text-primary" : "border-muted-foreground"
-                          }`}
-                        >
-                          {checked && <Check className="h-3 w-3" />}
-                        </span>
-                        {mat}
-                      </button>
-                    );
-                  })}
-                </div>
-                <p className="text-[10px] text-muted-foreground">Jika kosong, kupon sah untuk semua material</p>
-              </div>
-
-              <Button onClick={handleAddCoupon} disabled={isSavingCoupon} size="sm" className="w-full">
-                {isSavingCoupon ? <><LoaderCircle className="mr-2 h-3.5 w-3.5 animate-spin" />Menambah...</> : "Tambah Kupon"}
-              </Button>
-            </div>
-
-            {/* Coupon summary cards */}
-            <div className="grid grid-cols-2 gap-3">
-              <button
-                type="button"
-                onClick={() => setCouponFilter(couponFilter === "active" ? "all" : "active")}
-                className={`rounded-xl border p-3 text-left transition-colors ${
-                  couponFilter === "active"
-                    ? "border-green-500 bg-green-500/20"
-                    : "border-green-500/30 bg-green-500/10 hover:bg-green-500/20"
-                }`}
-              >
-                <p className="text-xs text-muted-foreground">Kupon Aktif</p>
-                <p className="text-2xl font-bold text-green-600">
-                  {coupons.filter(c => c.is_active && new Date(c.valid_until) >= new Date() && c.usage_count < c.usage_limit).length}
-                </p>
-              </button>
-              <button
-                type="button"
-                onClick={() => setCouponFilter(couponFilter === "expired" ? "all" : "expired")}
-                className={`rounded-xl border p-3 text-left transition-colors ${
-                  couponFilter === "expired"
-                    ? "border-red-500 bg-red-500/20"
-                    : "border-red-500/30 bg-red-500/10 hover:bg-red-500/20"
-                }`}
-              >
-                <p className="text-xs text-muted-foreground">Kupon Tamat</p>
-                <p className="text-2xl font-bold text-red-600">
-                  {coupons.filter(c => new Date(c.valid_until) < new Date() || c.usage_count >= c.usage_limit || !c.is_active).length}
-                </p>
-              </button>
-            </div>
-
-            {/* Coupon list */}
-            {isLoadingCoupons ? (
-              <div className="flex justify-center py-4"><LoaderCircle className="h-5 w-5 animate-spin text-muted-foreground" /></div>
-            ) : coupons.length === 0 ? (
-              <p className="text-center text-muted-foreground text-sm py-4">Tiada kupon lagi.</p>
-            ) : (
-              <div className="space-y-2 max-h-52 overflow-y-auto">
-                {coupons
-                  .filter((c) => {
-                    if (couponFilter === "active") {
-                      return c.is_active && new Date(c.valid_until) >= new Date() && c.usage_count < c.usage_limit;
-                    }
-                    if (couponFilter === "expired") {
-                      return new Date(c.valid_until) < new Date() || c.usage_count >= c.usage_limit || !c.is_active;
-                    }
-                    return true;
-                  })
-                  .map(c => {
-                  const expired = new Date(c.valid_until) < new Date();
-                  const exhausted = c.usage_count >= c.usage_limit;
-                  return (
-                    <div key={c.id} className={`flex items-center justify-between p-3 rounded-lg border text-sm ${
-                      !c.is_active || expired || exhausted ? "opacity-50 bg-muted/20" : "bg-background"
-                    }`}>
-                      <div className="flex-1 min-w-0">
-                        <div className="flex items-center gap-2">
-                          <span className="font-mono font-bold text-foreground">{c.code}</span>
-                          <span className={`text-xs px-1.5 py-0.5 rounded ${c.is_active && !expired && !exhausted ? "bg-green-500/10 text-green-600" : "bg-red-500/10 text-red-500"}`}>
-                            {expired ? "Tamat" : exhausted ? "Habis" : c.is_active ? "Aktif" : "Tidak Aktif"}
-                          </span>
-                        </div>
-                        <p className="text-xs text-muted-foreground mt-0.5">
-                          {c.discount_type === "fixed" ? `RM${c.discount_amount}` : `${c.discount_amount}%`} · 
-                          {c.usage_count}/{c.usage_limit} diguna · 
-                          Sah: {new Date(c.valid_until).toLocaleDateString("ms-MY")}
-                        </p>
-                        {c.applicable_materials && c.applicable_materials.length > 0 && (
-                          <div className="flex flex-wrap gap-1 mt-1">
-                            {c.applicable_materials.map((m: string) => (
-                              <span key={m} className="text-[9px] bg-amber-500/10 text-amber-600 px-1.5 py-0.5 rounded">{m}</span>
-                            ))}
-                          </div>
-                        )}
-                      </div>
-                      <div className="flex items-center gap-1 ml-2">
-                        <Button variant="ghost" size="icon" className="h-7 w-7"
-                          onClick={() => handleToggleCoupon(c)} title={c.is_active ? "Nyahaktif" : "Aktifkan"}>
-                          {c.is_active ? <EyeOff className="h-3.5 w-3.5" /> : <Eye className="h-3.5 w-3.5" />}
-                        </Button>
-                        <Button variant="ghost" size="icon" className="h-7 w-7 text-destructive hover:text-destructive"
-                          onClick={() => handleDeleteCoupon(c.id)} title="Padam">
-                          <Trash2 className="h-3.5 w-3.5" />
-                        </Button>
-                      </div>
-                    </div>
-                  );
-                })}
-              </div>
             )}
           </TabsContent>
 
