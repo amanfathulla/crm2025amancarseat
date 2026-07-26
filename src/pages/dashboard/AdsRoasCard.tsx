@@ -19,6 +19,12 @@ interface AdsRow {
 }
 
 const PLATFORMS = ["facebook", "tiktok", "google", "instagram", "lain-lain"];
+const MONTHS = [
+  "Januari", "Februari", "Mac", "April", "Mei", "Jun",
+  "Julai", "Ogos", "September", "Oktober", "November", "Disember",
+];
+const currentYear = new Date().getFullYear();
+const YEARS = [currentYear, currentYear - 1, currentYear - 2, currentYear - 3];
 
 export function AdsRoasCard() {
   const { authClient } = useAuth();
@@ -33,16 +39,18 @@ export function AdsRoasCard() {
     notes: "",
   });
 
+  // View selector
+  const [view, setView] = useState<"bulanan" | "tahunan">("tahunan");
+  const [selYear, setSelYear] = useState(currentYear);
+  const [selMonth, setSelMonth] = useState(new Date().getMonth());
+
   const load = async () => {
-    const since = new Date();
-    since.setDate(since.getDate() - 30);
-    const sinceStr = since.toISOString().slice(0, 10);
-
+    // Load a wide range (4 years back) so filtering is client-side & instant
+    const since = `${currentYear - 4}-01-01`;
     const [adsRes, salesRes] = await Promise.all([
-      authClient.from("ads_spend" as any).select("*").gte("spend_date", sinceStr).order("spend_date", { ascending: false }),
-      authClient.from("customers").select("sales_amount, order_date").gte("order_date", sinceStr),
+      authClient.from("ads_spend" as any).select("*").gte("spend_date", since).order("spend_date", { ascending: false }),
+      authClient.from("customers").select("sales_amount, order_date").gte("order_date", since),
     ]);
-
     setRows((adsRes.data || []) as any);
     const map: Record<string, number> = {};
     (salesRes.data || []).forEach((r: any) => {
@@ -81,9 +89,15 @@ export function AdsRoasCard() {
     load();
   };
 
-  // Aggregate by date
+  // Filter rows by selected view
+  const filtered = rows.filter((r) => {
+    const [y, m] = r.spend_date.split("-").map(Number);
+    if (view === "tahunan") return y === selYear;
+    return y === selYear && m - 1 === selMonth;
+  });
+
   const byDate: Record<string, number> = {};
-  rows.forEach((r) => {
+  filtered.forEach((r) => {
     byDate[r.spend_date] = (byDate[r.spend_date] || 0) + Number(r.amount);
   });
   const totalSpend = Object.values(byDate).reduce((a, b) => a + b, 0);
@@ -92,14 +106,14 @@ export function AdsRoasCard() {
 
   return (
     <div className="rounded-2xl border bg-card p-5 shadow-sm">
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between mb-3">
         <div className="flex items-center gap-2">
           <div className="p-2 rounded-lg bg-emerald-500/10">
             <TrendingUp className="h-5 w-5 text-emerald-600" />
           </div>
           <div>
-            <h3 className="font-semibold text-foreground">Iklan & ROAS Harian</h3>
-            <p className="text-xs text-muted-foreground">30 hari terakhir</p>
+            <h3 className="font-semibold text-foreground">Spend Iklan {selYear}</h3>
+            <p className="text-xs text-muted-foreground">{view === "tahunan" ? "Setahun penuh" : `${MONTHS[selMonth]} ${selYear}`}</p>
           </div>
         </div>
         <Dialog open={open} onOpenChange={setOpen}>
@@ -139,6 +153,34 @@ export function AdsRoasCard() {
         </Dialog>
       </div>
 
+      {/* View selector */}
+      <div className="flex items-center gap-2 mb-3">
+        <div className="inline-flex rounded-lg border border-white/10 overflow-hidden text-xs">
+          <button
+            onClick={() => setView("bulanan")}
+            className={`px-3 py-1.5 ${view === "bulanan" ? "bg-emerald-600 text-white" : "text-muted-foreground hover:bg-white/5"}`}
+          >Bulanan</button>
+          <button
+            onClick={() => setView("tahunan")}
+            className={`px-3 py-1.5 ${view === "tahunan" ? "bg-emerald-600 text-white" : "text-muted-foreground hover:bg-white/5"}`}
+          >Tahunan</button>
+        </div>
+        <Select value={String(selYear)} onValueChange={(v) => setSelYear(Number(v))}>
+          <SelectTrigger className="w-24 h-8 text-xs"><SelectValue /></SelectTrigger>
+          <SelectContent>
+            {YEARS.map((y) => <SelectItem key={y} value={String(y)}>{y}</SelectItem>)}
+          </SelectContent>
+        </Select>
+        {view === "bulanan" && (
+          <Select value={String(selMonth)} onValueChange={(v) => setSelMonth(Number(v))}>
+            <SelectTrigger className="w-32 h-8 text-xs"><SelectValue /></SelectTrigger>
+            <SelectContent>
+              {MONTHS.map((m, i) => <SelectItem key={m} value={String(i)}>{m}</SelectItem>)}
+            </SelectContent>
+          </Select>
+        )}
+      </div>
+
       <div className="grid grid-cols-3 gap-2 mb-4">
         <div className="rounded-lg bg-muted p-3 text-center">
           <p className="text-[10px] text-muted-foreground uppercase">Belanja</p>
@@ -155,10 +197,10 @@ export function AdsRoasCard() {
       </div>
 
       <div className="space-y-1 max-h-64 overflow-y-auto">
-        {rows.length === 0 && (
-          <p className="text-xs text-muted-foreground text-center py-4">Tiada rekod iklan. Tekan Tambah untuk masukkan belanja harian.</p>
+        {filtered.length === 0 && (
+          <p className="text-xs text-muted-foreground text-center py-4">Tiada rekod iklan untuk pilihan ini.</p>
         )}
-        {rows.map((r) => {
+        {filtered.map((r) => {
           const sales = salesByDate[r.spend_date] || 0;
           const roas = r.amount > 0 ? sales / Number(r.amount) : 0;
           return (
