@@ -1269,7 +1269,7 @@ export type Database = {
           step_id?: string | null
           step_order?: number | null
           day_offset?: number | null
-          scheduled_at?: string
+          scheduled_at: string
           sent_at?: string | null
           status?: string
           provider_message_id?: string | null

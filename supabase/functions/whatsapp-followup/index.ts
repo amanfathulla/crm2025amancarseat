@@ -224,6 +224,75 @@ async function runSend(supabase: any) {
   return json({ ok: true, sent, failed, skipped, deferred });
 }
 
+async function runSendOne(supabase: any, followupId: string) {
+  const creds = await getCredentials(supabase);
+  if (!creds?.api_key) return json({ ok: false, error: "credentials not set" }, 400);
+  const { data: row, error } = await supabase
+    .from("lead_followups")
+    .select(
+      "id, lead_id, day_offset, leads!inner(name, phone, product, followup_status, assigned_sender_id), followup_steps!inner(message_template)",
+    )
+    .eq("id", followupId)
+    .maybeSingle();
+  if (error || !row) return json({ ok: false, error: "followup not found" }, 404);
+  const lead = row.leads as any;
+  const step = row.followup_steps as any;
+  if (lead.followup_status !== "active") {
+    await supabase.from("lead_followups").update({ status: "cancelled", updated_at: new Date().toISOString() }).eq("id", followupId);
+    return json({ ok: true, skipped: "lead not active" });
+  }
+  const message = await renderTemplate(step.message_template ?? "", {
+    nama: lead.name,
+    produk: lead.product ?? "",
+  });
+  let senderPhone: string | null = null;
+  if (lead.assigned_sender_id) {
+    const { data: snd } = await supabase
+      .from("whatsapp_senders")
+      .select("phone_number")
+      .eq("id", lead.assigned_sender_id)
+      .maybeSingle();
+    senderPhone = snd?.phone_number ?? null;
+  }
+  const result = await sendUstazai(creds, lead.phone, message, senderPhone ?? undefined);
+  const ok = result && (result.status === true || result.success === true || result.message_id);
+  const nowIso = new Date().toISOString();
+  if (ok) {
+    await supabase.from("lead_followups").update({
+      status: "sent",
+      sent_at: nowIso,
+      rendered_message: message,
+      provider_message_id: result?.message_id ?? null,
+      sender_id_used: lead.assigned_sender_id ?? null,
+      updated_at: nowIso,
+    }).eq("id", followupId);
+    await supabase.from("lead_messages").insert({
+      lead_id: row.lead_id,
+      sender_id: lead.assigned_sender_id ?? null,
+      direction: "outbound",
+      message_type: "text",
+      content: message,
+    });
+    return json({ ok: true, sent: 1 });
+  } else {
+    await supabase.from("lead_followups").update({
+      status: "failed",
+      error_message: JSON.stringify(result).slice(0, 500),
+      rendered_message: message,
+      updated_at: nowIso,
+    }).eq("id", followupId);
+    return json({ ok: false, error: "send failed", detail: result }, 400);
+  }
+}
+
+async function runTest(supabase: any, number: string) {
+  const creds = await getCredentials(supabase);
+  if (!creds?.api_key) return json({ ok: false, error: "credentials not set" }, 400);
+  const result = await sendUstazai(creds, number, "Ini mesej test dari ACS Legacy CRM.", creds.sender_number ?? undefined);
+  const ok = result && (result.status === true || result.success === true || result.message_id);
+  return json({ ok, result });
+}
+
 Deno.serve(async (req: Request) => {
   if (req.method === "OPTIONS") return new Response(null, { status: 204, headers: CORS });
   try {
@@ -260,6 +329,14 @@ Deno.serve(async (req: Request) => {
         automation_enabled: Boolean(body.enabled), updated_at: new Date().toISOString(),
       }).eq("id", 1);
       return json({ ok: true });
+    }
+
+    if (body.action === "sendOne") {
+      return await runSendOne(supabase, body.followupId);
+    }
+
+    if (body.action === "test") {
+      return await runTest(supabase, body.number);
     }
 
     return json({ error: "unknown action" }, 400);
