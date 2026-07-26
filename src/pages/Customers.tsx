@@ -4,8 +4,6 @@ import { useLocation, useSearchParams, useNavigate } from "react-router-dom";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { Switch } from "@/components/ui/switch";
-import { Label } from "@/components/ui/label";
 import { 
   Search, UserPlus, MoreHorizontal, Pencil, Trash2, 
   Users, DollarSign, TrendingUp, Filter, MapPin, FileDown, FileText, Calculator,
@@ -90,26 +88,8 @@ function Customers() {
     completedOrders: 0,
     cancelledOrders: 0
   });
-
-  // Avatar helpers: warna ikut nama, inisial 2 huruf
-  const AVATAR_COLORS = [
-    "bg-blue-500", "bg-emerald-500", "bg-amber-500", "bg-rose-500",
-    "bg-violet-500", "bg-cyan-500", "bg-orange-500", "bg-teal-500",
-    "bg-pink-500", "bg-indigo-500",
-  ];
-  const avatarColor = (name: string) => {
-    const s = (name || "—").trim();
-    let h = 0;
-    for (let i = 0; i < s.length; i++) h = (h * 31 + s.charCodeAt(i)) >>> 0;
-    return AVATAR_COLORS[h % AVATAR_COLORS.length];
-  };
-  const initials = (name: string) => {
-    const parts = (name || "?").trim().split(/\s+/).filter(Boolean);
-    if (parts.length === 0) return "?";
-    if (parts.length === 1) return parts[0].slice(0, 2).toUpperCase();
-    return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
-  };
-
+  
+  const [currentPage, setCurrentPage] = useState(1);
   const [totalPages, setTotalPages] = useState(1);
   const [totalCustomers, setTotalCustomers] = useState(0);
   
@@ -798,46 +778,47 @@ function Customers() {
                 Hapus ({selectedCustomers.length})
               </Button>
             )}
-            <div className="flex flex-1 items-center gap-2 w-full sm:w-auto">
-              <div className="relative flex-1">
-                <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-                <Input
-                  placeholder="Search customers..."
-                  className="pl-9 w-full"
-                  value={searchQuery}
-                  onChange={handleSearch}
-                />
-              </div>
-
-              <Button
-                variant="outline"
-                size="icon"
-                onClick={() => setIsDownloadDialogOpen(true)}
-                title="Muat Turun"
-              >
-                <FileDown className="h-4 w-4" />
-              </Button>
-
-              <div className="flex items-center gap-2 border rounded-lg px-3 py-1.5 shrink-0">
-                <Label className="text-xs text-muted-foreground whitespace-nowrap">Kumpul ikut</Label>
-                <Switch
-                  checked={groupByPhone}
-                  onCheckedChange={(v) => setGroupByPhone(Boolean(v))}
-                />
-                <span className="text-xs font-medium">{groupByPhone ? "Phone" : "Order"}</span>
-              </div>
+            <div className="relative flex-1 sm:flex-initial">
+              <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
+              <Input
+                placeholder="Search customers..."
+                className="pl-9 w-full sm:w-[260px]"
+                value={searchQuery}
+                onChange={handleSearch}
+              />
             </div>
-
+            
             <Button
-              variant="ghost"
+              variant="outline"
               size="sm"
               onClick={handleRecalculateProfit}
               disabled={isRecalculating}
-              className="text-muted-foreground hover:text-foreground shrink-0"
+              className="whitespace-nowrap"
               title="Kira semula Gross Profit untuk order yang bernilai RM 0.00"
             >
-              <Calculator className="h-4 w-4 mr-1.5" />
+              <Calculator className="h-4 w-4 mr-2" />
               {isRecalculating ? "Mengira..." : "Recalculate Profit"}
+            </Button>
+
+            <Button
+              variant={groupByPhone ? "default" : "outline"}
+              size="sm"
+              onClick={() => setGroupByPhone((v) => !v)}
+              className="whitespace-nowrap"
+              title="Kumpulkan pelanggan mengikut nombor telefon"
+            >
+              <Users className="h-4 w-4 mr-2" />
+              {groupByPhone ? "Group: Phone" : "Group: Order"}
+            </Button>
+
+            <Button
+              variant="outline"
+              size="sm"
+              onClick={() => setIsDownloadDialogOpen(true)}
+              className="whitespace-nowrap"
+            >
+              <FileDown className="h-4 w-4 mr-2" />
+              Muat Turun
             </Button>
             
             <DropdownMenu>
@@ -919,7 +900,7 @@ function Customers() {
             </div>
           ) : (
             <>
-              <Accordion type="single" collapsible className="w-full space-y-3">
+              <Accordion type="single" collapsible className="w-full">
                 {listData.map((entry, index) => {
                   if (groupByPhone) {
                     const g = entry as any;
@@ -930,35 +911,33 @@ function Customers() {
                         ? "bg-red-500/15 text-red-600 border-red-500/30"
                         : "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
                     return (
-                      <div key={g.phone} className="flex items-center gap-4 p-4 border border-border rounded-xl shadow-sm">
-                        <div className={`h-11 w-11 shrink-0 rounded-full ${avatarColor(g.name)} text-white flex items-center justify-center text-sm font-semibold`}>
-                          {initials(g.name)}
-                        </div>
+                      <div key={g.phone} className="flex items-start gap-4 py-3 border-b border-border last:border-0">
                         <div className="flex-1 min-w-0">
                           <div className="flex items-center gap-2 flex-wrap">
                             <button
                               onClick={() => setOrdersPhone(g.phone)}
-                              className="text-base font-bold text-foreground hover:text-primary hover:underline"
+                              className="font-semibold text-foreground hover:text-primary hover:underline"
                             >
                               {g.name || "—"}
                             </button>
-                            {g.orderCount >= 2 && (
-                              <Badge variant="outline" className="text-[10px] border-primary/40 text-primary">Repeat</Badge>
-                            )}
+                            <button
+                              onClick={() => setOrdersPhone(g.phone)}
+                              className="inline-flex items-center gap-1 text-sm text-primary hover:underline"
+                            >
+                              {g.phone}
+                            </button>
+                            <Badge variant="secondary" className="text-xs">
+                              {g.orderCount} order
+                            </Badge>
                             <span className={`inline-block rounded-full border px-2 py-0.5 text-xs ${statusBadge}`}>
                               {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
                             </span>
                           </div>
-                          <div className="mt-1 flex items-center gap-3 text-xs text-muted-foreground">
-                            <span>{g.phone}</span>
-                            <Badge variant="outline" className="text-[10px] text-muted-foreground">{g.orderCount} order</Badge>
-                          </div>
+                          <p className="mt-1 text-xs text-muted-foreground">
+                            Jumlah dibelanjakan: <span className="font-medium text-foreground">{formatCurrency(g.totalSpent)}</span>
+                          </p>
                         </div>
-                        <div className="text-right shrink-0">
-                          <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Jumlah</div>
-                          <div className="text-lg font-bold text-[#22C069]">{formatCurrency(g.totalSpent)}</div>
-                        </div>
-                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)} className="shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)}>
                           Lihat Order
                         </Button>
                       </div>
@@ -984,9 +963,9 @@ function Customers() {
                     </div>
                   );
                 })}
-                  </Accordion>
+              </Accordion>
               
-                  {totalPages > 1 && (
+              {totalPages > 1 && (
                 <Pagination className="mt-6">
                   <PaginationContent>
                     <PaginationItem>
