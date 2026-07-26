@@ -23,6 +23,7 @@ import Sales from "@/pages/Sales";
 import Products from "@/pages/Products";
 import PaymentGateways from "@/pages/PaymentGateways";
 import Leads from "@/pages/Leads";
+import WhatsappFollowup from "@/pages/WhatsappFollowup";
 import Marketing from "@/pages/Marketing";
 import Reviews from "@/pages/Reviews";
 import LinkTempahan from "@/pages/LinkTempahan";
@@ -80,6 +81,7 @@ function App() {
                   <Route path="/dashboard" element={<Dashboard />} />
                   <Route path="/live-dashboard" element={<LiveDashboard />} />
                   <Route path="/leads" element={<Leads />} />
+                  <Route path="/whatsapp-followup" element={<WhatsappFollowup />} />
                   <Route path="/marketing" element={<Marketing />} />
                   <Route path="/customers" element={<Customers />} />
                   <Route path="/customers/receipt" element={<CustomerReceipt />} />

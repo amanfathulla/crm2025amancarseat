@@ -19,6 +19,7 @@ import {
   Star,
   Radio,
   Tag,
+  MessageCircle,
   Network,
   ChevronDown,
   ChevronRight,
@@ -161,6 +162,7 @@ export function Sidebar() {
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
     { title: "Kupon", path: "/coupons", icon: Tag },
     { title: "Lead Management", path: "/leads", icon: Users },
+    { title: "WhatsApp Followup", path: "/whatsapp-followup", icon: MessageCircle },
   ];
 
   const orderPageUrl = "/order";

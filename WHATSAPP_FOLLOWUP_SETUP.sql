@@ -2,6 +2,7 @@
 --  AMANCARSEAT — WhatsApp Follow-up System (clean consolidated setup)
 --  Run this ONCE in the Supabase SQL Editor (project ywjblrnqygowfixxmigw).
 --  Idempotent: safe to re-run. Does NOT recreate public.leads (CRM already has it).
+--  ORDER MATTERS: referenced tables are created before anything that uses them.
 -- ============================================================================
 
 -- ---------------------------------------------------------------------------
@@ -50,7 +51,7 @@ CREATE TRIGGER on_auth_user_created
   FOR EACH ROW EXECUTE FUNCTION public.bootstrap_first_admin();
 
 -- ---------------------------------------------------------------------------
--- 2) Phone normalizer (strip non-digits, drop leading 0, ensure 60 prefix)
+-- 2) Phone normalizers
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.normalize_my_phone(raw TEXT)
 RETURNS TEXT LANGUAGE plpgsql IMMUTABLE AS $$
@@ -66,32 +67,17 @@ BEGIN
 END;
 $$;
 
--- ---------------------------------------------------------------------------
--- 3) EXTEND existing public.leads (DO NOT recreate — CRM owns this table)
---    Adds follow-up support columns. Website leads keep their own status column.
--- ---------------------------------------------------------------------------
-ALTER TABLE public.leads
-  ADD COLUMN IF NOT EXISTS product TEXT,
-  ADD COLUMN IF NOT EXISTS notes TEXT,
-  ADD COLUMN IF NOT EXISTS followup_sequence_id UUID REFERENCES public.followup_sequences(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS followup_status TEXT NOT NULL DEFAULT 'active', -- active|replied|converted|stopped
-  ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
-  ADD COLUMN IF NOT EXISTS assigned_sender_id UUID,
-  ADD COLUMN IF NOT EXISTS chatbot_paused BOOLEAN NOT NULL DEFAULT false,
-  ADD COLUMN IF NOT EXISTS whatsapp_name TEXT,
-  ADD COLUMN IF NOT EXISTS whatsapp_pp_url TEXT;
-
-CREATE INDEX IF NOT EXISTS idx_leads_assigned_sender ON public.leads(assigned_sender_id);
-CREATE INDEX IF NOT EXISTS idx_leads_followup_status ON public.leads(followup_status);
-
--- Normalize phone on insert/update (guard against double trigger)
-DROP TRIGGER IF EXISTS trg_leads_normalize_phone ON public.leads;
-CREATE TRIGGER trg_leads_normalize_phone
-  BEFORE INSERT OR UPDATE ON public.leads
-  FOR EACH ROW EXECUTE FUNCTION public.leads_normalize_phone();
+CREATE OR REPLACE FUNCTION public.leads_normalize_phone()
+RETURNS TRIGGER LANGUAGE plpgsql AS $$
+BEGIN
+  NEW.phone := public.normalize_my_phone(NEW.phone);
+  NEW.updated_at := now();
+  RETURN NEW;
+END;
+$$;
 
 -- ---------------------------------------------------------------------------
--- 4) followup_sequences + followup_steps
+-- 3) followup_sequences (created BEFORE leads references it)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.followup_sequences (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -109,6 +95,9 @@ CREATE POLICY "staff can view sequences" ON public.followup_sequences FOR SELECT
 DROP POLICY IF EXISTS "admin can manage sequences" ON public.followup_sequences;
 CREATE POLICY "admin can manage sequences" ON public.followup_sequences FOR ALL TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 
+-- ---------------------------------------------------------------------------
+-- 4) followup_steps
+-- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.followup_steps (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
   sequence_id UUID NOT NULL REFERENCES public.followup_sequences(id) ON DELETE CASCADE,
@@ -133,40 +122,7 @@ DROP POLICY IF EXISTS "admin can manage steps" ON public.followup_steps;
 CREATE POLICY "admin can manage steps" ON public.followup_steps FOR ALL TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 
 -- ---------------------------------------------------------------------------
--- 5) lead_followups (scheduled send queue)
--- ---------------------------------------------------------------------------
-CREATE TABLE IF NOT EXISTS public.lead_followups (
-  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
-  lead_id UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
-  sequence_id UUID REFERENCES public.followup_sequences(id) ON DELETE SET NULL,
-  step_id UUID REFERENCES public.followup_steps(id) ON DELETE SET NULL,
-  step_order INT,
-  day_offset INT,
-  scheduled_at TIMESTAMPTZ NOT NULL,
-  sent_at TIMESTAMPTZ,
-  status TEXT NOT NULL DEFAULT 'pending', -- pending|sent|failed|cancelled
-  provider_message_id TEXT,
-  error_message TEXT,
-  rendered_message TEXT,
-  sender_id_used UUID REFERENCES public.whatsapp_senders(id) ON DELETE SET NULL,
-  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
-  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
-);
-CREATE INDEX IF NOT EXISTS idx_lead_followups_status_scheduled ON public.lead_followups(status, scheduled_at);
-CREATE INDEX IF NOT EXISTS idx_lead_followups_lead ON public.lead_followups(lead_id);
-CREATE INDEX IF NOT EXISTS idx_lead_followups_sender_sent ON public.lead_followups(sender_id_used, sent_at);
-GRANT SELECT, INSERT, UPDATE, DELETE ON public.lead_followups TO authenticated;
-GRANT ALL ON public.lead_followups TO service_role;
-ALTER TABLE public.lead_followups ENABLE ROW LEVEL SECURITY;
-DROP POLICY IF EXISTS "staff can view followups" ON public.lead_followups;
-CREATE POLICY "staff can view followups" ON public.lead_followups FOR SELECT TO authenticated USING (public.is_staff_or_admin(auth.uid()));
-DROP POLICY IF EXISTS "staff can update followups" ON public.lead_followups;
-CREATE POLICY "staff can update followups" ON public.lead_followups FOR UPDATE TO authenticated USING (public.is_staff_or_admin(auth.uid()));
-DROP POLICY IF EXISTS "staff can insert followups" ON public.lead_followups;
-CREATE POLICY "staff can insert followups" ON public.lead_followups FOR INSERT TO authenticated WITH CHECK (public.is_staff_or_admin(auth.uid()));
-
--- ---------------------------------------------------------------------------
--- 6) whatsapp_senders (multi-number rotation) + assignment triggers
+-- 5) whatsapp_senders (created BEFORE leads/lead_followups reference it)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.whatsapp_senders (
   id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -245,7 +201,62 @@ DROP TRIGGER IF EXISTS trg_leads_bump_sender_upd ON public.leads;
 CREATE TRIGGER trg_leads_bump_sender_upd AFTER UPDATE OF assigned_sender_id ON public.leads FOR EACH ROW EXECUTE FUNCTION public.bump_sender_count();
 
 -- ---------------------------------------------------------------------------
--- 7) Auto-generate follow-up schedule when a lead is created
+-- 6) EXTEND existing public.leads (now followup_sequences & whatsapp_senders exist)
+-- ---------------------------------------------------------------------------
+ALTER TABLE public.leads
+  ADD COLUMN IF NOT EXISTS product TEXT,
+  ADD COLUMN IF NOT EXISTS notes TEXT,
+  ADD COLUMN IF NOT EXISTS followup_sequence_id UUID REFERENCES public.followup_sequences(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS followup_status TEXT NOT NULL DEFAULT 'active',
+  ADD COLUMN IF NOT EXISTS created_by UUID REFERENCES auth.users(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS assigned_sender_id UUID REFERENCES public.whatsapp_senders(id) ON DELETE SET NULL,
+  ADD COLUMN IF NOT EXISTS chatbot_paused BOOLEAN NOT NULL DEFAULT false,
+  ADD COLUMN IF NOT EXISTS whatsapp_name TEXT,
+  ADD COLUMN IF NOT EXISTS whatsapp_pp_url TEXT;
+
+CREATE INDEX IF NOT EXISTS idx_leads_assigned_sender ON public.leads(assigned_sender_id);
+CREATE INDEX IF NOT EXISTS idx_leads_followup_status ON public.leads(followup_status);
+
+DROP TRIGGER IF EXISTS trg_leads_normalize_phone ON public.leads;
+CREATE TRIGGER trg_leads_normalize_phone
+  BEFORE INSERT OR UPDATE ON public.leads
+  FOR EACH ROW EXECUTE FUNCTION public.leads_normalize_phone();
+
+-- ---------------------------------------------------------------------------
+-- 7) lead_followups (references leads, sequences, steps, senders — all exist)
+-- ---------------------------------------------------------------------------
+CREATE TABLE IF NOT EXISTS public.lead_followups (
+  id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+  lead_id UUID NOT NULL REFERENCES public.leads(id) ON DELETE CASCADE,
+  sequence_id UUID REFERENCES public.followup_sequences(id) ON DELETE SET NULL,
+  step_id UUID REFERENCES public.followup_steps(id) ON DELETE SET NULL,
+  step_order INT,
+  day_offset INT,
+  scheduled_at TIMESTAMPTZ NOT NULL,
+  sent_at TIMESTAMPTZ,
+  status TEXT NOT NULL DEFAULT 'pending',
+  provider_message_id TEXT,
+  error_message TEXT,
+  rendered_message TEXT,
+  sender_id_used UUID REFERENCES public.whatsapp_senders(id) ON DELETE SET NULL,
+  created_at TIMESTAMPTZ NOT NULL DEFAULT now(),
+  updated_at TIMESTAMPTZ NOT NULL DEFAULT now()
+);
+CREATE INDEX IF NOT EXISTS idx_lead_followups_status_scheduled ON public.lead_followups(status, scheduled_at);
+CREATE INDEX IF NOT EXISTS idx_lead_followups_lead ON public.lead_followups(lead_id);
+CREATE INDEX IF NOT EXISTS idx_lead_followups_sender_sent ON public.lead_followups(sender_id_used, sent_at);
+GRANT SELECT, INSERT, UPDATE, DELETE ON public.lead_followups TO authenticated;
+GRANT ALL ON public.lead_followups TO service_role;
+ALTER TABLE public.lead_followups ENABLE ROW LEVEL SECURITY;
+DROP POLICY IF EXISTS "staff can view followups" ON public.lead_followups;
+CREATE POLICY "staff can view followups" ON public.lead_followups FOR SELECT TO authenticated USING (public.is_staff_or_admin(auth.uid()));
+DROP POLICY IF EXISTS "staff can update followups" ON public.lead_followups;
+CREATE POLICY "staff can update followups" ON public.lead_followups FOR UPDATE TO authenticated USING (public.is_staff_or_admin(auth.uid()));
+DROP POLICY IF EXISTS "staff can insert followups" ON public.lead_followups;
+CREATE POLICY "staff can insert followups" ON public.lead_followups FOR INSERT TO authenticated WITH CHECK (public.is_staff_or_admin(auth.uid()));
+
+-- ---------------------------------------------------------------------------
+-- 8) Auto-generate follow-up schedule when a lead is created
 -- ---------------------------------------------------------------------------
 CREATE OR REPLACE FUNCTION public.generate_lead_followups()
 RETURNS TRIGGER LANGUAGE plpgsql SECURITY DEFINER SET search_path = public AS $$
@@ -286,7 +297,7 @@ CREATE TRIGGER trg_cancel_pending_on_status_change AFTER UPDATE OF followup_stat
   FOR EACH ROW EXECUTE FUNCTION public.cancel_pending_on_status_change();
 
 -- ---------------------------------------------------------------------------
--- 8) WhatsApp credentials + settings (admin-only via service role)
+-- 9) WhatsApp credentials + settings (admin-only via service role)
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.whatsapp_credentials (
   id INT PRIMARY KEY DEFAULT 1,
@@ -318,7 +329,7 @@ DROP POLICY IF EXISTS "admin can update settings" ON public.whatsapp_settings;
 CREATE POLICY "admin can update settings" ON public.whatsapp_settings FOR UPDATE TO authenticated USING (public.has_role(auth.uid(),'admin')) WITH CHECK (public.has_role(auth.uid(),'admin'));
 
 -- ---------------------------------------------------------------------------
--- 9) lead_messages (history) + chatbot settings/credentials
+-- 10) lead_messages (history) + chatbot settings/credentials
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.lead_messages (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
@@ -356,7 +367,7 @@ CREATE TABLE IF NOT EXISTS public.chatbot_settings (
   ai_provider text NOT NULL DEFAULT 'gemini' CHECK (ai_provider IN ('claude','openai','gemini','lovable')),
   model_name text NOT NULL DEFAULT 'google/gemini-2.5-flash',
   product_knowledge text,
-  tone_instruction text NOT NULL DEFAULT 'Balas mesra dan santai macam admin sebenar, bukan robot. Guna Bahasa Melayu santai. Pisahkan setiap idea dengan ||| supaya boleh dipecahkan kepada beberapa mesej pendek.',
+  tone_instruction text NOT NULL DEFAULT 'Balas mesra dan santai macam admin sebenar, bukan robot. Guna Bahasa Melayu santai.',
   api_key_configured boolean NOT NULL DEFAULT false,
   updated_at timestamptz NOT NULL DEFAULT now(),
   updated_by uuid
@@ -383,7 +394,7 @@ GRANT ALL ON public.chatbot_credentials TO service_role;
 ALTER TABLE public.chatbot_credentials ENABLE ROW LEVEL SECURITY;
 
 -- ---------------------------------------------------------------------------
--- 10) API logs
+-- 11) API logs
 -- ---------------------------------------------------------------------------
 CREATE TABLE IF NOT EXISTS public.whatsapp_api_logs (
   id UUID NOT NULL DEFAULT gen_random_uuid() PRIMARY KEY,
@@ -411,7 +422,7 @@ DROP POLICY IF EXISTS "Staff/admin boleh lihat log API" ON public.whatsapp_api_l
 CREATE POLICY "Staff/admin boleh lihat log API" ON public.whatsapp_api_logs FOR SELECT TO authenticated USING (public.is_staff_or_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------------
--- 11) Storage buckets + policies (for media follow-ups)
+-- 12) Storage buckets + policies (for media follow-ups)
 -- ---------------------------------------------------------------------------
 INSERT INTO storage.buckets (id, name, public) VALUES ('followup-media','followup-media', false) ON CONFLICT (id) DO NOTHING;
 INSERT INTO storage.buckets (id, name, public) VALUES ('inbound-media','inbound-media', false) ON CONFLICT (id) DO NOTHING;
@@ -428,7 +439,7 @@ DROP POLICY IF EXISTS "Staff read inbound-media" ON storage.objects;
 CREATE POLICY "Staff read inbound-media" ON storage.objects FOR SELECT TO authenticated USING (bucket_id = 'inbound-media' AND public.is_staff_or_admin(auth.uid()));
 
 -- ---------------------------------------------------------------------------
--- 12) Seed default sequence (10 steps: D0, D3, D7, D10, D14, D17, D21, D24, D27, D30)
+-- 13) Seed default sequence (10 steps: D0, D3, D7, D10, D14, D17, D21, D24, D27, D30)
 --     Only seeds if no sequence exists yet.
 -- ---------------------------------------------------------------------------
 DO $$
