@@ -25,6 +25,7 @@ const Index = () => {
       <PromoBanner />
       <WallOfFame reviews={reviews as any} />
       <QuickOrderForm />
+      <PromoBanner />
       <LiveFooter />
     </div>
   );
