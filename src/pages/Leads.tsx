@@ -51,16 +51,16 @@ export default function Leads() {
       </div>
 
       <div className="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-6">
-        <div className="rounded-xl border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm"><Users className="w-4 h-4" /> Total Lead</div>
+        <div className="rounded-xl border-0 p-4 bg-blue-600 text-white shadow-sm">
+          <div className="flex items-center gap-2 text-white/90 text-sm"><Users className="w-4 h-4" /> Total Lead</div>
           <p className="text-3xl font-bold mt-1">{total}</p>
         </div>
-        <div className="rounded-xl border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm"><PhoneCall className="w-4 h-4" /> Dihubungi</div>
+        <div className="rounded-xl border-0 p-4 bg-amber-500 text-white shadow-sm">
+          <div className="flex items-center gap-2 text-white/90 text-sm"><PhoneCall className="w-4 h-4" /> Dihubungi</div>
           <p className="text-3xl font-bold mt-1">{contacted}</p>
         </div>
-        <div className="rounded-xl border p-4">
-          <div className="flex items-center gap-2 text-muted-foreground text-sm"><Users className="w-4 h-4" /> Closed</div>
+        <div className="rounded-xl border-0 p-4 bg-[#22C069] text-white shadow-sm">
+          <div className="flex items-center gap-2 text-white/90 text-sm"><Users className="w-4 h-4" /> Closed</div>
           <p className="text-3xl font-bold mt-1">{closed}</p>
         </div>
       </div>

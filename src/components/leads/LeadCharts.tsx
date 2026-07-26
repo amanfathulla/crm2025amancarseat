@@ -11,8 +11,6 @@ import {
   YAxis,
   CartesianGrid,
   ResponsiveContainer,
-  LineChart,
-  Line,
   PieChart,
   Pie,
   Cell,
@@ -77,17 +75,6 @@ export function LeadCharts({ leads }: LeadChartsProps) {
     return monthlyData;
   };
 
-  // Calculate status distribution for pie chart
-  const getStatusData = () => {
-    const closed = leads.filter((l) => l.status === "closed").length;
-    const notClosed = leads.filter((l) => l.status !== "closed").length;
-
-    return [
-      { name: "Closed", value: closed, color: "hsl(142, 76%, 36%)" },
-      { name: "Belum Closed", value: notClosed, color: "hsl(45, 93%, 47%)" },
-    ];
-  };
-
   // Calculate leads by month for pie chart
   const getMonthlyPieData = () => {
     const currentYear = new Date().getFullYear();
@@ -102,11 +89,10 @@ export function LeadCharts({ leads }: LeadChartsProps) {
         value: monthLeads.length,
         color: MONTH_COLORS[index],
       };
-    }).filter(item => item.value > 0); // Only show months with data
+    }).filter((item) => item.value > 0); // Only show months with data
   };
 
   const monthlyData = getMonthlyData();
-  const statusData = getStatusData();
   const monthlyPieData = getMonthlyPieData();
 
   const chartConfig = {
@@ -148,36 +134,6 @@ export function LeadCharts({ leads }: LeadChartsProps) {
         </CardContent>
       </Card>
 
-      {/* Status Lead Pie Chart */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">📊 Status Lead (Closed vs Belum)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <PieChart>
-              <Pie
-                data={statusData}
-                cx="50%"
-                cy="50%"
-                innerRadius={60}
-                outerRadius={100}
-                paddingAngle={3}
-                dataKey="value"
-                label={({ name, value }) => `${name}: ${value}`}
-                labelLine={false}
-              >
-                {statusData.map((entry, index) => (
-                  <Cell key={`cell-${index}`} fill={entry.color} />
-                ))}
-              </Pie>
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Legend />
-            </PieChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
       {/* Stacked Bar Chart - Closed vs Not Closed per Month */}
       <Card className="border-0 shadow-sm">
         <CardHeader className="pb-2">
@@ -194,40 +150,6 @@ export function LeadCharts({ leads }: LeadChartsProps) {
               <Bar dataKey="notClosed" stackId="a" fill="hsl(45, 93%, 47%)" name="Belum Closed" radius={[4, 4, 0, 0]} />
               <Legend />
             </BarChart>
-          </ChartContainer>
-        </CardContent>
-      </Card>
-
-      {/* Follow-up Performance Line Chart */}
-      <Card className="border-0 shadow-sm">
-        <CardHeader className="pb-2">
-          <CardTitle className="text-base font-semibold">📉 Prestasi Follow-up (Dihubungi → Closed)</CardTitle>
-        </CardHeader>
-        <CardContent>
-          <ChartContainer config={chartConfig} className="h-[280px] w-full">
-            <LineChart data={monthlyData}>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="hsl(var(--border))" />
-              <XAxis dataKey="month" tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <YAxis tick={{ fontSize: 11 }} tickLine={false} axisLine={false} />
-              <ChartTooltip content={<ChartTooltipContent />} />
-              <Line
-                type="monotone"
-                dataKey="contacted"
-                stroke="hsl(25, 95%, 53%)"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                name="Dihubungi"
-              />
-              <Line
-                type="monotone"
-                dataKey="closed"
-                stroke="hsl(142, 76%, 36%)"
-                strokeWidth={2}
-                dot={{ r: 4 }}
-                name="Closed"
-              />
-              <Legend />
-            </LineChart>
           </ChartContainer>
         </CardContent>
       </Card>
