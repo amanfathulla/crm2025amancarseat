@@ -11,39 +11,10 @@ import { MaterialViewsCard } from "./dashboard/MaterialViewsCard";
 import { AdsRoasCard } from "./dashboard/AdsRoasCard";
 import { getDailyQuote } from "@/utils/motivationalQuotes";
 import { AdminSettingsDialog } from "@/components/settings/AdminSettingsDialog";
+import CouponManager from "@/components/CouponManager";
 
 export default function Dashboard() {
   const { authClient } = useAuth();
-  const [pendingAffiliates, setPendingAffiliates] = useState<
-    { affiliate_id: string; name: string; whatsapp: string | null; email: string | null; created_at: string }[]
-  >([]);
-
-  const fetchPendingAffiliates = async () => {
-    try {
-      const { data, error } = await authClient.rpc("list_pending_affiliates");
-      if (error) throw error;
-      setPendingAffiliates((data as any) || []);
-    } catch (e) {
-      console.error("Failed to load pending affiliates", e);
-    }
-  };
-
-  useEffect(() => {
-    fetchPendingAffiliates();
-  }, [authClient]);
-
-  const handleAffiliateStatus = async (affId: string, status: "active" | "rejected") => {
-    try {
-      const { error } = await authClient.rpc("set_affiliate_status", {
-        p_affiliate_id: affId,
-        p_status: status,
-      });
-      if (error) throw error;
-      fetchPendingAffiliates();
-    } catch (e: any) {
-      console.error(e);
-    }
-  };
   const [revenueData, setRevenueData] = useState({
     currentYear: {
       year: new Date().getFullYear(),
@@ -365,7 +336,8 @@ export default function Dashboard() {
         <AdsRoasCard />
       </div>
 
-      {/* Affiliate Approvals — moved to sidebar > Affiliate Management > Affiliate List */}
+      {/* Kupon — urus kod promo & kupon utama laman web */}
+      <CouponManager />
 
       {/* Sales Target — di bawah sekali */}
       <SalesTargetCard currentYearRevenue={revenueData.currentYear.total} />

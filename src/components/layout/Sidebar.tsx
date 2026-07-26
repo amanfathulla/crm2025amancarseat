@@ -358,56 +358,7 @@ export function Sidebar() {
 
 
 
-          {/* Affiliate Management - collapsible (HIDDEN: set false->true to show) */}
-          {false && <div className="rounded-lg overflow-hidden">
-            <button
-              onClick={() => setAffOpen(!affOpen)}
-              className="flex h-11 w-full items-center rounded-lg px-0 text-sidebar-foreground/70 hover:bg-sidebar-accent hover:text-sidebar-foreground transition-all duration-200"
-            >
-              <div className="grid h-full w-12 place-content-center">
-                <Network className="h-5 w-5" />
-              </div>
-              {(expanded || (isMobile && mobileOpen)) && (
-                <>
-                  <span className="flex-1 text-sm font-medium text-left">Affiliate Management</span>
-                  {affOpen ? (
-                    <ChevronDown className="h-4 w-4 mr-2" />
-                  ) : (
-                    <ChevronRight className="h-4 w-4 mr-2" />
-                  )}
-                </>
-              )}
-            </button>
-            {affOpen && (expanded || (isMobile && mobileOpen)) && (
-              <div className="ml-9 space-y-0.5 mt-0.5">
-                {[
-                  { t: "Affiliate List", p: "/admin/affiliates" },
-                  { t: "Dashboard", p: "/admin/affiliates/dashboard" },
-                  { t: "Produk", p: "/admin/affiliates/products" },
-                  { t: "Bahan Marketing", p: "/admin/affiliates/marketing" },
-                  { t: "Settings", p: "/admin/affiliates/settings" },
-                ].map((s) => (
-                  <NavLink
-                    key={s.p}
-                    to={s.p}
-                    onClick={() => isMobile && setMobileOpen(false)}
-                    className={({ isActive }) =>
-                      cn(
-                        "block rounded-md px-3 py-2 text-sm transition-colors",
-                        isActive
-                          ? "bg-sidebar-primary/20 text-sidebar-primary"
-                          : "text-sidebar-foreground/60 hover:bg-sidebar-accent hover:text-sidebar-foreground"
-                      )
-                    }
-                  >
-                    {s.t}
-                  </NavLink>
-                ))}
-              </div>
-            )}
-          </div>}
-
-        </nav>
+          </nav>
 
         {/* Logout Button */}
         <div className="border-t border-sidebar-border p-2">

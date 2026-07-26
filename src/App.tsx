@@ -26,11 +26,6 @@ import Leads from "@/pages/Leads";
 import Marketing from "@/pages/Marketing";
 import Reviews from "@/pages/Reviews";
 import LinkTempahan from "@/pages/LinkTempahan";
-import AdminAffiliates from "@/pages/AdminAffiliates";
-import AdminAffiliateDashboard from "@/pages/AdminAffiliateDashboard";
-import AdminAffiliateProducts from "@/pages/AdminAffiliateProducts";
-import AdminAffiliateMarketing from "@/pages/AdminAffiliateMarketing";
-import AdminAffiliateSettings from "@/pages/AdminAffiliateSettings";
 import NotFound from "@/pages/NotFound";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
@@ -42,17 +37,7 @@ import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
-import AffiliateRegister from "@/pages/AffiliateRegister";
-import AffiliateLogin from "@/pages/AffiliateLogin";
-import AffiliateLayout from "@/components/layout/AffiliateLayout";
-import AffiliateDashboard from "@/pages/AffiliateDashboard";
-import AffiliateReferralCenter from "@/pages/AffiliateReferralCenter";
-import AffiliateProducts from "@/pages/AffiliateProducts";
-import AffiliateOrders from "@/pages/AffiliateOrders";
-import AffiliateCommissions from "@/pages/AffiliateCommissions";
-import AffiliateWithdraw from "@/pages/AffiliateWithdraw";
-import AffiliateProfile from "@/pages/AffiliateProfile";
-
+import NotFound from "@/pages/NotFound";
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -83,17 +68,6 @@ function App() {
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
                 <Route path="/live-dashboardacs" element={<RaceDashboard />} />
-                <Route path="/affiliate/register" element={<AffiliateRegister />} />
-                <Route path="/affiliate/login" element={<AffiliateLogin />} />
-                <Route path="/affiliate" element={<AffiliateLayout />}>
-                  <Route path="dashboard" element={<AffiliateDashboard />} />
-                  <Route path="referral" element={<AffiliateReferralCenter />} />
-                  <Route path="products" element={<AffiliateProducts />} />
-                  <Route path="orders" element={<AffiliateOrders />} />
-                  <Route path="commissions" element={<AffiliateCommissions />} />
-                  <Route path="withdraw" element={<AffiliateWithdraw />} />
-                  <Route path="profile" element={<AffiliateProfile />} />
-                </Route>
 
                 {/* Routes with sidebar and authenticated layout */}
                 <Route path="/" element={
@@ -114,11 +88,6 @@ function App() {
                   <Route path="/payment-gateways" element={<PaymentGateways />} />
                   <Route path="/reviews" element={<Reviews />} />
                   <Route path="/link-tempahan" element={<LinkTempahan />} />
-                <Route path="/admin/affiliates" element={<AdminAffiliates />} />
-                <Route path="/admin/affiliates/dashboard" element={<AdminAffiliateDashboard />} />
-                <Route path="/admin/affiliates/products" element={<AdminAffiliateProducts />} />
-                <Route path="/admin/affiliates/marketing" element={<AdminAffiliateMarketing />} />
-                <Route path="/admin/affiliates/settings" element={<AdminAffiliateSettings />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />
