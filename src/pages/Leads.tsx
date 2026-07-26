@@ -41,7 +41,7 @@ export default function Leads() {
   const contacted = leads.filter((l) => l.status === "contacted" || l.status === "closed").length;
 
   return (
-    <div className="p-6 max-w-6xl mx-auto">
+    <div className="p-6">
       <div className="flex items-center gap-3 mb-6">
         <Users className="w-6 h-6" />
         <div>
