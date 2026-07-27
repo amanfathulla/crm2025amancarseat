@@ -48,6 +48,7 @@ export default function OrderPage() {
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [categoryDescriptions, setCategoryDescriptions] = useState<Record<string, string>>({});
   const [imageIndex, setImageIndex] = useState(0);
 
   const [selectedCategory, setSelectedCategory] = useState<typeof ALL_MATERIAL_CATEGORIES[0] | null>(null);
@@ -180,13 +181,18 @@ export default function OrderPage() {
 
   // Fetch enabled categories on mount
   useEffect(() => {
-    supabase.from("category_settings" as any).select("name, is_enabled, image_url").then(({ data }) => {
+    supabase.from("category_settings" as any).select("*").then(({ data }) => {
       if (data) {
         const enabled = (data as any[]).filter(r => r.is_enabled).map(r => r.name);
         setEnabledCategories(enabled);
         const imgs: Record<string, string> = {};
-        (data as any[]).forEach(r => { if (r.image_url) imgs[r.name] = r.image_url; });
+        const descs: Record<string, string> = {};
+        (data as any[]).forEach(r => {
+          if (r.image_url) imgs[r.name] = r.image_url;
+          if (r.description) descs[r.name] = r.description;
+        });
         setCategoryImages(imgs);
+        setCategoryDescriptions(descs);
       } else {
         setEnabledCategories(ALL_MATERIAL_CATEGORIES.map(c => c.label));
       }
@@ -576,7 +582,7 @@ export default function OrderPage() {
                   <div className="relative z-10 p-6">
                     <span className="text-4xl mb-4 block">{cat.emoji}</span>
                     <h3 className="text-white font-bold text-lg mb-1">{cat.label}</h3>
-                    <p className="text-white/75 text-sm">{cat.desc}</p>
+                    <p className="text-white/75 text-sm">{categoryDescriptions[cat.label] ?? cat.desc}</p>
                     <div className="mt-5 flex items-center gap-1 text-white text-xs font-semibold bg-white/20 w-fit px-3 py-1.5 rounded-full">
                       Lihat Produk <ChevronRight className="h-3 w-3" />
                     </div>

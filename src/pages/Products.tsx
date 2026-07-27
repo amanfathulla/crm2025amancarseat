@@ -50,6 +50,10 @@ export default function Products() {
   const [selectedCategory, setSelectedCategory] = useState<string | null>(null);
   const [categoryEnabled, setCategoryEnabled] = useState<Record<string, boolean>>({});
   const [categoryImages, setCategoryImages] = useState<Record<string, string>>({});
+  const [categoryDescriptions, setCategoryDescriptions] = useState<Record<string, string>>({});
+  const [editingDescCategory, setEditingDescCategory] = useState<string | null>(null);
+  const [descDraft, setDescDraft] = useState<string>("");
+  const [savingDesc, setSavingDesc] = useState(false);
   const [uploadingCategoryImage, setUploadingCategoryImage] = useState<string | null>(null);
   const [togglingCategory, setTogglingCategory] = useState<string | null>(null);
   const { toast } = useToast();
@@ -90,13 +94,16 @@ export default function Products() {
       // Build category enabled map
       const enabledMap: Record<string, boolean> = {};
       const imagesMap: Record<string, string> = {};
+      const descMap: Record<string, string> = {};
       materialCategories.forEach(c => { enabledMap[c.name] = true; }); // default all enabled
       (categorySettingsRes.data || []).forEach((row: any) => {
         enabledMap[row.name] = row.is_enabled;
         if (row.image_url) imagesMap[row.name] = row.image_url;
+        if (row.description) descMap[row.name] = row.description;
       });
       setCategoryEnabled(enabledMap);
       setCategoryImages(imagesMap);
+      setCategoryDescriptions(descMap);
     } catch (error) {
       console.error("Error fetching products:", error);
       toast({ title: "Ralat", description: "Terdapat masalah semasa mengambil produk", variant: "destructive" });
@@ -161,6 +168,36 @@ export default function Products() {
       setUploadingCategoryImage(null);
     }
   };
+  const handleSaveDescription = async () => {
+    if (!editingDescCategory) return;
+    setSavingDesc(true);
+    try {
+      const { error } = await authClient
+        .from("category_settings" as any)
+        .upsert({ name: editingDescCategory, description: descDraft }, { onConflict: "name" } as any);
+      if (error) throw error;
+      setCategoryDescriptions(prev => ({ ...prev, [editingDescCategory]: descDraft }));
+      toast({ title: "✅ Ayat disimpan", description: `Ayat untuk ${editingDescCategory} dikemaskini.` });
+      setEditingDescCategory(null);
+    } catch (err: any) {
+      toast({ title: "Ralat", description: err.message, variant: "destructive" });
+    } finally {
+      setSavingDesc(false);
+    }
+  };
+
+  const openEditDescription = (categoryName: string) => {
+    setEditingDescCategory(categoryName);
+    setDescDraft(categoryDescriptions[categoryName] ?? defaultDescriptions[categoryName] ?? "");
+  };
+
+  const defaultDescriptions: Record<string, string> = {
+    "Kain Mesh": "Berjalur, selesa & sejuk",
+    "Kain Nylon": "Tahan lama, mudah dicuci",
+    "Kain Fullsilk": "Mewah, lembut & tahan panas",
+    "Semi Leather Kalis Air": "Kalis air, mudah dibersihkan",
+  };
+
   const getProductsByCategory = (categoryName: string) =>
     products.filter(p => p.category === categoryName);
 
@@ -232,6 +269,7 @@ export default function Products() {
                     )}
                   </div>
                   <p className="text-xs text-muted-foreground mt-1">{count} produk</p>
+                  <p className="text-xs text-primary/80 mt-1.5 font-medium leading-snug">{categoryDescriptions[category.name] ?? defaultDescriptions[category.name]}</p>
                 </div>
                 <div className="flex items-center gap-1.5 shrink-0">
                   {isToggling && <Loader2 className="h-3 w-3 animate-spin text-muted-foreground" />}
@@ -279,8 +317,17 @@ export default function Products() {
               </div>
 
               {/* Bottom: actions */}
-              <div className="px-4 py-3 mt-auto flex items-center justify-between gap-2 border-t border-border">
-                <div className="flex items-center gap-3 min-w-0">
+              <div className="px-4 py-3 mt-auto flex flex-col gap-2 border-t border-border">
+                <Button
+                  variant="secondary"
+                  size="sm"
+                  onClick={() => openEditDescription(category.name)}
+                  className="w-full gap-1.5"
+                >
+                  <Edit className="h-3.5 w-3.5" /> Edit Ayat
+                </Button>
+                <div className="flex items-center justify-between gap-2">
+                  <div className="flex items-center gap-3 min-w-0">
                   {img ? (
                     <>
                       <label className="inline-flex items-center gap-1 text-xs text-primary hover:underline cursor-pointer shrink-0">
@@ -314,7 +361,8 @@ export default function Products() {
                 </Button>
               </div>
             </div>
-          );
+          </div>
+        );
         })}
       </div>
 
@@ -492,6 +540,33 @@ export default function Products() {
   return (
     <div className="p-4 md:p-6">
       {selectedCategory ? renderProductList() : renderCategoryCards()}
+
+      {/* Edit Ayat Dialog */}
+      <Dialog open={editingDescCategory !== null} onOpenChange={(o) => { if (!o) setEditingDescCategory(null); }}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Edit Ayat Material</DialogTitle>
+            <DialogDescription>
+              Tukar ayat untuk <strong>{editingDescCategory}</strong>. Ayat ini akan terpapar di halaman <strong>Produk</strong> dan <strong>Tempahan (/order)</strong>.
+            </DialogDescription>
+          </DialogHeader>
+          <textarea
+            className="w-full min-h-[90px] rounded-lg border border-border bg-background px-3 py-2 text-sm text-foreground focus:outline-none focus:ring-2 focus:ring-primary/40 resize-y"
+            value={descDraft}
+            onChange={(e) => setDescDraft(e.target.value)}
+            placeholder="Contoh: Berjalur, selesa & sejuk"
+          />
+          <div className="flex justify-end gap-2 pt-1">
+            <Button variant="outline" onClick={() => setEditingDescCategory(null)} disabled={savingDesc}>
+              Batal
+            </Button>
+            <Button onClick={handleSaveDescription} disabled={savingDesc} className="gap-1.5">
+              {savingDesc ? <Loader2 className="h-4 w-4 animate-spin" /> : <Edit className="h-4 w-4" />}
+              Simpan Ayat
+            </Button>
+          </div>
+        </DialogContent>
+      </Dialog>
     </div>
   );
 }
