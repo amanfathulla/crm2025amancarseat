@@ -6,6 +6,13 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogClose,
+} from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
 import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
@@ -62,6 +69,7 @@ export default function OrderPage() {
 
   // Optional seat reference images + notes
   const [seatImages, setSeatImages] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
+  const [showRefDialog, setShowRefDialog] = useState(false);
   // Real storage URLs (for saving to DB). seatImages holds local preview blobs.
   const [seatImageUrls, setSeatImageUrls] = useState<{ front: string; back: string; third: string }>({ front: "", back: "", third: "" });
   const [uploadingImage, setUploadingImage] = useState<"front" | "back" | "third" | null>(null);
@@ -879,6 +887,37 @@ export default function OrderPage() {
                   <Info className="h-4 w-4 shrink-0 mt-0.5" />
                   <p>Jika diluar kawasan atau di tempat kerja, boleh hantar gambar kemudian. Team HQ kami akan followup anda. 🙏</p>
                 </div>
+
+                {/* Butang buka gambar rujukan cara ambil gambar */}
+                <Button
+                  type="button"
+                  variant="outline"
+                  onClick={() => setShowRefDialog(true)}
+                  className="w-full gap-2 border-pink-200 text-pink-700 hover:bg-pink-50"
+                >
+                  <ImagePlus className="h-4 w-4" />
+                  Lihat cara ambil gambar (rujukan)
+                </Button>
+
+                {/* Dialog gambar rujukan */}
+                <Dialog open={showRefDialog} onOpenChange={setShowRefDialog}>
+                  <DialogContent className="sm:max-w-lg">
+                    <DialogHeader>
+                      <DialogTitle>Cara ambil gambar seat</DialogTitle>
+                    </DialogHeader>
+                    <img
+                      src="/seat-reference.jpg"
+                      alt="Rujukan cara ambil gambar seat"
+                      className="w-full rounded-xl border border-gray-200"
+                    />
+                    <p className="text-xs text-gray-500 text-center">
+                      Hantar gambar ikut sudut ini supaya Team HQ boleh buat cover yang tepat.
+                    </p>
+                    <DialogClose asChild>
+                      <Button type="button" variant="secondary" className="w-full">Tutup</Button>
+                    </DialogClose>
+                  </DialogContent>
+                </Dialog>
 
                 {(["front","back","third"] as const).map((slot) => {
                   const labels = {
