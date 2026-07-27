@@ -1123,9 +1123,7 @@ export default function OrderPage() {
       type="checkbox" 
       className="mt-1 w-4 h-4 accent-yellow-600"
     <span className="text-xs text-gray-900 leading-snug">
-      Saya telah membaca dan memahami bahawa <strong>AMANCARSEAT bukan barang ready stock</strong>.
-      Setiap tempahan dibuat khas mengikut model kereta dan memerlukan masa 
-      <strong> 10–14 hari bekerja</strong> untuk proses siap sebelum penghantaran.
+      <strong>Saya faham dan bersetuju<strong> dengan prosedur tempahan AMANCARSEAT. Setiap set dibuat khas mengikut model kereta dan mengambil <strong> masa 10–14 hari<strong> bekerja sebelum penghantaran.
     </span>
   </label>
 </section>
