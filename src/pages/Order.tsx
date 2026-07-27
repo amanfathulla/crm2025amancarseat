@@ -1113,13 +1113,13 @@ export default function OrderPage() {
                 {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
 
                 {/* Pengakuan bukan ready stock */}
-                <label className="flex items-start gap-2.5 mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
+                <label className="flex items-start gap-2.5 mt-4 p-3 rounded-xl bg-yellow-50 border border-yellow-300 cursor-pointer">
                   <Checkbox
                     checked={agreedNotReadyStock}
                     onCheckedChange={(v) => setAgreedNotReadyStock(v === true)}
-                    className="mt-0.5 shrink-0 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                    className="mt-0.5 shrink-0 border-yellow-500 bg-yellow-400 data-[state=checked]:bg-yellow-400 data-[state=checked]:border-yellow-500 data-[state=checked]:text-black"
                   />
-                  <span className="text-xs text-amber-900 leading-snug">
+                  <span className="text-xs text-yellow-900 leading-snug">
                     Saya telah membaca dan memahami bahawa <strong>AMANCARSEAT bukan barang ready stock</strong>. Setiap tempahan dibuat khas mengikut model kereta dan memerlukan masa <strong>10–14 hari bekerja</strong> untuk proses siap sebelum penghantaran.
                   </span>
                 </label>
