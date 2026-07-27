@@ -541,6 +541,56 @@ export default function Products() {
     <div className="p-4 md:p-6">
       {selectedCategory ? renderProductList() : renderCategoryCards()}
 
+      {/* Add Product Dialog */}
+      <Dialog open={isAddDialogOpen} onOpenChange={setIsAddDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Tambah Produk Baru</DialogTitle>
+            <DialogDescription>Isi maklumat untuk membuat produk baru.</DialogDescription>
+          </DialogHeader>
+          <ProductForm
+            onSuccess={handleAddSuccess}
+            onCancel={() => setIsAddDialogOpen(false)}
+          />
+        </DialogContent>
+      </Dialog>
+
+      {/* Edit Product Dialog */}
+      <Dialog open={isEditDialogOpen} onOpenChange={setIsEditDialogOpen}>
+        <DialogContent className="sm:max-w-[700px] max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Edit Produk</DialogTitle>
+            <DialogDescription>Kemaskini maklumat produk {selectedProduct?.name}.</DialogDescription>
+          </DialogHeader>
+          {selectedProduct && (
+            <ProductForm
+              key={selectedProduct.id}
+              initialData={{
+                id: selectedProduct.id,
+                name: selectedProduct.name,
+                category: selectedProduct.category || "",
+                description: selectedProduct.description || "",
+                youtube_url: selectedProduct.youtube_url || "",
+                image_url: selectedProduct.image_url || undefined,
+                image_urls: selectedProduct.image_urls || undefined,
+                variations: selectedProduct.variations,
+              }}
+              onSuccess={handleEditSuccess}
+              onCancel={() => setIsEditDialogOpen(false)}
+            />
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Delete Product Dialog */}
+      <DeleteProductDialog
+        isOpen={isDeleteDialogOpen}
+        onClose={() => setIsDeleteDialogOpen(false)}
+        productId={selectedProduct?.id || ""}
+        productName={selectedProduct?.name || ""}
+        onSuccess={handleDeleteSuccess}
+      />
+
       {/* Edit Ayat Dialog */}
       <Dialog open={editingDescCategory !== null} onOpenChange={(o) => { if (!o) setEditingDescCategory(null); }}>
         <DialogContent className="sm:max-w-md">
