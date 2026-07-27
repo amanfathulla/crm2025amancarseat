@@ -5,6 +5,7 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { Checkbox } from "@/components/ui/checkbox";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -167,6 +168,7 @@ export default function OrderPage() {
   const [appliedCoupon, setAppliedCoupon] = useState<{ code: string; discount_amount: number; discount_type: string; applicable_materials: string[] | null } | null>(null);
   const [couponError, setCouponError] = useState("");
   const [isValidatingCoupon, setIsValidatingCoupon] = useState(false);
+  const [agreedNotReadyStock, setAgreedNotReadyStock] = useState(false);
 
   // Fetch shipping settings
   useEffect(() => {
@@ -369,6 +371,7 @@ export default function OrderPage() {
     if (!form.state) { toast({ title: "Sila pilih negeri untuk kira kos postage", variant: "destructive" }); return; }
     if (finalPrice <= 0) { toast({ title: "Harga tidak sah", variant: "destructive" }); return; }
     if (!selectedGateway) { toast({ title: "Gateway pembayaran belum aktif", description: "Sila pilih Bayar Melalui WhatsApp atau cuba lagi kemudian.", variant: "destructive" }); return; }
+    if (!agreedNotReadyStock) { toast({ title: "Sila sahkan prosedur tempahan", description: "Tick kotak 'bukan barang ready stock' di bahagian kupon sebelum membuat bayaran.", variant: "destructive" }); return; }
     // Track CTA click for CPC (fire-and-forget)
     if (selectedCategory) {
       (supabase as any).from("material_clicks").insert({
@@ -418,6 +421,10 @@ export default function OrderPage() {
     }
     if (finalPrice <= 0) {
       toast({ title: "Harga tidak sah", variant: "destructive" });
+      return;
+    }
+    if (!agreedNotReadyStock) {
+      toast({ title: "Sila sahkan prosedur tempahan", description: "Tick kotak 'bukan barang ready stock' di bahagian kupon sebelum hantar via WhatsApp.", variant: "destructive" });
       return;
     }
 
@@ -1104,6 +1111,18 @@ export default function OrderPage() {
                   </div>
                 )}
                 {couponError && <p className="text-red-500 text-xs mt-2">{couponError}</p>}
+
+                {/* Pengakuan bukan ready stock */}
+                <label className="flex items-start gap-2.5 mt-4 p-3 rounded-xl bg-amber-50 border border-amber-200 cursor-pointer">
+                  <Checkbox
+                    checked={agreedNotReadyStock}
+                    onCheckedChange={(v) => setAgreedNotReadyStock(v === true)}
+                    className="mt-0.5 shrink-0 border-amber-400 data-[state=checked]:bg-amber-500 data-[state=checked]:border-amber-500"
+                  />
+                  <span className="text-xs text-amber-900 leading-snug">
+                    Saya telah membaca dan memahami bahawa <strong>AMANCARSEAT bukan barang ready stock</strong>. Setiap tempahan dibuat khas mengikut model kereta dan memerlukan masa <strong>10–14 hari bekerja</strong> untuk proses siap sebelum penghantaran.
+                  </span>
+                </label>
               </section>
 
               {/* Payment Options */}
