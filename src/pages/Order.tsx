@@ -1122,8 +1122,6 @@ export default function OrderPage() {
     <input 
       type="checkbox" 
       className="mt-1 w-4 h-4 accent-yellow-600"
-    />
-
     <span className="text-xs text-gray-900 leading-snug">
       Saya telah membaca dan memahami bahawa <strong>AMANCARSEAT bukan barang ready stock</strong>.
       Setiap tempahan dibuat khas mengikut model kereta dan memerlukan masa 
