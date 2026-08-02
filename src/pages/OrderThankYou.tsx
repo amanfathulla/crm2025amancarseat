@@ -3,6 +3,7 @@ import { useSearchParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { CheckCircle, XCircle, Loader2, RotateCcw, MessageCircle, Download, Package, Car, MapPin, Phone, Mail, Hash } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { initPixels, trackEvent } from "@/lib/pixels";
 
 interface CustomerData {
   name: string;
@@ -53,6 +54,19 @@ export default function OrderThankYou() {
       setLoading(false);
     }
   }, [customerId]);
+
+  useEffect(() => {
+    if (!customer || !isPaid || isWhatsapp) return;
+    initPixels().then(() => {
+      trackEvent("Purchase", {
+        value: Number(customer.paid_amount || customer.sales_amount || 0),
+        currency: "MYR",
+        content_name: customer.product,
+        order_id: customer.order_number,
+      });
+    });
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [customer, isPaid, isWhatsapp]);
 
   const formatCurrency = (v: number) => `RM ${Number(v || 0).toFixed(2)}`;
   const formatDate = (d: string) => d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "long", year: "numeric" }) : "—";
