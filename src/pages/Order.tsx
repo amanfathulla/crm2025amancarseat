@@ -1123,7 +1123,8 @@ export default function OrderPage() {
                     <strong>Saya faham dan bersetuju</strong> dengan prosedur tempahan AMANCARSEAT. Setiap set dibuat khas mengikut model kereta dan mengambil <strong>masa 10–14 hari</strong> bekerja sebelum penghantaran.
                   </span>
                 </label>
-              </div>
+              </section>
+
 
 
               {/* Payment Options */}
