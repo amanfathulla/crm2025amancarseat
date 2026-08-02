@@ -32,6 +32,8 @@ type Coupon = {
   is_active: boolean;
   applicable_materials: string[] | null;
   is_featured_landing: boolean;
+  banner_theme: "orange" | "red" | "black" | "white" | "yellow";
+
 };
 
 type FormState = {
