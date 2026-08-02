@@ -383,6 +383,13 @@ export default function OrderPage() {
         referrer: document.referrer || null,
       }).then(() => {});
     }
+    trackEvent("InitiateCheckout", {
+      value: amountToPay,
+      currency: "MYR",
+      content_name: selectedProduct?.name || "",
+      content_category: selectedCategory?.label || "",
+      payment_type: paymentType,
+    });
     setStep("loading");
     try {
       const endpoint = selectedGateway === "billplz"
@@ -440,6 +447,13 @@ export default function OrderPage() {
       }).then(() => {});
     }
 
+    trackEvent("Lead", {
+      value: finalPrice,
+      currency: "MYR",
+      content_name: selectedProduct?.name || "",
+      content_category: selectedCategory?.label || "",
+      method: "whatsapp",
+    });
     setStep("loading");
 
     try {
