@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/pixels";
 import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -246,6 +247,7 @@ export default function OrderPage() {
         user_agent: navigator.userAgent,
         referrer: document.referrer || null,
       }).then(() => {});
+      trackEvent("ViewContent", { content_category: match.label, content_name: match.label });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledCategories]);
@@ -303,6 +305,7 @@ export default function OrderPage() {
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
     }).then(() => {});
+    trackEvent("ViewContent", { content_category: cat.label, content_name: cat.label });
   };
 
   const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;
@@ -380,6 +383,13 @@ export default function OrderPage() {
         referrer: document.referrer || null,
       }).then(() => {});
     }
+    trackEvent("InitiateCheckout", {
+      value: amountToPay,
+      currency: "MYR",
+      content_name: selectedProduct?.name || "",
+      content_category: selectedCategory?.label || "",
+      payment_type: paymentType,
+    });
     setStep("loading");
     try {
       const endpoint = selectedGateway === "billplz"
@@ -437,6 +447,13 @@ export default function OrderPage() {
       }).then(() => {});
     }
 
+    trackEvent("Lead", {
+      value: finalPrice,
+      currency: "MYR",
+      content_name: selectedProduct?.name || "",
+      content_category: selectedCategory?.label || "",
+      method: "whatsapp",
+    });
     setStep("loading");
 
     try {
