@@ -6,9 +6,11 @@ import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useToast } from "@/hooks/use-toast";
 import { useAuth } from "@/hooks/useAuth";
-import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Trash2, Plus, Send, Radio, Copy, RefreshCw, Check } from "lucide-react";
+import { LoaderCircle, Mail, Lock, Eye, EyeOff, CheckCircle2, Trash2, Plus, Send, Radio, Copy, RefreshCw, Check, Target } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 import { PublicDashSettings } from "@/components/settings/PublicDashSettings";
+import { PixelSettings } from "@/components/settings/PixelSettings";
+
 
 interface AdminSettingsDialogProps {
   open: boolean;
