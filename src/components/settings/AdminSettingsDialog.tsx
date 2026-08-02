@@ -267,10 +267,14 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
         </DialogHeader>
 
         <Tabs defaultValue="telegram" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="telegram" className="flex items-center gap-1 text-xs">
               <Send className="h-3.5 w-3.5" />
               <span className="hidden sm:inline">Telegram</span>
+            </TabsTrigger>
+            <TabsTrigger value="pixels" className="flex items-center gap-1 text-xs">
+              <Target className="h-3.5 w-3.5" />
+              <span className="hidden sm:inline">Pixel</span>
             </TabsTrigger>
             <TabsTrigger value="password" className="flex items-center gap-1 text-xs">
               <Lock className="h-3.5 w-3.5" />
@@ -285,6 +289,12 @@ export function AdminSettingsDialog({ open, onOpenChange }: AdminSettingsDialogP
               <span className="hidden sm:inline">Public</span>
             </TabsTrigger>
           </TabsList>
+
+          {/* ── Pixel Tab ── */}
+          <TabsContent value="pixels" className="space-y-4 pt-2">
+            <PixelSettings />
+          </TabsContent>
+
 
           {/* ── Telegram Tab ── */}
           <TabsContent value="telegram" className="space-y-4 pt-2">
