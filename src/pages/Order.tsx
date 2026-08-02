@@ -1117,16 +1117,15 @@ export default function OrderPage() {
                   <Checkbox
                     checked={agreedNotReadyStock}
                     onCheckedChange={(v) => setAgreedNotReadyStock(v === true)}
-                    <section className="bg-yellow-300 p-4 rounded-xl">
-  <label className="flex items-start gap-3 cursor-pointer">
-    <input 
-      type="checkbox" 
-      className="mt-1 w-4 h-4 accent-yellow-600"
-    <span className="text-xs text-gray-900 leading-snug">
-      <strong>Saya faham dan bersetuju<strong> dengan prosedur tempahan AMANCARSEAT. Setiap set dibuat khas mengikut model kereta dan mengambil <strong> masa 10–14 hari<strong> bekerja sebelum penghantaran.
-    </span>
-  </label>
-</section>
+                    className="mt-0.5"
+                  />
+                  <span className="text-xs text-gray-900 leading-snug">
+                    <strong>Saya faham dan bersetuju</strong> dengan prosedur tempahan AMANCARSEAT. Setiap set dibuat khas mengikut model kereta dan mengambil <strong>masa 10–14 hari</strong> bekerja sebelum penghantaran.
+                  </span>
+                </label>
+              </section>
+
+
 
               {/* Payment Options */}
               <div className="space-y-3">

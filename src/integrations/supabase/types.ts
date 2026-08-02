@@ -886,6 +886,48 @@ export type Database = {
         }
         Relationships: []
       }
+      pixel_settings: {
+        Row: {
+          created_at: string
+          ga4_enabled: boolean
+          ga4_id: string
+          gtm_enabled: boolean
+          gtm_id: string
+          id: string
+          meta_enabled: boolean
+          meta_pixel_id: string
+          tiktok_enabled: boolean
+          tiktok_pixel_id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          ga4_enabled?: boolean
+          ga4_id?: string
+          gtm_enabled?: boolean
+          gtm_id?: string
+          id?: string
+          meta_enabled?: boolean
+          meta_pixel_id?: string
+          tiktok_enabled?: boolean
+          tiktok_pixel_id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          ga4_enabled?: boolean
+          ga4_id?: string
+          gtm_enabled?: boolean
+          gtm_id?: string
+          id?: string
+          meta_enabled?: boolean
+          meta_pixel_id?: string
+          tiktok_enabled?: boolean
+          tiktok_pixel_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
       product_variations: {
         Row: {
           cost: number
