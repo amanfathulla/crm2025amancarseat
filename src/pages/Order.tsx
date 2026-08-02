@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { trackEvent } from "@/lib/pixels";
 import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -246,6 +247,7 @@ export default function OrderPage() {
         user_agent: navigator.userAgent,
         referrer: document.referrer || null,
       }).then(() => {});
+      trackEvent("ViewContent", { content_category: match.label, content_name: match.label });
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledCategories]);
@@ -303,6 +305,7 @@ export default function OrderPage() {
       user_agent: navigator.userAgent,
       referrer: document.referrer || null,
     }).then(() => {});
+    trackEvent("ViewContent", { content_category: cat.label, content_name: cat.label });
   };
 
   const productPrice = selectedVariation?.price ?? selectedProduct?.price ?? 0;

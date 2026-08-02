@@ -38,6 +38,23 @@ import Testimoni from "@/pages/Testimoni";
 import OrderFullsilk from "@/pages/OrderFullsilk";
 import OrderThankYou from "@/pages/OrderThankYou";
 import RaceDashboard from "@/pages/RaceDashboard";
+import { initPixels, trackPageView } from "@/lib/pixels";
+
+const CRM_PREFIXES = ["/dashboard","/live-dashboard","/leads","/marketing","/customers","/sales","/products","/payment-gateways","/reviews","/coupons","/link-tempahan","/admin","/login"];
+
+function PixelTracker() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    const isCrm = CRM_PREFIXES.some((p) => pathname.startsWith(p));
+    if (isCrm) return;
+    let cancelled = false;
+    initPixels().then(() => {
+      if (!cancelled) trackPageView(pathname);
+    });
+    return () => { cancelled = true; };
+  }, [pathname]);
+  return null;
+}
 function ScrollToTop() {
   const { pathname } = useLocation();
   useEffect(() => {
@@ -55,6 +72,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Router>
             <ScrollToTop />
+            <PixelTracker />
             <div className="flex min-h-screen w-full">
               <Routes>
                 {/* Routes without sidebar */}
