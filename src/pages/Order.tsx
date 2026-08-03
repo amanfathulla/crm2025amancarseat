@@ -417,6 +417,7 @@ export default function OrderPage() {
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
+      await new Promise((r) => setTimeout(r, 400)); // beri masa pixel hantar event
       window.location.href = data.bill_url;
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
