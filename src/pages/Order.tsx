@@ -537,6 +537,19 @@ export default function OrderPage() {
         `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
       );
 
+      // Order sudah masuk sistem → kira sebagai Purchase (bayaran via WhatsApp)
+      trackEvent("Purchase", {
+        value: amountToPay,
+        currency: "MYR",
+        content_name: selectedProduct?.name || "",
+        content_category: selectedCategory?.label || "",
+        content_type: "product",
+        order_id: orderRef,
+        payment_source: "whatsapp",
+        payment_type: paymentType,
+      });
+      await new Promise((r) => setTimeout(r, 500)); // pastikan event sempat dihantar
+
       window.location.href = `https://wa.me/60194503184?text=${waMsg}`;
     } catch (err: any) {
       toast({ title: "Ralat", description: err?.message || "Gagal simpan tempahan. Sila cuba lagi.", variant: "destructive" });
