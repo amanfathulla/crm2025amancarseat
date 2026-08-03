@@ -448,13 +448,15 @@ export default function OrderPage() {
       }).then(() => {});
     }
 
-    trackEvent("Lead", {
-      value: finalPrice,
+    // Nota: event Purchase dihantar selepas order berjaya masuk sistem (bukan Lead)
+    trackEvent("InitiateCheckout", {
+      value: amountToPay,
       currency: "MYR",
       content_name: selectedProduct?.name || "",
       content_category: selectedCategory?.label || "",
       method: "whatsapp",
     });
+
     setStep("loading");
 
     try {
