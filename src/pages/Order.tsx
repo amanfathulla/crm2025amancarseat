@@ -417,6 +417,7 @@ export default function OrderPage() {
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
+      await new Promise((r) => setTimeout(r, 400)); // beri masa pixel hantar event
       window.location.href = data.bill_url;
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
@@ -535,6 +536,19 @@ export default function OrderPage() {
         `Nama: ${form.name || "-"}\nNo. Telefon: ${form.phone || "-"}\nModel Kereta: ${form.car_model || "-"}\n\n` +
         `Sila sahkan penerimaan bayaran. Terima kasih! 🙏`
       );
+
+      // Order sudah masuk sistem → kira sebagai Purchase (bayaran via WhatsApp)
+      trackEvent("Purchase", {
+        value: amountToPay,
+        currency: "MYR",
+        content_name: selectedProduct?.name || "",
+        content_category: selectedCategory?.label || "",
+        content_type: "product",
+        order_id: orderRef,
+        payment_source: "whatsapp",
+        payment_type: paymentType,
+      });
+      await new Promise((r) => setTimeout(r, 500)); // pastikan event sempat dihantar
 
       window.location.href = `https://wa.me/60194503184?text=${waMsg}`;
     } catch (err: any) {
