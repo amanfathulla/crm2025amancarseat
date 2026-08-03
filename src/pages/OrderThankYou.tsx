@@ -56,17 +56,26 @@ export default function OrderThankYou() {
   }, [customerId]);
 
   useEffect(() => {
-    if (!customer || !isPaid || isWhatsapp) return;
+    if (loading || !isPaid) return;
+    // Dedupe so refresh tak double-count
+    const key = `acs_purchase_${customerId || "unknown"}`;
+    if (sessionStorage.getItem(key)) return;
+    sessionStorage.setItem(key, "1");
+
+    const value = Number(customer?.paid_amount || customer?.sales_amount || 0);
     initPixels().then(() => {
       trackEvent("Purchase", {
-        value: Number(customer.paid_amount || customer.sales_amount || 0),
+        value,
         currency: "MYR",
-        content_name: customer.product,
-        order_id: customer.order_number,
+        content_name: customer?.product || "AmanCarSeat Order",
+        content_type: "product",
+        order_id: customer?.order_number || customerId || "",
+        payment_source: isWhatsapp ? "whatsapp" : (customer?.payment_gateway || "gateway"),
       });
     });
     // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [customer, isPaid, isWhatsapp]);
+  }, [loading, customer, isPaid, isWhatsapp]);
+
 
   const formatCurrency = (v: number) => `RM ${Number(v || 0).toFixed(2)}`;
   const formatDate = (d: string) => d ? new Date(d).toLocaleDateString("ms-MY", { day: "2-digit", month: "long", year: "numeric" }) : "—";
