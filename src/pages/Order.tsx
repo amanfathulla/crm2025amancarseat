@@ -548,9 +548,20 @@ export default function OrderPage() {
         payment_source: "whatsapp",
         payment_type: paymentType,
       });
-      await new Promise((r) => setTimeout(r, 500)); // pastikan event sempat dihantar
+      // elak double-count bila page thank-you dibuka
+      try { sessionStorage.setItem(`acs_purchase_${customerId}`, "1"); } catch {}
 
-      window.location.href = `https://wa.me/60194503184?text=${waMsg}`;
+      // Buka WhatsApp dalam tab baharu supaya pixel sempat hantar event,
+      // kemudian bawa pelanggan ke page thank-you.
+      const waUrl = `https://wa.me/60194503184?text=${waMsg}`;
+      const waTab = window.open(waUrl, "_blank");
+      await new Promise((r) => setTimeout(r, 600));
+      if (waTab) {
+        window.location.href = `/order/thank-you?customer_id=${customerId}&source=whatsapp&paid=true`;
+      } else {
+        window.location.href = waUrl;
+      }
+
     } catch (err: any) {
       toast({ title: "Ralat", description: err?.message || "Gagal simpan tempahan. Sila cuba lagi.", variant: "destructive" });
       setStep("form");
