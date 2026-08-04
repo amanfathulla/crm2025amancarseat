@@ -6,6 +6,9 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
+import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial } from "@/lib/reviewMaterials";
+import { useAuth } from "@/hooks/useAuth";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -29,6 +32,7 @@ const PAGE_SIZE = 20;
 
 export default function Reviews() {
   const { toast } = useToast();
+  const { authClient } = useAuth();
   const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState("");
@@ -37,6 +41,9 @@ export default function Reviews() {
   const [editing, setEditing] = useState<Review | null>(null);
   const [deleting, setDeleting] = useState<Review | null>(null);
   const [saving, setSaving] = useState(false);
+  const [materials, setMaterials] = useState<Record<string, string>>({});
+  const [materialFilter, setMaterialFilter] = useState<string>("all");
+  const [editMaterial, setEditMaterial] = useState<string>("");
 
   const load = async () => {
     setLoading(true);
@@ -48,6 +55,7 @@ export default function Reviews() {
         .limit(1000);
       if (error) throw error;
       setReviews((data || []) as Review[]);
+      setMaterials(await fetchReviewMaterials());
     } catch (e: any) {
       toast({ title: "Ralat", description: e.message, variant: "destructive" });
     } finally {
@@ -59,14 +67,19 @@ export default function Reviews() {
 
   const filtered = useMemo(() => {
     const t = search.trim().toLowerCase();
-    if (!t) return reviews;
-    return reviews.filter(
-      (r) =>
+    return reviews.filter((r) => {
+      if (materialFilter !== "all") {
+        const m = materials[r.id];
+        if (materialFilter === "none" ? !!m : m !== materialFilter) return false;
+      }
+      if (!t) return true;
+      return (
         (r.name || "").toLowerCase().includes(t) ||
         (r.car_model || "").toLowerCase().includes(t) ||
         (r.review || "").toLowerCase().includes(t)
-    );
-  }, [reviews, search]);
+      );
+    });
+  }, [reviews, search, materials, materialFilter]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
@@ -88,6 +101,11 @@ export default function Reviews() {
         })
         .eq("id", editing.id);
       if (error) throw error;
+
+      if (editMaterial) {
+        await saveReviewMaterial(editing.id, editMaterial, authClient ?? undefined);
+      }
+
       toast({ title: "✅ Review dikemas kini" });
       setEditing(null);
       load();
@@ -136,6 +154,29 @@ export default function Reviews() {
           />
         </div>
 
+        <div className="flex flex-wrap gap-2">
+          {[{ k: "all", l: "Semua" }, ...REVIEW_MATERIALS.map((m) => ({ k: m, l: m })), { k: "none", l: "Tiada Material" }].map((o) => (
+            <button
+              key={o.k}
+              onClick={() => { setMaterialFilter(o.k); setPage(1); }}
+              className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
+                materialFilter === o.k
+                  ? "bg-primary text-primary-foreground border-primary"
+                  : "bg-muted text-muted-foreground border-border hover:bg-accent"
+              }`}
+            >
+              {o.l}
+              <span className="ml-1.5 opacity-70">
+                {o.k === "all"
+                  ? reviews.length
+                  : o.k === "none"
+                  ? reviews.filter((r) => !materials[r.id]).length
+                  : reviews.filter((r) => materials[r.id] === o.k).length}
+              </span>
+            </button>
+          ))}
+        </div>
+
         {loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
             <Loader2 className="h-5 w-5 mr-2 animate-spin" /> Memuat reviews...
@@ -172,6 +213,11 @@ export default function Reviews() {
                         ))}
                       </span>
                     </div>
+                    {materials[r.id] && (
+                      <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-primary/40 bg-primary/10 text-primary px-2 py-0.5">
+                        {materials[r.id]}
+                      </span>
+                    )}
                     {r.review && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 italic">"{r.review}"</p>}
                     {imgs.length > 0 && (
                       <div className="flex gap-1.5 mt-2">
@@ -187,7 +233,7 @@ export default function Reviews() {
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
-                    <Button variant="outline" size="sm" onClick={() => setEditing({ ...r })} className="gap-1">
+                    <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setEditMaterial(materials[r.id] ?? ""); }} className="gap-1">
                       <Pencil className="h-3 w-3" /> Edit
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setDeleting(r)} className="gap-1 text-destructive">
@@ -246,6 +292,19 @@ export default function Reviews() {
                   <Input type="number" min={1} max={5} value={editing.price_rating ?? 5}
                     onChange={(e) => setEditing({ ...editing, price_rating: Number(e.target.value) })} />
                 </div>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Material Design Order</label>
+                <Select value={editMaterial} onValueChange={setEditMaterial}>
+                  <SelectTrigger>
+                    <SelectValue placeholder="Pilih material design order" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {REVIEW_MATERIALS.map((m) => (
+                      <SelectItem key={m} value={m}>{m}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-sm font-medium">Ulasan</label>
