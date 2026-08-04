@@ -8,6 +8,7 @@ import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
 import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
 import PromoBanner from "@/components/sales/PromoBanner";
+import { REVIEW_MATERIALS } from "@/lib/reviewMaterials";
 import LiveFooter from "@/components/LiveFooter";
 
 const PAGE_SIZE = 12;
@@ -15,12 +16,13 @@ const PAGE_SIZE = 12;
 export default function Testimoni() {
   const { brand: brandSlug } = useParams<{ brand?: string }>();
   const navigate = useNavigate();
-  const { reviews, loading, error } = useReviews();
+  const { reviews, loading, error, materials } = useReviews();
 
   const activeBrand = getBrandKeyFromSlug(brandSlug);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [reviewOpen, setReviewOpen] = useState(false);
+  const [material, setMaterial] = useState<string>("all");
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -39,10 +41,11 @@ export default function Testimoni() {
     const term = search.trim().toLowerCase();
     return reviews.filter((r) => {
       if (!brand.match(r.car_model || "")) return false;
+      if (material !== "all" && materials[r.id] !== material) return false;
       if (term && !(r.car_model || "").toLowerCase().includes(term) && !(r.name || "").toLowerCase().includes(term)) return false;
       return true;
     });
-  }, [reviews, activeBrand, search]);
+  }, [reviews, activeBrand, search, material, materials]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const currentPage = Math.min(page, totalPages);
@@ -96,6 +99,23 @@ export default function Testimoni() {
               </button>
             );
           })}
+        </div>
+
+        {/* Material chips */}
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-4">
+          {[{ k: "all", l: "Semua Material" }, ...REVIEW_MATERIALS.map((m) => ({ k: m, l: m }))].map((m) => (
+            <button
+              key={m.k}
+              onClick={() => { setMaterial(m.k); setPage(1); }}
+              className={`px-4 py-1.5 rounded-full text-xs font-semibold transition border ${
+                material === m.k
+                  ? "bg-white text-black border-white"
+                  : "bg-neutral-900 text-gray-300 border-white/10 hover:bg-neutral-800"
+              }`}
+            >
+              {m.l}
+            </button>
+          ))}
         </div>
 
         {/* Search */}
