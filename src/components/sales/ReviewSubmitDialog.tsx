@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Star, User, Loader2, Upload } from "lucide-react";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, REVIEWS_BUCKET, CAR_BRANDS } from "@/lib/reviewsClient";
+import { REVIEW_MATERIALS, saveReviewMaterial } from "@/lib/reviewMaterials";
 
 interface Props {
   open: boolean;
@@ -53,13 +54,14 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
   const [name, setName] = useState("");
   const [brand, setBrand] = useState("");
   const [model, setModel] = useState("");
+  const [material, setMaterial] = useState("");
   const [reviewText, setReviewText] = useState("");
   const [images, setImages] = useState<File[]>([]);
   const [submitting, setSubmitting] = useState(false);
 
   const reset = () => {
     setRating(5); setQuality(5); setPrice(5);
-    setAvatar(null); setName(""); setBrand(""); setModel("");
+    setAvatar(null); setName(""); setBrand(""); setModel(""); setMaterial("");
     setReviewText(""); setImages([]);
   };
 
@@ -73,6 +75,10 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
     e.preventDefault();
     if (!name.trim() || !brand || !model.trim()) {
       toast({ title: "Lengkapkan maklumat", description: "Sila isi nama, brand & model kereta.", variant: "destructive" });
+      return;
+    }
+    if (!material) {
+      toast({ title: "Pilih material", description: "Sila pilih Material Design Order.", variant: "destructive" });
       return;
     }
     if (images.length < 1) {
@@ -90,7 +96,7 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
       const brandLabel = CAR_BRANDS.find((b) => b.key === brand)?.label ?? "";
       const carModelFull = `${brandLabel} ${model.trim()}`.trim();
 
-      const { error } = await reviewsSupabase.from("reviews").insert({
+      const { data: inserted, error } = await reviewsSupabase.from("reviews").insert({
         name: name.trim(),
         car_model: carModelFull,
         rating,
@@ -99,8 +105,16 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
         review: reviewText.trim(),
         images: imageUrls,
         avatar_url: avatarUrl,
-      });
+      }).select("id").single();
       if (error) throw error;
+
+      if (inserted?.id) {
+        try {
+          await saveReviewMaterial(inserted.id as string, material);
+        } catch (e) {
+          console.error("saveReviewMaterial", e);
+        }
+      }
 
       toast({ title: "Terima kasih! 🎉", description: "Ulasan anda telah dihantar." });
       reset();
@@ -179,6 +193,20 @@ export function ReviewSubmitDialog({ open, onOpenChange, onSubmitted }: Props) {
               <Input value={model} onChange={(e) => setModel(e.target.value)} placeholder="cth: Myvi 2023"
                 className="mt-2 bg-neutral-900 border-white/10 text-white placeholder:text-gray-500" />
             </div>
+          </div>
+
+          <div>
+            <Label className="text-white">Material Design Order *</Label>
+            <Select value={material} onValueChange={setMaterial}>
+              <SelectTrigger className="mt-2 bg-neutral-900 border-white/10 text-white">
+                <SelectValue placeholder="Pilih material design order" />
+              </SelectTrigger>
+              <SelectContent className="bg-neutral-950 text-white border-white/10">
+                {REVIEW_MATERIALS.map((m) => (
+                  <SelectItem key={m} value={m}>{m}</SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div>
