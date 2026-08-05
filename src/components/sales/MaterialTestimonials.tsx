@@ -1,24 +1,24 @@
-import { useMemo } from "react";
-import { Link } from "react-router-dom";
-import { Star, Loader2, ArrowRight } from "lucide-react";
+import { useMemo, useState } from "react";
+import { Star, Loader2 } from "lucide-react";
 import { useReviews } from "@/hooks/useReviews";
-import { MATERIAL_SLUGS } from "@/lib/reviewMaterials";
 
 interface Props {
   material: string;
-  limit?: number;
+  pageSize?: number;
 }
 
-export default function MaterialTestimonials({ material, limit = 6 }: Props) {
+export default function MaterialTestimonials({ material, pageSize = 6 }: Props) {
   const { reviews, loading, materials } = useReviews();
+  const [page, setPage] = useState(1);
 
   const list = useMemo(
     () => reviews.filter((r) => materials[r.id] === material),
     [reviews, materials, material]
   );
 
-  const slug = MATERIAL_SLUGS[material];
-  const items = list.slice(0, limit);
+  const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
+  const currentPage = Math.min(page, totalPages);
+  const items = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
     <section className="mt-10 pt-8 border-t border-white/10">
@@ -27,14 +27,6 @@ export default function MaterialTestimonials({ material, limit = 6 }: Props) {
           <h3 className="text-white font-bold text-lg">Testimoni {material}</h3>
           <p className="text-white/50 text-xs">{list.length} review sebenar pelanggan</p>
         </div>
-        {slug && (
-          <Link
-            to={`/testimoni/${slug}`}
-            className="shrink-0 inline-flex items-center gap-1 text-xs font-semibold text-white bg-white/10 hover:bg-white/20 border border-white/15 rounded-full px-3 py-1.5 transition-colors"
-          >
-            Lihat semua <ArrowRight className="h-3 w-3" />
-          </Link>
-        )}
       </div>
 
       {loading ? (
@@ -81,13 +73,36 @@ export default function MaterialTestimonials({ material, limit = 6 }: Props) {
         </div>
       )}
 
-      {slug && (
-        <Link
-          to={`/testimoni/${slug}`}
-          className="mt-4 flex items-center justify-center gap-2 h-11 rounded-xl border border-white/15 bg-white/5 hover:bg-white/10 text-white text-sm font-semibold transition-colors"
-        >
-          Lihat semua testimoni {material} <ArrowRight className="h-4 w-4" />
-        </Link>
+      {totalPages > 1 && (
+        <div className="flex flex-wrap items-center justify-center gap-2 mt-6">
+          <button
+            onClick={() => setPage((p) => Math.max(1, p - 1))}
+            disabled={currentPage === 1}
+            className="min-w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-semibold disabled:opacity-40 hover:bg-white/10 transition-colors"
+          >
+            ‹
+          </button>
+          {Array.from({ length: totalPages }, (_, i) => i + 1).map((p) => (
+            <button
+              key={p}
+              onClick={() => setPage(p)}
+              className={`min-w-9 h-9 px-3 rounded-lg border text-sm font-semibold transition-colors ${
+                p === currentPage
+                  ? "bg-white text-black border-white"
+                  : "bg-white/5 text-white border-white/10 hover:bg-white/10"
+              }`}
+            >
+              {p}
+            </button>
+          ))}
+          <button
+            onClick={() => setPage((p) => Math.min(totalPages, p + 1))}
+            disabled={currentPage === totalPages}
+            className="min-w-9 h-9 rounded-lg bg-white/5 border border-white/10 text-white text-sm font-semibold disabled:opacity-40 hover:bg-white/10 transition-colors"
+          >
+            ›
+          </button>
+        </div>
       )}
     </section>
   );
