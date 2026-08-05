@@ -1,4 +1,4 @@
-import { useMemo, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { Link, useParams, useNavigate } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -8,7 +8,7 @@ import { BRANDS, getBrandKeyFromSlug, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
 import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
 import PromoBanner from "@/components/sales/PromoBanner";
-import { REVIEW_MATERIALS } from "@/lib/reviewMaterials";
+import { REVIEW_MATERIALS, MATERIAL_SLUGS, materialFromSlug } from "@/lib/reviewMaterials";
 import LiveFooter from "@/components/LiveFooter";
 
 const PAGE_SIZE = 12;
@@ -18,11 +18,17 @@ export default function Testimoni() {
   const navigate = useNavigate();
   const { reviews, loading, error, materials } = useReviews();
 
-  const activeBrand = getBrandKeyFromSlug(brandSlug);
+  const slugMaterial = materialFromSlug(brandSlug);
+  const activeBrand = slugMaterial ? "all" : getBrandKeyFromSlug(brandSlug);
   const [search, setSearch] = useState("");
   const [page, setPage] = useState(1);
   const [reviewOpen, setReviewOpen] = useState(false);
-  const [material, setMaterial] = useState<string>("all");
+  const [material, setMaterial] = useState<string>(slugMaterial ?? "all");
+
+  useEffect(() => {
+    setMaterial(slugMaterial ?? "all");
+    setPage(1);
+  }, [slugMaterial]);
 
   const counts = useMemo(() => {
     const c: Record<string, number> = {};
@@ -106,7 +112,11 @@ export default function Testimoni() {
           {[{ k: "all", l: "Semua Material" }, ...REVIEW_MATERIALS.map((m) => ({ k: m, l: m }))].map((m) => (
             <button
               key={m.k}
-              onClick={() => { setMaterial(m.k); setPage(1); }}
+              onClick={() => {
+                setMaterial(m.k);
+                setPage(1);
+                navigate(m.k === "all" ? "/testimoni" : `/testimoni/${MATERIAL_SLUGS[m.k] ?? ""}`);
+              }}
               className={`px-4 py-1.5 rounded-full text-xs font-semibold transition border ${
                 material === m.k
                   ? "bg-white text-black border-white"

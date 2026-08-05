@@ -48,3 +48,17 @@ export async function saveReviewMaterial(
     .upsert({ review_id: reviewId, material }, { onConflict: "review_id" });
   if (error) throw error;
 }
+
+/** Slug URL untuk setiap material (untuk /testimoni/:slug) */
+export const MATERIAL_SLUGS: Record<string, string> = {
+  "Kain Mesh": "kainmesh",
+  "Kain Nylon": "kainnylon",
+  "Kain Fullsilk": "kainfullsilk",
+  "Semi Leather Kalis Air": "semileather",
+};
+
+/** Dapatkan label material daripada slug URL (terima pelbagai variasi ejaan) */
+export function materialFromSlug(slug?: string | null): string | null {
+  if (!slug) return null;
+  return matchMaterialLabel(slug);
+}
