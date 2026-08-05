@@ -19,6 +19,7 @@ import { useToast } from "@/hooks/use-toast";
 import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
 import { Upload, X, ImagePlus } from "lucide-react";
+import MaterialTestimonials from "@/components/sales/MaterialTestimonials";
 
 const ALL_MATERIAL_CATEGORIES = [
   { id: "kain-mesh",      label: "Kain Mesh",              emoji: "🔵", gradient: "from-blue-500 to-blue-700",     border: "border-blue-500/40",   glow: "shadow-blue-500/20",   desc: "Berjalur, selesa & sejuk" },
@@ -833,6 +834,8 @@ export default function OrderPage() {
               className="w-full h-12 bg-gradient-to-r from-blue-500 to-blue-700 hover:from-blue-600 hover:to-blue-800 text-white font-semibold rounded-xl shadow-lg shadow-blue-900/40 disabled:opacity-30 transition-all">
               Teruskan Tempahan <ChevronRight className="h-4 w-4 ml-1" />
             </Button>
+
+            <MaterialTestimonials material={selectedCategory.label} />
           </div>
         )}
 
