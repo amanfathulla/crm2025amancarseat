@@ -698,6 +698,14 @@ export default function RaceDashboard() {
                         {o.product}
                         {o.product_variation ? ` · ${o.product_variation}` : ""}
                       </div>
+                      {o.coupon_code ? (
+                        <span
+                          className="mt-1 inline-flex items-center gap-1 rounded-md px-1.5 py-0.5 text-[10px] font-bold uppercase tracking-wide"
+                          style={{ background: "rgba(255,122,26,0.15)", color: "#FF7A1A" }}
+                        >
+                          🎟 {o.coupon_code}
+                        </span>
+                      ) : null}
                     </div>
                     <div
                       className="text-sm font-black"
