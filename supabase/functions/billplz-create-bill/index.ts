@@ -182,6 +182,7 @@ serve(async (req) => {
         payment_type: isDeposit ? 'deposit' : 'full',
         deposit_amount: isDeposit ? finalPrice : 0,
         balance_amount: serverBalanceAmount,
+        coupon_code: coupon_code && coupon_code.trim() ? coupon_code.trim().toUpperCase() : null,
         payment_source: 'billplz',
         payment_gateway: 'billplz',
       })
