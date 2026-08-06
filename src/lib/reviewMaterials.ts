@@ -62,3 +62,36 @@ export function materialFromSlug(slug?: string | null): string | null {
   if (!slug) return null;
   return matchMaterialLabel(slug);
 }
+
+/** Ambil peta review_id -> pin_order untuk review yang dipin */
+export async function fetchPinnedReviews(): Promise<Record<string, number>> {
+  const { data, error } = await supabase
+    .from("review_materials")
+    .select("review_id, pin_order, pinned")
+    .eq("pinned", true)
+    .limit(500);
+  if (error) {
+    console.error("fetchPinnedReviews", error.message);
+    return {};
+  }
+  const map: Record<string, number> = {};
+  for (const row of data ?? []) map[(row as any).review_id] = (row as any).pin_order ?? 0;
+  return map;
+}
+
+/** Tetapkan status pin untuk satu review (perlu material) */
+export async function setReviewPin(
+  reviewId: string,
+  material: string,
+  pinned: boolean,
+  pinOrder: number | null,
+  client: SupabaseClient<any> = supabase as unknown as SupabaseClient<any>
+) {
+  const { error } = await client
+    .from("review_materials")
+    .upsert(
+      { review_id: reviewId, material, pinned, pin_order: pinned ? pinOrder ?? 0 : null },
+      { onConflict: "review_id" }
+    );
+  if (error) throw error;
+}
