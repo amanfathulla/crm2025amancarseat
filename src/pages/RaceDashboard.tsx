@@ -28,6 +28,7 @@ type RecentOrder = {
   customer_name: string;
   product: string;
   product_variation?: string | null;
+  coupon_code?: string | null;
   price: number;
   created_at: string;
 };
