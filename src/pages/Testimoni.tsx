@@ -10,6 +10,7 @@ import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
 import PromoBanner from "@/components/sales/PromoBanner";
 import { REVIEW_MATERIALS, MATERIAL_SLUGS, materialFromSlug } from "@/lib/reviewMaterials";
 import LiveFooter from "@/components/LiveFooter";
+import { ReviewImage, LightboxProvider } from "@/components/sales/ReviewImageViewer";
 
 const PAGE_SIZE = 12;
 

@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Star, Loader2 } from "lucide-react";
 import { useReviews } from "@/hooks/useReviews";
+import { ReviewImage, LightboxProvider } from "@/components/sales/ReviewImageViewer";
 
 interface Props {
   material: string;
