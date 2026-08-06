@@ -266,6 +266,11 @@ export default function Reviews() {
                         {materials[r.id]}
                       </span>
                     )}
+                    {pins[r.id] !== undefined && (
+                      <span className="inline-flex items-center gap-1 ml-1.5 mt-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-600 px-2 py-0.5">
+                        <Pin className="h-2.5 w-2.5" /> Pin #{pins[r.id]}
+                      </span>
+                    )}
                     {r.review && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 italic">"{r.review}"</p>}
                     {imgs.length > 0 && (
                       <div className="flex gap-1.5 mt-2">
