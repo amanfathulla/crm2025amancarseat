@@ -9,6 +9,7 @@ type LiveOrder = {
   product: string;
   car_model: string;
   price: number;
+  coupon_code?: string | null;
   created_at: string;
 };
 
@@ -101,7 +102,7 @@ export default function LiveDashboard() {
       // Recent orders — HARI INI SAHAJA (max 10)
       const { data: recent } = await authClient
         .from("customers")
-        .select("id, name, product, car_model, sales_amount, paid_amount, created_at")
+        .select("id, name, product, car_model, sales_amount, paid_amount, coupon_code, created_at")
         .gte("created_at", todayIso)
         .order("created_at", { ascending: false })
         .limit(10);
@@ -112,6 +113,7 @@ export default function LiveDashboard() {
           product: r.product || "—",
           car_model: r.car_model || "—",
           price: Number(r.sales_amount || r.paid_amount || 0),
+          coupon_code: r.coupon_code || null,
           created_at: r.created_at,
         }))
       );
