@@ -286,6 +286,15 @@ export default function Reviews() {
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
+                    <Button
+                      variant={pins[r.id] !== undefined ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => togglePin(r.id)}
+                      className="gap-1"
+                    >
+                      {pins[r.id] !== undefined ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                      {pins[r.id] !== undefined ? "Unpin" : "Pin"}
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setEditMaterial(materials[r.id] ?? ""); }} className="gap-1">
                       <Pencil className="h-3 w-3" /> Edit
                     </Button>
