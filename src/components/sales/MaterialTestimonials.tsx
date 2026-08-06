@@ -29,6 +29,7 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
   const items = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
+    <LightboxProvider>
     <section className="mt-10 pt-8 border-t border-white/10">
       <div className="flex items-end justify-between gap-3 mb-4">
         <div>
@@ -111,5 +112,6 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
         </div>
       )}
     </section>
+    </LightboxProvider>
   );
 }

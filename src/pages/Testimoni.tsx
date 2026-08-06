@@ -67,6 +67,7 @@ export default function Testimoni() {
   const handleReview = () => setReviewOpen(true);
 
   return (
+    <LightboxProvider>
     <div className="min-h-screen w-full flex-1 bg-black text-white">
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/70 border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
@@ -193,6 +194,7 @@ export default function Testimoni() {
 
       <ReviewSubmitDialog open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>
+    </LightboxProvider>
   );
 }
 
