@@ -1,6 +1,7 @@
 import { useMemo, useState } from "react";
 import { Star, Loader2 } from "lucide-react";
 import { useReviews } from "@/hooks/useReviews";
+import { ReviewImage, LightboxProvider } from "@/components/sales/ReviewImageViewer";
 
 interface Props {
   material: string;
@@ -28,6 +29,7 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
   const items = list.slice((currentPage - 1) * pageSize, currentPage * pageSize);
 
   return (
+    <LightboxProvider>
     <section className="mt-10 pt-8 border-t border-white/10">
       <div className="flex items-end justify-between gap-3 mb-4">
         <div>
@@ -68,9 +70,7 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
                 {images.length > 0 && (
                   <div className="grid grid-cols-3 gap-1.5">
                     {images.slice(0, 3).map((src, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black/40 border border-white/5">
-                        <img src={src} alt={`Testimoni ${material} ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
-                      </div>
+                      <ReviewImage key={i} src={src} alt={`Testimoni ${material} ${i + 1}`} compact />
                     ))}
                   </div>
                 )}
@@ -112,5 +112,6 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
         </div>
       )}
     </section>
+    </LightboxProvider>
   );
 }

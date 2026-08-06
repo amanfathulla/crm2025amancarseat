@@ -10,6 +10,7 @@ import { QuickOrderForm } from "@/components/sales/QuickOrderForm";
 import PromoBanner from "@/components/sales/PromoBanner";
 import { REVIEW_MATERIALS, MATERIAL_SLUGS, materialFromSlug } from "@/lib/reviewMaterials";
 import LiveFooter from "@/components/LiveFooter";
+import { ReviewImage, LightboxProvider } from "@/components/sales/ReviewImageViewer";
 
 const PAGE_SIZE = 12;
 
@@ -66,6 +67,7 @@ export default function Testimoni() {
   const handleReview = () => setReviewOpen(true);
 
   return (
+    <LightboxProvider>
     <div className="min-h-screen w-full flex-1 bg-black text-white">
       <header className="sticky top-0 z-30 backdrop-blur-xl bg-black/70 border-b border-white/10">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between gap-3">
@@ -192,6 +194,7 @@ export default function Testimoni() {
 
       <ReviewSubmitDialog open={reviewOpen} onOpenChange={setReviewOpen} />
     </div>
+    </LightboxProvider>
   );
 }
 
@@ -233,9 +236,7 @@ function ReviewCard({ review }: { review: Review }) {
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
           {images.slice(0, 3).map((src, i) => (
-            <a key={i} href={src} target="_blank" rel="noreferrer" className="aspect-square rounded-md overflow-hidden bg-neutral-900 border border-white/5">
-              <img src={src} alt={`${review.name} ${i + 1}`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
-            </a>
+            <ReviewImage key={i} src={src} alt={`Testimoni ${review.name} ${i + 1}`} compact />
           ))}
         </div>
       )}
