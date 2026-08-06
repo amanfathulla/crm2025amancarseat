@@ -481,6 +481,7 @@ export default function LiveDashboard() {
                 <th className="text-left px-4 py-3">Pelanggan</th>
                 <th className="text-left px-4 py-3">Produk</th>
                 <th className="text-left px-4 py-3">Model Kereta</th>
+                <th className="text-left px-4 py-3">Kupon</th>
                 <th className="text-right px-4 py-3">Harga</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-right px-4 py-3">Masa</th>
