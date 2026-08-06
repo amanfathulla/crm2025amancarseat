@@ -80,12 +80,58 @@ export default function Reviews() {
         (r.car_model || "").toLowerCase().includes(t) ||
         (r.review || "").toLowerCase().includes(t)
       );
+    }).sort((a, b) => {
+      const pa = pins[a.id];
+      const pb = pins[b.id];
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return 0;
     });
-  }, [reviews, search, materials, materialFilter]);
+  }, [reviews, search, materials, materialFilter, pins]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
   const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  const MAX_PINS = 6;
+
+  const togglePin = async (reviewId: string) => {
+    const material = materials[reviewId];
+    if (!material) {
+      toast({
+        title: "Pilih material dahulu",
+        description: "Review perlu ada 'Material Design Order' sebelum boleh dipin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const isPinned = pins[reviewId] !== undefined;
+    const pinnedSameMaterial = Object.keys(pins).filter((id) => materials[id] === material);
+    if (!isPinned && pinnedSameMaterial.length >= MAX_PINS) {
+      toast({
+        title: `Maksimum ${MAX_PINS} pin`,
+        description: `${material} sudah ada ${MAX_PINS} testimoni dipin. Unpin salah satu dahulu.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const nextOrder = pinnedSameMaterial.length
+        ? Math.max(...pinnedSameMaterial.map((id) => pins[id])) + 1
+        : 1;
+      await setReviewPin(reviewId, material, !isPinned, isPinned ? null : nextOrder, authClient ?? undefined);
+      setPins((prev) => {
+        const next = { ...prev };
+        if (isPinned) delete next[reviewId];
+        else next[reviewId] = nextOrder;
+        return next;
+      });
+      toast({ title: isPinned ? "📌 Pin dibuang" : "📌 Testimoni dipin ke page 1" });
+    } catch (e: any) {
+      toast({ title: "Ralat pin", description: e.message, variant: "destructive" });
+    }
+  };
 
   const handleSaveEdit = async () => {
     if (!editing) return;
