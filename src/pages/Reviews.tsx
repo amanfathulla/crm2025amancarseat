@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Pin, PinOff, Plus, Search, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
-import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial } from "@/lib/reviewMaterials";
+import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial, fetchPinnedReviews, setReviewPin } from "@/lib/reviewMaterials";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -44,6 +44,7 @@ export default function Reviews() {
   const [materials, setMaterials] = useState<Record<string, string>>({});
   const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [editMaterial, setEditMaterial] = useState<string>("");
+  const [pins, setPins] = useState<Record<string, number>>({});
 
   const load = async () => {
     setLoading(true);
@@ -56,6 +57,7 @@ export default function Reviews() {
       if (error) throw error;
       setReviews((data || []) as Review[]);
       setMaterials(await fetchReviewMaterials());
+      setPins(await fetchPinnedReviews());
     } catch (e: any) {
       toast({ title: "Ralat", description: e.message, variant: "destructive" });
     } finally {
