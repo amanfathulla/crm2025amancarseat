@@ -436,6 +436,7 @@ export type Database = {
           balance_amount: number | null
           car_model: string | null
           city: string | null
+          coupon_code: string | null
           created_at: string | null
           deposit_amount: number | null
           email: string
@@ -470,6 +471,7 @@ export type Database = {
           balance_amount?: number | null
           car_model?: string | null
           city?: string | null
+          coupon_code?: string | null
           created_at?: string | null
           deposit_amount?: number | null
           email: string
@@ -504,6 +506,7 @@ export type Database = {
           balance_amount?: number | null
           car_model?: string | null
           city?: string | null
+          coupon_code?: string | null
           created_at?: string | null
           deposit_amount?: number | null
           email?: string
@@ -1071,18 +1074,24 @@ export type Database = {
         Row: {
           created_at: string
           material: string
+          pin_order: number | null
+          pinned: boolean
           review_id: string
           updated_at: string
         }
         Insert: {
           created_at?: string
           material: string
+          pin_order?: number | null
+          pinned?: boolean
           review_id: string
           updated_at?: string
         }
         Update: {
           created_at?: string
           material?: string
+          pin_order?: number | null
+          pinned?: boolean
           review_id?: string
           updated_at?: string
         }

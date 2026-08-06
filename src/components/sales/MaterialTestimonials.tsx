@@ -8,13 +8,20 @@ interface Props {
 }
 
 export default function MaterialTestimonials({ material, pageSize = 6 }: Props) {
-  const { reviews, loading, materials } = useReviews();
+  const { reviews, loading, materials, pins } = useReviews();
   const [page, setPage] = useState(1);
 
-  const list = useMemo(
-    () => reviews.filter((r) => materials[r.id] === material),
-    [reviews, materials, material]
-  );
+  const list = useMemo(() => {
+    const filtered = reviews.filter((r) => materials[r.id] === material);
+    return filtered.sort((a, b) => {
+      const pa = pins[a.id];
+      const pb = pins[b.id];
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return 0;
+    });
+  }, [reviews, materials, pins, material]);
 
   const totalPages = Math.max(1, Math.ceil(list.length / pageSize));
   const currentPage = Math.min(page, totalPages);

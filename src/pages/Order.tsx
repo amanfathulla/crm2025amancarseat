@@ -482,6 +482,7 @@ export default function OrderPage() {
         order_status: "processing",
         payment_source: "whatsapp",
         payment_gateway: null,
+        coupon_code: appliedCoupon?.code || null,
         order_date: new Date().toISOString(),
         seat_image_front: seatImageUrls.front || null,
         seat_image_back: seatImageUrls.back || null,

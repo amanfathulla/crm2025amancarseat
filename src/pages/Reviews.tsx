@@ -1,12 +1,12 @@
 import { useEffect, useMemo, useState } from "react";
-import { Loader2, Pencil, Plus, Search, Star, Trash2 } from "lucide-react";
+import { Loader2, Pencil, Pin, PinOff, Plus, Search, Star, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
-import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial } from "@/lib/reviewMaterials";
+import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial, fetchPinnedReviews, setReviewPin } from "@/lib/reviewMaterials";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -44,6 +44,7 @@ export default function Reviews() {
   const [materials, setMaterials] = useState<Record<string, string>>({});
   const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [editMaterial, setEditMaterial] = useState<string>("");
+  const [pins, setPins] = useState<Record<string, number>>({});
 
   const load = async () => {
     setLoading(true);
@@ -56,6 +57,7 @@ export default function Reviews() {
       if (error) throw error;
       setReviews((data || []) as Review[]);
       setMaterials(await fetchReviewMaterials());
+      setPins(await fetchPinnedReviews());
     } catch (e: any) {
       toast({ title: "Ralat", description: e.message, variant: "destructive" });
     } finally {
@@ -78,12 +80,58 @@ export default function Reviews() {
         (r.car_model || "").toLowerCase().includes(t) ||
         (r.review || "").toLowerCase().includes(t)
       );
+    }).sort((a, b) => {
+      const pa = pins[a.id];
+      const pb = pins[b.id];
+      if (pa !== undefined && pb !== undefined) return pa - pb;
+      if (pa !== undefined) return -1;
+      if (pb !== undefined) return 1;
+      return 0;
     });
-  }, [reviews, search, materials, materialFilter]);
+  }, [reviews, search, materials, materialFilter, pins]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
   const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
+
+  const MAX_PINS = 6;
+
+  const togglePin = async (reviewId: string) => {
+    const material = materials[reviewId];
+    if (!material) {
+      toast({
+        title: "Pilih material dahulu",
+        description: "Review perlu ada 'Material Design Order' sebelum boleh dipin.",
+        variant: "destructive",
+      });
+      return;
+    }
+    const isPinned = pins[reviewId] !== undefined;
+    const pinnedSameMaterial = Object.keys(pins).filter((id) => materials[id] === material);
+    if (!isPinned && pinnedSameMaterial.length >= MAX_PINS) {
+      toast({
+        title: `Maksimum ${MAX_PINS} pin`,
+        description: `${material} sudah ada ${MAX_PINS} testimoni dipin. Unpin salah satu dahulu.`,
+        variant: "destructive",
+      });
+      return;
+    }
+    try {
+      const nextOrder = pinnedSameMaterial.length
+        ? Math.max(...pinnedSameMaterial.map((id) => pins[id])) + 1
+        : 1;
+      await setReviewPin(reviewId, material, !isPinned, isPinned ? null : nextOrder, authClient ?? undefined);
+      setPins((prev) => {
+        const next = { ...prev };
+        if (isPinned) delete next[reviewId];
+        else next[reviewId] = nextOrder;
+        return next;
+      });
+      toast({ title: isPinned ? "📌 Pin dibuang" : "📌 Testimoni dipin ke page 1" });
+    } catch (e: any) {
+      toast({ title: "Ralat pin", description: e.message, variant: "destructive" });
+    }
+  };
 
   const handleSaveEdit = async () => {
     if (!editing) return;
@@ -218,6 +266,11 @@ export default function Reviews() {
                         {materials[r.id]}
                       </span>
                     )}
+                    {pins[r.id] !== undefined && (
+                      <span className="inline-flex items-center gap-1 ml-1.5 mt-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-amber-500/40 bg-amber-500/10 text-amber-600 px-2 py-0.5">
+                        <Pin className="h-2.5 w-2.5" /> Pin #{pins[r.id]}
+                      </span>
+                    )}
                     {r.review && <p className="text-sm text-muted-foreground line-clamp-2 mt-0.5 italic">"{r.review}"</p>}
                     {imgs.length > 0 && (
                       <div className="flex gap-1.5 mt-2">
@@ -233,6 +286,15 @@ export default function Reviews() {
                     )}
                   </div>
                   <div className="flex flex-col sm:flex-row gap-1.5 shrink-0">
+                    <Button
+                      variant={pins[r.id] !== undefined ? "default" : "outline"}
+                      size="sm"
+                      onClick={() => togglePin(r.id)}
+                      className="gap-1"
+                    >
+                      {pins[r.id] !== undefined ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
+                      {pins[r.id] !== undefined ? "Unpin" : "Pin"}
+                    </Button>
                     <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setEditMaterial(materials[r.id] ?? ""); }} className="gap-1">
                       <Pencil className="h-3 w-3" /> Edit
                     </Button>

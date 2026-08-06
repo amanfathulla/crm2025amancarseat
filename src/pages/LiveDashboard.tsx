@@ -9,6 +9,7 @@ type LiveOrder = {
   product: string;
   car_model: string;
   price: number;
+  coupon_code?: string | null;
   created_at: string;
 };
 
@@ -101,7 +102,7 @@ export default function LiveDashboard() {
       // Recent orders — HARI INI SAHAJA (max 10)
       const { data: recent } = await authClient
         .from("customers")
-        .select("id, name, product, car_model, sales_amount, paid_amount, created_at")
+        .select("id, name, product, car_model, sales_amount, paid_amount, coupon_code, created_at")
         .gte("created_at", todayIso)
         .order("created_at", { ascending: false })
         .limit(10);
@@ -112,6 +113,7 @@ export default function LiveDashboard() {
           product: r.product || "—",
           car_model: r.car_model || "—",
           price: Number(r.sales_amount || r.paid_amount || 0),
+          coupon_code: r.coupon_code || null,
           created_at: r.created_at,
         }))
       );
@@ -479,6 +481,7 @@ export default function LiveDashboard() {
                 <th className="text-left px-4 py-3">Pelanggan</th>
                 <th className="text-left px-4 py-3">Produk</th>
                 <th className="text-left px-4 py-3">Model Kereta</th>
+                <th className="text-left px-4 py-3">Kupon</th>
                 <th className="text-right px-4 py-3">Harga</th>
                 <th className="text-left px-4 py-3">Status</th>
                 <th className="text-right px-4 py-3">Masa</th>
@@ -487,7 +490,7 @@ export default function LiveDashboard() {
             <tbody>
               {recentOrders.length === 0 ? (
                 <tr>
-                  <td colSpan={6} className="text-center py-8 text-muted-foreground">
+                  <td colSpan={7} className="text-center py-8 text-muted-foreground">
                     Belum ada order
                   </td>
                 </tr>
@@ -502,6 +505,15 @@ export default function LiveDashboard() {
                     <td className="px-4 py-3 font-medium text-foreground">{o.customer}</td>
                     <td className="px-4 py-3 text-foreground">{o.product}</td>
                     <td className="px-4 py-3 text-muted-foreground">{o.car_model}</td>
+                    <td className="px-4 py-3">
+                      {o.coupon_code ? (
+                        <Badge className="bg-orange-500/15 text-orange-700 hover:bg-orange-500/20 border-orange-500/30">
+                          🎟 {o.coupon_code}
+                        </Badge>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">—</span>
+                      )}
+                    </td>
                     <td className="px-4 py-3 text-right font-semibold text-foreground">
                       RM {o.price.toLocaleString("en-MY", { maximumFractionDigits: 0 })}
                     </td>

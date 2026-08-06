@@ -125,6 +125,7 @@ serve(async (req) => {
         payment_type: isDeposit ? "deposit" : "full",
         deposit_amount: isDeposit ? amountToPay : 0,
         balance_amount: serverBalance,
+        coupon_code: coupon_code?.trim() ? coupon_code.trim().toUpperCase() : null,
         payment_source: provider,
         payment_gateway: provider,
       }).select().single();

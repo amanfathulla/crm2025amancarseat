@@ -1,6 +1,6 @@
 import { useEffect, useState } from "react";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
-import { fetchReviewMaterials } from "@/lib/reviewMaterials";
+import { fetchReviewMaterials, fetchPinnedReviews } from "@/lib/reviewMaterials";
 
 let cache: Review[] | null = null;
 let inflight: Promise<Review[]> | null = null;
@@ -39,10 +39,12 @@ export function useReviews() {
   const [loading, setLoading] = useState(!cache);
   const [error, setError] = useState<string | null>(null);
   const [materials, setMaterials] = useState<Record<string, string>>({});
+  const [pins, setPins] = useState<Record<string, number>>({});
 
   useEffect(() => {
     let alive = true;
     fetchReviewMaterials().then((m) => { if (alive) setMaterials(m); });
+    fetchPinnedReviews().then((p) => { if (alive) setPins(p); });
     return () => { alive = false; };
   }, []);
 
@@ -71,5 +73,5 @@ export function useReviews() {
     };
   }, []);
 
-  return { reviews, loading, error, materials };
+  return { reviews, loading, error, materials, pins };
 }
