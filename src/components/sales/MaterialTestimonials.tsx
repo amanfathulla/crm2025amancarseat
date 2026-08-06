@@ -68,9 +68,7 @@ export default function MaterialTestimonials({ material, pageSize = 6 }: Props) 
                 {images.length > 0 && (
                   <div className="grid grid-cols-3 gap-1.5">
                     {images.slice(0, 3).map((src, i) => (
-                      <div key={i} className="aspect-square rounded-lg overflow-hidden bg-black/40 border border-white/5">
-                        <img src={src} alt={`Testimoni ${material} ${i + 1}`} loading="lazy" className="w-full h-full object-cover" />
-                      </div>
+                      <ReviewImage key={i} src={src} alt={`Testimoni ${material} ${i + 1}`} compact />
                     ))}
                   </div>
                 )}

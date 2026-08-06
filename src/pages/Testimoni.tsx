@@ -233,9 +233,7 @@ function ReviewCard({ review }: { review: Review }) {
       {images.length > 0 && (
         <div className="grid grid-cols-3 gap-1.5">
           {images.slice(0, 3).map((src, i) => (
-            <a key={i} href={src} target="_blank" rel="noreferrer" className="aspect-square rounded-md overflow-hidden bg-neutral-900 border border-white/5">
-              <img src={src} alt={`${review.name} ${i + 1}`} loading="lazy" className="w-full h-full object-cover hover:scale-105 transition-transform" />
-            </a>
+            <ReviewImage key={i} src={src} alt={`Testimoni ${review.name} ${i + 1}`} compact />
           ))}
         </div>
       )}
