@@ -44,6 +44,8 @@ type FormState = {
   is_lifetime: boolean;
   valid_until: string; // yyyy-mm-dd, only used when not lifetime
   materials: string[]; // empty = all materials
+  is_unlimited: boolean;
+  usage_limit: string;
   is_featured_landing: boolean;
   banner_theme: "orange" | "red" | "black" | "white" | "yellow";
 };
@@ -58,6 +60,8 @@ const emptyForm = (): FormState => ({
   is_lifetime: true,
   valid_until: "",
   materials: [],
+  is_unlimited: true,
+  usage_limit: "",
   is_featured_landing: false,
   banner_theme: "orange",
 });
@@ -114,6 +118,8 @@ export default function CouponManager() {
       is_lifetime: isLifetime,
       valid_until: isLifetime ? "" : row.valid_until.slice(0, 10),
       materials: row.applicable_materials || [],
+      is_unlimited: !row.usage_limit || row.usage_limit >= 999999,
+      usage_limit: !row.usage_limit || row.usage_limit >= 999999 ? "" : String(row.usage_limit),
       is_featured_landing: row.is_featured_landing,
       banner_theme: (row.banner_theme as FormState["banner_theme"]) || "orange",
     });
@@ -136,6 +142,10 @@ export default function CouponManager() {
       toast({ title: "Sila masukkan jumlah diskaun", variant: "destructive" });
       return;
     }
+    if (!form.is_unlimited && (!form.usage_limit || Number(form.usage_limit) <= 0)) {
+      toast({ title: "Sila masukkan kuota penggunaan kupon", variant: "destructive" });
+      return;
+    }
     if (!form.is_lifetime && !form.valid_until) {
       toast({ title: "Sila pilih tarikh tamat tempoh", variant: "destructive" });
       return;
@@ -146,7 +156,7 @@ export default function CouponManager() {
       code: form.code.trim().toUpperCase(),
       discount_amount: Number(form.discount_amount),
       discount_type: form.discount_type,
-      usage_limit: 999999,
+      usage_limit: form.is_unlimited ? 999999 : Math.max(1, Number(form.usage_limit) || 1),
       valid_until: form.is_lifetime ? LIFETIME_DATE : `${form.valid_until}T23:59:59+08:00`,
       is_active: form.is_active,
       applicable_materials: form.materials.length > 0 ? form.materials : null,
@@ -287,6 +297,32 @@ export default function CouponManager() {
                   />
                 </div>
               )}
+
+              <div className="rounded-lg border p-3 space-y-3">
+                <div className="flex items-center justify-between">
+                  <div>
+                    <Label className="text-sm">Kuota Tanpa Had</Label>
+                    <p className="text-xs text-muted-foreground">Kupon boleh digunakan tanpa had bilangan</p>
+                  </div>
+                  <Switch
+                    checked={form.is_unlimited}
+                    onCheckedChange={(v) => setForm((p) => ({ ...p, is_unlimited: v }))}
+                  />
+                </div>
+                {!form.is_unlimited && (
+                  <div className="space-y-1">
+                    <Label>Kuantiti Kuota</Label>
+                    <Input
+                      type="number"
+                      min={1}
+                      value={form.usage_limit}
+                      onChange={(e) => setForm((p) => ({ ...p, usage_limit: e.target.value }))}
+                      placeholder="cth: 100"
+                    />
+                    <p className="text-xs text-muted-foreground">Berapa kali kupon ini boleh ditebus.</p>
+                  </div>
+                )}
+              </div>
 
               <div className="space-y-2">
                 <Label>Material Layak</Label>
