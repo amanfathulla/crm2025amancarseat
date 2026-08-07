@@ -31,40 +31,76 @@ const months = [
   { value: "12", label: "Disember" },
 ];
 
+const HEADERS = [
+  "Bil",
+  "No. Tempahan",
+  "Tarikh Order",
+  "Nama",
+  "No. Telefon",
+  "Email",
+  "Alamat Penuh",
+  "Bandar",
+  "Negeri",
+  "Poskod",
+  "Model Kereta",
+  "Produk",
+  "Variasi Produk",
+  "Kupon",
+  "Status Order",
+  "Jenis Bayaran",
+  "Jumlah Pesanan",
+  "Jumlah Jualan (RM)",
+  "Jumlah Kos (RM)",
+  "Jumlah Untung (RM)",
+] as const;
+
+const num = (v: unknown) => {
+  const n = typeof v === "number" ? v : parseFloat(String(v ?? "0"));
+  return isNaN(n) ? 0 : n;
+};
+const money = (n: number) => n.toFixed(2);
+const esc = (s: unknown) =>
+  String(s ?? "").replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+
 export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDialogProps) {
   const [selectedYear, setSelectedYear] = useState<string>(currentYear.toString());
   const [selectedMonth, setSelectedMonth] = useState<string>("all");
-  const [fileFormat, setFileFormat] = useState<"csv" | "excel">("csv");
+  const [fileFormat, setFileFormat] = useState<"csv" | "excel">("excel");
   const [isLoading, setIsLoading] = useState(false);
   const { toast } = useToast();
   const { authClient } = useAuth();
+
+  const triggerDownload = (content: string, mime: string, filename: string) => {
+    const blob = new Blob(["\ufeff" + content], { type: mime });
+    const link = document.createElement("a");
+    link.href = URL.createObjectURL(blob);
+    link.download = filename;
+    link.click();
+    setTimeout(() => URL.revokeObjectURL(link.href), 2000);
+  };
 
   const downloadData = async () => {
     setIsLoading(true);
     try {
       let query = authClient
         .from("customers")
-        .select("name, phone, email, created_at, total_orders, city");
+        .select(
+          "order_number, name, phone, email, address, city, state, zip_code, car_model, product, product_variation, coupon_code, order_status, payment_type, total_orders, sales_amount, paid_amount, gross_profit, order_date, created_at"
+        )
+        .order("created_at", { ascending: true })
+        .limit(5000);
 
-      // Apply date filters
       if (selectedMonth !== "all") {
         const startDate = new Date(parseInt(selectedYear), parseInt(selectedMonth) - 1, 1);
-        const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0);
-        
-        query = query
-          .gte("created_at", startDate.toISOString())
-          .lte("created_at", endDate.toISOString());
+        const endDate = new Date(parseInt(selectedYear), parseInt(selectedMonth), 0, 23, 59, 59);
+        query = query.gte("created_at", startDate.toISOString()).lte("created_at", endDate.toISOString());
       } else if (selectedYear) {
         const startDate = new Date(parseInt(selectedYear), 0, 1);
-        const endDate = new Date(parseInt(selectedYear), 11, 31);
-        
-        query = query
-          .gte("created_at", startDate.toISOString())
-          .lte("created_at", endDate.toISOString());
+        const endDate = new Date(parseInt(selectedYear), 11, 31, 23, 59, 59);
+        query = query.gte("created_at", startDate.toISOString()).lte("created_at", endDate.toISOString());
       }
 
       const { data, error } = await query;
-
       if (error) throw error;
 
       if (!data || data.length === 0) {
@@ -76,54 +112,98 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         return;
       }
 
-      // Format data for export - ensure phone numbers are properly formatted
-      const formattedData = data.map(customer => ({
-        "Nama": customer.name,
-        "No. Telefon": `'${customer.phone}`, // Add leading apostrophe to preserve leading zeros
-        "Email": customer.email,
-        "Tarikh Daftar": formatDate(new Date(customer.created_at), "dd/MM/yyyy"),
-        "Jumlah Pesanan": customer.total_orders,
-        "Negeri": customer.city
-      }));
+      let totalSales = 0;
+      let totalCost = 0;
+      let totalProfit = 0;
 
-      // Convert to CSV/Excel format
+      const rows = data.map((c: Record<string, unknown>, idx) => {
+        const sales = num(c.sales_amount) || num(c.paid_amount);
+        const profit = num(c.gross_profit);
+        const cost = Math.max(sales - profit, 0);
+        totalSales += sales;
+        totalCost += cost;
+        totalProfit += profit;
+
+        const orderDate = (c.order_date as string) || (c.created_at as string);
+
+        return [
+          String(idx + 1),
+          c.order_number ? String(c.order_number) : "-",
+          orderDate ? formatDate(new Date(orderDate), "dd/MM/yyyy") : "-",
+          (c.name as string) || "-",
+          c.phone ? `'${c.phone}` : "-",
+          (c.email as string) || "-",
+          (c.address as string) || "-",
+          (c.city as string) || "-",
+          (c.state as string) || (c.city as string) || "-",
+          (c.zip_code as string) || "-",
+          (c.car_model as string) || "-",
+          (c.product as string) || "-",
+          (c.product_variation as string) || "-",
+          (c.coupon_code as string) || "-",
+          (c.order_status as string) || "-",
+          (c.payment_type as string) || "-",
+          String(c.total_orders != null && num(c.total_orders) > 0 ? num(c.total_orders) : 1),
+          money(sales),
+          money(cost),
+          money(profit),
+        ];
+      });
+
+      const periodLabel =
+        selectedMonth === "all"
+          ? `Tahun ${selectedYear}`
+          : `${months.find((m) => m.value === selectedMonth)?.label} ${selectedYear}`;
+      const fileBase = `pelanggan_${selectedYear}_${selectedMonth !== "all" ? selectedMonth : "semua"}`;
+
       if (fileFormat === "csv") {
-        const headers = Object.keys(formattedData[0]);
-        const csv = [
-          headers.join(","),
-          ...formattedData.map(row => headers.map(header => {
-            // Ensure all cells are properly quoted to preserve formatting
-            return `"${row[header]}"`;
-          }).join(","))
-        ].join("\n");
-
-        // Create and download file
-        const blob = new Blob([csv], { type: "text/csv;charset=utf-8;" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `pelanggan_${selectedYear}_${selectedMonth !== "all" ? selectedMonth : "semua"}.csv`;
-        link.click();
+        const q = (v: string) => `"${String(v).replace(/"/g, '""')}"`;
+        const lines = [
+          [`Senarai Pelanggan - ${periodLabel}`].map(q).join(","),
+          "",
+          HEADERS.map(q).join(","),
+          ...rows.map((r) => r.map(q).join(",")),
+          "",
+          [q("JUMLAH JUALAN (RM)"), q(money(totalSales))].join(","),
+          [q("JUMLAH KOS (RM)"), q(money(totalCost))].join(","),
+          [q("JUMLAH PROFIT (RM)"), q(money(totalProfit))].join(","),
+        ];
+        triggerDownload(lines.join("\n"), "text/csv;charset=utf-8;", `${fileBase}.csv`);
       } else {
-        // For Excel, we'll use CSV with tab separator and special formatting for numbers
-        const headers = Object.keys(formattedData[0]);
-        const csv = [
-          headers.join("\t"),
-          ...formattedData.map(row => headers.map(header => {
-            // Ensure all cells are properly quoted to preserve formatting
-            return `"${row[header]}"`;
-          }).join("\t"))
-        ].join("\n");
-
-        const blob = new Blob([csv], { type: "application/vnd.ms-excel" });
-        const link = document.createElement("a");
-        link.href = URL.createObjectURL(blob);
-        link.download = `pelanggan_${selectedYear}_${selectedMonth !== "all" ? selectedMonth : "semua"}.xls`;
-        link.click();
+        const html = `<html xmlns:x="urn:schemas-microsoft-com:office:excel"><head><meta charset="utf-8" />
+<style>
+  table { border-collapse: collapse; font-family: Arial, sans-serif; font-size: 11pt; }
+  td, th { border: 1px solid #999; padding: 4px 8px; mso-number-format:"\\@"; }
+  th { background: #1e3a5f; color: #ffffff; font-weight: bold; }
+  .title { font-size: 16pt; font-weight: bold; }
+  .num { mso-number-format:"0\\.00"; text-align: right; }
+  .totlabel { font-size: 16pt; font-weight: bold; color: #FF0000; background: #FFF3F3; }
+  .totval { font-size: 16pt; font-weight: bold; color: #FF0000; background: #FFF3F3; mso-number-format:"0\\.00"; text-align: right; }
+</style></head><body>
+<table>
+  <tr><td class="title" colspan="${HEADERS.length}">Senarai Pelanggan - ${esc(periodLabel)}</td></tr>
+  <tr><td colspan="${HEADERS.length}"></td></tr>
+  <tr>${HEADERS.map((h) => `<th>${esc(h)}</th>`).join("")}</tr>
+  ${rows
+    .map(
+      (r) =>
+        `<tr>${r
+          .map((cell, i) => `<td class="${i >= 17 ? "num" : ""}">${esc(i === 4 ? String(cell).replace(/^'/, "") : cell)}</td>`)
+          .join("")}</tr>`
+    )
+    .join("")}
+  <tr><td colspan="${HEADERS.length}"></td></tr>
+  <tr><td class="totlabel" colspan="17">JUMLAH JUALAN (RM)</td><td class="totval" colspan="3">${money(totalSales)}</td></tr>
+  <tr><td class="totlabel" colspan="17">JUMLAH KOS (RM)</td><td class="totval" colspan="3">${money(totalCost)}</td></tr>
+  <tr><td class="totlabel" colspan="17">JUMLAH PROFIT (RM)</td><td class="totval" colspan="3">${money(totalProfit)}</td></tr>
+</table>
+</body></html>`;
+        triggerDownload(html, "application/vnd.ms-excel;charset=utf-8;", `${fileBase}.xls`);
       }
 
       toast({
         title: "Muat Turun Selesai",
-        description: "Fail telah berjaya dimuat turun.",
+        description: `${rows.length} rekod • Jualan RM${money(totalSales)} • Profit RM${money(totalProfit)}`,
       });
       onClose();
     } catch (error) {
@@ -144,7 +224,7 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
         <DialogHeader>
           <DialogTitle>Muat Turun Senarai Pelanggan</DialogTitle>
           <DialogDescription>
-            Pilih tempoh masa dan format fail untuk muat turun data pelanggan.
+            Pilih tempoh masa dan format fail. Jumlah Jualan, Kos dan Profit dikira automatik di bawah senarai.
           </DialogDescription>
         </DialogHeader>
 
@@ -188,8 +268,8 @@ export function DownloadCustomersDialog({ isOpen, onClose }: DownloadCustomersDi
                 <SelectValue placeholder="Pilih format fail" />
               </SelectTrigger>
               <SelectContent>
+                <SelectItem value="excel">Excel (.xls)</SelectItem>
                 <SelectItem value="csv">CSV</SelectItem>
-                <SelectItem value="excel">Excel</SelectItem>
               </SelectContent>
             </Select>
           </div>
