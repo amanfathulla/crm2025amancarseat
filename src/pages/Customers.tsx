@@ -208,6 +208,7 @@ function Customers() {
         payment_type: (record as any).payment_type || null,
         deposit_amount: Number((record as any).deposit_amount) || 0,
         balance_amount: Number((record as any).balance_amount) || 0,
+        coupon_code: (record as any).coupon_code || null,
       })) || [];
       
       setCustomers(mappedCustomers);

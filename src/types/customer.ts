@@ -33,6 +33,7 @@ export interface Customer {
   payment_type?: string | null;
   deposit_amount?: number | null;
   balance_amount?: number | null;
+  coupon_code?: string | null;
 }
 
 export interface CustomerFormData {
