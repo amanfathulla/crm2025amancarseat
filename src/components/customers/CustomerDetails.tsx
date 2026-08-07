@@ -177,6 +177,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
               <InfoRow icon={<Car className="h-3 w-3" />} label="Kereta" value={customer.car_model || "—"} />
               <InfoRow icon={<MapPin className="h-3 w-3" />} label="Lokasi" value={location} />
               <InfoRow icon={<Phone className="h-3 w-3" />} label="Telefon" value={customer.phone || "—"} />
+              <InfoRow icon={<Ticket className="h-3 w-3" />} label="Kupon" value={customer.coupon_code || "— (tiada kupon)"} />
             </div>
             {/* Finance row */}
             <div className="border-t border-border/40 bg-muted/20 px-3 py-1.5 flex items-center justify-between gap-2 flex-wrap">
