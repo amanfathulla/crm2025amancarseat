@@ -17,6 +17,7 @@ import {
   Trash2,
   MessageCircle,
   CreditCard,
+  Ticket,
 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import { useEffect, useState } from "react";
@@ -142,7 +143,14 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
           </div>
           <div className="flex-1 min-w-0 text-left overflow-hidden">
             <p className="font-semibold text-foreground text-xs truncate leading-tight">{customer.name}</p>
-            <p className="text-[11px] text-muted-foreground truncate leading-tight">{customer.phone || "—"}</p>
+            <div className="flex items-center gap-1 min-w-0">
+              <p className="text-[11px] text-muted-foreground truncate leading-tight">{customer.phone || "—"}</p>
+              {customer.coupon_code && (
+                <span className="shrink-0 inline-flex items-center gap-0.5 text-[8px] px-1 py-0.5 rounded-full border font-bold whitespace-nowrap bg-fuchsia-500/15 text-fuchsia-600 border-fuchsia-500/30">
+                  <Ticket className="h-2.5 w-2.5" /> {customer.coupon_code}
+                </span>
+              )}
+            </div>
           </div>
           <div className="shrink-0 flex flex-col items-end gap-0.5 ml-1 min-w-[80px]">
             <div className="flex items-center gap-1">
@@ -169,6 +177,7 @@ export function CustomerDetails({ customer, onEdit, onDelete, index, className }
               <InfoRow icon={<Car className="h-3 w-3" />} label="Kereta" value={customer.car_model || "—"} />
               <InfoRow icon={<MapPin className="h-3 w-3" />} label="Lokasi" value={location} />
               <InfoRow icon={<Phone className="h-3 w-3" />} label="Telefon" value={customer.phone || "—"} />
+              <InfoRow icon={<Ticket className="h-3 w-3" />} label="Kupon" value={customer.coupon_code || "— (tiada kupon)"} />
             </div>
             {/* Finance row */}
             <div className="border-t border-border/40 bg-muted/20 px-3 py-1.5 flex items-center justify-between gap-2 flex-wrap">
