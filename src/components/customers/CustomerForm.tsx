@@ -216,7 +216,7 @@ export function CustomerForm({
     setFormData(prev => ({
       ...prev,
       product_variation: variationName,
-      sales_amount: price,
+      sales_amount: paidAmount,
       gross_profit: grossProfit,
       paid_amount: paidAmount
     }));
@@ -225,15 +225,14 @@ export function CustomerForm({
   const handlePaidAmountChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const paidAmount = Number(e.target.value);
     const selectedVariation = variations.find(v => v.name === formData.product_variation);
-    
-    if (selectedVariation) {
-      const newGrossProfit = paidAmount - selectedVariation.cost;
-      setFormData(prev => ({
-        ...prev,
-        paid_amount: paidAmount,
-        gross_profit: newGrossProfit
-      }));
-    }
+    const cost = selectedVariation?.cost ?? 0;
+
+    setFormData(prev => ({
+      ...prev,
+      paid_amount: paidAmount,
+      sales_amount: paidAmount,
+      gross_profit: paidAmount - cost
+    }));
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -269,7 +268,7 @@ export function CustomerForm({
             car_model: formData.car_model,
             product: formData.product,
             product_variation: formData.product_variation,
-            sales_amount: formData.sales_amount,
+            sales_amount: formData.paid_amount,
             gross_profit: formData.gross_profit,
             paid_amount: formData.paid_amount,
             order_date: formData.order_date,
