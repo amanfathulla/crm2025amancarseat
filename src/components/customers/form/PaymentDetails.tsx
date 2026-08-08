@@ -50,8 +50,8 @@ export function PaymentDetails({
           <span>{productVariation}</span>
         </div>
         <div className="flex justify-between mb-1">
-          <span>Sales Amount:</span>
-          <span>RM {salesAmount.toFixed(2)}</span>
+          <span>Jualan Direkod (Jumlah Dibayar):</span>
+          <span>RM {(paidAmount || 0).toFixed(2)}</span>
         </div>
         <div className="flex justify-between font-medium">
           <span>Gross Profit:</span>
