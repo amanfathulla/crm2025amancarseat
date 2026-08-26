@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Volume2, VolumeX, Play, Star, ArrowLeft, Zap } from "lucide-react";
+import { Shield, Volume2, VolumeX, Play, Star, Zap } from "lucide-react";
 
 interface SalePage {
   id: string;
@@ -10,6 +10,7 @@ interface SalePage {
   headline: string | null;
   subheadline: string | null;
   video_url: string | null;
+  video_urls: string[] | null;
   poster_url: string | null;
   product_id: string | null;
   cta_label: string | null;
@@ -40,7 +41,8 @@ export default function SalePageView() {
   const [selectedVar, setSelectedVar] = useState<Variation | null>(null);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
-  const [showVideo, setShowVideo] = useState(false);
+  const [started, setStarted] = useState(false);
+  const [videoIndex, setVideoIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -49,7 +51,7 @@ export default function SalePageView() {
       try {
         const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_url, poster_url, product_id, cta_label, badge_text, is_published")
+          .select("id, slug, title, headline, subheadline, video_url, video_urls, poster_url, product_id, cta_label, badge_text, is_published")
           .eq("slug", slug).single();
         if (!pg || !pg.is_published) {
           setLoading(false);
@@ -83,18 +85,51 @@ export default function SalePageView() {
     })();
   }, [slug]);
 
-  const handleUnmute = () => {
+  // Playlist: video_urls (array, main ikut turutan + loop) — fallback ke video_url tunggal
+  const playlist: string[] = page?.video_urls?.filter(Boolean)?.length
+    ? (page!.video_urls as string[]).filter(Boolean)
+    : page?.video_url
+    ? [page.video_url]
+    : [];
+
+  const currentVideo = playlist[videoIndex % Math.max(1, playlist.length)] || null;
+
+  // Video ended → next in playlist; at end → loop back to first
+  const handleVideoEnded = () => {
+    if (playlist.length <= 1) {
+      // Single video: loop itself
+      videoRef.current?.play().catch(() => {});
+      return;
+    }
+    setVideoIndex(i => (i + 1) % playlist.length);
+  };
+
+  // When index changes, load & keep playing
+  useEffect(() => {
+    if (!currentVideo || !videoRef.current) return;
+    videoRef.current.load();
+    if (started) {
+      videoRef.current.play().catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [videoIndex]);
+
+  const handleStart = () => {
+    setStarted(true);
     setMuted(false);
-    setShowVideo(true);
     if (videoRef.current) {
       videoRef.current.muted = false;
       videoRef.current.play().catch(() => {});
     }
   };
 
-  const buyUrl = product
-    ? `/order?product=${product.id}${selectedVar ? "" : ""}`
-    : "/order";
+  const toggleMute = () => {
+    const next = !muted;
+    setMuted(next);
+    if (videoRef.current) videoRef.current.muted = next;
+  };
+
+  const buyUrl = product ? `/order?product=${product.id}` : "/order";
 
   // loading
   if (loading) {
@@ -108,9 +143,12 @@ export default function SalePageView() {
   // not found / unpublished
   if (!page) {
     return (
-      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-4 p-6">
+      <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-white/80 text-lg font-semibold">Page tidak dijumpai</p>
-        <Link to="/" className="text-amber-400 underline text-sm">Kembali ke laman utama</Link>
+        <p className="text-white/40 text-xs">
+          Page ini mungkin masih Draf (belum Publish) atau link salah.
+        </p>
+        <Link to="/" className="text-amber-400 underline text-sm mt-2">Kembali ke laman utama</Link>
       </div>
     );
   }
@@ -122,24 +160,27 @@ export default function SalePageView() {
       {/* Phone-width container 375px (full-screen on actual mobile) */}
       <div className="w-full max-w-[375px] min-h-full relative flex flex-col">
 
-        {/* ── Video section ──────────────────────────── */}
+        {/* ── Video section (playlist) ─────────────────── */}
         <div className="relative w-full aspect-[9/16] bg-black overflow-hidden">
-          {page.video_url ? (
+          {currentVideo ? (
             <>
               <video
                 ref={videoRef}
-                src={page.video_url}
+                src={currentVideo}
                 poster={page.poster_url || undefined}
                 muted={muted}
-                loop
+                loop={false}
                 playsInline
                 autoPlay
+                onEnded={handleVideoEnded}
                 className="w-full h-full object-cover"
-              />
-              {/* Tap-to-play overlay (shown when not yet started) */}
-              {!showVideo && (
+              >
+                <source src={currentVideo} type="video/mp4" />
+              </video>
+              {/* Tap-to-start overlay */}
+              {!started && (
                 <button
-                  onClick={handleUnmute}
+                  onClick={handleStart}
                   className="absolute inset-0 flex items-center justify-center bg-black/30"
                 >
                   <div className="flex flex-col items-center gap-3">
@@ -152,18 +193,20 @@ export default function SalePageView() {
                   </div>
                 </button>
               )}
-              {/* Mute toggle (after started) */}
-              {showVideo && (
+              {/* Mute toggle */}
+              {started && (
                 <button
-                  onClick={() => {
-                    const next = !muted;
-                    setMuted(next);
-                    if (videoRef.current) videoRef.current.muted = next;
-                  }}
+                  onClick={toggleMute}
                   className="absolute top-3 right-3 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center"
                 >
                   {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
                 </button>
+              )}
+              {/* Playlist position indicator */}
+              {playlist.length > 1 && (
+                <div className="absolute bottom-24 right-3 bg-black/50 backdrop-blur text-white/80 text-[10px] px-2 py-1 rounded-full">
+                  {videoIndex + 1}/{playlist.length}
+                </div>
               )}
             </>
           ) : page.poster_url ? (

@@ -23,6 +23,7 @@ interface SalePage {
   headline: string | null;
   subheadline: string | null;
   video_url: string | null;
+  video_urls: string[] | null;
   poster_url: string | null;
   product_id: string | null;
   cta_label: string | null;
@@ -43,6 +44,7 @@ interface FormState {
   headline: string;
   subheadline: string;
   video_url: string;
+  video_urls: string[];  // playlist — banyak video, main ikut turutan lepas tu loop
   poster_url: string;
   product_id: string;
   cta_label: string;
@@ -55,6 +57,7 @@ const EMPTY_FORM: FormState = {
   headline: "",
   subheadline: "",
   video_url: "",
+  video_urls: [],
   poster_url: "",
   product_id: "",
   cta_label: "Buy Now",
@@ -116,6 +119,7 @@ export default function SalePagesAdmin() {
       headline: p.headline || "",
       subheadline: p.subheadline || "",
       video_url: p.video_url || "",
+      video_urls: (p as any).video_urls || [],
       poster_url: p.poster_url || "",
       product_id: p.product_id || "",
       cta_label: p.cta_label || "Buy Now",
@@ -137,6 +141,7 @@ export default function SalePagesAdmin() {
         headline: form.headline.trim() || null,
         subheadline: form.subheadline.trim() || null,
         video_url: form.video_url.trim() || null,
+        video_urls: form.video_urls.filter(Boolean),
         poster_url: form.poster_url.trim() || null,
         product_id: form.product_id || null,
         cta_label: form.cta_label.trim() || "Buy Now",
@@ -289,8 +294,50 @@ export default function SalePagesAdmin() {
                 <Input id="sp-subheadline" value={form.subheadline} onChange={e => setField("subheadline", e.target.value)} placeholder="Diskaun 20% hari ini" />
               </div>
               <div>
-                <Label htmlFor="sp-video">Video URL (R2 Cloudflare)</Label>
-                <Input id="sp-video" value={form.video_url} onChange={e => setField("video_url", e.target.value)} placeholder="https://pub-xxxx.r2.dev/video.mp4" />
+                <Label>Media Source — Video Playlist</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  Main ikut turutan, lepas habis semua → loop semula dari video pertama.
+                  Setiap link mesti direct ke fail <code className="text-foreground">.mp4</code>.
+                </p>
+                <div className="space-y-2">
+                  {(form.video_urls.length === 0 ? [""] : form.video_urls).map((url, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-5 shrink-0">{i + 1}.</span>
+                      <Input
+                        value={url}
+                        onChange={e => {
+                          const next = [...form.video_urls];
+                          next[i] = e.target.value;
+                          setForm(f => ({ ...f, video_urls: next }));
+                        }}
+                        placeholder="https://pub-xxxx.r2.dev/video1.mp4"
+                        className="text-xs"
+                      />
+                      {form.video_urls.length > 1 && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => {
+                            const next = form.video_urls.filter((_, idx) => idx !== i);
+                            setForm(f => ({ ...f, video_urls: next }));
+                          }}
+                        >
+                          <Trash2 className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setForm(f => ({ ...f, video_urls: [...f.video_urls, ""] }))}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Tambah Video
+                  </Button>
+                </div>
               </div>
               <div>
                 <Label htmlFor="sp-poster">Poster URL (thumbnail video)</Label>
@@ -373,7 +420,7 @@ function PreviewPhone({ page, products }: { page: FormState; products: ProductOp
         ) : (
           <MonitorPlay className="h-12 w-12 text-white/20" />
         )}
-        {page.video_url && (
+        {(page.video_urls.filter(Boolean).length > 0 || page.video_url) && (
           <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center">
             <Play className="h-4 w-4 text-white fill-white" />
           </div>
