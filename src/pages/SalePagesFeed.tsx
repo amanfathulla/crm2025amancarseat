@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Volume2, VolumeX, Zap, ChevronDown } from "lucide-react";
+import { Play, Volume2, VolumeX, Zap, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
 
 interface FeedPage {
   id: string;
@@ -27,8 +27,17 @@ export default function SalePagesFeed() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
+  const [isDesktop, setIsDesktop] = useState(false);
   const scrollRef = useRef<HTMLDivElement | null>(null);
   const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+
+  // Detect desktop vs mobile
+  useEffect(() => {
+    const check = () => setIsDesktop(window.innerWidth >= 768);
+    check();
+    window.addEventListener("resize", check);
+    return () => window.removeEventListener("resize", check);
+  }, []);
 
   useEffect(() => {
     (async () => {
@@ -82,6 +91,25 @@ export default function SalePagesFeed() {
     });
   }, []);
 
+  // Navigasi arrow — scroll ke index tertentu
+  const scrollToIndex = useCallback((idx: number) => {
+    const container = scrollRef.current;
+    if (!container) return;
+    const clamped = Math.max(0, Math.min(idx, pages.length - 1));
+    const target = container.querySelector<HTMLElement>(`[data-index="${clamped}"]`);
+    if (target) {
+      // Desktop: scroll horizontal; Mobile: scroll vertical
+      if (isDesktop) {
+        container.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
+      } else {
+        container.scrollTo({ top: target.offsetTop, behavior: "smooth" });
+      }
+    }
+  }, [pages.length, isDesktop]);
+
+  const goNext = useCallback(() => scrollToIndex(activeIndex + 1), [activeIndex, scrollToIndex]);
+  const goPrev = useCallback(() => scrollToIndex(activeIndex - 1), [activeIndex, scrollToIndex]);
+
   if (loading) {
     return (
       <div className="fixed inset-0 bg-black flex items-center justify-center">
@@ -101,23 +129,23 @@ export default function SalePagesFeed() {
 
   return (
     <div className="fixed inset-0 bg-black flex justify-center" style={{ height: "100dvh" }}>
-      <div className="relative mx-auto w-full max-w-[375px] h-full">
+      <div className="relative mx-auto w-full max-w-[420px] h-full">
 
-        {/* Header tipis — overlay */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-3 bg-gradient-to-b from-black/80 to-transparent">
+        {/* Header — logo ACS + mute */}
+        <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-6 w-6 object-contain" />
             <span className="text-white text-sm font-bold">AmanCarSeat</span>
           </div>
-          <button onClick={toggleMute} className="h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+          <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
             {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
           </button>
         </div>
 
-        {/* Feed — setiap section 100% tinggi, snap scroll */}
+        {/* Feed — mobile: vertical scroll; desktop: horizontal scroll */}
         <div
           ref={scrollRef}
-          className="h-full w-full overflow-y-auto snap-y snap-mandatory"
+          className="w-full h-full overflow-auto snap-y snap-mandatory md:snap-x md:overflow-x-auto md:overflow-y-hidden md:flex md:snap-mandatory"
           style={{ scrollbarWidth: "none", msOverflowStyle: "none", height: "100dvh" }}
         >
           {pages.map((p, i) => {
@@ -129,8 +157,8 @@ export default function SalePagesFeed() {
               <section
                 key={p.id}
                 data-index={i}
-                className="relative w-full snap-start snap-always flex flex-col overflow-hidden"
-                style={{ height: "100dvh" }}
+                className="relative w-full snap-start snap-always flex flex-col overflow-hidden shrink-0"
+                style={{ height: "100dvh", width: isDesktop ? "420px" : "100%" }}
               >
                 {/* Video — penuh section */}
                 <div className="relative flex-1 min-h-0 bg-black">
@@ -186,11 +214,63 @@ export default function SalePagesFeed() {
           })}
         </div>
 
-        {/* Scroll hint — hanya pada video pertama */}
-        {activeIndex === 0 && pages.length > 1 && (
-          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0.5 text-white/60 pointer-events-none animate-bounce">
-            <ChevronDown className="h-4 w-4" />
-            <span className="text-[10px]">Scroll</span>
+        {/* ── Navigation arrows ── */}
+
+        {/* Mobile: arrow bawah (scroll ke bawah untuk video seterusnya) */}
+        {!isDesktop && pages.length > 1 && activeIndex < pages.length - 1 && (
+          <button
+            onClick={goNext}
+            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-0.5 text-white/70 animate-bounce hover:text-white"
+          >
+            <ChevronDown className="h-5 w-5" />
+            <span className="text-[10px]">Scroll video lain</span>
+          </button>
+        )}
+
+        {/* Mobile: arrow atas (video sebelum) */}
+        {!isDesktop && activeIndex > 0 && (
+          <button
+            onClick={goPrev}
+            className="absolute top-16 left-1/2 -translate-x-1/2 z-30 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70 hover:text-white"
+          >
+            <ChevronDown className="h-4 w-4 rotate-180" />
+          </button>
+        )}
+
+        {/* Desktop: arrow kanan (video seterusnya) */}
+        {isDesktop && pages.length > 1 && activeIndex < pages.length - 1 && (
+          <button
+            onClick={goNext}
+            className="absolute top-1/2 right-2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-colors"
+          >
+            <ChevronRight className="h-6 w-6" />
+          </button>
+        )}
+
+        {/* Desktop: arrow kiri (video sebelum) */}
+        {isDesktop && activeIndex > 0 && (
+          <button
+            onClick={goPrev}
+            className="absolute top-1/2 left-2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-colors"
+          >
+            <ChevronLeft className="h-6 w-6" />
+          </button>
+        )}
+
+        {/* Dot indicators */}
+        {pages.length > 1 && (
+          <div className={`absolute z-30 flex gap-1.5 ${isDesktop ? "flex-col bottom-1/2 translate-y-1/2 right-4" : "horizontal bottom-3 left-1/2 -translate-x-1/2"}`}>
+            {pages.map((_, i) => (
+              <button
+                key={i}
+                onClick={() => scrollToIndex(i)}
+                className={`h-1.5 rounded-full transition-all ${
+                  i === activeIndex
+                    ? "bg-white w-4"
+                    : "bg-white/30 w-1.5 hover:bg-white/50"
+                }`}
+              />
+            ))}
           </div>
         )}
       </div>
