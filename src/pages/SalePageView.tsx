@@ -75,8 +75,11 @@ export default function SalePageView() {
           return;
         }
         setPage(pg as SalePage);
-        // bump views via SECURITY DEFINER RPC (anon tak boleh UPDATE jadual terus)
-        supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(() => {});
+        // bump views via SECURITY DEFINER RPC + update local state supaya UI tunjuk nombor baru
+        supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(({ data }: any) => {
+          const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
+          setPage(prev => prev ? { ...prev, views: newViews } : prev);
+        }).catch(() => {});
         if (pg.product_id) {
           const { data: prod } = await supabase
             .from("public_products")
