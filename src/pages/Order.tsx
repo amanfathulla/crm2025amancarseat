@@ -16,7 +16,6 @@ import {
   DialogClose,
 } from "@/components/ui/dialog";
 import { useToast } from "@/hooks/use-toast";
-import LiveFooter from "@/components/LiveFooter";
 import FormattedDescription from "@/components/products/FormattedDescription";
 import { Upload, X, ImagePlus } from "lucide-react";
 import MaterialTestimonials from "@/components/sales/MaterialTestimonials";
@@ -1288,9 +1287,6 @@ export default function OrderPage() {
           </div>
         )}
       </main>
-
-      {/* Footer */}
-      <LiveFooter />
     </div>
   );
 }
