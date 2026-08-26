@@ -1,7 +1,8 @@
 import { useState, useEffect, useRef, useCallback } from "react";
-import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, ExternalLink, Eye } from "lucide-react";
+import { reviewsSupabase } from "@/lib/reviewsClient";
+import { fetchReviewMaterials } from "@/lib/reviewMaterials";
+import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart } from "lucide-react";
 
 interface FeedPage {
   id: string;
@@ -12,23 +13,62 @@ interface FeedPage {
   video_urls: string[] | null;
   video_url: string | null;
   poster_url: string | null;
+  product_id: string | null;
+  cta_label: string | null;
   badge_text: string | null;
   theme: string | null;
+  is_published: boolean;
   views: number;
 }
 
-const THEME_DOTS: Record<string, string> = {
-  amber: "bg-amber-400", red: "bg-red-500", blue: "bg-blue-500",
-  green: "bg-emerald-500", pink: "bg-pink-500", purple: "bg-purple-500",
+interface FeedProduct {
+  id: string;
+  name: string;
+  price: number;
+  category: string | null;
+  image_url: string | null;
+}
+
+interface FeedVariation {
+  id: string;
+  product_id: string;
+  name: string;
+  price: number;
+}
+
+interface Review {
+  id: string;
+  name: string;
+  car_model: string;
+  rating: number;
+  review: string;
+  images: string[] | null;
+  created_at: string;
+  avatar_url: string | null;
+}
+
+const THEME_STYLES: Record<string, { cta: string; price: string; badge: string }> = {
+  amber:  { cta: "bg-amber-400",     price: "text-amber-400",     badge: "bg-amber-400" },
+  red:    { cta: "bg-red-500",       price: "text-red-400",       badge: "bg-red-500" },
+  blue:   { cta: "bg-blue-500",      price: "text-blue-400",      badge: "bg-blue-500" },
+  green:  { cta: "bg-emerald-500",   price: "text-emerald-400",   badge: "bg-emerald-500" },
+  pink:   { cta: "bg-pink-500",      price: "text-pink-400",      badge: "bg-pink-500" },
+  purple: { cta: "bg-purple-500",    price: "text-purple-400",    badge: "bg-purple-500" },
 };
 
 export default function SalePagesFeed() {
   const [pages, setPages] = useState<FeedPage[]>([]);
+  const [productMap, setProductMap] = useState<Record<string, FeedProduct>>({});
+  const [variationMap, setVariationMap] = useState<Record<string, FeedVariation[]>>({}); // productId → variations
+  const [addonMap, setAddonMap] = useState<Record<string, FeedProduct[]>>({}); // pageId → addon products
+  const [reviewMap, setReviewMap] = useState<Record<string, Review[]>>({}); // productId → reviews
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
+  const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
+  const [infoOpen, setInfoOpen] = useState(false);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -43,12 +83,80 @@ export default function SalePagesFeed() {
   useEffect(() => {
     (async () => {
       try {
-        const { data } = await supabase
+        // 1. Fetch semua published pages
+        const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_urls, video_url, poster_url, badge_text, theme, views")
+          .select("*")
           .eq("is_published", true)
           .order("created_at", { ascending: false });
-        setPages((data || []) as FeedPage[]);
+        const pagesData = (pg || []) as FeedPage[];
+        setPages(pagesData);
+
+        // 2. Fetch semua produk utama
+        const mainProductIds = pagesData.map(p => p.product_id).filter(Boolean) as string[];
+        if (mainProductIds.length > 0) {
+          const { data: prods } = await supabase
+            .from("public_products")
+            .select("id, name, price, category, image_url")
+            .in("id", mainProductIds);
+          const pMap: Record<string, FeedProduct> = {};
+          (prods || []).forEach((p: any) => { pMap[p.id] = p; });
+          setProductMap(pMap);
+
+          // 3. Fetch variations untuk setiap produk utama
+          const { data: vars } = await supabase
+            .from("public_product_variations")
+            .select("id, product_id, name, price")
+            .in("product_id", mainProductIds)
+            .order("price");
+          const vMap: Record<string, FeedVariation[]> = {};
+          (vars || []).forEach((v: any) => {
+            if (!vMap[v.product_id]) vMap[v.product_id] = [];
+            vMap[v.product_id].push(v);
+          });
+          setVariationMap(vMap);
+
+          // 4. Fetch reviews untuk setiap produk (6 latest ikut material)
+          const matMap = await fetchReviewMaterials();
+          const { data: allReviews } = await reviewsSupabase
+            .from("reviews")
+            .select("id, name, car_model, rating, review, images, created_at, avatar_url")
+            .order("created_at", { ascending: false })
+            .limit(300);
+          const rMap: Record<string, Review[]> = {};
+          mainProductIds.forEach(pid => {
+            const prod = pMap[pid];
+            if (!prod?.category) return;
+            const matched = (allReviews || [])
+              .filter((r: any) => matMap[r.id] === prod.category)
+              .slice(0, 6) as Review[];
+            if (matched.length > 0) rMap[pid] = matched;
+          });
+          setReviewMap(rMap);
+        }
+
+        // 5. Fetch add-on products bagi setiap page
+        const addonPromises = pagesData.map(async p => {
+          try {
+            const { data } = await supabase
+              .from("sale_page_products")
+              .select("product_id")
+              .eq("sale_page_id", p.id)
+              .neq("product_id", p.product_id || "")
+              .order("sort_order");
+            const ids = ((data || []) as any[]).map(r => r.product_id);
+            if (ids.length === 0) return { pageId: p.id, addons: [] as FeedProduct[] };
+            const { data: prods } = await supabase
+              .from("public_products")
+              .select("id, name, price, category, image_url")
+              .in("id", ids);
+            return { pageId: p.id, addons: (prods || []) as FeedProduct[] };
+          } catch { return { pageId: p.id, addons: [] as FeedProduct[] }; }
+        });
+        const addonResults = await Promise.all(addonPromises);
+        const aMap: Record<string, FeedProduct[]> = {};
+        addonResults.forEach(r => { aMap[r.pageId] = r.addons; });
+        setAddonMap(aMap);
       } catch (e) {
         console.error("feed load error", e);
       } finally {
@@ -57,15 +165,9 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
-  const goNext = useCallback(() => {
-    setIndex(i => Math.min(i + 1, pages.length - 1));
-  }, [pages.length]);
+  const goNext = useCallback(() => setIndex(i => Math.min(i + 1, pages.length - 1)), [pages.length]);
+  const goPrev = useCallback(() => setIndex(i => Math.max(i - 1, 0)), []);
 
-  const goPrev = useCallback(() => {
-    setIndex(i => Math.max(i - 1, 0));
-  }, []);
-
-  // Keyboard navigation (desktop)
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
       if (e.key === "ArrowDown" || e.key === "ArrowRight") goNext();
@@ -75,15 +177,11 @@ export default function SalePagesFeed() {
     return () => window.removeEventListener("keydown", onKey);
   }, [goNext, goPrev]);
 
-  // Bila tukar video: reset started, auto-play muted
   useEffect(() => {
     setStarted(false);
+    setInfoOpen(false);
     const v = videoRef.current;
-    if (v) {
-      v.currentTime = 0;
-      v.muted = true;
-      v.play().catch(() => {});
-    }
+    if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
   }, [index]);
 
   const toggleMute = () => {
@@ -93,7 +191,6 @@ export default function SalePagesFeed() {
     setMuted(v.muted);
   };
 
-  // Swipe (mobile) — swipe atas/bawah tukar video
   const onTouchStart = (e: React.TouchEvent) => {
     touchStartY.current = e.touches[0].clientY;
     touchStartX.current = e.touches[0].clientX;
@@ -102,16 +199,13 @@ export default function SalePagesFeed() {
     if (touchStartY.current === null || touchStartX.current === null) return;
     const dy = e.changedTouches[0].clientY - touchStartY.current;
     const dx = e.changedTouches[0].clientX - touchStartX.current;
-    const THRESHOLD = 50;
+    const TH = 50;
     if (isDesktop) {
-      if (dx < -THRESHOLD) goNext();
-      else if (dx > THRESHOLD) goPrev();
+      if (dx < -TH) goNext(); else if (dx > TH) goPrev();
     } else {
-      if (dy < -THRESHOLD) goNext();
-      else if (dy > THRESHOLD) goPrev();
+      if (dy < -TH) goNext(); else if (dy > TH) goPrev();
     }
-    touchStartY.current = null;
-    touchStartX.current = null;
+    touchStartY.current = null; touchStartX.current = null;
   };
 
   if (loading) {
@@ -126,12 +220,21 @@ export default function SalePagesFeed() {
     return (
       <div className="fixed inset-0 bg-black flex flex-col items-center justify-center gap-3 p-6 text-center">
         <p className="text-white/80 text-lg font-semibold">Tiada page lagi</p>
-        <Link to="/" className="text-amber-400 underline text-sm mt-2">Kembali ke laman utama</Link>
       </div>
     );
   }
 
   const active = pages[index];
+  const product = active.product_id ? productMap[active.product_id] : null;
+  const variations = active.product_id ? (variationMap[active.product_id] || []) : [];
+  const selectedVarId = active.product_id ? selectedVars[active.product_id] : undefined;
+  const selectedVar = variations.find(v => v.id === selectedVarId);
+  const addons = addonMap[active.id] || [];
+  const reviews = active.product_id ? (reviewMap[active.product_id] || []) : [];
+  const theme = THEME_STYLES[active.theme || "amber"] || THEME_STYLES.amber;
+  const displayPrice = selectedVar?.price ?? product?.price ?? 0;
+  const canBuyDirect = product && (variations.length <= 1 || !!selectedVar);
+  const buyUrl = `/order?product=${product?.id || ""}${selectedVar ? `&variation=${selectedVar.id}` : ""}&sp=${active.id}`;
   const playlist = active.video_urls?.filter(Boolean)?.length
     ? active.video_urls.filter(Boolean)
     : active.video_url ? [active.video_url] : [];
@@ -146,8 +249,7 @@ export default function SalePagesFeed() {
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
-
-        {/* ── Video aktif ── */}
+        {/* ── Video ── */}
         <div className="absolute inset-0 bg-black">
           {src ? (
             <video
@@ -168,8 +270,6 @@ export default function SalePagesFeed() {
               <Play className="h-10 w-10 text-white/20" />
             </div>
           )}
-
-          {/* Tekan untuk buka suara */}
           {!started && (
             <button
               onClick={() => {
@@ -189,18 +289,15 @@ export default function SalePagesFeed() {
               </div>
             </button>
           )}
-
-          {/* Gradient bawah supaya teks jelas */}
-          <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none" />
         </div>
 
-        {/* ── Header: logo ACS + counter + mute ── */}
+        {/* ── Header ── */}
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
             <span className="text-white text-sm font-bold">AmanCarSeat</span>
           </div>
-          {/* Counter besar: 1/100 */}
           <div className="flex items-center gap-2">
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
               {index + 1}/{pages.length}
@@ -211,82 +308,187 @@ export default function SalePagesFeed() {
           </div>
         </div>
 
-        {/* ── Info video aktif: tajuk page + views + link ── */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 pointer-events-none">
+        {/* ── Bottom: info produk + Buy Now TERUS ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5">
           {/* Badge */}
           {active.badge_text && (
-            <div className={`inline-flex ${THEME_DOTS[active.theme || "amber"] || "bg-amber-400"} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
+            <div className={`inline-flex ${theme.badge} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
               <Zap className="h-3 w-3" /> {active.badge_text}
             </div>
           )}
+
+          {/* Headline */}
           <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
           {active.subheadline && <p className="text-white/70 text-xs mt-1">{active.subheadline}</p>}
 
-          {/* Meta: views + tajuk page */}
+          {/* Meta */}
           <div className="flex items-center gap-3 mt-2 text-[11px]">
             <span className="flex items-center gap-1 text-white/60">
               <Eye className="h-3.5 w-3.5" /> {active.views || 0} view
             </span>
-            <span className="text-white/40">•</span>
-            <span className="text-white/60 font-mono truncate">/page/{active.slug}</span>
+            {reviews.length > 0 && (
+              <span className="flex items-center gap-1 text-white/60">
+                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviews.length} testimoni
+              </span>
+            )}
           </div>
 
-          {/* Butang buka page penuh — PENTING supaya tahu page mana */}
-          <Link
-            to={`/page/${active.slug}`}
-            className="pointer-events-auto mt-3 w-full h-12 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-sm flex items-center justify-center gap-2 transition-colors"
-          >
-            <ExternalLink className="h-4 w-4" />
-            {active.title} — Tempahan
-          </Link>
+          {/* Produk card — TERUS di sini, bukan pergi page lain */}
+          {product && (
+            <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
+              <div className="flex items-start gap-3">
+                {product.image_url ? (
+                  <img src={product.image_url} alt={product.name} className="h-14 w-14 rounded-lg object-cover border border-white/10 shrink-0" />
+                ) : (
+                  <div className="h-14 w-14 rounded-lg bg-white/5 border border-white/10 shrink-0" />
+                )}
+                <div className="flex-1 min-w-0">
+                  <p className="text-white font-semibold text-[13px] leading-tight">{product.name}</p>
+                  {product.category && <p className="text-white/40 text-[10px] mt-0.5">{product.category}</p>}
+                  <div className="flex items-baseline gap-2 mt-1">
+                    <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
+                    {selectedVar && selectedVar.price !== product.price && (
+                      <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
+                    )}
+                  </div>
+                </div>
+                {/* Arrow expand info (testimoni + add-on) */}
+                <button
+                  onClick={() => setInfoOpen(o => !o)}
+                  className="shrink-0 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70"
+                >
+                  {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronDown className="h-4 w-4 rotate-180" />}
+                </button>
+              </div>
+
+              {/* Variations — pilih kalau ada */}
+              {variations.length > 1 && (
+                <div className="mt-2.5">
+                  <div className="flex flex-wrap gap-1.5">
+                    {variations.map(v => (
+                      <button
+                        key={v.id}
+                        onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
+                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors ${
+                          selectedVar?.id === v.id
+                            ? `${theme.cta} text-black border-transparent`
+                            : "bg-white/5 text-white/80 border-white/15"
+                        }`}
+                      >
+                        {v.name} <span className="opacity-70">RM{v.price.toFixed(0)}</span>
+                      </button>
+                    ))}
+                  </div>
+                </div>
+              )}
+
+              {/* Expanded: testimoni + add-on produk */}
+              {infoOpen && (
+                <div className="mt-3 pt-3 border-t border-white/5 space-y-3">
+                  {/* Testimoni REAL */}
+                  {reviews.length > 0 && (
+                    <div>
+                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">Testimoni ({product.category})</p>
+                      <div className="space-y-1.5">
+                        {reviews.slice(0, 3).map(r => (
+                          <div key={r.id} className="bg-white/5 rounded-lg p-2">
+                            <div className="flex items-center gap-1.5 mb-0.5">
+                              {r.avatar_url ? (
+                                <img src={r.avatar_url} alt={r.name} className="h-5 w-5 rounded-full object-cover" />
+                              ) : (
+                                <div className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                                  {r.name.charAt(0).toUpperCase()}
+                                </div>
+                              )}
+                              <span className="text-white text-[10px] font-semibold">{r.name}</span>
+                              <div className="flex gap-0.5 ml-auto">
+                                {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                                  <Star key={i} className="h-2 w-2 text-amber-400 fill-amber-400" />
+                                ))}
+                              </div>
+                            </div>
+                            <p className="text-white/60 text-[10px] leading-snug line-clamp-2">{r.review}</p>
+                          </div>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                  {/* Add-on produk */}
+                  {addons.length > 0 && (
+                    <div>
+                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">Produk Lain</p>
+                      <div className="space-y-1.5">
+                        {addons.map(a => (
+                          <a
+                            key={a.id}
+                            href={`/order?product=${a.id}&sp=${active.id}`}
+                            className="flex items-center gap-2 bg-white/5 rounded-lg p-1.5 active:bg-white/10"
+                          >
+                            {a.image_url ? (
+                              <img src={a.image_url} alt={a.name} className="h-8 w-8 rounded-md object-cover shrink-0" />
+                            ) : (
+                              <div className="h-8 w-8 rounded-md bg-white/10 shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-[10px] font-medium truncate">{a.name}</p>
+                              <p className={`${theme.price} text-[10px] font-bold`}>RM{a.price.toFixed(0)}</p>
+                            </div>
+                          </a>
+                        ))}
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
+
+              {/* Buy Now — TERUS ke order form */}
+              {canBuyDirect ? (
+                <a
+                  href={buyUrl}
+                  className={`mt-2.5 w-full h-11 rounded-xl ${theme.cta} text-black font-bold text-sm flex items-center justify-center gap-2`}
+                >
+                  <ShoppingCart className="h-4 w-4" />
+                  {active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}
+                </a>
+              ) : (
+                <div className={`mt-2.5 w-full h-11 rounded-xl ${theme.cta} opacity-60 text-black font-bold text-sm flex items-center justify-center gap-2`}>
+                  Pilih Varian Dahulu
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
-        {/* ── Progress bar ── */}
+        {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 z-40 h-1 bg-white/10">
-          <div
-            className="h-full bg-amber-400 transition-all duration-300"
-            style={{ width: `${((index + 1) / pages.length) * 100}%` }}
-          />
+          <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${((index + 1) / pages.length) * 100}%` }} />
         </div>
 
-        {/* ── Navigation arrows ── */}
-
-        {/* Desktop: kiri/kanan */}
+        {/* ── Navigation ── */}
         {isDesktop && hasNext && (
-          <button onClick={goNext} className="absolute top-1/2 right-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80 transition-colors">
+          <button onClick={goNext} className="absolute top-1/2 right-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80">
             <ChevronRight className="h-6 w-6" />
           </button>
         )}
         {isDesktop && hasPrev && (
-          <button onClick={goPrev} className="absolute top-1/2 left-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80 transition-colors">
+          <button onClick={goPrev} className="absolute top-1/2 left-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80">
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}
-
-        {/* Mobile: hint swipe bawah (video seterusnya) */}
         {!isDesktop && hasNext && (
-          <button onClick={goNext} className="absolute bottom-36 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-0.5 text-white/70 animate-bounce">
-            <ChevronDown className="h-5 w-5" />
-            <span className="text-[10px]">Swipe video lain</span>
+          <button onClick={goNext} className="absolute top-20 left-1/2 -translate-x-1/2 z-40 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70 animate-bounce">
+            <ChevronDown className="h-4 w-4" />
           </button>
         )}
-        {/* Mobile: arrow atas (video sebelum) */}
         {!isDesktop && hasPrev && (
           <button onClick={goPrev} className="absolute top-16 left-1/2 -translate-x-1/2 z-40 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70">
             <ChevronDown className="h-4 w-4 rotate-180" />
           </button>
         )}
-
-        {/* Mini thumbnail nav (kalau page sikit sahaja) */}
         {pages.length > 1 && pages.length <= 10 && (
           <div className="absolute top-1/2 right-2 -translate-y-1/2 z-30 flex flex-col gap-2">
-            {pages.map((p, i) => (
-              <button
-                key={p.id}
-                onClick={() => setIndex(i)}
-                className={`h-2 rounded-full transition-all ${i === index ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`}
-                title={p.title}
-              />
+            {pages.map((_, i) => (
+              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === index ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
             ))}
           </div>
         )}
