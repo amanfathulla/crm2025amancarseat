@@ -473,6 +473,9 @@ export default function OrderPage() {
         full_price: finalPrice,
         balance_amount: balanceAmount,
       };
+      // Jika pelanggan datang dari sale page (?sp=PAGE_ID), tag order ke page itu
+      const spId = new URLSearchParams(window.location.search).get("sp");
+      if (spId) payload.sale_page_id = spId;
       if (selectedGateway !== "billplz") payload.provider = selectedGateway;
       const res = await fetch(
         `https://ywjblrnqygowfixxmigw.supabase.co/functions/v1/${endpoint}`,
@@ -555,6 +558,12 @@ export default function OrderPage() {
         deposit_amount: paymentType === "deposit" ? amountToPay : 0,
         balance_amount: balanceAmount,
       } as any).select("order_number").single();
+
+      // Jika dari sale page, tag order ke page itu
+      const spId = new URLSearchParams(window.location.search).get("sp");
+      if (spId) {
+        await (supabase as any).from("customers").update({ sale_page_id: spId }).eq("id", customerId);
+      }
 
       if (error) throw error;
       const orderNumber = (inserted as any)?.order_number;

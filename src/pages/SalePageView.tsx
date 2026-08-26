@@ -50,6 +50,7 @@ export default function SalePageView() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variations, setVariations] = useState<Variation[]>([]);
   const [selectedVar, setSelectedVar] = useState<Variation | null>(null);
+  const [addonProducts, setAddonProducts] = useState<Product[]>([]);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
@@ -89,6 +90,23 @@ export default function SalePageView() {
             if (v.length === 1) setSelectedVar(v[0]);
           }
         }
+        // Produk add-on (banyak produk dalam satu page)
+        try {
+          const { data: addonRows } = await supabase
+            .from("sale_page_products")
+            .select("product_id, sort_order")
+            .eq("sale_page_id", pg.id)
+            .neq("product_id", pg.product_id || "")
+            .order("sort_order");
+          const addonIds = ((addonRows || []) as any[]).map(r => r.product_id);
+          if (addonIds.length > 0) {
+            const { data: prods } = await supabase
+              .from("public_products")
+              .select("id, name, price, category, image_url, description, status")
+              .in("id", addonIds);
+            setAddonProducts((prods || []) as Product[]);
+          }
+        } catch { /* table belum wujud */ }
       } catch (e) {
         console.error("salepage load error", e);
       } finally {
@@ -139,8 +157,8 @@ export default function SalePageView() {
     if (videoRef.current) videoRef.current.muted = next;
   };
 
-  const buyUrl = product
-    ? `/order?product=${product.id}${selectedVar ? `&variation=${selectedVar.id}` : ""}`
+  const buyUrl = page
+    ? `/order?product=${product?.id || ""}${selectedVar ? `&variation=${selectedVar.id}` : ""}&sp=${page.id}`
     : "/order";
 
   // Boleh beli terus hanya jika: tiada varian, 1 varian (auto), atau dah pilih varian
@@ -347,6 +365,33 @@ export default function SalePageView() {
                           {v.name}
                           <span className="ml-1.5 opacity-70">RM{v.price.toFixed(0)}</span>
                         </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Add-on produk — beli terus link ke /order produk itu */}
+                {addonProducts.length > 0 && (
+                  <div>
+                    <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide mb-2">Produk Lain</p>
+                    <div className="space-y-2">
+                      {addonProducts.map(a => (
+                        <a
+                          key={a.id}
+                          href={`/order?product=${a.id}&sp=${page.id}`}
+                          className="flex items-center gap-3 bg-white/5 border border-white/10 rounded-lg p-2 active:bg-white/10"
+                        >
+                          {a.image_url ? (
+                            <img src={a.image_url} alt={a.name} className="h-10 w-10 rounded-md object-cover shrink-0" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-xs font-medium truncate">{a.name}</p>
+                            <p className={`${theme.price} text-[11px] font-bold`}>RM{a.price.toFixed(0)}</p>
+                          </div>
+                          <ChevronUp className="h-3.5 w-3.5 text-white/40 rotate-90 shrink-0" />
+                        </a>
                       ))}
                     </div>
                   </div>

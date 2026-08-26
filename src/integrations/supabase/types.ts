@@ -1274,6 +1274,30 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_page_products: {
+        Row: {
+          id: string
+          sale_page_id: string
+          product_id: string
+          sort_order: number
+          created_at: string
+        }
+        Insert: {
+          id?: string
+          sale_page_id: string
+          product_id: string
+          sort_order?: number
+          created_at?: string
+        }
+        Update: {
+          id?: string
+          sale_page_id?: string
+          product_id?: string
+          sort_order?: number
+          created_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_product_variations: {
