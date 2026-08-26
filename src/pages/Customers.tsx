@@ -767,7 +767,7 @@ function Customers() {
               </CardDescription>
             </div>
           </div>
-          <div className="flex items-center gap-2 w-full sm:w-auto">
+          <div className="flex flex-wrap items-center gap-2 w-full sm:w-auto">
             {selectedCustomers.length > 0 && (
               <Button
                 variant="destructive"
@@ -779,7 +779,7 @@ function Customers() {
                 Hapus ({selectedCustomers.length})
               </Button>
             )}
-            <div className="relative flex-1 sm:flex-initial">
+            <div className="relative w-full sm:w-auto sm:flex-initial">
               <Search className="absolute left-2.5 top-2.5 h-4 w-4 text-muted-foreground" />
               <Input
                 placeholder="Search customers..."
@@ -919,20 +919,35 @@ function Customers() {
                         ? "bg-red-500/15 text-red-600 border-red-500/30"
                         : "bg-yellow-500/15 text-yellow-600 border-yellow-500/30";
                     return (
-                      <div key={g.phone} className="flex items-center gap-4 px-4 py-3 border-b border-border last:border-0 hover:bg-muted/40 transition-colors">
-                        <div className="flex-1 min-w-0">
-                          <button
-                            onClick={() => setOrdersPhone(g.phone)}
-                            className="block truncate text-sm font-semibold text-foreground hover:text-primary hover:underline"
-                          >
-                            {g.name || "—"}
-                          </button>
-                          <button
-                            onClick={() => setOrdersPhone(g.phone)}
-                            className="block truncate text-xs text-muted-foreground hover:text-primary hover:underline mt-0.5"
-                          >
-                            {g.phone}
-                          </button>
+                      <div key={g.phone} className="flex flex-col gap-3 px-4 py-3 border-b border-border last:border-0 hover:bg-muted/40 transition-colors sm:flex-row sm:items-center sm:gap-4">
+                        <div className="flex items-center justify-between gap-3 sm:flex-1 sm:min-w-0">
+                          <div className="min-w-0 flex-1">
+                            <button
+                              onClick={() => setOrdersPhone(g.phone)}
+                              className="block truncate text-sm font-semibold text-foreground hover:text-primary hover:underline"
+                            >
+                              {g.name || "—"}
+                            </button>
+                            <button
+                              onClick={() => setOrdersPhone(g.phone)}
+                              className="block truncate text-xs text-muted-foreground hover:text-primary hover:underline mt-0.5"
+                            >
+                              {g.phone}
+                            </button>
+                          </div>
+                          <span className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium min-w-[88px] sm:hidden ${statusBadge}`}>
+                            {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
+                          </span>
+                        </div>
+                        <div className="flex items-center gap-4 sm:hidden">
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Jumlah</div>
+                            <div className="text-sm font-semibold text-foreground">{formatCurrency(g.totalSpent)}</div>
+                          </div>
+                          <div>
+                            <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Order</div>
+                            <div className="text-sm font-medium text-foreground">{g.orderCount}</div>
+                          </div>
                         </div>
                         <div className="hidden sm:block w-32 text-right shrink-0">
                           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Jumlah</div>
@@ -942,12 +957,12 @@ function Customers() {
                           <div className="text-[11px] uppercase tracking-wide text-muted-foreground">Order</div>
                           <div className="text-sm font-medium text-foreground">{g.orderCount}</div>
                         </div>
-                        <div className="w-28 flex justify-center shrink-0">
+                        <div className="hidden sm:flex w-28 justify-center shrink-0">
                           <span className={`inline-flex items-center justify-center rounded-full border px-2.5 py-0.5 text-xs font-medium min-w-[88px] ${statusBadge}`}>
                             {g.latestStatus === "completed" ? "Completed" : g.latestStatus === "cancelled" ? "Cancelled" : "In Process"}
                           </span>
                         </div>
-                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)} className="w-[120px] shrink-0">
+                        <Button variant="outline" size="sm" onClick={() => setOrdersPhone(g.phone)} className="w-full shrink-0 sm:w-[120px]">
                           Lihat Order
                         </Button>
                       </div>
