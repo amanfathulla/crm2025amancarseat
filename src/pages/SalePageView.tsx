@@ -83,7 +83,7 @@ export default function SalePageView() {
       try {
         const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_url, video_urls, image_urls, poster_url, product_id, product_mode, product_category, cta_label, badge_text, theme, is_published, views")
+          .select("*")
           .eq("slug", slug).single();
         if (!pg || !pg.is_published) {
           setLoading(false);
@@ -498,7 +498,7 @@ export default function SalePageView() {
                 {page.image_urls.filter(Boolean).length > 1 && (
                   <div className="flex justify-center gap-1 mt-1.5">
                     {page.image_urls.filter(Boolean).map((_, i) => (
-                      <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % page.image_urls!.filter(Boolean).length ? "bg-white" : "bg-white/30"}`} />
+                      <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % (page.image_urls?.filter(Boolean).length || 1) ? "bg-white" : "bg-white/30"}`} />
                     ))}
                   </div>
                 )}

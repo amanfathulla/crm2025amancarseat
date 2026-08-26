@@ -457,7 +457,7 @@ export default function SalePagesFeed() {
               {active.image_urls.filter(Boolean).length > 1 && (
                 <div className="flex justify-center gap-1 mt-1.5">
                   {active.image_urls.filter(Boolean).map((_, i) => (
-                    <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % active.image_urls!.filter(Boolean).length ? "bg-white" : "bg-white/30"}`} />
+                    <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % (active.image_urls?.filter(Boolean).length || 1) ? "bg-white" : "bg-white/30"}`} />
                   ))}
                 </div>
               )}
