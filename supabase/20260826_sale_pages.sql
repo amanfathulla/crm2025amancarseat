@@ -33,24 +33,44 @@ create trigger trg_sale_pages_updated_at
 before update on public.sale_pages
 for each row execute function public.set_updated_at();
 
--- RLS
+-- RLS — guna is_valid_admin_session() (custom auth system CRM ini)
 alter table public.sale_pages enable row level security;
 
--- Public (anon) boleh baca page yang published sahaja
+-- Buang polisi lama (mungkin dari versi awal yang salah)
 drop policy if exists "sale_pages_public_read" on public.sale_pages;
+drop policy if exists "sale_pages_admin_all" on public.sale_pages;
+drop policy if exists "sale_pages_anon_bump_views" on public.sale_pages;
+drop policy if exists "sale_pages_admin_read" on public.sale_pages;
+drop policy if exists "sale_pages_admin_insert" on public.sale_pages;
+drop policy if exists "sale_pages_admin_update" on public.sale_pages;
+drop policy if exists "sale_pages_admin_delete" on public.sale_pages;
+
+-- Public (anon) boleh baca page yang published sahaja
 create policy "sale_pages_public_read"
 on public.sale_pages for select
 to anon, authenticated
 using (is_published = true);
 
--- Admin (authenticated) boleh CRUD semua
-drop policy if exists "sale_pages_admin_all" on public.sale_pages;
-create policy "sale_pages_admin_all"
-on public.sale_pages
-for all
-to authenticated
-using (true)
-with check (true);
+-- Admin (via custom session token) boleh baca SEMUA page (termasuk draf)
+create policy "sale_pages_admin_read"
+on public.sale_pages for select
+using (public.is_valid_admin_session());
+
+-- Admin boleh INSERT page baru
+create policy "sale_pages_admin_insert"
+on public.sale_pages for insert
+with check (public.is_valid_admin_session());
+
+-- Admin boleh UPDATE page
+create policy "sale_pages_admin_update"
+on public.sale_pages for update
+using (public.is_valid_admin_session())
+with check (public.is_valid_admin_session());
+
+-- Admin boleh DELETE page
+create policy "sale_pages_admin_delete"
+on public.sale_pages for delete
+using (public.is_valid_admin_session());
 
 -- Views counter: SECURITY DEFINER function (anon panggil via RPC, tak boleh sentuh data lain)
 create or replace function public.bump_sale_page_views(p_slug text)
