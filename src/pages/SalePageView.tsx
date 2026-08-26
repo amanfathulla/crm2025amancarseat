@@ -60,6 +60,11 @@ export default function SalePageView() {
   const [product, setProduct] = useState<Product | null>(null);
   const [variations, setVariations] = useState<Variation[]>([]);
   const [selectedVar, setSelectedVar] = useState<Variation | null>(null);
+  const [categoryProducts, setCategoryProducts] = useState<Product[]>([]);
+  const [categoryVariations, setCategoryVariations] = useState<Record<string, Variation[]>>({});
+  const [selectedCatVars, setSelectedCatVars] = useState<Record<string, string>>({});
+  const [selectedCatProductPage, setSelectedCatProductPage] = useState<string | null>(null);
+  const [catOpen, setCatOpen] = useState(false);
   const [addonProducts, setAddonProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
@@ -88,7 +93,31 @@ export default function SalePageView() {
           const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
           setPage(prev => prev ? { ...prev, views: newViews } : prev);
         }).catch(() => {});
-        if (pg.product_id) {
+        if ((pg.product_mode || "single") === "category" && pg.product_category) {
+          // Mode category: fetch semua produk aktif dalam kategori
+          const { data: catProds } = await supabase
+            .from("public_products")
+            .select("id, name, price, category, image_url, description, status")
+            .eq("category", pg.product_category)
+            .eq("status", "active")
+            .order("price");
+          const cProds = (catProds || []) as Product[];
+          setCategoryProducts(cProds);
+          // Fetch variasi untuk semua produk category
+          if (cProds.length > 0) {
+            const { data: vars } = await supabase
+              .from("public_product_variations")
+              .select("id, name, price, product_id")
+              .in("product_id", cProds.map(p => p.id))
+              .order("price");
+            const vMap: Record<string, Variation[]> = {};
+            (vars || []).forEach((v: any) => {
+              if (!vMap[v.product_id]) vMap[v.product_id] = [];
+              vMap[v.product_id].push(v as Variation);
+            });
+            setCategoryVariations(vMap);
+          }
+        } else if (pg.product_id) {
           const { data: prod } = await supabase
             .from("public_products")
             .select("id, name, price, category, image_url, description, status")
@@ -345,7 +374,98 @@ export default function SalePageView() {
         </div>
 
         {/* ── Product bar kompak (±15-20% skrin) ──────────── */}
-        {product && (
+        {(page.product_mode || "single") === "category" && categoryProducts.length > 0 ? (
+          <div className="shrink-0 bg-zinc-950 border-t border-white/10">
+            <button
+              onClick={() => { setCatOpen(o => !o); if (catOpen) setSelectedCatProductPage(null); }}
+              style={ctaStyle}
+              className={`block w-full h-12 ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-sm flex items-center justify-center gap-2`}
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {catOpen ? "Tutup Produk" : `Lihat ${categoryProducts.length} Produk (${page.product_category})`}
+            </button>
+            {catOpen && (
+              <div className="px-3 pb-3 max-h-[45vh] overflow-y-auto">
+                {!selectedCatProductPage ? (
+                  /* STEP 1: senarai produk */
+                  <div className="space-y-2">
+                    <p className="text-white/50 text-[10px] uppercase tracking-wide">Pilih Produk</p>
+                    {categoryProducts.map(cp => (
+                      <button
+                        key={cp.id}
+                        onClick={() => setSelectedCatProductPage(cp.id)}
+                        className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg p-2 text-left transition-colors"
+                      >
+                        {cp.image_url ? (
+                          <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-xs font-medium truncate">{cp.name}</p>
+                          <p style={priceStyle} className={`${!themeHex ? themeStyle.price : ""} text-xs font-bold`}>RM{cp.price.toFixed(0)}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-white/40 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  /* STEP 2: varian */
+                  <div className="space-y-2">
+                    <button
+                      onClick={() => setSelectedCatProductPage(null)}
+                      className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white mb-1"
+                    >
+                      <ChevronLeft className="h-3.5 w-3.5" /> Semua Produk
+                    </button>
+                    {(() => {
+                      const cp = categoryProducts.find(p => p.id === selectedCatProductPage)!;
+                      const cpVars = categoryVariations[cp.id] || [];
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                            {cp.image_url ? (
+                              <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                            ) : (
+                              <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                            )}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-xs font-medium truncate">{cp.name}</p>
+                              <p style={priceStyle} className={`${!themeHex ? themeStyle.price : ""} text-xs font-bold`}>RM{cp.price.toFixed(0)}</p>
+                            </div>
+                          </div>
+                          {cpVars.length > 1 ? (
+                            <div className="flex flex-wrap gap-1.5">
+                              {cpVars.map(v => (
+                                <a
+                                  key={v.id}
+                                  href={`/order?product=${cp.id}&variation=${v.id}&sp=${page.id}`}
+                                  style={ctaStyle}
+                                  className={`flex-1 px-2 py-2 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-[11px] text-center`}
+                                >
+                                  {v.name}
+                                  <span className="block text-[10px] opacity-70">RM{v.price.toFixed(0)}</span>
+                                </a>
+                              ))}
+                            </div>
+                          ) : (
+                            <a
+                              href={`/order?product=${cp.id}${cpVars[0] ? `&variation=${cpVars[0].id}` : ""}&sp=${page.id}`}
+                              style={ctaStyle}
+                              className={`block w-full h-10 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-1`}
+                            >
+                              <ShoppingCart className="h-4 w-4" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
+                            </a>
+                          )}
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : product && (
           <div className="shrink-0 bg-zinc-950 border-t border-white/10">
             {/* Collapsed row: thumbnail + nama + harga + Buy kecil + arrow */}
             <div className="flex items-center gap-3 px-3 py-2.5">

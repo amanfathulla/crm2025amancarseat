@@ -83,6 +83,8 @@ export default function SalePagesFeed() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
   const [infoOpen, setInfoOpen] = useState(false);
+  const [catOpen, setCatOpen] = useState(false);
+  const [selectedCatProduct, setSelectedCatProduct] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartY = useRef<number | null>(null);
   const touchStartX = useRef<number | null>(null);
@@ -243,6 +245,8 @@ export default function SalePagesFeed() {
   useEffect(() => {
     setStarted(false);
     setInfoOpen(false);
+    setCatOpen(false);
+    setSelectedCatProduct(null);
     const v = videoRef.current;
     if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
     // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
@@ -417,57 +421,96 @@ export default function SalePagesFeed() {
 
           {/* Produk card — TERUS di sini, bukan pergi page lain */}
           {isCategoryMode ? (
-            /* MODE KATEGORI: list produk dalam category */
+            /* MODE KATEGORI: step 1 pilih produk, step 2 pilih varian */
             <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
-              <p className="text-white/50 text-[10px] uppercase tracking-wide mb-2">{active.product_category} — Pilih Produk</p>
-              <div className="space-y-2">
-                {categoryProducts.map(cp => {
-                  const cpVars = variationMap[cp.id] || [];
-                  const selectedCpVar = selectedVars[cp.id] ? cpVars.find(v => v.id === selectedVars[cp.id]) : undefined;
-                  const cpPrice = selectedCpVar?.price ?? cp.price;
-                  const cpBuyUrl = `/order?product=${cp.id}${selectedCpVar ? `&variation=${selectedCpVar.id}` : ""}&sp=${active.id}`;
-                  return (
-                    <div key={cp.id} className="bg-white/5 rounded-lg p-2">
-                      <div className="flex items-center gap-2">
-                        {cp.image_url ? (
-                          <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
-                        ) : (
-                          <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
-                        )}
-                        <div className="flex-1 min-w-0">
-                          <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
-                          <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[12px] font-bold`}>RM{cpPrice.toFixed(0)}</p>
-                        </div>
-                      </div>
-                      {cpVars.length > 1 && (
-                        <div className="flex flex-wrap gap-1 mt-1.5">
-                          {cpVars.map(v => (
-                            <button
-                              key={v.id}
-                              onClick={() => setSelectedVars(s => ({ ...s, [cp.id]: v.id }))}
-                              style={selectedVars[cp.id] === v.id ? ctaStyle : undefined}
-                              className={`px-2 py-1 rounded-md text-[10px] font-medium border ${
-                                selectedVars[cp.id] === v.id
-                                  ? `${!hexColor ? theme.cta : ""} text-black border-transparent`
-                                  : "bg-white/5 text-white/80 border-white/15"
-                              }`}
-                            >
-                              {v.name} <span className="opacity-70">RM{v.price.toFixed(0)}</span>
-                            </button>
-                          ))}
-                        </div>
-                      )}
-                      <a
-                        href={cpBuyUrl}
-                        style={ctaStyle}
-                        className={`mt-1.5 block w-full h-9 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[12px] flex items-center justify-center gap-1`}
-                      >
-                        <ShoppingCart className="h-3.5 w-3.5" /> Tempah Sekarang
-                      </a>
+              <button
+                onClick={() => { setCatOpen(o => !o); if (catOpen) setSelectedCatProduct(null); }}
+                className={`w-full h-10 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-2`}
+                style={ctaStyle}
+              >
+                <ShoppingCart className="h-4 w-4" />
+                {catOpen ? "Tutup Produk" : `Lihat ${categoryProducts.length} Produk (${active.product_category})`}
+              </button>
+              {catOpen && (
+                <div className="mt-2">
+                  {!selectedCatProduct ? (
+                    /* STEP 1: senarai produk (tiada varian) */
+                    <div className="space-y-2">
+                      <p className="text-white/50 text-[10px] uppercase tracking-wide">Pilih Produk</p>
+                      {categoryProducts.map(cp => (
+                        <button
+                          key={cp.id}
+                          onClick={() => setSelectedCatProduct(cp.id)}
+                          className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg p-2 text-left transition-colors"
+                        >
+                          {cp.image_url ? (
+                            <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                          ) : (
+                            <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
+                            <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[12px] font-bold`}>RM{cp.price.toFixed(0)}</p>
+                          </div>
+                          <ChevronRight className="h-4 w-4 text-white/40 shrink-0" />
+                        </button>
+                      ))}
                     </div>
-                  );
-                })}
-              </div>
+                  ) : (
+                    /* STEP 2: varian untuk produk terpilih */
+                    <div className="space-y-2">
+                      <button
+                        onClick={() => setSelectedCatProduct(null)}
+                        className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white mb-1"
+                      >
+                        <ChevronLeft className="h-3.5 w-3.5" /> Semua Produk
+                      </button>
+                      {(() => {
+                        const cp = categoryProducts.find(p => p.id === selectedCatProduct)!;
+                        const cpVars = variationMap[cp.id] || [];
+                        return (
+                          <>
+                            <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                              {cp.image_url ? (
+                                <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                              ) : (
+                                <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                              )}
+                              <div className="flex-1 min-w-0">
+                                <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
+                                <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[12px] font-bold`}>RM{cp.price.toFixed(0)}</p>
+                              </div>
+                            </div>
+                            {cpVars.length > 1 ? (
+                              <div className="flex flex-wrap gap-1.5">
+                                {cpVars.map(v => (
+                                  <a
+                                    key={v.id}
+                                    href={`/order?product=${cp.id}&variation=${v.id}&sp=${active.id}`}
+                                    style={ctaStyle}
+                                    className={`flex-1 px-2 py-2 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[11px] text-center`}
+                                  >
+                                    {v.name}
+                                    <span className="block text-[10px] opacity-70">RM{v.price.toFixed(0)}</span>
+                                  </a>
+                                ))}
+                              </div>
+                            ) : (
+                              <a
+                                href={`/order?product=${cp.id}${cpVars[0] ? `&variation=${cpVars[0].id}` : ""}&sp=${active.id}`}
+                                style={ctaStyle}
+                                className={`block w-full h-10 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-1`}
+                              >
+                                <ShoppingCart className="h-4 w-4" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
+                              </a>
+                            )}
+                          </>
+                        );
+                      })()}
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           ) : product && (
             /* MODE SINGLE: satu produk utama */
