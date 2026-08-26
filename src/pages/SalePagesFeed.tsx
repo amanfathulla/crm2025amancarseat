@@ -230,8 +230,12 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
-  const goNext = useCallback(() => setIndex(i => Math.min(i + 1, pages.length - 1)), [pages.length]);
-  const goPrev = useCallback(() => setIndex(i => Math.max(i - 1, 0)), []);
+  const goNext = useCallback(() => {
+    setIndex(i => (i + 1) % pages.length);
+  }, [pages.length]);
+  const goPrev = useCallback(() => {
+    setIndex(i => (i - 1 + pages.length) % pages.length);
+  }, [pages.length]);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
