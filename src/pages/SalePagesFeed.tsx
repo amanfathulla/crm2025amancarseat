@@ -56,12 +56,24 @@ const THEME_STYLES: Record<string, { cta: string; price: string; badge: string }
   purple: { cta: "bg-purple-500",    price: "text-purple-400",    badge: "bg-purple-500" },
 };
 
+/** Dapatkan style theme — support nama preset ATAU hex color (#f70c0c) */
+function getThemeStyle(theme: string | null | undefined): { cta: string; price: string; badge: string } {
+  if (!theme) return THEME_STYLES.amber;
+  if (THEME_STYLES[theme]) return THEME_STYLES[theme];
+  // Hex custom — guna inline style untuk CTA & badge, price guna hex terus
+  if (/^#([0-9a-f]{6})$/i.test(theme)) {
+    return { cta: "", price: "", badge: "" }; // marker — caller guna style obj
+  }
+  return THEME_STYLES.amber;
+}
+
 export default function SalePagesFeed() {
   const [pages, setPages] = useState<FeedPage[]>([]);
   const [productMap, setProductMap] = useState<Record<string, FeedProduct>>({});
   const [variationMap, setVariationMap] = useState<Record<string, FeedVariation[]>>({}); // productId → variations
   const [addonMap, setAddonMap] = useState<Record<string, FeedProduct[]>>({}); // pageId → addon products
-  const [reviewMap, setReviewMap] = useState<Record<string, Review[]>>({}); // productId → reviews
+  const [reviewMap, setReviewMap] = useState<Record<string, Review[]>>({}); // productId → 10 reviews terawal
+  const [reviewCountMap, setReviewCountMap] = useState<Record<string, number>>({}); // productId → total count mengikut material
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -116,23 +128,38 @@ export default function SalePagesFeed() {
           });
           setVariationMap(vMap);
 
-          // 4. Fetch reviews untuk setiap produk (6 latest ikut material)
+          // 4. Fetch SEMUA reviews (untuk kiraan total mengikut bahan)
           const matMap = await fetchReviewMaterials();
-          const { data: allReviews } = await reviewsSupabase
-            .from("reviews")
-            .select("id, name, car_model, rating, review, images, created_at, avatar_url")
-            .order("created_at", { ascending: false })
-            .limit(300);
+          const allReviewsAll: any[] = [];
+          let fromR = 0;
+          while (true) {
+            const { data: batch, error: rErr } = await reviewsSupabase
+              .from("reviews")
+              .select("id, name, car_model, rating, review, images, created_at, avatar_url")
+              .order("created_at", { ascending: false })
+              .range(fromR, fromR + 999);
+            if (rErr || !data || data.length === 0) break;
+            allReviewsAll.push(...batch);
+            if (batch.length < 1000) break;
+            fromR += 1000;
+          }
           const rMap: Record<string, Review[]> = {};
+          const rCountMap: Record<string, number> = {};
           mainProductIds.forEach(pid => {
             const prod = pMap[pid];
             if (!prod?.category) return;
-            const matched = (allReviews || [])
-              .filter((r: any) => matMap[r.id] === prod.category)
-              .slice(0, 6) as Review[];
-            if (matched.length > 0) rMap[pid] = matched;
+            const matched = allReviewsAll.filter((r: any) => matMap[r.id] === prod.category);
+            rCountMap[pid] = matched.length;
+            if (matched.length > 0) {
+              // 10 ulasan terawal (terawal = created_at menaik)
+              const earliest = [...matched].sort((a, b) =>
+                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+              ).slice(0, 10) as Review[];
+              rMap[pid] = earliest;
+            }
           });
           setReviewMap(rMap);
+          setReviewCountMap(rCountMap);
         }
 
         // 5. Fetch add-on products bagi setiap page
@@ -142,7 +169,6 @@ export default function SalePagesFeed() {
               .from("sale_page_products")
               .select("product_id")
               .eq("sale_page_id", p.id)
-              .neq("product_id", p.product_id || "")
               .order("sort_order");
             const ids = ((data || []) as any[]).map(r => r.product_id);
             if (ids.length === 0) return { pageId: p.id, addons: [] as FeedProduct[] };
@@ -150,7 +176,9 @@ export default function SalePagesFeed() {
               .from("public_products")
               .select("id, name, price, category, image_url")
               .in("id", ids);
-            return { pageId: p.id, addons: (prods || []) as FeedProduct[] };
+            // Filter keluar produk utama di frontend (bukan di query)
+            const addons = (prods || []).filter((pr: any) => pr.id !== p.product_id) as FeedProduct[];
+            return { pageId: p.id, addons };
           } catch { return { pageId: p.id, addons: [] as FeedProduct[] }; }
         });
         const addonResults = await Promise.all(addonPromises);
@@ -231,7 +259,11 @@ export default function SalePagesFeed() {
   const selectedVar = variations.find(v => v.id === selectedVarId);
   const addons = addonMap[active.id] || [];
   const reviews = active.product_id ? (reviewMap[active.product_id] || []) : [];
-  const theme = THEME_STYLES[active.theme || "amber"] || THEME_STYLES.amber;
+  const theme = getThemeStyle(active.theme);
+  const hexColor = /^#([0-9a-f]{6})$/i.test(active.theme || "") ? (active.theme as string) : null;
+  const ctaStyle = hexColor ? { backgroundColor: hexColor } : undefined;
+  const priceStyle = hexColor ? { color: hexColor } : undefined;
+  const badgeStyle = hexColor ? { backgroundColor: hexColor } : undefined;
   const displayPrice = selectedVar?.price ?? product?.price ?? 0;
   const canBuyDirect = product && (variations.length <= 1 || !!selectedVar);
   const buyUrl = `/order?product=${product?.id || ""}${selectedVar ? `&variation=${selectedVar.id}` : ""}&sp=${active.id}`;
@@ -312,7 +344,7 @@ export default function SalePagesFeed() {
         <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5">
           {/* Badge */}
           {active.badge_text && (
-            <div className={`inline-flex ${theme.badge} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
+            <div style={badgeStyle} className={`inline-flex ${!hexColor ? theme.badge : ""} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
               <Zap className="h-3 w-3" /> {active.badge_text}
             </div>
           )}
@@ -326,9 +358,9 @@ export default function SalePagesFeed() {
             <span className="flex items-center gap-1 text-white/60">
               <Eye className="h-3.5 w-3.5" /> {active.views || 0} view
             </span>
-            {reviews.length > 0 && (
+            {product && reviewCountMap[product.id] > 0 && (
               <span className="flex items-center gap-1 text-white/60">
-                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviews.length} testimoni
+                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCountMap[product.id]} testimoni {product.category ? `(${product.category})` : ""}
               </span>
             )}
           </div>
@@ -346,7 +378,7 @@ export default function SalePagesFeed() {
                   <p className="text-white font-semibold text-[13px] leading-tight">{product.name}</p>
                   {product.category && <p className="text-white/40 text-[10px] mt-0.5">{product.category}</p>}
                   <div className="flex items-baseline gap-2 mt-1">
-                    <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
+                    <span style={priceStyle} className={`${!hexColor ? theme.price : ""} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
                     {selectedVar && selectedVar.price !== product.price && (
                       <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
                     )}
@@ -369,9 +401,10 @@ export default function SalePagesFeed() {
                       <button
                         key={v.id}
                         onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
+                        style={selectedVar?.id === v.id ? ctaStyle : undefined}
                         className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors ${
                           selectedVar?.id === v.id
-                            ? `${theme.cta} text-black border-transparent`
+                            ? `${!hexColor ? theme.cta : ""} text-black border-transparent`
                             : "bg-white/5 text-white/80 border-white/15"
                         }`}
                       >
@@ -385,12 +418,14 @@ export default function SalePagesFeed() {
               {/* Expanded: testimoni + add-on produk */}
               {infoOpen && (
                 <div className="mt-3 pt-3 border-t border-white/5 space-y-3">
-                  {/* Testimoni REAL */}
+                  {/* Testimoni REAL — 10 terawal */}
                   {reviews.length > 0 && (
                     <div>
-                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">Testimoni ({product.category})</p>
-                      <div className="space-y-1.5">
-                        {reviews.slice(0, 3).map(r => (
+                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">
+                        Testimoni ({reviewCountMap[product.id] || 0} total • {product.category}) — 10 terawal
+                      </p>
+                      <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
+                        {reviews.map(r => (
                           <div key={r.id} className="bg-white/5 rounded-lg p-2">
                             <div className="flex items-center gap-1.5 mb-0.5">
                               {r.avatar_url ? (
@@ -431,7 +466,7 @@ export default function SalePagesFeed() {
                             )}
                             <div className="flex-1 min-w-0">
                               <p className="text-white text-[10px] font-medium truncate">{a.name}</p>
-                              <p className={`${theme.price} text-[10px] font-bold`}>RM{a.price.toFixed(0)}</p>
+                              <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[10px] font-bold`}>RM{a.price.toFixed(0)}</p>
                             </div>
                           </a>
                         ))}
@@ -445,13 +480,14 @@ export default function SalePagesFeed() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
-                  className={`mt-2.5 w-full h-11 rounded-xl ${theme.cta} text-black font-bold text-sm flex items-center justify-center gap-2`}
+                  style={ctaStyle}
+                  className={`mt-2.5 w-full h-11 rounded-xl ${!hexColor ? theme.cta : ""} text-black font-bold text-sm flex items-center justify-center gap-2`}
                 >
                   <ShoppingCart className="h-4 w-4" />
                   {active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}
                 </a>
               ) : (
-                <div className={`mt-2.5 w-full h-11 rounded-xl ${theme.cta} opacity-60 text-black font-bold text-sm flex items-center justify-center gap-2`}>
+                <div style={ctaStyle} className={`mt-2.5 w-full h-11 rounded-xl ${!hexColor ? theme.cta : ""} opacity-60 text-black font-bold text-sm flex items-center justify-center gap-2`}>
                   Pilih Varian Dahulu
                 </div>
               )}

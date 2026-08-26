@@ -635,21 +635,36 @@ export default function SalePagesAdmin() {
               </div>
               <div>
                 <Label>Theme Warna</Label>
-                <div className="flex flex-wrap gap-2">
+                {/* Custom color: hex input + native color picker */}
+                <div className="flex items-center gap-2 mb-2">
+                  <input
+                    type="color"
+                    value={/^#([0-9a-f]{6})$/i.test(form.theme) ? form.theme : "#fbbf24"}
+                    onChange={e => setField("theme", e.target.value)}
+                    className="h-9 w-12 rounded-md border border-border cursor-pointer bg-transparent p-0.5"
+                    title="Pilih warna custom"
+                  />
+                  <Input
+                    value={form.theme}
+                    onChange={e => setField("theme", e.target.value)}
+                    placeholder="#f70c0c atau nama (amber/red/...)"
+                    className="font-mono text-xs flex-1"
+                  />
+                </div>
+                {/* Preset pantas */}
+                <div className="flex flex-wrap gap-1.5">
                   {THEME_OPTIONS.map(t => (
                     <button
                       key={t.id}
                       type="button"
                       onClick={() => setField("theme", t.id)}
-                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                      title={t.label}
+                      className={`h-7 w-7 rounded-full border-2 transition-all ${
                         form.theme === t.id
-                          ? "border-foreground bg-foreground/10"
-                          : "border-border hover:border-muted-foreground"
-                      }`}
-                    >
-                      <span className={`h-3 w-3 rounded-full ${t.dot}`} />
-                      {t.label}
-                    </button>
+                          ? "border-foreground scale-110"
+                          : "border-transparent hover:scale-110"
+                      } ${t.dot}`}
+                    />
                   ))}
                 </div>
               </div>
