@@ -1231,6 +1231,8 @@ export type Database = {
           cta_label: string | null
           badge_text: string | null
           theme: string
+          product_mode: string
+          product_category: string | null
           is_published: boolean
           views: number
           created_at: string

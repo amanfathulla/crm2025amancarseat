@@ -14,6 +14,8 @@ interface FeedPage {
   video_url: string | null;
   poster_url: string | null;
   product_id: string | null;
+  product_mode: string | null;
+  product_category: string | null;
   cta_label: string | null;
   badge_text: string | null;
   theme: string | null;
@@ -104,62 +106,95 @@ export default function SalePagesFeed() {
         const pagesData = (pg || []) as FeedPage[];
         setPages(pagesData);
 
-        // 2. Fetch semua produk utama
+        // 2. Kumpul product_id (mode single) + kategori (mode category)
         const mainProductIds = pagesData.map(p => p.product_id).filter(Boolean) as string[];
-        if (mainProductIds.length > 0) {
-          const { data: prods } = await supabase
+        const categories = pagesData
+          .filter(p => (p.product_mode || "single") === "category" && p.product_category)
+          .map(p => p.product_category as string);
+        const categoryProds: FeedProduct[] = [];
+
+        if (categories.length > 0) {
+          const { data: catProds } = await supabase
             .from("public_products")
             .select("id, name, price, category, image_url")
-            .in("id", mainProductIds);
-          const pMap: Record<string, FeedProduct> = {};
-          (prods || []).forEach((p: any) => { pMap[p.id] = p; });
-          setProductMap(pMap);
+            .in("category", categories)
+            .eq("status", "active");
+          categoryProds.push(...((catProds || []) as FeedProduct[]));
+        }
 
-          // 3. Fetch variations untuk setiap produk utama
-          const { data: vars } = await supabase
-            .from("public_product_variations")
-            .select("id, product_id, name, price")
-            .in("product_id", mainProductIds)
-            .order("price");
-          const vMap: Record<string, FeedVariation[]> = {};
-          (vars || []).forEach((v: any) => {
-            if (!vMap[v.product_id]) vMap[v.product_id] = [];
-            vMap[v.product_id].push(v);
-          });
-          setVariationMap(vMap);
+        if (mainProductIds.length > 0 || categoryProds.length > 0) {
+          // Produk utama by id
+          if (mainProductIds.length > 0) {
+            const { data: prods } = await supabase
+              .from("public_products")
+              .select("id, name, price, category, image_url")
+              .in("id", mainProductIds);
+            const pMap: Record<string, FeedProduct> = {};
+            (prods || []).forEach((p: any) => { pMap[p.id] = p; });
+            // Append produk category (key by id jugak)
+            categoryProds.forEach(p => { if (!pMap[p.id]) pMap[p.id] = p; });
+            setProductMap(pMap);
 
-          // 4. Fetch SEMUA reviews (untuk kiraan total mengikut bahan)
-          const matMap = await fetchReviewMaterials();
-          const allReviewsAll: any[] = [];
-          let fromR = 0;
-          while (true) {
-            const { data: batch, error: rErr } = await reviewsSupabase
-              .from("reviews")
-              .select("id, name, car_model, rating, review, images, created_at, avatar_url")
-              .order("created_at", { ascending: false })
-              .range(fromR, fromR + 999);
-            if (rErr || !data || data.length === 0) break;
-            allReviewsAll.push(...batch);
-            if (batch.length < 1000) break;
-            fromR += 1000;
-          }
-          const rMap: Record<string, Review[]> = {};
-          const rCountMap: Record<string, number> = {};
-          mainProductIds.forEach(pid => {
-            const prod = pMap[pid];
-            if (!prod?.category) return;
-            const matched = allReviewsAll.filter((r: any) => matMap[r.id] === prod.category);
-            rCountMap[pid] = matched.length;
-            if (matched.length > 0) {
-              // 10 ulasan terawal (terawal = created_at menaik)
-              const earliest = [...matched].sort((a, b) =>
-                new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
-              ).slice(0, 10) as Review[];
-              rMap[pid] = earliest;
+            // 3. Fetch variations untuk semua produk (utama + category)
+            const allIds = [...mainProductIds, ...categoryProds.map(p => p.id)];
+            const { data: vars } = await supabase
+              .from("public_product_variations")
+              .select("id, product_id, name, price")
+              .in("product_id", allIds)
+              .order("price");
+            const vMap: Record<string, FeedVariation[]> = {};
+            (vars || []).forEach((v: any) => {
+              if (!vMap[v.product_id]) vMap[v.product_id] = [];
+              vMap[v.product_id].push(v);
+            });
+            setVariationMap(vMap);
+
+            // 4. Fetch SEMUA reviews (untuk kiraan total mengikut bahan)
+            const matMap = await fetchReviewMaterials();
+            const allReviewsAll: any[] = [];
+            let fromR = 0;
+            while (true) {
+              const { data: batch, error: rErr } = await reviewsSupabase
+                .from("reviews")
+                .select("id, name, car_model, rating, review, images, created_at, avatar_url")
+                .order("created_at", { ascending: false })
+                .range(fromR, fromR + 999);
+              if (rErr || !data || data.length === 0) break;
+              allReviewsAll.push(...batch);
+              if (batch.length < 1000) break;
+              fromR += 1000;
             }
-          });
-          setReviewMap(rMap);
-          setReviewCountMap(rCountMap);
+            const rMap: Record<string, Review[]> = {};
+            const rCountMap: Record<string, number> = {};
+            // Reviews ikut produk utama sahaja
+            mainProductIds.forEach(pid => {
+              const prod = pMap[pid];
+              if (!prod?.category) return;
+              const matched = allReviewsAll.filter((r: any) => matMap[r.id] === prod.category);
+              rCountMap[pid] = matched.length;
+              if (matched.length > 0) {
+                const earliest = [...matched].sort((a, b) =>
+                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                ).slice(0, 10) as Review[];
+                rMap[pid] = earliest;
+              }
+            });
+            // Untuk mode category: guna produk pertama dalam category untuk review count
+            pagesData.filter(p => (p.product_mode || "single") === "category").forEach(p => {
+              const firstCatProd = categoryProds.find(pr => pr.category === p.product_category);
+              if (!firstCatProd?.category) return;
+              const matched = allReviewsAll.filter((r: any) => matMap[r.id] === firstCatProd.category);
+              rCountMap[`cat_${p.id}`] = matched.length;
+              if (matched.length > 0) {
+                const earliest = [...matched].sort((a, b) =>
+                  new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+                ).slice(0, 10) as Review[];
+                rMap[`cat_${p.id}`] = earliest;
+              }
+            });
+            setReviewMap(rMap);
+            setReviewCountMap(rCountMap);
+          }
         }
 
         // 5. Fetch add-on products bagi setiap page
@@ -263,12 +298,17 @@ export default function SalePagesFeed() {
   }
 
   const active = pages[index];
-  const product = active.product_id ? productMap[active.product_id] : null;
+  const isCategoryMode = (active.product_mode || "single") === "category";
+  const categoryProducts = isCategoryMode
+    ? (Object.values(productMap).filter(p => p.category === active.product_category))
+    : [];
+  const product = !isCategoryMode && active.product_id ? productMap[active.product_id] : null;
   const variations = active.product_id ? (variationMap[active.product_id] || []) : [];
   const selectedVarId = active.product_id ? selectedVars[active.product_id] : undefined;
   const selectedVar = variations.find(v => v.id === selectedVarId);
   const addons = addonMap[active.id] || [];
-  const reviews = active.product_id ? (reviewMap[active.product_id] || []) : [];
+  const reviews = isCategoryMode ? (reviewMap[`cat_${active.id}`] || []) : (active.product_id ? (reviewMap[active.product_id] || []) : []);
+  const reviewCount = isCategoryMode ? (reviewCountMap[`cat_${active.id}`] || 0) : (active.product_id ? (reviewCountMap[active.product_id] || 0) : 0);
   const theme = getThemeStyle(active.theme);
   const hexColor = /^#([0-9a-f]{6})$/i.test(active.theme || "") ? (active.theme as string) : null;
   const ctaStyle = hexColor ? { backgroundColor: hexColor } : undefined;
@@ -376,7 +416,61 @@ export default function SalePagesFeed() {
           </div>
 
           {/* Produk card — TERUS di sini, bukan pergi page lain */}
-          {product && (
+          {isCategoryMode ? (
+            /* MODE KATEGORI: list produk dalam category */
+            <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
+              <p className="text-white/50 text-[10px] uppercase tracking-wide mb-2">{active.product_category} — Pilih Produk</p>
+              <div className="space-y-2">
+                {categoryProducts.map(cp => {
+                  const cpVars = variationMap[cp.id] || [];
+                  const selectedCpVar = selectedVars[cp.id] ? cpVars.find(v => v.id === selectedVars[cp.id]) : undefined;
+                  const cpPrice = selectedCpVar?.price ?? cp.price;
+                  const cpBuyUrl = `/order?product=${cp.id}${selectedCpVar ? `&variation=${selectedCpVar.id}` : ""}&sp=${active.id}`;
+                  return (
+                    <div key={cp.id} className="bg-white/5 rounded-lg p-2">
+                      <div className="flex items-center gap-2">
+                        {cp.image_url ? (
+                          <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                        ) : (
+                          <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
+                        )}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
+                          <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[12px] font-bold`}>RM{cpPrice.toFixed(0)}</p>
+                        </div>
+                      </div>
+                      {cpVars.length > 1 && (
+                        <div className="flex flex-wrap gap-1 mt-1.5">
+                          {cpVars.map(v => (
+                            <button
+                              key={v.id}
+                              onClick={() => setSelectedVars(s => ({ ...s, [cp.id]: v.id }))}
+                              style={selectedVars[cp.id] === v.id ? ctaStyle : undefined}
+                              className={`px-2 py-1 rounded-md text-[10px] font-medium border ${
+                                selectedVars[cp.id] === v.id
+                                  ? `${!hexColor ? theme.cta : ""} text-black border-transparent`
+                                  : "bg-white/5 text-white/80 border-white/15"
+                              }`}
+                            >
+                              {v.name} <span className="opacity-70">RM{v.price.toFixed(0)}</span>
+                            </button>
+                          ))}
+                        </div>
+                      )}
+                      <a
+                        href={cpBuyUrl}
+                        style={ctaStyle}
+                        className={`mt-1.5 block w-full h-9 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[12px] flex items-center justify-center gap-1`}
+                      >
+                        <ShoppingCart className="h-3.5 w-3.5" /> Tempah Sekarang
+                      </a>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+          ) : product && (
+            /* MODE SINGLE: satu produk utama */
             <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
               <div className="flex items-start gap-3">
                 {product.image_url ? (

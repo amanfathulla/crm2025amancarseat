@@ -76,6 +76,8 @@ const EMPTY_FORM: FormState = {
   video_urls: [],
   poster_url: "",
   product_id: "",
+  product_mode: "single",
+  product_category: "",
   extra_product_ids: [],
   cta_label: "Buy Now",
   badge_text: "",
@@ -88,7 +90,13 @@ const THEME_OPTIONS = [
   { id: "blue",   label: "Blue",   dot: "bg-blue-500" },
   { id: "green",  label: "Green",  dot: "bg-emerald-500" },
   { id: "pink",   label: "Pink",   dot: "bg-pink-500" },
-  { id: "purple", label: "Purple", dot: "bg-purple-500" },
+];
+
+const PRODUCT_CATEGORIES = [
+  "Kain Mesh",
+  "Kain Nylon",
+  "Kain Fullsilk",
+  "Semi Leather Kalis Air",
 ];
 
 const THEME_PREVIEW_DOTS: Record<string, string> = {
@@ -227,7 +235,9 @@ export default function SalePagesAdmin() {
         video_url: form.video_url.trim() || (form.video_urls.filter(Boolean)[0] || null),
         video_urls: form.video_urls.filter(Boolean),
         poster_url: form.poster_url.trim() || null,
-        product_id: form.product_id || null,
+        product_id: form.product_mode === "category" ? null : (form.product_id || null),
+        product_mode: form.product_mode || "single",
+        product_category: form.product_mode === "category" ? (form.product_category || null) : null,
         cta_label: form.cta_label.trim() || "Buy Now",
         badge_text: form.badge_text.trim() || null,
         theme: form.theme || "amber",
@@ -548,19 +558,57 @@ export default function SalePagesAdmin() {
               {/* ── Produk utama ── */}
               <div>
                 <Label>Produk Utama</Label>
-                <Select value={form.product_id || "none"} onValueChange={v => setField("product_id", v === "none" ? "" : v)}>
-                  <SelectTrigger>
-                    <SelectValue placeholder="Pilih produk" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    <SelectItem value="none">— Tiada produk —</SelectItem>
-                    {products.map(pr => (
-                      <SelectItem key={pr.id} value={pr.id}>
-                        {pr.name} {pr.price != null ? `(${rm(pr.price)})` : ""}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
+                <div className="flex gap-1.5 mb-2">
+                  <button
+                    type="button"
+                    onClick={() => setField("product_mode", "single")}
+                    className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                      (form.product_mode || "single") === "single"
+                        ? "border-foreground bg-foreground/10"
+                        : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    Produk Tunggal
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => setField("product_mode", "category")}
+                    className={`flex-1 px-3 py-1.5 rounded-lg text-xs font-medium border transition-colors ${
+                      form.product_mode === "category"
+                        ? "border-foreground bg-foreground/10"
+                        : "border-border hover:border-muted-foreground"
+                    }`}
+                  >
+                    Ikut Kategori
+                  </button>
+                </div>
+                {form.product_mode === "category" ? (
+                  <Select value={form.product_category || "none"} onValueChange={v => setField("product_category", v === "none" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih kategori produk" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Pilih kategori —</SelectItem>
+                      {PRODUCT_CATEGORIES.map(cat => (
+                        <SelectItem key={cat} value={cat}>{cat}</SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                ) : (
+                  <Select value={form.product_id || "none"} onValueChange={v => setField("product_id", v === "none" ? "" : v)}>
+                    <SelectTrigger>
+                      <SelectValue placeholder="Pilih produk" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="none">— Tiada produk —</SelectItem>
+                      {products.map(pr => (
+                        <SelectItem key={pr.id} value={pr.id}>
+                          {pr.name} {pr.price != null ? `(${rm(pr.price)})` : ""}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
+                )}
               </div>
 
               {/* ── Produk add-on (list boleh tambah banyak) ── */}

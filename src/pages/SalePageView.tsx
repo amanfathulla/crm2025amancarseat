@@ -46,6 +46,14 @@ const THEME_STYLES: Record<string, { cta: string; badge: string; price: string; 
   purple: { cta: "bg-purple-500 hover:bg-purple-400",    badge: "bg-purple-500",     price: "text-purple-400",     star: "text-purple-400 fill-purple-400" },
 };
 
+/** Support hex custom color (#f70c0c) — kalau bukan preset, pulangkan flag hex */
+function resolveTheme(theme: string | null | undefined) {
+  if (!theme) return { style: THEME_STYLES.amber, hex: null as string | null };
+  if (THEME_STYLES[theme]) return { style: THEME_STYLES[theme], hex: null };
+  if (/^#([0-9a-f]{6})$/i.test(theme)) return { style: null as any, hex: theme };
+  return { style: THEME_STYLES.amber, hex: null };
+}
+
 export default function SalePageView() {
   const { slug } = useParams<{ slug: string }>();
   const [page, setPage] = useState<SalePage | null>(null);
@@ -222,7 +230,13 @@ export default function SalePageView() {
   }
 
   const displayPrice = selectedVar?.price ?? product?.price ?? 0;
-  const theme = THEME_STYLES[page.theme || "amber"] || THEME_STYLES.amber;
+  const theme = resolveTheme(page.theme);
+  const themeStyle = theme.style;
+  const themeHex = theme.hex;
+  const ctaStyle = themeHex ? { backgroundColor: themeHex } : undefined;
+  const priceStyle = themeHex ? { color: themeHex } : undefined;
+  const badgeStyle = themeHex ? { backgroundColor: themeHex } : undefined;
+  const starStyle = themeHex ? { color: themeHex, fill: themeHex } : undefined;
   const prod_cat = product?.category || "";
   const MATERIAL_SLUGS: Record<string, string> = {
     "Kain Mesh": "kainmesh",
@@ -314,7 +328,7 @@ export default function SalePageView() {
 
           {/* Badge (top-left) */}
           {page.badge_text && (
-            <div className={`absolute top-3 left-3 ${theme.badge} text-black text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1`}>
+            <div style={badgeStyle} className={`absolute top-3 left-3 ${!themeHex ? themeStyle.badge : ""} text-black text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1`}>
               <Zap className="h-3 w-3" /> {page.badge_text}
             </div>
           )}
@@ -347,7 +361,7 @@ export default function SalePageView() {
               <div className="flex-1 min-w-0">
                 <p className="text-white font-semibold text-[13px] leading-tight truncate">{product.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
-                  <span className={`${theme.price} font-bold text-sm`}>RM{displayPrice.toFixed(0)}</span>
+                  <span style={priceStyle} className={`${!themeHex ? themeStyle.price : ""} font-bold text-sm`}>RM{displayPrice.toFixed(0)}</span>
                   {selectedVar && selectedVar.price !== product.price && (
                     <span className="text-white/30 text-[10px] line-through">RM{product.price.toFixed(0)}</span>
                   )}
@@ -360,7 +374,7 @@ export default function SalePageView() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
-                  className={`shrink-0 h-9 px-4 rounded-lg ${theme.cta} text-black font-bold text-sm flex items-center`}
+                  className={`shrink-0 h-9 px-4 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-sm flex items-center`}
                 >
                   {page.cta_label || "Buy"}
                 </a>
@@ -368,7 +382,7 @@ export default function SalePageView() {
                 <button
                   type="button"
                   onClick={() => setInfoOpen(true)}
-                  className={`shrink-0 h-9 px-4 rounded-lg ${theme.cta} opacity-80 text-black font-bold text-[12px] flex items-center`}
+                  className={`shrink-0 h-9 px-4 rounded-lg ${!themeHex ? themeStyle.cta : ""} opacity-80 text-black font-bold text-[12px] flex items-center`}
                 >
                   Pilih Varian
                 </button>
@@ -406,7 +420,7 @@ export default function SalePageView() {
                           onClick={() => setSelectedVar(v)}
                           className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
                             selectedVar?.id === v.id
-                              ? `${theme.cta} text-black border-transparent`
+                              ? `${!themeHex ? themeStyle.cta : ""} text-black border-transparent`
                               : "bg-white/5 text-white/80 border-white/15 hover:border-white/30"
                           }`}
                         >
@@ -436,7 +450,7 @@ export default function SalePageView() {
                           )}
                           <div className="flex-1 min-w-0">
                             <p className="text-white text-xs font-medium truncate">{a.name}</p>
-                            <p className={`${theme.price} text-[11px] font-bold`}>RM{a.price.toFixed(0)}</p>
+                            <p style={priceStyle} className={`${!themeHex ? themeStyle.price : ""} text-[11px] font-bold`}>RM{a.price.toFixed(0)}</p>
                           </div>
                           <ChevronUp className="h-3.5 w-3.5 text-white/40 rotate-90 shrink-0" />
                         </a>
@@ -473,7 +487,7 @@ export default function SalePageView() {
                             <span className="text-white text-[11px] font-semibold truncate">{r.name}</span>
                             <div className="flex items-center gap-0.5 ml-auto shrink-0">
                               {Array.from({ length: r.rating || 5 }).map((_, i) => (
-                                <Star key={i} className={`h-2.5 w-2.5 ${theme.star}`} />
+                                <Star key={i} style={starStyle} className={`h-2.5 w-2.5 ${!themeHex ? themeStyle.star : ""}`} />
                               ))}
                             </div>
                           </div>
@@ -507,7 +521,7 @@ export default function SalePageView() {
                 {canBuyDirect ? (
                   <a
                     href={buyUrl}
-                    className={`block w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center transition-colors`}
+                    className={`block w-full h-12 rounded-xl ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-base flex items-center justify-center transition-colors`}
                   >
                     {page.cta_label || "Buy Now"}
                   </a>
@@ -518,7 +532,7 @@ export default function SalePageView() {
                       const el = document.getElementById("salepage-varians");
                       el?.scrollIntoView({ behavior: "smooth", block: "center" });
                     }}
-                    className={`w-full h-12 rounded-xl ${theme.cta} opacity-70 text-black font-bold text-base flex items-center justify-center`}
+                    className={`w-full h-12 rounded-xl ${!themeHex ? themeStyle.cta : ""} opacity-70 text-black font-bold text-base flex items-center justify-center`}
                   >
                     Pilih Varian Dahulu
                   </button>
