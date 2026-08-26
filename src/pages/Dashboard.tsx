@@ -251,16 +251,24 @@ export default function Dashboard() {
 
     fetchDashboardData();
 
-    const channel = authClient
-      .channel("public:customers")
-      .on(
-        "postgres_changes",
-        { event: "*", schema: "public", table: "customers" },
-        () => {
-          fetchDashboardData();
-        }
-      )
-      .subscribe();
+    // Realtime subscription — wrapped in try/catch because newer @supabase/supabase-js
+    // can throw if the channel is already subscribed or the publication isn't configured.
+    // The 15s poll below keeps data fresh regardless, so a realtime failure must NOT crash the page.
+    let channel: ReturnType<typeof authClient.channel> | null = null;
+    try {
+      channel = authClient
+        .channel("dashboard-customers-live")
+        .on(
+          "postgres_changes",
+          { event: "*", schema: "public", table: "customers" },
+          () => {
+            fetchDashboardData();
+          }
+        )
+        .subscribe();
+    } catch (e) {
+      console.warn("Realtime subscription skipped:", e);
+    }
 
     // Fallback poll so the Jualan cards update live without a manual refresh
     // (mirrors LiveDashboard). Realtime events alone can be missed if the
@@ -268,7 +276,7 @@ export default function Dashboard() {
     const poll = setInterval(() => fetchDashboardData(), 15000);
 
     return () => {
-      authClient.removeChannel(channel);
+      if (channel) authClient.removeChannel(channel);
       clearInterval(poll);
     };
   }, []);

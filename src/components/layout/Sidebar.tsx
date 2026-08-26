@@ -94,14 +94,21 @@ export function Sidebar() {
 
     fetchOrderCounts();
 
-    const subscription = authClient
-      .channel("public:customers")
-      .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
-        fetchOrderCounts();
-      })
-      .subscribe();
+    // Unique channel name per component — sharing a name with another mounted
+    // component's channel makes newer supabase-js throw when adding callbacks.
+    let subscription: ReturnType<typeof authClient.channel> | null = null;
+    try {
+      subscription = authClient
+        .channel("sidebar-customers-orders")
+        .on("postgres_changes", { event: "*", schema: "public", table: "customers" }, () => {
+          fetchOrderCounts();
+        })
+        .subscribe();
+    } catch (e) {
+      console.warn("Sidebar realtime skipped:", e);
+    }
 
-    return () => { authClient.removeChannel(subscription); };
+    return () => { if (subscription) authClient.removeChannel(subscription); };
   }, [authClient]);
 
   useEffect(() => {
