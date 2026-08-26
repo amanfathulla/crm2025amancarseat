@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Volume2, VolumeX, Play, Star, Zap } from "lucide-react";
+import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown } from "lucide-react";
 
 interface SalePage {
   id: string;
@@ -28,6 +28,12 @@ interface Product {
   description: string | null;
 }
 
+interface Variation {
+  id: string;
+  name: string;
+  price: number;
+}
+
 // Theme accent mapping — CTA button, badge, price & stars ikut warna theme
 const THEME_STYLES: Record<string, { cta: string; badge: string; price: string; star: string }> = {
   amber:  { cta: "bg-amber-400 hover:bg-amber-300",      badge: "bg-amber-400",      price: "text-amber-400",      star: "text-amber-400 fill-amber-400" },
@@ -37,12 +43,6 @@ const THEME_STYLES: Record<string, { cta: string; badge: string; price: string; 
   pink:   { cta: "bg-pink-500 hover:bg-pink-400",        badge: "bg-pink-500",       price: "text-pink-400",       star: "text-pink-400 fill-pink-400" },
   purple: { cta: "bg-purple-500 hover:bg-purple-400",    badge: "bg-purple-500",     price: "text-purple-400",     star: "text-purple-400 fill-purple-400" },
 };
-
-interface Variation {
-  id: string;
-  name: string;
-  price: number;
-}
 
 export default function SalePageView() {
   const { slug } = useParams<{ slug: string }>();
@@ -54,6 +54,7 @@ export default function SalePageView() {
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
   const [videoIndex, setVideoIndex] = useState(0);
+  const [infoOpen, setInfoOpen] = useState(false); // product info sheet (arrow toggle)
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -108,14 +109,12 @@ export default function SalePageView() {
   // Video ended → next in playlist; at end → loop back to first
   const handleVideoEnded = () => {
     if (playlist.length <= 1) {
-      // Single video: loop itself
       videoRef.current?.play().catch(() => {});
       return;
     }
     setVideoIndex(i => (i + 1) % playlist.length);
   };
 
-  // When index changes, load & keep playing
   useEffect(() => {
     if (!currentVideo || !videoRef.current) return;
     videoRef.current.load();
@@ -144,6 +143,9 @@ export default function SalePageView() {
     ? `/order?product=${product.id}${selectedVar ? `&variation=${selectedVar.id}` : ""}`
     : "/order";
 
+  // Boleh beli terus hanya jika: tiada varian, 1 varian (auto), atau dah pilih varian
+  const canBuyDirect = product && (variations.length <= 1 || !!selectedVar);
+
   // loading
   if (loading) {
     return (
@@ -170,12 +172,12 @@ export default function SalePageView() {
   const theme = THEME_STYLES[page.theme || "amber"] || THEME_STYLES.amber;
 
   return (
-    <div className="fixed inset-0 bg-black overflow-y-auto flex justify-center">
-      {/* Phone-width container 375px (full-screen on actual mobile) */}
-      <div className="w-full max-w-[375px] min-h-full relative flex flex-col">
+    <div className="fixed inset-0 bg-black flex justify-center overflow-hidden">
+      {/* Phone-width container 375px — video 80%+, product bar kompak di bawah */}
+      <div className="relative w-full max-w-[375px] h-full flex flex-col overflow-hidden">
 
-        {/* ── Video section (playlist) ─────────────────── */}
-        <div className="relative w-full aspect-[9/16] bg-black overflow-hidden">
+        {/* ── Video section — flex-1 (±80% skrin) ──────────── */}
+        <div className="relative flex-1 min-h-0 bg-black overflow-hidden">
           {currentVideo ? (
             <>
               <video
@@ -218,7 +220,7 @@ export default function SalePageView() {
               )}
               {/* Playlist position indicator */}
               {playlist.length > 1 && (
-                <div className="absolute bottom-24 right-3 bg-black/50 backdrop-blur text-white/80 text-[10px] px-2 py-1 rounded-full">
+                <div className="absolute bottom-4 right-3 bg-black/50 backdrop-blur text-white/80 text-[10px] px-2 py-1 rounded-full">
                   {videoIndex + 1}/{playlist.length}
                 </div>
               )}
@@ -240,7 +242,7 @@ export default function SalePageView() {
 
           {/* Headline overlay on video */}
           {page.headline && (
-            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16">
+            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 pointer-events-none">
               <h1 className="text-white font-bold text-lg leading-tight">{page.headline}</h1>
               {page.subheadline && (
                 <p className="text-white/70 text-xs mt-1">{page.subheadline}</p>
@@ -249,94 +251,145 @@ export default function SalePageView() {
           )}
         </div>
 
-        {/* ── Product card + Buy ─────────────────────── */}
+        {/* ── Product bar kompak (±15-20% skrin) ──────────── */}
         {product && (
-          <div className="bg-zinc-950 px-4 py-5 flex-1 flex flex-col gap-4">
-            {/* Product info row */}
-            <div className="flex items-start gap-3">
-              {product.image_url && (
+          <div className="shrink-0 bg-zinc-950 border-t border-white/10">
+            {/* Collapsed row: thumbnail + nama + harga + Buy kecil + arrow */}
+            <div className="flex items-center gap-3 px-3 py-2.5">
+              {product.image_url ? (
                 <img
                   src={product.image_url}
                   alt={product.name}
-                  className="h-16 w-16 rounded-lg object-cover border border-white/10 shrink-0"
+                  className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0"
                 />
+              ) : (
+                <div className="h-12 w-12 rounded-lg bg-white/5 border border-white/10 shrink-0" />
               )}
               <div className="flex-1 min-w-0">
-                <p className="text-white font-semibold text-sm leading-tight">{product.name}</p>
-                {product.category && (
-                  <p className="text-white/40 text-[11px] mt-0.5">{product.category}</p>
-                )}
-                <div className="flex items-baseline gap-2 mt-1.5">
-                  <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
+                <p className="text-white font-semibold text-[13px] leading-tight truncate">{product.name}</p>
+                <div className="flex items-center gap-1.5 mt-0.5">
+                  <span className={`${theme.price} font-bold text-sm`}>RM{displayPrice.toFixed(0)}</span>
                   {selectedVar && selectedVar.price !== product.price && (
-                    <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
+                    <span className="text-white/30 text-[10px] line-through">RM{product.price.toFixed(0)}</span>
+                  )}
+                  {selectedVar && (
+                    <span className="text-white/50 text-[10px] truncate">• {selectedVar.name}</span>
                   )}
                 </div>
               </div>
-              <div className="flex items-center gap-0.5 shrink-0">
-                {[1,2,3,4,5].map(i => (
-                  <Star key={i} className={`h-3 w-3 ${theme.star}`} />
-                ))}
-              </div>
-            </div>
-
-            {/* Variations */}
-            {variations.length > 1 && (
-              <div id="salepage-varians">
-                <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide mb-2">Pilih Varian</p>
-                <div className="flex flex-wrap gap-2">
-                  {variations.map(v => (
-                    <button
-                      key={v.id}
-                      onClick={() => setSelectedVar(v)}
-                      className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
-                        selectedVar?.id === v.id
-                          ? `${theme.cta} text-black border-transparent`
-                          : "bg-white/5 text-white/80 border-white/15 hover:border-white/30"
-                      }`}
-                    >
-                      {v.name}
-                      <span className="ml-1.5 opacity-70">RM{v.price.toFixed(0)}</span>
-                    </button>
-                  ))}
-                </div>
-              </div>
-            )}
-
-            {/* Trust badges */}
-            <div className="flex items-center gap-4 text-white/50 text-[11px]">
-              <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Tempahan Selamat</span>
-              <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Siap 10–14 hari</span>
-            </div>
-
-            {/* Buy Now button — disabled if multiple variations & none selected */}
-            {variations.length > 1 && !selectedVar ? (
+              {/* Buy kecil — buka sheet jika belum pilih varian */}
+              {canBuyDirect ? (
+                <a
+                  href={buyUrl}
+                  className={`shrink-0 h-9 px-4 rounded-lg ${theme.cta} text-black font-bold text-sm flex items-center`}
+                >
+                  {page.cta_label || "Buy"}
+                </a>
+              ) : (
+                <button
+                  type="button"
+                  onClick={() => setInfoOpen(true)}
+                  className={`shrink-0 h-9 px-4 rounded-lg ${theme.cta} opacity-80 text-black font-bold text-[12px] flex items-center`}
+                >
+                  Pilih Varian
+                </button>
+              )}
+              {/* Arrow toggle — buka/tutup info produk penuh */}
               <button
                 type="button"
-                onClick={() => {
-                  const el = document.getElementById("salepage-varians");
-                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
-                }}
-                className={`mt-1 w-full h-12 rounded-xl ${theme.cta} opacity-70 text-black font-bold text-base flex items-center justify-center gap-2`}
+                onClick={() => setInfoOpen(o => !o)}
+                className="shrink-0 h-9 w-9 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70"
+                aria-label={infoOpen ? "Tutup info produk" : "Buka info produk"}
               >
-                Pilih Varian Dahulu
+                {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronUp className="h-4 w-4" />}
               </button>
-            ) : (
-              <a
-                href={buyUrl}
-                className={`mt-1 w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center gap-2 transition-colors`}
-              >
-                {page.cta_label || "Buy Now"}
-              </a>
+            </div>
+
+            {/* Expanded info sheet — muncul bila arrow ditekan */}
+            {infoOpen && (
+              <div className="px-4 pb-4 pt-1 space-y-3 max-h-[42vh] overflow-y-auto border-t border-white/5">
+                {/* Detail produk */}
+                <div className="flex items-start justify-between gap-3 pt-2">
+                  <div className="min-w-0">
+                    <p className="text-white font-semibold text-sm leading-tight">{product.name}</p>
+                    {product.category && (
+                      <p className="text-white/40 text-[11px] mt-0.5">{product.category}</p>
+                    )}
+                    <div className="flex items-baseline gap-2 mt-1">
+                      <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
+                      {selectedVar && selectedVar.price !== product.price && (
+                        <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
+                      )}
+                    </div>
+                  </div>
+                  <div className="flex items-center gap-0.5 shrink-0">
+                    {[1,2,3,4,5].map(i => (
+                      <Star key={i} className={`h-3 w-3 ${theme.star}`} />
+                    ))}
+                  </div>
+                </div>
+
+                {/* Variations */}
+                {variations.length > 1 && (
+                  <div id="salepage-varians">
+                    <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide mb-2">Pilih Varian</p>
+                    <div className="flex flex-wrap gap-2">
+                      {variations.map(v => (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedVar(v)}
+                          className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
+                            selectedVar?.id === v.id
+                              ? `${theme.cta} text-black border-transparent`
+                              : "bg-white/5 text-white/80 border-white/15 hover:border-white/30"
+                          }`}
+                        >
+                          {v.name}
+                          <span className="ml-1.5 opacity-70">RM{v.price.toFixed(0)}</span>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Trust badges */}
+                <div className="flex items-center gap-4 text-white/50 text-[11px]">
+                  <span className="flex items-center gap-1"><Shield className="h-3 w-3" /> Tempahan Selamat</span>
+                  <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Siap 10–14 hari</span>
+                </div>
+
+                {/* Buy Now besar — disabled jika belum pilih varian */}
+                {canBuyDirect ? (
+                  <a
+                    href={buyUrl}
+                    className={`block w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center transition-colors`}
+                  >
+                    {page.cta_label || "Buy Now"}
+                  </a>
+                ) : (
+                  <button
+                    type="button"
+                    onClick={() => {
+                      const el = document.getElementById("salepage-varians");
+                      el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                    }}
+                    className={`w-full h-12 rounded-xl ${theme.cta} opacity-70 text-black font-bold text-base flex items-center justify-center`}
+                  >
+                    Pilih Varian Dahulu
+                  </button>
+                )}
+              </div>
             )}
           </div>
         )}
 
-        {/* Footer branding (minimal) */}
-        <div className="bg-zinc-950 px-4 py-3 flex items-center justify-center gap-2 border-t border-white/5">
-          <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-5 w-5 object-contain" />
-          <span className="text-white/30 text-[11px]">AmanCarSeat</span>
-        </div>
+        {/* Tiada produk — bar branding kecil sahaja */}
+        {!product && (
+          <div className="shrink-0 bg-zinc-950 px-4 py-3 flex items-center justify-center gap-2 border-t border-white/5">
+            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-5 w-5 object-contain" />
+            <span className="text-white/30 text-[11px]">AmanCarSeat</span>
+          </div>
+        )}
       </div>
     </div>
   );
