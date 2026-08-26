@@ -737,9 +737,9 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
 
   return (
     <Dialog open={!!page} onOpenChange={o => { if (!o) onClose(); }}>
-      <DialogContent className="max-w-lg max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-w-2xl max-h-[90vh] overflow-y-auto">
         <DialogHeader>
-          <DialogTitle className="flex items-center gap-2">
+          <DialogTitle className="flex items-center gap-2 flex-wrap">
             {page.title}
             <Badge variant={page.is_published ? "default" : "secondary"}>
               {page.is_published ? "Live" : "Draf"}
@@ -747,108 +747,103 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 text-sm">
+        <div className="space-y-5 text-sm">
           {/* Jualan — highlight */}
           <div className="grid grid-cols-3 gap-3">
             <div className="rounded-xl bg-gradient-to-br from-green-500 to-green-600 text-white p-3">
               <p className="text-[10px] text-white/80 uppercase tracking-wide">Jumlah Jualan</p>
-              <p className="text-lg font-bold mt-0.5">{rm(sales)}</p>
+              <p className="text-xl font-bold mt-0.5">{rm(sales)}</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-blue-500 to-blue-600 text-white p-3">
               <p className="text-[10px] text-white/80 uppercase tracking-wide">Order</p>
-              <p className="text-lg font-bold mt-0.5">{orders}</p>
+              <p className="text-xl font-bold mt-0.5">{orders}</p>
             </div>
             <div className="rounded-xl bg-gradient-to-br from-amber-500 to-amber-600 text-white p-3">
               <p className="text-[10px] text-white/80 uppercase tracking-wide">Views</p>
-              <p className="text-lg font-bold mt-0.5">{page.views || 0}</p>
+              <p className="text-xl font-bold mt-0.5">{page.views || 0}</p>
             </div>
           </div>
 
-          {/* Info asas */}
-          <div className="space-y-1.5 text-sm">
-            <div className="flex justify-between gap-2">
-              <span className="text-muted-foreground">Link</span>
-              <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline truncate">
-                /page/{page.slug}
+          {/* Info asas — grid 2 kolom, nilai wrap bukan truncate */}
+          <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Link</p>
+              <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline break-all">
+                {window.location.origin}/page/{page.slug}
               </a>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Video dalam playlist</span>
-              <span className="font-medium">{videos}</span>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Video dalam playlist</p>
+              <p className="font-medium">{videos} video</p>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Theme</span>
-              <span className="font-medium capitalize">{page.theme || "amber"}</span>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Theme</p>
+              <div className="flex items-center gap-1.5">
+                <span className={`inline-block h-3 w-3 rounded-full ${THEME_PREVIEW_DOTS[page.theme || "amber"] || "bg-amber-400"}`} />
+                <span className="font-medium capitalize">{page.theme || "amber"}</span>
+              </div>
             </div>
-            <div className="flex justify-between">
-              <span className="text-muted-foreground">Butang CTA</span>
-              <span className="font-medium">{page.cta_label || "Buy Now"}</span>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Butang CTA</p>
+              <p className="font-medium">{page.cta_label || "Buy Now"}</p>
             </div>
-            {page.headline && (
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground shrink-0">Headline</span>
-                <span className="text-right truncate">{page.headline}</span>
-              </div>
-            )}
-            {page.subheadline && (
-              <div className="flex justify-between gap-2">
-                <span className="text-muted-foreground shrink-0">Sub-headline</span>
-                <span className="text-right truncate">{page.subheadline}</span>
-              </div>
-            )}
-            {page.badge_text && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Badge</span>
-                <span className="font-medium">{page.badge_text}</span>
-              </div>
-            )}
-            {page.created_at && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Dibuat</span>
-                <span className="font-medium">{new Date(page.created_at).toLocaleString("ms-MY", { dateStyle: "medium", timeStyle: "short" })}</span>
-              </div>
-            )}
-            {page.updated_at && (
-              <div className="flex justify-between">
-                <span className="text-muted-foreground">Dikemaskini</span>
-                <span className="font-medium">{new Date(page.updated_at).toLocaleString("ms-MY", { dateStyle: "medium", timeStyle: "short" })}</span>
-              </div>
-            )}
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Badge</p>
+              <p className="font-medium break-words">{page.badge_text || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Headline</p>
+              <p className="font-medium break-words">{page.headline || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Sub-headline</p>
+              <p className="font-medium break-words">{page.subheadline || "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Dibuat</p>
+              <p className="font-medium">{page.created_at ? new Date(page.created_at).toLocaleString("ms-MY", { dateStyle: "full", timeStyle: "short" }) : "—"}</p>
+            </div>
+            <div>
+              <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Dikemaskini</p>
+              <p className="font-medium">{page.updated_at ? new Date(page.updated_at).toLocaleString("ms-MY", { dateStyle: "full", timeStyle: "short" }) : "—"}</p>
+            </div>
           </div>
 
-          {/* Produk */}
+          {/* Produk — card penuh, harga nampak */}
           <div>
             <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Produk</p>
             {main ? (
-              <div className="flex items-center justify-between bg-muted/50 rounded-lg px-3 py-2 mb-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Badge variant="default" className="shrink-0 text-[10px]">Utama</Badge>
-                  <span className="text-sm truncate">{main.name}</span>
+              <div className="flex items-center gap-3 bg-muted/50 rounded-lg px-3 py-2.5 mb-2">
+                <Badge variant="default" className="shrink-0 text-[10px]">Utama</Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium break-words">{main.name}</p>
+                  {main.category && <p className="text-[11px] text-muted-foreground">{main.category}</p>}
                 </div>
-                <span className="text-sm font-semibold shrink-0">{rm(main.price)}</span>
+                <span className="text-sm font-bold shrink-0">{rm(main.price)}</span>
               </div>
             ) : (
               <p className="text-xs text-muted-foreground italic">Tiada produk utama</p>
             )}
             {addons.map(a => (
-              <div key={a.id} className="flex items-center justify-between bg-muted/30 rounded-lg px-3 py-2 mb-1.5">
-                <div className="flex items-center gap-2 min-w-0">
-                  <Badge variant="outline" className="shrink-0 text-[10px]">Add-On</Badge>
-                  <span className="text-sm truncate">{a.name}</span>
+              <div key={a.id} className="flex items-center gap-3 bg-muted/30 rounded-lg px-3 py-2.5 mb-2">
+                <Badge variant="outline" className="shrink-0 text-[10px]">Add-On</Badge>
+                <div className="flex-1 min-w-0">
+                  <p className="text-sm font-medium break-words">{a.name}</p>
+                  {a.category && <p className="text-[11px] text-muted-foreground">{a.category}</p>}
                 </div>
-                <span className="text-sm font-semibold shrink-0">{rm(a.price)}</span>
+                <span className="text-sm font-bold shrink-0">{rm(a.price)}</span>
               </div>
             ))}
           </div>
 
-          {/* URL video */}
+          {/* URL video — break-all supaya nampak penuh */}
           {videos > 0 && (
             <div>
-              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Playlist Video</p>
-              <div className="space-y-1">
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Playlist Video ({videos})</p>
+              <div className="space-y-1.5">
                 {(page.video_urls?.filter(Boolean).length ? page.video_urls.filter(Boolean) : page.video_url ? [page.video_url] : []).map((u, i) => (
-                  <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted/40 rounded px-2 py-1.5 truncate">
-                    {i + 1}. {u}
+                  <div key={i} className="text-[11px] font-mono text-muted-foreground bg-muted/40 rounded px-3 py-2 break-all">
+                    <span className="font-bold text-foreground">{i + 1}.</span> {u}
                   </div>
                 ))}
               </div>
@@ -859,15 +854,15 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
           {page.poster_url && (
             <div>
               <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Poster</p>
-              <img src={page.poster_url} alt="poster" className="w-full max-h-32 object-cover rounded-lg border" />
+              <img src={page.poster_url} alt="poster" className="w-full max-h-40 object-cover rounded-lg border" />
             </div>
           )}
 
           {/* Quick actions */}
-          <div className="flex gap-2 pt-2 border-t">
+          <div className="flex gap-2 pt-3 border-t">
             <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="flex-1">
               <Button variant="outline" size="sm" className="w-full">
-                <ExternalLink className="h-3.5 w-3.5 mr-1" /> Buka Page
+                <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Buka Page
               </Button>
             </a>
             <Button
@@ -879,7 +874,7 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
                 toast({ title: "Link disalin" });
               }}
             >
-              <Copy className="h-3.5 w-3.5 mr-1" /> Salin Link
+              <Copy className="h-3.5 w-3.5 mr-1.5" /> Salin Link
             </Button>
           </div>
         </div>
