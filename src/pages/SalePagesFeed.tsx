@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Volume2, VolumeX, Zap, ChevronDown, ChevronRight, ChevronLeft } from "lucide-react";
+import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, ExternalLink, Eye } from "lucide-react";
 
 interface FeedPage {
   id: string;
@@ -25,13 +25,14 @@ const THEME_DOTS: Record<string, string> = {
 export default function SalePagesFeed() {
   const [pages, setPages] = useState<FeedPage[]>([]);
   const [loading, setLoading] = useState(true);
-  const [activeIndex, setActiveIndex] = useState(0);
+  const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
+  const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
-  const scrollRef = useRef<HTMLDivElement | null>(null);
-  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
+  const videoRef = useRef<HTMLVideoElement | null>(null);
+  const touchStartY = useRef<number | null>(null);
+  const touchStartX = useRef<number | null>(null);
 
-  // Detect desktop vs mobile
   useEffect(() => {
     const check = () => setIsDesktop(window.innerWidth >= 768);
     check();
@@ -56,59 +57,62 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
-  // IntersectionObserver — main video yang nampak, pause yang lain
-  useEffect(() => {
-    const container = scrollRef.current;
-    if (!container || pages.length === 0) return;
-    const observer = new IntersectionObserver(
-      (entries) => {
-        entries.forEach((entry) => {
-          const idx = Number((entry.target as HTMLElement).dataset.index);
-          const video = videoRefs.current[idx];
-          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
-            setActiveIndex(idx);
-            if (video) {
-              video.muted = muted;
-              video.play().catch(() => {});
-            }
-          } else {
-            video?.pause();
-          }
-        });
-      },
-      { root: container, threshold: [0, 0.6, 1] }
-    );
-    container.querySelectorAll<HTMLElement>("[data-index]").forEach((el) => observer.observe(el));
-    return () => observer.disconnect();
-    // eslint-disable-next-line react-hooks/exhaustive-deps
-  }, [pages, loading]);
+  const goNext = useCallback(() => {
+    setIndex(i => Math.min(i + 1, pages.length - 1));
+  }, [pages.length]);
 
-  const toggleMute = useCallback(() => {
-    setMuted((m) => {
-      const next = !m;
-      Object.values(videoRefs.current).forEach((v) => { if (v) v.muted = next; });
-      return next;
-    });
+  const goPrev = useCallback(() => {
+    setIndex(i => Math.max(i - 1, 0));
   }, []);
 
-  // Navigasi arrow — scroll ke index tertentu
-  const scrollToIndex = useCallback((idx: number) => {
-    const container = scrollRef.current;
-    if (!container) return;
-    const clamped = Math.max(0, Math.min(idx, pages.length - 1));
-    const target = container.querySelector<HTMLElement>(`[data-index="${clamped}"]`);
-    if (target) {
-      // Desktop: scroll horizontal; Mobile: scroll vertical
-      if (isDesktop) {
-        container.scrollTo({ left: target.offsetLeft, behavior: "smooth" });
-      } else {
-        container.scrollTo({ top: target.offsetTop, behavior: "smooth" });
-      }
-    }
-  }, [pages.length, isDesktop]);
+  // Keyboard navigation (desktop)
+  useEffect(() => {
+    const onKey = (e: KeyboardEvent) => {
+      if (e.key === "ArrowDown" || e.key === "ArrowRight") goNext();
+      if (e.key === "ArrowUp" || e.key === "ArrowLeft") goPrev();
+    };
+    window.addEventListener("keydown", onKey);
+    return () => window.removeEventListener("keydown", onKey);
+  }, [goNext, goPrev]);
 
-  const goNext = useCallback(() => scrollToIndex(activeIndex + 1), [activeIndex, scrollToIndex]);
-  const goPrev = useCallback(() => scrollToIndex(activeIndex - 1), [activeIndex, scrollToIndex]);
+  // Bila tukar video: reset started, auto-play muted
+  useEffect(() => {
+    setStarted(false);
+    const v = videoRef.current;
+    if (v) {
+      v.currentTime = 0;
+      v.muted = true;
+      v.play().catch(() => {});
+    }
+  }, [index]);
+
+  const toggleMute = () => {
+    const v = videoRef.current;
+    if (!v) return;
+    v.muted = !v.muted;
+    setMuted(v.muted);
+  };
+
+  // Swipe (mobile) — swipe atas/bawah tukar video
+  const onTouchStart = (e: React.TouchEvent) => {
+    touchStartY.current = e.touches[0].clientY;
+    touchStartX.current = e.touches[0].clientX;
+  };
+  const onTouchEnd = (e: React.TouchEvent) => {
+    if (touchStartY.current === null || touchStartX.current === null) return;
+    const dy = e.changedTouches[0].clientY - touchStartY.current;
+    const dx = e.changedTouches[0].clientX - touchStartX.current;
+    const THRESHOLD = 50;
+    if (isDesktop) {
+      if (dx < -THRESHOLD) goNext();
+      else if (dx > THRESHOLD) goPrev();
+    } else {
+      if (dy < -THRESHOLD) goNext();
+      else if (dy > THRESHOLD) goPrev();
+    }
+    touchStartY.current = null;
+    touchStartX.current = null;
+  };
 
   if (loading) {
     return (
@@ -127,148 +131,161 @@ export default function SalePagesFeed() {
     );
   }
 
-  return (
-    <div className="fixed inset-0 bg-black flex justify-center" style={{ height: "100dvh" }}>
-      <div className="relative mx-auto w-full max-w-[420px] h-full">
+  const active = pages[index];
+  const playlist = active.video_urls?.filter(Boolean)?.length
+    ? active.video_urls.filter(Boolean)
+    : active.video_url ? [active.video_url] : [];
+  const src = playlist[0] || null;
+  const hasNext = index < pages.length - 1;
+  const hasPrev = index > 0;
 
-        {/* Header — logo ACS + mute */}
-        <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-3 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
-          <div className="flex items-center gap-2">
-            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-6 w-6 object-contain" />
-            <span className="text-white text-sm font-bold">AmanCarSeat</span>
-          </div>
-          <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
-            {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
-          </button>
+  return (
+    <div className="fixed inset-0 bg-black flex justify-center select-none" style={{ height: "100dvh" }}>
+      <div
+        className="relative w-full max-w-[420px] h-full overflow-hidden touch-pan-y"
+        onTouchStart={onTouchStart}
+        onTouchEnd={onTouchEnd}
+      >
+
+        {/* ── Video aktif ── */}
+        <div className="absolute inset-0 bg-black">
+          {src ? (
+            <video
+              ref={videoRef}
+              key={active.id}
+              src={src}
+              poster={active.poster_url || undefined}
+              muted
+              loop
+              playsInline
+              autoPlay
+              className="absolute inset-0 w-full h-full object-cover"
+            />
+          ) : active.poster_url ? (
+            <img src={active.poster_url} alt={active.title} className="absolute inset-0 w-full h-full object-cover" />
+          ) : (
+            <div className="absolute inset-0 flex items-center justify-center">
+              <Play className="h-10 w-10 text-white/20" />
+            </div>
+          )}
+
+          {/* Tekan untuk buka suara */}
+          {!started && (
+            <button
+              onClick={() => {
+                setStarted(true);
+                const v = videoRef.current;
+                if (v) { v.muted = false; setMuted(false); v.play().catch(() => {}); }
+              }}
+              className="absolute inset-0 flex items-center justify-center bg-black/30"
+            >
+              <div className="flex flex-col items-center gap-3">
+                <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                  <Play className="h-8 w-8 text-white fill-white" />
+                </div>
+                <span className="text-white/90 text-xs font-medium bg-black/40 px-3 py-1 rounded-full">
+                  Tekan untuk main dengan suara
+                </span>
+              </div>
+            </button>
+          )}
+
+          {/* Gradient bawah supaya teks jelas */}
+          <div className="absolute bottom-0 left-0 right-0 h-2/5 bg-gradient-to-t from-black/90 via-black/50 to-transparent pointer-events-none" />
         </div>
 
-        {/* Feed — mobile: vertical scroll; desktop: horizontal scroll */}
-        <div
-          ref={scrollRef}
-          className="w-full h-full overflow-auto snap-y snap-mandatory md:snap-x md:overflow-x-auto md:overflow-y-hidden md:flex md:snap-mandatory"
-          style={{ scrollbarWidth: "none", msOverflowStyle: "none", height: "100dvh" }}
-        >
-          {pages.map((p, i) => {
-            const playlist = p.video_urls?.filter(Boolean)?.length
-              ? p.video_urls.filter(Boolean)
-              : p.video_url ? [p.video_url] : [];
-            const first = playlist[0] || null;
-            return (
-              <section
-                key={p.id}
-                data-index={i}
-                className="relative w-full snap-start snap-always flex flex-col overflow-hidden shrink-0"
-                style={{ height: "100dvh", width: isDesktop ? "420px" : "100%" }}
-              >
-                {/* Video — penuh section */}
-                <div className="relative flex-1 min-h-0 bg-black">
-                  {first ? (
-                    <video
-                      ref={(el) => { videoRefs.current[i] = el; }}
-                      src={first}
-                      poster={p.poster_url || undefined}
-                      muted={muted}
-                      loop
-                      playsInline
-                      preload={Math.abs(i - activeIndex) <= 1 ? "auto" : "none"}
-                      className="absolute inset-0 w-full h-full object-cover"
-                    />
-                  ) : p.poster_url ? (
-                    <img src={p.poster_url} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
-                  ) : (
-                    <div className="absolute inset-0 flex items-center justify-center">
-                      <Play className="h-10 w-10 text-white/20" />
-                    </div>
-                  )}
+        {/* ── Header: logo ACS + counter + mute ── */}
+        <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="flex items-center gap-2">
+            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
+            <span className="text-white text-sm font-bold">AmanCarSeat</span>
+          </div>
+          {/* Counter besar: 1/100 */}
+          <div className="flex items-center gap-2">
+            <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
+              {index + 1}/{pages.length}
+            </span>
+            <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+              {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+            </button>
+          </div>
+        </div>
 
-                  {/* Badge */}
-                  {p.badge_text && (
-                    <div className={`absolute top-14 left-3 ${THEME_DOTS[p.theme || "amber"] || "bg-amber-400"} text-black text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1`}>
-                      <Zap className="h-3 w-3" /> {p.badge_text}
-                    </div>
-                  )}
+        {/* ── Info video aktif: tajuk page + views + link ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 pointer-events-none">
+          {/* Badge */}
+          {active.badge_text && (
+            <div className={`inline-flex ${THEME_DOTS[active.theme || "amber"] || "bg-amber-400"} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
+              <Zap className="h-3 w-3" /> {active.badge_text}
+            </div>
+          )}
+          <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
+          {active.subheadline && <p className="text-white/70 text-xs mt-1">{active.subheadline}</p>}
 
-                  {/* Headline */}
-                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 pointer-events-none">
-                    <h2 className="text-white font-bold text-lg leading-tight">{p.headline || p.title}</h2>
-                    {p.subheadline && <p className="text-white/70 text-xs mt-1">{p.subheadline}</p>}
-                    <p className="text-white/40 text-[10px] mt-1.5">
-                      {p.views || 0} view • {i + 1}/{pages.length}
-                    </p>
-                  </div>
-                </div>
+          {/* Meta: views + tajuk page */}
+          <div className="flex items-center gap-3 mt-2 text-[11px]">
+            <span className="flex items-center gap-1 text-white/60">
+              <Eye className="h-3.5 w-3.5" /> {active.views || 0} view
+            </span>
+            <span className="text-white/40">•</span>
+            <span className="text-white/60 font-mono truncate">/page/{active.slug}</span>
+          </div>
 
-                {/* Bar bawah — buka page penuh */}
-                <Link
-                  to={`/page/${p.slug}`}
-                  className="shrink-0 bg-zinc-950 border-t border-white/10 flex items-center gap-3 px-3 py-3"
-                >
-                  <div className="flex-1 min-w-0">
-                    <p className="text-white font-semibold text-[13px] truncate">{p.title}</p>
-                    <p className="text-white/40 text-[11px] truncate">Buka page penuh — pilih varian & tempahan</p>
-                  </div>
-                  <ChevronDown className="h-4 w-4 text-white/50 rotate-[-90deg] shrink-0" />
-                </Link>
-              </section>
-            );
-          })}
+          {/* Butang buka page penuh — PENTING supaya tahu page mana */}
+          <Link
+            to={`/page/${active.slug}`}
+            className="pointer-events-auto mt-3 w-full h-12 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-sm flex items-center justify-center gap-2 transition-colors"
+          >
+            <ExternalLink className="h-4 w-4" />
+            {active.title} — Tempahan
+          </Link>
+        </div>
+
+        {/* ── Progress bar ── */}
+        <div className="absolute bottom-0 left-0 right-0 z-40 h-1 bg-white/10">
+          <div
+            className="h-full bg-amber-400 transition-all duration-300"
+            style={{ width: `${((index + 1) / pages.length) * 100}%` }}
+          />
         </div>
 
         {/* ── Navigation arrows ── */}
 
-        {/* Mobile: arrow bawah (scroll ke bawah untuk video seterusnya) */}
-        {!isDesktop && pages.length > 1 && activeIndex < pages.length - 1 && (
-          <button
-            onClick={goNext}
-            className="absolute bottom-24 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-0.5 text-white/70 animate-bounce hover:text-white"
-          >
-            <ChevronDown className="h-5 w-5" />
-            <span className="text-[10px]">Scroll video lain</span>
-          </button>
-        )}
-
-        {/* Mobile: arrow atas (video sebelum) */}
-        {!isDesktop && activeIndex > 0 && (
-          <button
-            onClick={goPrev}
-            className="absolute top-16 left-1/2 -translate-x-1/2 z-30 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70 hover:text-white"
-          >
-            <ChevronDown className="h-4 w-4 rotate-180" />
-          </button>
-        )}
-
-        {/* Desktop: arrow kanan (video seterusnya) */}
-        {isDesktop && pages.length > 1 && activeIndex < pages.length - 1 && (
-          <button
-            onClick={goNext}
-            className="absolute top-1/2 right-2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-colors"
-          >
+        {/* Desktop: kiri/kanan */}
+        {isDesktop && hasNext && (
+          <button onClick={goNext} className="absolute top-1/2 right-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80 transition-colors">
             <ChevronRight className="h-6 w-6" />
           </button>
         )}
-
-        {/* Desktop: arrow kiri (video sebelum) */}
-        {isDesktop && activeIndex > 0 && (
-          <button
-            onClick={goPrev}
-            className="absolute top-1/2 left-2 -translate-y-1/2 z-30 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/80 hover:text-white hover:bg-black/80 transition-colors"
-          >
+        {isDesktop && hasPrev && (
+          <button onClick={goPrev} className="absolute top-1/2 left-3 -translate-y-1/2 z-40 h-12 w-12 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80 transition-colors">
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}
 
-        {/* Dot indicators */}
-        {pages.length > 1 && (
-          <div className={`absolute z-30 flex gap-1.5 ${isDesktop ? "flex-col bottom-1/2 translate-y-1/2 right-4" : "horizontal bottom-3 left-1/2 -translate-x-1/2"}`}>
-            {pages.map((_, i) => (
+        {/* Mobile: hint swipe bawah (video seterusnya) */}
+        {!isDesktop && hasNext && (
+          <button onClick={goNext} className="absolute bottom-36 left-1/2 -translate-x-1/2 z-30 flex flex-col items-center gap-0.5 text-white/70 animate-bounce">
+            <ChevronDown className="h-5 w-5" />
+            <span className="text-[10px]">Swipe video lain</span>
+          </button>
+        )}
+        {/* Mobile: arrow atas (video sebelum) */}
+        {!isDesktop && hasPrev && (
+          <button onClick={goPrev} className="absolute top-16 left-1/2 -translate-x-1/2 z-40 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70">
+            <ChevronDown className="h-4 w-4 rotate-180" />
+          </button>
+        )}
+
+        {/* Mini thumbnail nav (kalau page sikit sahaja) */}
+        {pages.length > 1 && pages.length <= 10 && (
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 z-30 flex flex-col gap-2">
+            {pages.map((p, i) => (
               <button
-                key={i}
-                onClick={() => scrollToIndex(i)}
-                className={`h-1.5 rounded-full transition-all ${
-                  i === activeIndex
-                    ? "bg-white w-4"
-                    : "bg-white/30 w-1.5 hover:bg-white/50"
-                }`}
+                key={p.id}
+                onClick={() => setIndex(i)}
+                className={`h-2 rounded-full transition-all ${i === index ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`}
+                title={p.title}
               />
             ))}
           </div>
