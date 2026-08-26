@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
-import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
+import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
 
 interface SalePage {
   id: string;
@@ -54,6 +54,7 @@ export default function SalePageView() {
   const [selectedVar, setSelectedVar] = useState<Variation | null>(null);
   const [addonProducts, setAddonProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
@@ -111,19 +112,29 @@ export default function SalePageView() {
           }
         } catch { /* table belum wujud */ }
 
-        // Fetch 6 testimoni REAL berdasarkan material produk
+        // Fetch SEMUA testimoni — total count mengikut material + 10 terawal
         if (prod?.category) {
           try {
             const matMap = await fetchReviewMaterials();
-            const { data: allReviews } = await reviewsSupabase
-              .from("reviews")
-              .select("id, name, car_model, rating, review, images, created_at, avatar_url")
-              .order("created_at", { ascending: false })
-              .limit(200);
-            const matched = (allReviews || [])
-              .filter((r: any) => matMap[r.id] === prod.category)
-              .slice(0, 6) as Review[];
-            setReviews(matched);
+            const allRev: any[] = [];
+            let fromR = 0;
+            while (true) {
+              const { data: batch } = await reviewsSupabase
+                .from("reviews")
+                .select("id, name, car_model, rating, review, images, created_at, avatar_url")
+                .order("created_at", { ascending: false })
+                .range(fromR, fromR + 999);
+              if (!data || data.length === 0) break;
+              allRev.push(...(batch || []));
+              if ((batch || []).length < 1000) break;
+              fromR += 1000;
+            }
+            const matched = allRev.filter((r: any) => matMap[r.id] === prod.category);
+            setReviewCount(matched.length);
+            const earliest = [...matched].sort((a, b) =>
+              new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
+            ).slice(0, 10) as Review[];
+            setReviews(earliest);
           } catch (e) {
             console.error("reviews fetch error", e);
           }
@@ -222,6 +233,24 @@ export default function SalePageView() {
     <div className="fixed inset-0 bg-black flex justify-center overflow-hidden">
       {/* Phone-width container 375px — video 80%+, product bar kompak di bawah */}
       <div className="relative w-full max-w-[375px] h-full flex flex-col overflow-hidden">
+
+        {/* ── Header: logo ACS + views (macam feed) ── */}
+        <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
+          <div className="flex items-center gap-2">
+            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
+            <span className="text-white text-sm font-bold">AmanCarSeat</span>
+          </div>
+          <div className="flex items-center gap-2">
+            <span className="flex items-center gap-1 text-white/80 text-[11px] font-medium bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
+              <Eye className="h-3 w-3" /> {page.views || 0} view
+            </span>
+            {reviewCount > 0 && (
+              <span className="flex items-center gap-1 text-white/80 text-[11px] font-medium bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
+                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCount}
+              </span>
+            )}
+          </div>
+        </div>
 
         {/* ── Video section — flex-1 (±80% skrin) ──────────── */}
         <div className="relative flex-1 min-h-0 bg-black overflow-hidden">
@@ -413,12 +442,12 @@ export default function SalePageView() {
                   </div>
                 )}
 
-                {/* Testimoni REAL — 6 latest ikut material produk */}
+                {/* Testimoni REAL — total count + 10 terawal */}
                 {reviews.length > 0 && (
                   <div>
                     <div className="flex items-center justify-between mb-2">
                       <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide">
-                        Testimoni ({prod_cat})
+                        Testimoni ({reviewCount} total • {prod_cat})
                       </p>
                       <Link
                         to={`/testimoni/${materialSlug}`}
@@ -427,8 +456,8 @@ export default function SalePageView() {
                         Lihat semua
                       </Link>
                     </div>
-                    <div className="space-y-2">
-                      {reviews.slice(0, 3).map(r => (
+                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
+                      {reviews.map(r => (
                         <div key={r.id} className="bg-white/5 border border-white/10 rounded-lg p-2.5">
                           <div className="flex items-center gap-2 mb-1">
                             {r.avatar_url ? (
@@ -452,14 +481,14 @@ export default function SalePageView() {
                         </div>
                       ))}
                     </div>
-                    {/* Chip baki testimoni */}
-                    {reviews.length > 3 && (
+                    {/* Link ke page testimoni penuh */}
+                    {reviewCount > 10 && (
                       <Link
                         to={`/testimoni/${materialSlug}`}
                         className="mt-2 flex items-center justify-center gap-1 text-[10px] text-white/50 bg-white/5 rounded-lg py-1.5"
                       >
                         <MessageCircle className="h-3 w-3" />
-                        +{reviews.length - 3} testimoni lagi — lihat semua
+                        +{reviewCount - 10} testimoni lagi — lihat semua
                       </Link>
                     )}
                   </div>

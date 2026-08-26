@@ -210,7 +210,16 @@ export default function SalePagesFeed() {
     setInfoOpen(false);
     const v = videoRef.current;
     if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
-  }, [index]);
+    // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
+    const pg = pages[index];
+    if (pg) {
+      supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(() => {
+        // Update local state supaya counter view naik live
+        setPages(prev => prev.map((p, i) => i === index ? { ...p, views: (p.views || 0) + 1 } : p));
+      }).catch(() => {});
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [index, pages.length]);
 
   const toggleMute = () => {
     const v = videoRef.current;
