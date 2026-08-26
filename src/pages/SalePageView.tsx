@@ -1,7 +1,9 @@
 import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown } from "lucide-react";
+import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
+import { fetchReviewMaterials } from "@/lib/reviewMaterials";
+import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle } from "lucide-react";
 
 interface SalePage {
   id: string;
@@ -51,6 +53,7 @@ export default function SalePageView() {
   const [variations, setVariations] = useState<Variation[]>([]);
   const [selectedVar, setSelectedVar] = useState<Variation | null>(null);
   const [addonProducts, setAddonProducts] = useState<Product[]>([]);
+  const [reviews, setReviews] = useState<Review[]>([]);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
@@ -107,6 +110,24 @@ export default function SalePageView() {
             setAddonProducts((prods || []) as Product[]);
           }
         } catch { /* table belum wujud */ }
+
+        // Fetch 6 testimoni REAL berdasarkan material produk
+        if (prod?.category) {
+          try {
+            const matMap = await fetchReviewMaterials();
+            const { data: allReviews } = await reviewsSupabase
+              .from("reviews")
+              .select("id, name, car_model, rating, review, images, created_at, avatar_url")
+              .order("created_at", { ascending: false })
+              .limit(200);
+            const matched = (allReviews || [])
+              .filter((r: any) => matMap[r.id] === prod.category)
+              .slice(0, 6) as Review[];
+            setReviews(matched);
+          } catch (e) {
+            console.error("reviews fetch error", e);
+          }
+        }
       } catch (e) {
         console.error("salepage load error", e);
       } finally {
@@ -188,6 +209,14 @@ export default function SalePageView() {
 
   const displayPrice = selectedVar?.price ?? product?.price ?? 0;
   const theme = THEME_STYLES[page.theme || "amber"] || THEME_STYLES.amber;
+  const prod_cat = product?.category || "";
+  const MATERIAL_SLUGS: Record<string, string> = {
+    "Kain Mesh": "kainmesh",
+    "Kain Nylon": "kainnylon",
+    "Kain Fullsilk": "kainfullsilk",
+    "Semi Leather Kalis Air": "semileather",
+  };
+  const materialSlug = MATERIAL_SLUGS[prod_cat] || "all";
 
   return (
     <div className="fixed inset-0 bg-black flex justify-center overflow-hidden">
@@ -326,25 +355,12 @@ export default function SalePageView() {
             {/* Expanded info sheet — muncul bila arrow ditekan */}
             {infoOpen && (
               <div className="px-4 pb-4 pt-1 space-y-3 max-h-[42vh] overflow-y-auto border-t border-white/5">
-                {/* Detail produk */}
-                <div className="flex items-start justify-between gap-3 pt-2">
-                  <div className="min-w-0">
-                    <p className="text-white font-semibold text-sm leading-tight">{product.name}</p>
-                    {product.category && (
-                      <p className="text-white/40 text-[11px] mt-0.5">{product.category}</p>
-                    )}
-                    <div className="flex items-baseline gap-2 mt-1">
-                      <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
-                      {selectedVar && selectedVar.price !== product.price && (
-                        <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
-                      )}
-                    </div>
-                  </div>
-                  <div className="flex items-center gap-0.5 shrink-0">
-                    {[1,2,3,4,5].map(i => (
-                      <Star key={i} className={`h-3 w-3 ${theme.star}`} />
-                    ))}
-                  </div>
+                {/* Detail produk — nama + kategori sahaja (harga dah ada kat bar atas) */}
+                <div className="pt-2">
+                  <p className="text-white font-semibold text-sm leading-tight">{product.name}</p>
+                  {product.category && (
+                    <p className="text-white/40 text-[11px] mt-0.5">{product.category}</p>
+                  )}
                 </div>
 
                 {/* Variations */}
@@ -394,6 +410,58 @@ export default function SalePageView() {
                         </a>
                       ))}
                     </div>
+                  </div>
+                )}
+
+                {/* Testimoni REAL — 6 latest ikut material produk */}
+                {reviews.length > 0 && (
+                  <div>
+                    <div className="flex items-center justify-between mb-2">
+                      <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide">
+                        Testimoni ({prod_cat})
+                      </p>
+                      <Link
+                        to={`/testimoni/${materialSlug}`}
+                        className="text-[10px] text-amber-400 underline shrink-0"
+                      >
+                        Lihat semua
+                      </Link>
+                    </div>
+                    <div className="space-y-2">
+                      {reviews.slice(0, 3).map(r => (
+                        <div key={r.id} className="bg-white/5 border border-white/10 rounded-lg p-2.5">
+                          <div className="flex items-center gap-2 mb-1">
+                            {r.avatar_url ? (
+                              <img src={r.avatar_url} alt={r.name} className="h-6 w-6 rounded-full object-cover" />
+                            ) : (
+                              <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white/60">
+                                {r.name.charAt(0).toUpperCase()}
+                              </div>
+                            )}
+                            <span className="text-white text-[11px] font-semibold truncate">{r.name}</span>
+                            <div className="flex items-center gap-0.5 ml-auto shrink-0">
+                              {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                                <Star key={i} className={`h-2.5 w-2.5 ${theme.star}`} />
+                              ))}
+                            </div>
+                          </div>
+                          <p className="text-white/70 text-[11px] leading-snug line-clamp-2">{r.review}</p>
+                          {r.car_model && (
+                            <p className="text-white/30 text-[10px] mt-1">{r.car_model}</p>
+                          )}
+                        </div>
+                      ))}
+                    </div>
+                    {/* Chip baki testimoni */}
+                    {reviews.length > 3 && (
+                      <Link
+                        to={`/testimoni/${materialSlug}`}
+                        className="mt-2 flex items-center justify-center gap-1 text-[10px] text-white/50 bg-white/5 rounded-lg py-1.5"
+                      >
+                        <MessageCircle className="h-3 w-3" />
+                        +{reviews.length - 3} testimoni lagi — lihat semua
+                      </Link>
+                    )}
                   </div>
                 )}
 
