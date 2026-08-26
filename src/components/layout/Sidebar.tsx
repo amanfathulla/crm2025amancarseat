@@ -22,6 +22,7 @@ import {
   Network,
   ChevronDown,
   ChevronRight,
+  MonitorPlay,
 } from "lucide-react";
 
 interface SidebarItemType {
@@ -161,6 +162,7 @@ export function Sidebar() {
     { title: "Payment Gateways", path: "/payment-gateways", icon: CreditCard },
     { title: "Kupon", path: "/coupons", icon: Tag },
     { title: "Lead Management", path: "/leads", icon: Users },
+    { title: "Page", path: "/sale-pages", icon: MonitorPlay },
   ];
 
   const orderPageUrl = "/order";

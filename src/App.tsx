@@ -28,6 +28,8 @@ import Reviews from "@/pages/Reviews";
 import LinkTempahan from "@/pages/LinkTempahan";
 import Coupons from "@/pages/Coupons";
 import NotFound from "@/pages/NotFound";
+import SalePageView from "@/pages/SalePageView";
+import SalePagesAdmin from "@/pages/SalePagesAdmin";
 import { MainLayout } from "@/components/layout/MainLayout";
 import { Sidebar } from "@/components/layout/Sidebar";
 
@@ -83,6 +85,7 @@ function App() {
                 <Route path="/order/:material" element={<Order />} />
                 <Route path="/testimoni" element={<Testimoni />} />
                 <Route path="/testimoni/:brand" element={<Testimoni />} />
+                <Route path="/page/:slug" element={<SalePageView />} />
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
                 <Route path="/live-dashboardacs" element={<RaceDashboard />} />
@@ -107,6 +110,7 @@ function App() {
                   <Route path="/reviews" element={<Reviews />} />
                   <Route path="/coupons" element={<Coupons />} />
                   <Route path="/link-tempahan" element={<LinkTempahan />} />
+                  <Route path="/sale-pages" element={<SalePagesAdmin />} />
                 </Route>
 
                 <Route path="*" element={<NotFound />} />

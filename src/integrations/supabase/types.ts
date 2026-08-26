@@ -1217,6 +1217,57 @@ export type Database = {
         }
         Relationships: []
       }
+      sale_pages: {
+        Row: {
+          id: string
+          slug: string
+          title: string
+          headline: string | null
+          subheadline: string | null
+          video_url: string | null
+          poster_url: string | null
+          product_id: string | null
+          cta_label: string | null
+          badge_text: string | null
+          is_published: boolean
+          views: number
+          created_at: string
+          updated_at: string
+        }
+        Insert: {
+          id?: string
+          slug: string
+          title: string
+          headline?: string | null
+          subheadline?: string | null
+          video_url?: string | null
+          poster_url?: string | null
+          product_id?: string | null
+          cta_label?: string | null
+          badge_text?: string | null
+          is_published?: boolean
+          views?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Update: {
+          id?: string
+          slug?: string
+          title?: string
+          headline?: string | null
+          subheadline?: string | null
+          video_url?: string | null
+          poster_url?: string | null
+          product_id?: string | null
+          cta_label?: string | null
+          badge_text?: string | null
+          is_published?: boolean
+          views?: number
+          created_at?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       admin_product_variations: {

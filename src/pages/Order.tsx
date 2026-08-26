@@ -211,6 +211,7 @@ export default function OrderPage() {
   }, []);
 
   // Auto-select material from URL path (/order/materialmesh) or query param (?material=fullsilk)
+  // Also support ?product=ID to pre-select a specific product (used by salepage /page/[slug] Buy Now)
   useEffect(() => {
     if (enabledCategories === null) return;
     const params = new URLSearchParams(window.location.search);
@@ -229,25 +230,72 @@ export default function OrderPage() {
         mat = last.toLowerCase().replace(/^material[-_]?/, "");
       }
     }
-    if (!mat) return;
-    const needle = mat.toLowerCase();
-    const match = ALL_MATERIAL_CATEGORIES.find(c =>
-      c.id.toLowerCase().includes(needle) ||
-      c.label.toLowerCase().includes(needle)
-    );
-    if (match) {
-      setSelectedCategory(match);
-      setSelectedProduct(null);
-      setSelectedVariation(null);
-      fetchProducts(match.label);
-      setStep("product");
-      // Track page view (fire-and-forget)
-      (supabase as any).from("page_views").insert({
-        material: match.label,
-        user_agent: navigator.userAgent,
-        referrer: document.referrer || null,
-      }).then(() => {});
-      trackEvent("ViewContent", { content_category: match.label, content_name: match.label });
+    if (mat) {
+      const needle = mat.toLowerCase();
+      const match = ALL_MATERIAL_CATEGORIES.find(c =>
+        c.id.toLowerCase().includes(needle) ||
+        c.label.toLowerCase().includes(needle)
+      );
+      if (match) {
+        setSelectedCategory(match);
+        setSelectedProduct(null);
+        setSelectedVariation(null);
+        fetchProducts(match.label);
+        setStep("product");
+        (supabase as any).from("page_views").insert({
+          material: match.label,
+          user_agent: navigator.userAgent,
+          referrer: document.referrer || null,
+        }).then(() => {});
+        trackEvent("ViewContent", { content_category: match.label, content_name: match.label });
+      }
+    }
+    // Pre-select product by ID (?product=UUID) — used by salepage Buy Now
+    const productId = params.get("product");
+    if (productId) {
+      // Determine the product's category, then pre-select it + the product
+      (async () => {
+        try {
+          const { data: prod } = await (supabase as any)
+            .from("public_products")
+            .select("id, name, price, category, image_url, description, status, youtube_url, image_urls")
+            .eq("id", productId).single();
+          if (!prod) return;
+          // Determine the product's category, then pre-select it + the product
+          const catMatch = ALL_MATERIAL_CATEGORIES.find(c => c.label === prod.category);
+          if (catMatch) {
+            setSelectedCategory(catMatch);
+            setStep("product");
+            // Fetch variations for this product
+            const { data: vars } = await (supabase as any)
+              .from("public_product_variations")
+              .select("id, product_id, name, price")
+              .eq("product_id", productId)
+              .order("price");
+            const fullProd: Product = {
+              ...prod,
+              youtube_url: prod.youtube_url || null,
+              image_urls: prod.image_urls || null,
+              variations: vars || [],
+            };
+            setProducts(prev => prev.some(p => p.id === fullProd.id) ? prev : [fullProd, ...prev]);
+            setSelectedProduct(fullProd);
+            // If only one variation, auto-select it and jump to form
+            if (vars && vars.length === 1) {
+              setSelectedVariation(vars[0]);
+              setStep("form");
+            } else if (vars && vars.length > 1) {
+              // Stay on product step — user picks variation
+              setStep("product");
+            } else {
+              // No variations — go straight to form
+              setStep("form");
+            }
+          }
+        } catch (e) {
+          console.error("pre-select product error", e);
+        }
+      })();
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [enabledCategories]);
