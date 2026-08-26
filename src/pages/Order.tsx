@@ -53,6 +53,9 @@ export default function OrderPage() {
   const { toast } = useToast();
   const pageScrollRef = useRef<HTMLDivElement | null>(null);
   const [step, setStep] = useState<Step>("category");
+  // While pre-selecting product/variation from URL (?product=ID), hide the material screen
+  // so users coming from a salepage don't see a 3-second "Pilih Material" flash.
+  const [preselecting, setPreselecting] = useState(false);
   const [products, setProducts] = useState<Product[]>([]);
   const [loadingProducts, setLoadingProducts] = useState(false);
   const [enabledCategories, setEnabledCategories] = useState<string[] | null>(null);
@@ -250,22 +253,26 @@ export default function OrderPage() {
         trackEvent("ViewContent", { content_category: match.label, content_name: match.label });
       }
     }
-    // Pre-select product by ID (?product=UUID) — used by salepage Buy Now
+    // Pre-select product by ID (?product=UUID) — used by salepage Buy Now.
+    // Also supports ?variation=ID to pre-select a specific variation the user
+    // already picked on the salepage, so they skip straight to the form.
     const productId = params.get("product");
     if (productId) {
-      // Determine the product's category, then pre-select it + the product
+      setPreselecting(true); // hide "Pilih Material" screen during fetch
       (async () => {
         try {
           const { data: prod } = await (supabase as any)
             .from("public_products")
             .select("id, name, price, category, image_url, description, status, youtube_url, image_urls")
             .eq("id", productId).single();
-          if (!prod) return;
+          if (!prod) {
+            setPreselecting(false);
+            return;
+          }
           // Determine the product's category, then pre-select it + the product
           const catMatch = ALL_MATERIAL_CATEGORIES.find(c => c.label === prod.category);
           if (catMatch) {
             setSelectedCategory(catMatch);
-            setStep("product");
             // Fetch variations for this product
             const { data: vars } = await (supabase as any)
               .from("public_product_variations")
@@ -280,12 +287,19 @@ export default function OrderPage() {
             };
             setProducts(prev => prev.some(p => p.id === fullProd.id) ? prev : [fullProd, ...prev]);
             setSelectedProduct(fullProd);
-            // If only one variation, auto-select it and jump to form
-            if (vars && vars.length === 1) {
+
+            // Check if a specific variation was passed (?variation=ID from salepage)
+            const variationId = params.get("variation");
+            const matchedVar = vars?.find((v: any) => v.id === variationId);
+            if (matchedVar) {
+              setSelectedVariation(matchedVar);
+              setStep("form");
+            } else if (vars && vars.length === 1) {
+              // Only one variation — auto-select it and jump to form
               setSelectedVariation(vars[0]);
               setStep("form");
             } else if (vars && vars.length > 1) {
-              // Stay on product step — user picks variation
+              // Multiple variations and none specified — user must pick
               setStep("product");
             } else {
               // No variations — go straight to form
@@ -294,6 +308,8 @@ export default function OrderPage() {
           }
         } catch (e) {
           console.error("pre-select product error", e);
+        } finally {
+          setPreselecting(false);
         }
       })();
     }
@@ -664,8 +680,16 @@ export default function OrderPage() {
       {/* ── Main Content ───────────────────────────────────── */}
       <main className="max-w-3xl mx-auto px-4 py-8 pb-16">
 
+        {/* Pre-select loading — avoid flashing the material selection screen */}
+        {preselecting && (
+          <div className="flex flex-col items-center justify-center py-32 gap-4">
+            <Loader2 className="h-10 w-10 animate-spin text-white/60" />
+            <p className="text-white/50 text-sm">Memuatkan produk...</p>
+          </div>
+        )}
+
         {/* ── STEP: Category ── */}
-        {step === "category" && (
+        {step === "category" && !preselecting && (
           <div className="animate-in fade-in slide-in-from-bottom-4 duration-300">
             <div className="text-center mb-10">
               <div className="inline-flex items-center justify-center w-14 h-14 rounded-2xl bg-white/5 border border-white/10 mb-4">

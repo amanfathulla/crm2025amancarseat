@@ -140,7 +140,9 @@ export default function SalePageView() {
     if (videoRef.current) videoRef.current.muted = next;
   };
 
-  const buyUrl = product ? `/order?product=${product.id}` : "/order";
+  const buyUrl = product
+    ? `/order?product=${product.id}${selectedVar ? `&variation=${selectedVar.id}` : ""}`
+    : "/order";
 
   // loading
   if (loading) {
@@ -280,7 +282,7 @@ export default function SalePageView() {
 
             {/* Variations */}
             {variations.length > 1 && (
-              <div>
+              <div id="salepage-varians">
                 <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide mb-2">Pilih Varian</p>
                 <div className="flex flex-wrap gap-2">
                   {variations.map(v => (
@@ -307,13 +309,26 @@ export default function SalePageView() {
               <span className="flex items-center gap-1"><Zap className="h-3 w-3" /> Siap 10–14 hari</span>
             </div>
 
-            {/* Buy Now button */}
-            <a
-              href={buyUrl}
-              className={`mt-1 w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center gap-2 transition-colors`}
-            >
-              {page.cta_label || "Buy Now"}
-            </a>
+            {/* Buy Now button — disabled if multiple variations & none selected */}
+            {variations.length > 1 && !selectedVar ? (
+              <button
+                type="button"
+                onClick={() => {
+                  const el = document.getElementById("salepage-varians");
+                  el?.scrollIntoView({ behavior: "smooth", block: "center" });
+                }}
+                className={`mt-1 w-full h-12 rounded-xl ${theme.cta} opacity-70 text-black font-bold text-base flex items-center justify-center gap-2`}
+              >
+                Pilih Varian Dahulu
+              </button>
+            ) : (
+              <a
+                href={buyUrl}
+                className={`mt-1 w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center gap-2 transition-colors`}
+              >
+                {page.cta_label || "Buy Now"}
+              </a>
+            )}
           </div>
         )}
 
