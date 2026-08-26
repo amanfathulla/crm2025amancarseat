@@ -49,6 +49,7 @@ interface FormState {
   product_id: string;
   cta_label: string;
   badge_text: string;
+  theme: string;
 }
 
 const EMPTY_FORM: FormState = {
@@ -62,7 +63,18 @@ const EMPTY_FORM: FormState = {
   product_id: "",
   cta_label: "Buy Now",
   badge_text: "",
+  theme: "amber",
 };
+
+// Pilihan warna theme (mesti sama dengan THEME_STYLES dalam SalePageView)
+const THEME_OPTIONS = [
+  { id: "amber",  label: "Amber",  dot: "bg-amber-400" },
+  { id: "red",    label: "Red",    dot: "bg-red-500" },
+  { id: "blue",   label: "Blue",   dot: "bg-blue-500" },
+  { id: "green",  label: "Green",  dot: "bg-emerald-500" },
+  { id: "pink",   label: "Pink",   dot: "bg-pink-500" },
+  { id: "purple", label: "Purple", dot: "bg-purple-500" },
+];
 
 export default function SalePagesAdmin() {
   const { toast } = useToast();
@@ -124,6 +136,7 @@ export default function SalePagesAdmin() {
       product_id: p.product_id || "",
       cta_label: p.cta_label || "Buy Now",
       badge_text: p.badge_text || "",
+      theme: (p as any).theme || "amber",
     });
     setDialogOpen(true);
   };
@@ -146,6 +159,7 @@ export default function SalePagesAdmin() {
         product_id: form.product_id || null,
         cta_label: form.cta_label.trim() || "Buy Now",
         badge_text: form.badge_text.trim() || null,
+        theme: form.theme || "amber",
       };
       if (editing) {
         const { error } = await authClient.from("sale_pages").update(payload).eq("id", editing.id);
@@ -367,6 +381,26 @@ export default function SalePagesAdmin() {
                   <Input id="sp-badge" value={form.badge_text} onChange={e => setField("badge_text", e.target.value)} placeholder="PROMO" />
                 </div>
               </div>
+              <div>
+                <Label>Theme Warna</Label>
+                <div className="flex flex-wrap gap-2">
+                  {THEME_OPTIONS.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setField("theme", t.id)}
+                      className={`flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-medium border transition-colors ${
+                        form.theme === t.id
+                          ? "border-foreground bg-foreground/10"
+                          : "border-border hover:border-muted-foreground"
+                      }`}
+                    >
+                      <span className={`h-3 w-3 rounded-full ${t.dot}`} />
+                      {t.label}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
                 <Button onClick={handleSave} disabled={saving}>{saving ? "Menyimpan..." : "Simpan"}</Button>
@@ -407,6 +441,16 @@ export default function SalePagesAdmin() {
     </div>
   );
 }
+
+// Preview dot mapping (CTA bg)
+const THEME_PREVIEW_DOTS: Record<string, string> = {
+  amber: "bg-amber-400",
+  red: "bg-red-500",
+  blue: "bg-blue-500",
+  green: "bg-emerald-500",
+  pink: "bg-pink-500",
+  purple: "bg-purple-500",
+};
 
 // Live phone preview — mirrors SalePageView layout
 function PreviewPhone({ page, products }: { page: FormState; products: ProductOption[] }) {
@@ -449,7 +493,7 @@ function PreviewPhone({ page, products }: { page: FormState; products: ProductOp
           </div>
         </div>
         <div className="mt-auto">
-          <div className="w-full h-11 rounded-xl bg-amber-400 text-black font-bold flex items-center justify-center text-sm">
+          <div className={`w-full h-11 rounded-xl ${THEME_PREVIEW_DOTS[page.theme] || "bg-amber-400"} text-black font-bold flex items-center justify-center text-sm`}>
             {page.cta_label || "Buy Now"}
           </div>
         </div>

@@ -15,6 +15,7 @@ interface SalePage {
   product_id: string | null;
   cta_label: string | null;
   badge_text: string | null;
+  theme: string | null;
   is_published: boolean;
 }
 
@@ -26,6 +27,16 @@ interface Product {
   image_url: string | null;
   description: string | null;
 }
+
+// Theme accent mapping — CTA button, badge, price & stars ikut warna theme
+const THEME_STYLES: Record<string, { cta: string; badge: string; price: string; star: string }> = {
+  amber:  { cta: "bg-amber-400 hover:bg-amber-300",      badge: "bg-amber-400",      price: "text-amber-400",      star: "text-amber-400 fill-amber-400" },
+  red:    { cta: "bg-red-500 hover:bg-red-400",          badge: "bg-red-500",        price: "text-red-400",        star: "text-red-400 fill-red-400" },
+  blue:   { cta: "bg-blue-500 hover:bg-blue-400",        badge: "bg-blue-500",       price: "text-blue-400",       star: "text-blue-400 fill-blue-400" },
+  green:  { cta: "bg-emerald-500 hover:bg-emerald-400",  badge: "bg-emerald-500",    price: "text-emerald-400",    star: "text-emerald-400 fill-emerald-400" },
+  pink:   { cta: "bg-pink-500 hover:bg-pink-400",        badge: "bg-pink-500",       price: "text-pink-400",       star: "text-pink-400 fill-pink-400" },
+  purple: { cta: "bg-purple-500 hover:bg-purple-400",    badge: "bg-purple-500",     price: "text-purple-400",     star: "text-purple-400 fill-purple-400" },
+};
 
 interface Variation {
   id: string;
@@ -51,7 +62,7 @@ export default function SalePageView() {
       try {
         const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_url, video_urls, poster_url, product_id, cta_label, badge_text, is_published")
+          .select("id, slug, title, headline, subheadline, video_url, video_urls, poster_url, product_id, cta_label, badge_text, theme, is_published")
           .eq("slug", slug).single();
         if (!pg || !pg.is_published) {
           setLoading(false);
@@ -154,6 +165,7 @@ export default function SalePageView() {
   }
 
   const displayPrice = selectedVar?.price ?? product?.price ?? 0;
+  const theme = THEME_STYLES[page.theme || "amber"] || THEME_STYLES.amber;
 
   return (
     <div className="fixed inset-0 bg-black overflow-y-auto flex justify-center">
@@ -219,7 +231,7 @@ export default function SalePageView() {
 
           {/* Badge (top-left) */}
           {page.badge_text && (
-            <div className="absolute top-3 left-3 bg-amber-400 text-black text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1">
+            <div className={`absolute top-3 left-3 ${theme.badge} text-black text-[11px] font-bold px-2.5 py-1 rounded-full flex items-center gap-1`}>
               <Zap className="h-3 w-3" /> {page.badge_text}
             </div>
           )}
@@ -253,7 +265,7 @@ export default function SalePageView() {
                   <p className="text-white/40 text-[11px] mt-0.5">{product.category}</p>
                 )}
                 <div className="flex items-baseline gap-2 mt-1.5">
-                  <span className="text-amber-400 font-bold text-lg">RM{displayPrice.toFixed(0)}</span>
+                  <span className={`${theme.price} font-bold text-lg`}>RM{displayPrice.toFixed(0)}</span>
                   {selectedVar && selectedVar.price !== product.price && (
                     <span className="text-white/30 text-xs line-through">RM{product.price.toFixed(0)}</span>
                   )}
@@ -261,7 +273,7 @@ export default function SalePageView() {
               </div>
               <div className="flex items-center gap-0.5 shrink-0">
                 {[1,2,3,4,5].map(i => (
-                  <Star key={i} className="h-3 w-3 text-amber-400 fill-amber-400" />
+                  <Star key={i} className={`h-3 w-3 ${theme.star}`} />
                 ))}
               </div>
             </div>
@@ -277,7 +289,7 @@ export default function SalePageView() {
                       onClick={() => setSelectedVar(v)}
                       className={`px-3 py-2 rounded-lg text-xs font-medium border transition-colors ${
                         selectedVar?.id === v.id
-                          ? "bg-amber-400 text-black border-amber-400"
+                          ? `${theme.cta} text-black border-transparent`
                           : "bg-white/5 text-white/80 border-white/15 hover:border-white/30"
                       }`}
                     >
@@ -298,7 +310,7 @@ export default function SalePageView() {
             {/* Buy Now button */}
             <a
               href={buyUrl}
-              className="mt-1 w-full h-12 rounded-xl bg-amber-400 hover:bg-amber-300 text-black font-bold text-base flex items-center justify-center gap-2 transition-colors"
+              className={`mt-1 w-full h-12 rounded-xl ${theme.cta} text-black font-bold text-base flex items-center justify-center gap-2 transition-colors`}
             >
               {page.cta_label || "Buy Now"}
             </a>

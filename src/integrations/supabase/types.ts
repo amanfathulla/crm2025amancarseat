@@ -1230,6 +1230,7 @@ export type Database = {
           product_id: string | null
           cta_label: string | null
           badge_text: string | null
+          theme: string
           is_published: boolean
           views: number
           created_at: string
@@ -1247,6 +1248,7 @@ export type Database = {
           product_id?: string | null
           cta_label?: string | null
           badge_text?: string | null
+          theme?: string
           is_published?: boolean
           views?: number
           created_at?: string
@@ -1264,6 +1266,7 @@ export type Database = {
           product_id?: string | null
           cta_label?: string | null
           badge_text?: string | null
+          theme?: string
           is_published?: boolean
           views?: number
           created_at?: string
