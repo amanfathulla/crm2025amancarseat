@@ -1,4 +1,5 @@
 import { useState, useEffect, useCallback } from "react";
+import { SalePageTemplate } from "./SalePageTemplates";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
 import { Button } from "@/components/ui/button";
@@ -78,6 +79,7 @@ const EMPTY_FORM: FormState = {
   product_id: "",
   product_mode: "single",
   product_category: "",
+  template: 1,
   extra_product_ids: [],
   cta_label: "Buy Now",
   badge_text: "",
@@ -97,6 +99,19 @@ const PRODUCT_CATEGORIES = [
   "Kain Nylon",
   "Kain Fullsilk",
   "Semi Leather Kalis Air",
+];
+
+const TEMPLATE_LIST = [
+  { id: 1, name: "Hero Shoppable", short: "Hero" },
+  { id: 2, name: "Dual Split", short: "Split" },
+  { id: 3, name: "Snap Feed", short: "Feed" },
+  { id: 4, name: "Thumb Rail", short: "Rail" },
+  { id: 5, name: "Split Panel", short: "Panel" },
+  { id: 6, name: "Step Accordion", short: "Step" },
+  { id: 7, name: "Grid 2x2", short: "Grid" },
+  { id: 8, name: "Bottom Sheet", short: "Sheet" },
+  { id: 9, name: "Floating PiP", short: "PiP" },
+  { id: 10, name: "Scrollytelling", short: "Story" },
 ];
 
 const THEME_PREVIEW_DOTS: Record<string, string> = {
@@ -238,6 +253,7 @@ export default function SalePagesAdmin() {
         product_id: form.product_mode === "category" ? null : (form.product_id || null),
         product_mode: form.product_mode || "single",
         product_category: form.product_mode === "category" ? (form.product_category || null) : null,
+        template: form.template || 1,
         cta_label: form.cta_label.trim() || "Buy Now",
         badge_text: form.badge_text.trim() || null,
         theme: form.theme || "amber",
@@ -681,6 +697,32 @@ export default function SalePagesAdmin() {
                   <Input id="sp-badge" value={form.badge_text} onChange={e => setField("badge_text", e.target.value)} placeholder="PROMO" />
                 </div>
               </div>
+              {/* ── Template pilihan ── */}
+              <div>
+                <Label>Template Video</Label>
+                <p className="text-[11px] text-muted-foreground mb-2">Pilih layout video. Preview sebelah kanan akan bertukar ikut template.</p>
+                <div className="grid grid-cols-5 gap-1.5">
+                  {TEMPLATE_LIST.map(t => (
+                    <button
+                      key={t.id}
+                      type="button"
+                      onClick={() => setField("template", t.id)}
+                      className={`relative aspect-[9/16] rounded-lg border overflow-hidden text-[8px] font-semibold leading-tight p-1 text-center transition-all ${
+                        form.template === t.id
+                          ? "border-primary ring-2 ring-primary bg-primary/10 text-foreground"
+                          : "border-border bg-zinc-900 text-muted-foreground hover:border-primary/50"
+                      }`}
+                      title={t.name}
+                    >
+                      <span className="block text-[10px] font-bold">{t.id}</span>
+                      <span className="block mt-0.5 leading-tight">{t.short}</span>
+                      {form.template === t.id && (
+                        <span className="absolute top-0.5 right-0.5 h-3 w-3 rounded-full bg-primary flex items-center justify-center text-[7px] text-background">✓</span>
+                      )}
+                    </button>
+                  ))}
+                </div>
+              </div>
               <div>
                 <Label>Theme Warna</Label>
                 {/* Custom color: hex input + native color picker */}
@@ -949,62 +991,24 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
 // Live phone preview — mirrors SalePageView layout
 function PreviewPhone({ page, products }: { page: FormState; products: ProductOption[] }) {
   const prod = products.find(p => p.id === page.product_id);
-  const addons = products.filter(p => page.extra_product_ids.includes(p.id));
+  const tplProduct = prod ? { id: prod.id, name: prod.name, price: prod.price, image_url: prod.image_url, category: prod.category } : null;
+  const tplPage = {
+    title: page.title,
+    headline: page.headline,
+    subheadline: page.subheadline,
+    video_url: page.video_url,
+    video_urls: page.video_urls,
+    poster_url: page.poster_url,
+    badge_text: page.badge_text,
+    theme: page.theme,
+    cta_label: page.cta_label,
+    product_mode: page.product_mode,
+    product_category: page.product_category,
+    template: page.template || 1,
+  };
   return (
-    <div className="w-full h-full bg-black overflow-y-auto flex flex-col">
-      {/* Video area */}
-      <div className="relative w-full flex-1 min-h-[420px] bg-gradient-to-br from-zinc-900 to-black flex items-center justify-center shrink-0">
-        {page.poster_url ? (
-          <img src={page.poster_url} alt="poster" className="w-full h-full object-cover" />
-        ) : (
-          <MonitorPlay className="h-12 w-12 text-white/20" />
-        )}
-        {page.video_url && (
-          <div className="absolute top-3 right-3 h-8 w-8 rounded-full bg-black/50 flex items-center justify-center">
-            <Play className="h-4 w-4 text-white fill-white" />
-          </div>
-        )}
-        {page.badge_text && (
-          <div className={`absolute top-3 left-3 ${THEME_PREVIEW_DOTS[page.theme] || "bg-amber-400"} text-black text-[11px] font-bold px-2.5 py-1 rounded-full`}>
-            {page.badge_text}
-          </div>
-        )}
-        {page.headline && (
-          <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 to-transparent p-4">
-            <p className="text-white font-bold text-sm leading-tight">{page.headline}</p>
-            {page.subheadline && <p className="text-white/60 text-[11px] mt-1">{page.subheadline}</p>}
-          </div>
-        )}
-        {/* Video count chip */}
-        {(page.video_urls.filter(Boolean).length > 0 || page.video_url) && (
-          <div className="absolute bottom-3 right-3 bg-black/50 text-white/80 text-[10px] px-2 py-1 rounded-full">
-            {Math.max(page.video_urls.filter(Boolean).length, page.video_url ? 1 : 0)} video
-          </div>
-        )}
-      </div>
-      {/* Product + CTA */}
-      <div className="flex-1 bg-zinc-950 p-4 flex flex-col gap-3 min-h-0">
-        <div className="flex items-center gap-3">
-          <div className="h-14 w-14 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center shrink-0">
-            <MonitorPlay className="h-5 w-5 text-white/20" />
-          </div>
-          <div className="min-w-0">
-            <p className="text-white text-sm font-semibold truncate">{prod?.name || "Pilih produk…"}</p>
-            <p className="text-white/40 text-[11px]">{prod?.category || "—"}</p>
-          </div>
-        </div>
-        {/* Add-on preview */}
-        {addons.length > 0 && (
-          <div className="text-[10px] text-white/50">
-            +{addons.length} produk add-on: {addons.slice(0, 2).map(a => a.name).join(", ")}{addons.length > 2 ? "…" : ""}
-          </div>
-        )}
-        <div className="mt-auto">
-          <div className={`w-full h-11 rounded-xl ${THEME_PREVIEW_DOTS[page.theme] || "bg-amber-400"} text-black font-bold flex items-center justify-center text-sm`}>
-            {page.cta_label || "Buy Now"}
-          </div>
-        </div>
-      </div>
+    <div className="w-full h-full overflow-hidden bg-black">
+      <SalePageTemplate template={page.template || 1} page={tplPage} product={tplProduct} />
     </div>
   );
 }

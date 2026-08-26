@@ -1233,6 +1233,7 @@ export type Database = {
           theme: string
           product_mode: string
           product_category: string | null
+          template: number
           is_published: boolean
           views: number
           created_at: string
