@@ -13,6 +13,7 @@ interface SalePage {
   subheadline: string | null;
   video_url: string | null;
   video_urls: string[] | null;
+  image_urls: string[] | null;
   poster_url: string | null;
   product_id: string | null;
   cta_label: string | null;
@@ -73,6 +74,7 @@ export default function SalePageView() {
   const [started, setStarted] = useState(false);
   const [videoIndex, setVideoIndex] = useState(0);
   const [infoOpen, setInfoOpen] = useState(false); // product info sheet (arrow toggle)
+  const [imgIndex, setImgIndex] = useState(0);
   const videoRef = useRef<HTMLVideoElement | null>(null);
 
   useEffect(() => {
@@ -81,7 +83,7 @@ export default function SalePageView() {
       try {
         const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_url, video_urls, poster_url, product_id, product_mode, product_category, cta_label, badge_text, theme, is_published, views")
+          .select("id, slug, title, headline, subheadline, video_url, video_urls, image_urls, poster_url, product_id, product_mode, product_category, cta_label, badge_text, theme, is_published, views")
           .eq("slug", slug).single();
         if (!pg || !pg.is_published) {
           setLoading(false);
@@ -213,6 +215,23 @@ export default function SalePageView() {
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [videoIndex]);
+
+  // Auto-scroll carousel gambar (pelanggan) setiap 2.5s
+  useEffect(() => {
+    const imgs = page?.image_urls?.filter(Boolean) || [];
+    if (imgs.length <= 1) return;
+    const el = document.getElementById("img-car-page");
+    if (!el) return;
+    const t = setInterval(() => {
+      setImgIndex(prev => {
+        const next = (prev + 1) % imgs.length;
+        const card = el.children[next] as HTMLElement;
+        card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        return next;
+      });
+    }, 2500);
+    return () => clearInterval(t);
+  }, [page?.id, page?.image_urls]);
 
   const handleStart = () => {
     setStarted(true);
@@ -467,6 +486,24 @@ export default function SalePageView() {
           </div>
         ) : product && (
           <div className="shrink-0 bg-zinc-950 border-t border-white/10">
+            {/* Carousel gambar pelanggan */}
+            {page.image_urls && page.image_urls.filter(Boolean).length > 0 && (
+              <div className="pt-3">
+                <p className="text-white/40 text-[10px] uppercase tracking-wide mb-1.5 px-3">Pelanggan Kami 📸</p>
+                <div className="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory px-3" style={{ scrollbarWidth: "none" }} id={`img-car-page`}>
+                  {page.image_urls.filter(Boolean).map((img, i) => (
+                    <img key={i} src={img} alt={`Hasil ${i + 1}`} className="h-20 w-20 shrink-0 rounded-lg object-cover border border-white/10 snap-start" />
+                  ))}
+                </div>
+                {page.image_urls.filter(Boolean).length > 1 && (
+                  <div className="flex justify-center gap-1 mt-1.5">
+                    {page.image_urls.filter(Boolean).map((_, i) => (
+                      <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % page.image_urls!.filter(Boolean).length ? "bg-white" : "bg-white/30"}`} />
+                    ))}
+                  </div>
+                )}
+              </div>
+            )}
             {/* Collapsed row: thumbnail + nama + harga + Buy kecil + arrow */}
             <div className="flex items-center gap-3 px-3 py-2.5">
               {product.image_url ? (

@@ -12,6 +12,7 @@ interface FeedPage {
   subheadline: string | null;
   video_urls: string[] | null;
   video_url: string | null;
+  image_urls: string[] | null;
   poster_url: string | null;
   product_id: string | null;
   product_mode: string | null;
@@ -84,6 +85,7 @@ export default function SalePagesFeed() {
   const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
   const [infoOpen, setInfoOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
+  const [imgIndex, setImgIndex] = useState(0);
   const [selectedCatProduct, setSelectedCatProduct] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
   const touchStartY = useRef<number | null>(null);
@@ -230,6 +232,23 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
+  // Auto-scroll carousel gambar (pelanggan) setiap 2.5s
+  useEffect(() => {
+    const imgs = active.image_urls?.filter(Boolean) || [];
+    if (imgs.length <= 1) return;
+    const el = document.getElementById(`img-car-${active.id}`);
+    if (!el) return;
+    const t = setInterval(() => {
+      setImgIndex(prev => {
+        const next = (prev + 1) % imgs.length;
+        const card = el.children[next] as HTMLElement;
+        card?.scrollIntoView({ behavior: "smooth", inline: "center", block: "nearest" });
+        return next;
+      });
+    }, 2500);
+    return () => clearInterval(t);
+  }, [active.id, active.image_urls]);
+
   const goNext = useCallback(() => {
     setIndex(i => (i + 1) % pages.length);
   }, [pages.length]);
@@ -251,6 +270,7 @@ export default function SalePagesFeed() {
     setInfoOpen(false);
     setCatOpen(false);
     setSelectedCatProduct(null);
+    setImgIndex(0);
     const v = videoRef.current;
     if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
     // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
@@ -422,6 +442,27 @@ export default function SalePagesFeed() {
               </span>
             )}
           </div>
+
+          {/* Carousel gambar — pelanggan dah pasang (auto-scroll) */}
+          {active.image_urls && active.image_urls.filter(Boolean).length > 0 && (
+            <div className="mt-3">
+              <p className="text-white/40 text-[10px] uppercase tracking-wide mb-1.5 px-1">Pelanggan Kami 📸</p>
+              <div className="relative">
+                <div className="flex gap-2 overflow-x-auto scroll-smooth snap-x snap-mandatory" style={{ scrollbarWidth: "none" }} id={`img-car-${active.id}`}>
+                  {active.image_urls.filter(Boolean).map((img, i) => (
+                    <img key={i} src={img} alt={`Hasil ${i + 1}`} className="h-24 w-24 shrink-0 rounded-lg object-cover border border-white/10 snap-start" />
+                  ))}
+                </div>
+              </div>
+              {active.image_urls.filter(Boolean).length > 1 && (
+                <div className="flex justify-center gap-1 mt-1.5">
+                  {active.image_urls.filter(Boolean).map((_, i) => (
+                    <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === imgIndex % active.image_urls!.filter(Boolean).length ? "bg-white" : "bg-white/30"}`} />
+                  ))}
+                </div>
+              )}
+            </div>
+          )}
 
           {/* Produk card — TERUS di sini, bukan pergi page lain */}
           {isCategoryMode ? (
