@@ -102,7 +102,7 @@ const PRODUCT_CATEGORIES = [
 ];
 
 const TEMPLATE_LIST = [
-  { id: 1, name: "Hero Shoppable", short: "Hero" },
+  { id: 1, name: "Feed Style", short: "Feed" },
   { id: 2, name: "Dual Split", short: "Split" },
   { id: 3, name: "Snap Feed", short: "Feed" },
   { id: 4, name: "Thumb Rail", short: "Rail" },

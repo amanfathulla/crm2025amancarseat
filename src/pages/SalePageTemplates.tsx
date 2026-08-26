@@ -40,6 +40,9 @@ export interface TplPage {
   product_mode?: string | null;
   product_category?: string | null;
   template?: number;
+  // Untuk template "Feed Style" (default) — senarai produk category + testimoni
+  category_products?: TplProduct[];
+  review_count?: number;
 }
 
 const CTA = "#C8203C";
@@ -64,34 +67,103 @@ function BuyButton({ theme, label, onClick, full = true }: { theme: any; label: 
   );
 }
 
-// ── TEMPLATE 1: Hero Shoppable ──
+// ── TEMPLATE 1: Feed Style (default — sama macam page scroll) ──
 export function TplHero({ page, product }: { page: TplPage; product?: TplProduct | null }) {
   const theme = resolveTheme(page.theme);
   const src = useFirstVideo(page);
+  const isCat = (page.product_mode || "single") === "category";
+  const catProducts = page.category_products || [];
+  const [catOpen, setCatOpen] = useState(false);
+  const [selCat, setSelCat] = useState<string | null>(null);
+
   return (
-    <div className="relative w-full h-full bg-[#0C0E11] overflow-hidden flex flex-col">
-      <div className="relative flex-1">
+    <div className="relative w-full h-full bg-black overflow-y-auto flex flex-col">
+      {/* Video dominant */}
+      <div className="relative w-full flex-1 min-h-[60%] bg-black">
         {src && <video src={src} poster={page.poster_url || undefined} autoPlay muted loop playsInline className="w-full h-full object-cover" />}
-        <div className="absolute inset-0 bg-gradient-to-t from-black/90 via-black/20 to-transparent" />
-        <div className="absolute top-3 left-3 right-3">
-          <p className="text-white font-semibold text-sm leading-tight drop-shadow max-w-[80%]">
-            {page.headline || page.title}
-          </p>
-          <div className="flex items-center gap-1.5 mt-2">
-            <Star className="h-3 w-3" style={{ color: GOLD }} fill={GOLD} />
-            <span className="text-white/80 text-[11px]">4.9 • 210 ulasan</span>
-            <Truck className="h-3 w-3 text-white/60 ml-1" />
+        <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent" />
+        {page.headline && (
+          <div className="absolute bottom-3 left-3 right-3">
+            <p className="text-white font-semibold text-sm leading-tight drop-shadow">{page.headline}</p>
+            {page.subheadline && <p className="text-white/70 text-[11px] mt-1">{page.subheadline}</p>}
           </div>
-        </div>
+        )}
       </div>
-      <div className="p-3 bg-[#0C0E11] flex items-center gap-3">
-        <div className="flex-1">
-          <p className="text-white/50 text-[10px] line-through">RM{(product?.price ?? 150) + 40}</p>
-          <p className="text-white font-bold text-lg" style={{ color: GOLD }}>RM{product?.price ?? 150}</p>
-        </div>
-        <div className="w-1/2">
-          <BuyButton theme={theme} label={page.cta_label || "Beli Sekarang"} />
-        </div>
+
+      {/* Product bar — macam feed */}
+      <div className="shrink-0 bg-zinc-950 border-t border-white/10 p-3">
+        {page.review_count ? (
+          <p className="text-white/50 text-[10px] mb-2 flex items-center gap-1">
+            <Star className="h-3 w-3" style={{ color: GOLD }} fill={GOLD} /> {page.review_count} testimoni ({product?.category || page.product_category})
+          </p>
+        ) : null}
+
+        {isCat ? (
+          <div>
+            <button
+              onClick={() => { setCatOpen(o => !o); if (catOpen) setSelCat(null); }}
+              style={theme.hex ? { backgroundColor: theme.hex } : { backgroundColor: CTA }}
+              className="w-full h-10 rounded-lg text-white font-bold text-[13px] flex items-center justify-center gap-2"
+            >
+              <ShoppingCart className="h-4 w-4" />
+              {catOpen ? "Tutup Produk" : `Lihat ${catProducts.length} Produk (${page.product_category})`}
+            </button>
+            {catOpen && (
+              <div className="mt-2">
+                {!selCat ? (
+                  <div className="space-y-2">
+                    {catProducts.map(cp => (
+                      <button key={cp.id} onClick={() => setSelCat(cp.id)} className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg p-2 text-left transition-colors">
+                        {cp.image_url ? <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" /> : <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />}
+                        <div className="flex-1 min-w-0">
+                          <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
+                          <p className="text-white font-bold text-[12px]" style={{ color: GOLD }}>RM{cp.price.toFixed(0)}</p>
+                        </div>
+                        <ChevronRight className="h-4 w-4 text-white/40 shrink-0" />
+                      </button>
+                    ))}
+                  </div>
+                ) : (
+                  <div className="space-y-2">
+                    <button onClick={() => setSelCat(null)} className="flex items-center gap-1 text-[11px] text-white/60 hover:text-white mb-1">
+                      <ChevronLeft className="h-3.5 w-3.5" /> Semua Produk
+                    </button>
+                    {(() => {
+                      const cp = catProducts.find(p => p.id === selCat)!;
+                      return (
+                        <>
+                          <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
+                            {cp.image_url ? <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" /> : <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />}
+                            <div className="flex-1 min-w-0">
+                              <p className="text-white text-[12px] font-medium truncate">{cp.name}</p>
+                              <p className="text-white font-bold text-[12px]" style={{ color: GOLD }}>RM{cp.price.toFixed(0)}</p>
+                            </div>
+                          </div>
+                          <a href={`/order?product=${cp.id}&sp=0`} style={theme.hex ? { backgroundColor: theme.hex } : { backgroundColor: CTA }} className="block w-full h-10 rounded-lg text-white font-bold text-[13px] flex items-center justify-center gap-1">
+                            <ShoppingCart className="h-4 w-4" /> Tempah Sekarang • RM{cp.price.toFixed(0)}
+                          </a>
+                        </>
+                      );
+                    })()}
+                  </div>
+                )}
+              </div>
+            )}
+          </div>
+        ) : product ? (
+          <div className="flex items-center gap-3">
+            {product.image_url ? <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0" /> : <div className="h-12 w-12 rounded-lg bg-white/5 shrink-0" />}
+            <div className="flex-1 min-w-0">
+              <p className="text-white text-[13px] font-semibold truncate">{product.name}</p>
+              <p className="text-white font-bold text-lg" style={{ color: GOLD }}>RM{product.price.toFixed(0)}</p>
+            </div>
+            <a href={`/order?product=${product.id}&sp=0`} style={theme.hex ? { backgroundColor: theme.hex } : { backgroundColor: CTA }} className="px-5 h-11 rounded-xl text-white font-bold text-sm flex items-center justify-center gap-2 shrink-0">
+              <ShoppingCart className="h-4 w-4" /> {page.cta_label || "Beli"}
+            </a>
+          </div>
+        ) : (
+          <div className="text-white/40 text-center text-[12px] py-2">Tiada produk dipilih</div>
+        )}
       </div>
     </div>
   );

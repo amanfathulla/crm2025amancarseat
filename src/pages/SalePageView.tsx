@@ -138,6 +138,8 @@ export default function SalePageView() {
     product_mode: page.product_mode,
     product_category: page.product_category,
     template: page.template || 1,
+    category_products: categoryProducts.map(p => ({ id: p.id, name: p.name, price: p.price, image_url: p.image_url, category: p.category })),
+    review_count: reviewCount,
   };
 
   return (
