@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
-import { Play, Volume2, VolumeX, Zap, ChevronUp, ChevronDown } from "lucide-react";
+import { Play, Volume2, VolumeX, Zap, ChevronDown } from "lucide-react";
 
 interface FeedPage {
   id: string;
@@ -27,8 +27,8 @@ export default function SalePagesFeed() {
   const [loading, setLoading] = useState(true);
   const [activeIndex, setActiveIndex] = useState(0);
   const [muted, setMuted] = useState(true);
-  const containerRef = useRef<HTMLDivElement | null>(null);
-  const videoRefs = useRef<(HTMLVideoElement | null)[]>([]);
+  const scrollRef = useRef<HTMLDivElement | null>(null);
+  const videoRefs = useRef<Record<number, HTMLVideoElement | null>>({});
 
   useEffect(() => {
     (async () => {
@@ -47,33 +47,37 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
-  // Main/ pause video ikut active index (IntersectionObserver)
+  // IntersectionObserver — main video yang nampak, pause yang lain
   useEffect(() => {
-    const container = containerRef.current;
+    const container = scrollRef.current;
     if (!container || pages.length === 0) return;
     const observer = new IntersectionObserver(
-      entries => {
-        entries.forEach(entry => {
+      (entries) => {
+        entries.forEach((entry) => {
           const idx = Number((entry.target as HTMLElement).dataset.index);
           const video = videoRefs.current[idx];
-          if (entry.isIntersecting && entry.intersectionRatio > 0.6) {
+          if (entry.isIntersecting && entry.intersectionRatio >= 0.6) {
             setActiveIndex(idx);
-            video?.play().catch(() => {});
+            if (video) {
+              video.muted = muted;
+              video.play().catch(() => {});
+            }
           } else {
             video?.pause();
           }
         });
       },
-      { root: container, threshold: [0.6] }
+      { root: container, threshold: [0, 0.6, 1] }
     );
-    container.querySelectorAll("[data-index]").forEach(el => observer.observe(el));
+    container.querySelectorAll<HTMLElement>("[data-index]").forEach((el) => observer.observe(el));
     return () => observer.disconnect();
-  }, [pages]);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [pages, loading]);
 
   const toggleMute = useCallback(() => {
-    setMuted(m => {
+    setMuted((m) => {
       const next = !m;
-      videoRefs.current.forEach(v => { if (v) v.muted = next; });
+      Object.values(videoRefs.current).forEach((v) => { if (v) v.muted = next; });
       return next;
     });
   }, []);
@@ -96,22 +100,26 @@ export default function SalePagesFeed() {
   }
 
   return (
-    <div className="fixed inset-0 bg-black flex justify-center">
-      <div className="relative w-full max-w-[375px] h-full flex flex-col overflow-hidden">
+    <div className="fixed inset-0 bg-black flex justify-center" style={{ height: "100dvh" }}>
+      <div className="relative mx-auto w-full max-w-[375px] h-full">
 
-        {/* Header tipis */}
-        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-2 bg-gradient-to-b from-black/70 to-transparent pointer-events-none">
+        {/* Header tipis — overlay */}
+        <div className="absolute top-0 left-0 right-0 z-20 flex items-center justify-between px-4 pt-3 pb-3 bg-gradient-to-b from-black/80 to-transparent">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-6 w-6 object-contain" />
             <span className="text-white text-sm font-bold">AmanCarSeat</span>
           </div>
-          <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+          <button onClick={toggleMute} className="h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
             {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
           </button>
         </div>
 
-        {/* Feed — scroll ke bawah untuk video seterusnya */}
-        <div ref={containerRef} className="h-full overflow-y-auto snap-y snap-mandatory" style={{ scrollbarWidth: "none" }}>
+        {/* Feed — setiap section 100% tinggi, snap scroll */}
+        <div
+          ref={scrollRef}
+          className="h-full w-full overflow-y-auto snap-y snap-mandatory"
+          style={{ scrollbarWidth: "none", msOverflowStyle: "none", height: "100dvh" }}
+        >
           {pages.map((p, i) => {
             const playlist = p.video_urls?.filter(Boolean)?.length
               ? p.video_urls.filter(Boolean)
@@ -121,25 +129,26 @@ export default function SalePagesFeed() {
               <section
                 key={p.id}
                 data-index={i}
-                className="relative h-full snap-start snap-always flex flex-col"
+                className="relative w-full snap-start snap-always flex flex-col overflow-hidden"
+                style={{ height: "100dvh" }}
               >
-                {/* Video */}
+                {/* Video — penuh section */}
                 <div className="relative flex-1 min-h-0 bg-black">
                   {first ? (
                     <video
-                      ref={el => { videoRefs.current[i] = el; }}
+                      ref={(el) => { videoRefs.current[i] = el; }}
                       src={first}
                       poster={p.poster_url || undefined}
                       muted={muted}
                       loop
                       playsInline
-                      preload={i <= 1 ? "auto" : "none"}
-                      className="w-full h-full object-cover"
+                      preload={Math.abs(i - activeIndex) <= 1 ? "auto" : "none"}
+                      className="absolute inset-0 w-full h-full object-cover"
                     />
                   ) : p.poster_url ? (
-                    <img src={p.poster_url} alt={p.title} className="w-full h-full object-cover" />
+                    <img src={p.poster_url} alt={p.title} className="absolute inset-0 w-full h-full object-cover" />
                   ) : (
-                    <div className="w-full h-full flex items-center justify-center">
+                    <div className="absolute inset-0 flex items-center justify-center">
                       <Play className="h-10 w-10 text-white/20" />
                     </div>
                   )}
@@ -152,25 +161,23 @@ export default function SalePagesFeed() {
                   )}
 
                   {/* Headline */}
-                  {p.headline && (
-                    <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 pointer-events-none">
-                      <h2 className="text-white font-bold text-lg leading-tight">{p.headline}</h2>
-                      {p.subheadline && <p className="text-white/70 text-xs mt-1">{p.subheadline}</p>}
-                      <p className="text-white/40 text-[10px] mt-1.5">{p.views || 0} view • video {i + 1}/{pages.length}</p>
-                    </div>
-                  )}
+                  <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/80 via-black/40 to-transparent px-4 pb-4 pt-16 pointer-events-none">
+                    <h2 className="text-white font-bold text-lg leading-tight">{p.headline || p.title}</h2>
+                    {p.subheadline && <p className="text-white/70 text-xs mt-1">{p.subheadline}</p>}
+                    <p className="text-white/40 text-[10px] mt-1.5">
+                      {p.views || 0} view • {i + 1}/{pages.length}
+                    </p>
+                  </div>
                 </div>
 
-                {/* Bar bawah: buka page penuh */}
+                {/* Bar bawah — buka page penuh */}
                 <Link
                   to={`/page/${p.slug}`}
                   className="shrink-0 bg-zinc-950 border-t border-white/10 flex items-center gap-3 px-3 py-3"
                 >
                   <div className="flex-1 min-w-0">
                     <p className="text-white font-semibold text-[13px] truncate">{p.title}</p>
-                    <p className="text-white/40 text-[11px] truncate">
-                      Buka page penuh — pilih varian & tempahan
-                    </p>
+                    <p className="text-white/40 text-[11px] truncate">Buka page penuh — pilih varian & tempahan</p>
                   </div>
                   <ChevronDown className="h-4 w-4 text-white/50 rotate-[-90deg] shrink-0" />
                 </Link>
@@ -179,11 +186,13 @@ export default function SalePagesFeed() {
           })}
         </div>
 
-        {/* Scroll hint */}
-        <div className="absolute bottom-20 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0.5 text-white/50 pointer-events-none animate-bounce">
-          <ChevronDown className="h-4 w-4" />
-          <span className="text-[10px]">Scroll</span>
-        </div>
+        {/* Scroll hint — hanya pada video pertama */}
+        {activeIndex === 0 && pages.length > 1 && (
+          <div className="absolute bottom-24 left-1/2 -translate-x-1/2 z-20 flex flex-col items-center gap-0.5 text-white/60 pointer-events-none animate-bounce">
+            <ChevronDown className="h-4 w-4" />
+            <span className="text-[10px]">Scroll</span>
+          </div>
+        )}
       </div>
     </div>
   );

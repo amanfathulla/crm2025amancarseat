@@ -712,6 +712,7 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
   authClient: any;
 }) {
   const [addons, setAddons] = useState<ProductOption[]>([]);
+  const { toast } = useToast();
 
   useEffect(() => {
     if (!page) { setAddons([]); return; }
@@ -779,16 +780,38 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
               <span className="text-muted-foreground">Theme</span>
               <span className="font-medium capitalize">{page.theme || "amber"}</span>
             </div>
+            <div className="flex justify-between">
+              <span className="text-muted-foreground">Butang CTA</span>
+              <span className="font-medium">{page.cta_label || "Buy Now"}</span>
+            </div>
             {page.headline && (
               <div className="flex justify-between gap-2">
                 <span className="text-muted-foreground shrink-0">Headline</span>
                 <span className="text-right truncate">{page.headline}</span>
               </div>
             )}
+            {page.subheadline && (
+              <div className="flex justify-between gap-2">
+                <span className="text-muted-foreground shrink-0">Sub-headline</span>
+                <span className="text-right truncate">{page.subheadline}</span>
+              </div>
+            )}
             {page.badge_text && (
               <div className="flex justify-between">
                 <span className="text-muted-foreground">Badge</span>
                 <span className="font-medium">{page.badge_text}</span>
+              </div>
+            )}
+            {page.created_at && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Dibuat</span>
+                <span className="font-medium">{new Date(page.created_at).toLocaleString("ms-MY", { dateStyle: "medium", timeStyle: "short" })}</span>
+              </div>
+            )}
+            {page.updated_at && (
+              <div className="flex justify-between">
+                <span className="text-muted-foreground">Dikemaskini</span>
+                <span className="font-medium">{new Date(page.updated_at).toLocaleString("ms-MY", { dateStyle: "medium", timeStyle: "short" })}</span>
               </div>
             )}
           </div>
@@ -831,6 +854,34 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
               </div>
             </div>
           )}
+
+          {/* Poster thumbnail */}
+          {page.poster_url && (
+            <div>
+              <p className="text-xs font-medium text-muted-foreground uppercase tracking-wide mb-2">Poster</p>
+              <img src={page.poster_url} alt="poster" className="w-full max-h-32 object-cover rounded-lg border" />
+            </div>
+          )}
+
+          {/* Quick actions */}
+          <div className="flex gap-2 pt-2 border-t">
+            <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="flex-1">
+              <Button variant="outline" size="sm" className="w-full">
+                <ExternalLink className="h-3.5 w-3.5 mr-1" /> Buka Page
+              </Button>
+            </a>
+            <Button
+              variant="outline"
+              size="sm"
+              className="flex-1"
+              onClick={() => {
+                navigator.clipboard.writeText(`${window.location.origin}/page/${page.slug}`);
+                toast({ title: "Link disalin" });
+              }}
+            >
+              <Copy className="h-3.5 w-3.5 mr-1" /> Salin Link
+            </Button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
