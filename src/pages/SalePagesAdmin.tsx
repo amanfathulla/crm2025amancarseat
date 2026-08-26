@@ -59,7 +59,6 @@ interface FormState {
   subheadline: string;
   video_url: string;
   video_urls: string[];
-  image_urls: string[];
   poster_url: string;
   product_id: string;         // produk utama (backward compat)
   extra_product_ids: string[]; // produk add-on tambahan
@@ -75,7 +74,6 @@ const EMPTY_FORM: FormState = {
   subheadline: "",
   video_url: "",
   video_urls: [],
-  image_urls: [],
   poster_url: "",
   product_id: "",
   product_mode: "single",
@@ -125,7 +123,6 @@ export default function SalePagesAdmin() {
   const [saving, setSaving] = useState(false);
   const [deleting, setDeleting] = useState<SalePage | null>(null);
   const [form, setForm] = useState<FormState>({ ...EMPTY_FORM });
-  const [mediaTab, setMediaTab] = useState<"video" | "image">("video");
 
   const setField = (key: keyof FormState, value: string) =>
     setForm(f => ({ ...f, [key]: value }));
@@ -213,7 +210,6 @@ export default function SalePagesAdmin() {
       subheadline: p.subheadline || "",
       video_url: p.video_url || "",
       video_urls: (p as any).video_urls || [],
-      image_urls: (p as any).image_urls || [],
       poster_url: p.poster_url || "",
       product_id: p.product_id || "",
       extra_product_ids: extras,
@@ -238,7 +234,6 @@ export default function SalePagesAdmin() {
         subheadline: form.subheadline.trim() || null,
         video_url: form.video_url.trim() || (form.video_urls.filter(Boolean)[0] || null),
         video_urls: form.video_urls.filter(Boolean),
-        image_urls: form.image_urls.filter(Boolean),
         poster_url: form.poster_url.trim() || null,
         product_id: form.product_mode === "category" ? null : (form.product_id || null),
         product_mode: form.product_mode || "single",
@@ -506,41 +501,53 @@ export default function SalePagesAdmin() {
                 <Input id="sp-subheadline" value={form.subheadline} onChange={e => setField("subheadline", e.target.value)} placeholder="Diskaun 20% hari ini" />
               </div>
 
-              {/* ── Folder Media (Video + Gambar) ── */}
+              {/* ── Folder media video (banyak URL, boleh tambah/edit/buang) ── */}
               <div>
                 <Label className="flex items-center gap-1.5">
-                  <FolderOpen className="h-3.5 w-3.5" /> Folder Media
+                  <FolderOpen className="h-3.5 w-3.5" /> Folder Media Video
                 </Label>
-                <div className="flex gap-1.5 mb-2">
-                  <button type="button" onClick={() => setMediaTab("video")} className={`flex-1 px-3 py-1.5 rounded-md text-[12px] font-medium ${mediaTab === "video" ? "bg-primary text-primary-foreground" : "bg-zinc-800 text-muted-foreground hover:bg-zinc-700"}`}>🎬 Video</button>
-                  <button type="button" onClick={() => setMediaTab("image")} className={`flex-1 px-3 py-1.5 rounded-md text-[12px] font-medium ${mediaTab === "image" ? "bg-primary text-primary-foreground" : "bg-zinc-800 text-muted-foreground hover:bg-zinc-700"}`}>🖼️ Gambar</button>
+                <p className="text-[11px] text-muted-foreground mb-2">
+                  Main ikut turutan, lepas habis semua → loop semula. Setiap link direct ke fail <code className="text-foreground">.mp4</code>.
+                </p>
+                <div className="space-y-2">
+                  {(form.video_urls.length === 0 ? [""] : form.video_urls).map((url, i) => (
+                    <div key={i} className="flex items-center gap-2">
+                      <span className="text-xs text-muted-foreground w-5 shrink-0">{i + 1}.</span>
+                      <Input
+                        value={url}
+                        onChange={e => {
+                          const next = [...form.video_urls];
+                          next[i] = e.target.value;
+                          setForm(f => ({ ...f, video_urls: next }));
+                        }}
+                        placeholder="https://pub-xxxx.r2.dev/video1.mp4"
+                        className="text-xs"
+                      />
+                      {form.video_urls.length > 1 && (
+                        <Button
+                          type="button"
+                          size="icon"
+                          variant="outline"
+                          className="h-8 w-8 shrink-0"
+                          onClick={() => {
+                            const next = form.video_urls.filter((_, idx) => idx !== i);
+                            setForm(f => ({ ...f, video_urls: next }));
+                          }}
+                        >
+                          <X className="h-3 w-3" />
+                        </Button>
+                      )}
+                    </div>
+                  ))}
+                  <Button
+                    type="button"
+                    size="sm"
+                    variant="outline"
+                    onClick={() => setForm(f => ({ ...f, video_urls: [...f.video_urls, ""] }))}
+                  >
+                    <Plus className="h-3.5 w-3.5 mr-1" /> Tambah Video
+                  </Button>
                 </div>
-
-                {mediaTab === "video" ? (
-                  <div className="space-y-2">
-                    <p className="text-[11px] text-muted-foreground">Main ikut turutan, lepas habis semua → loop. Link direct <code className="text-foreground">.mp4</code>.</p>
-                    {(form.video_urls.length === 0 ? [""] : form.video_urls).map((url, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-5 shrink-0">{i + 1}.</span>
-                        <Input value={url} onChange={e => { const next = [...form.video_urls]; next[i] = e.target.value; setForm(f => ({ ...f, video_urls: next })); }} placeholder="https://pub-xxxx.r2.dev/video1.mp4" className="text-xs" />
-                        {form.video_urls.length > 1 && (<Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => setForm(f => ({ ...f, video_urls: form.video_urls.filter((_, idx) => idx !== i) }))}><X className="h-3 w-3" /></Button>)}
-                      </div>
-                    ))}
-                    <Button type="button" size="sm" variant="outline" onClick={() => setForm(f => ({ ...f, video_urls: [...f.video_urls, ""] }))}><Plus className="h-3.5 w-3.5 mr-1" /> Tambah Video</Button>
-                  </div>
-                ) : (
-                  <div className="space-y-2">
-                    <p className="text-[11px] text-muted-foreground">Gambar pelanggan dah pasang (hasil). Akan jadi carousel auto-scroll di bawah video.</p>
-                    {(form.image_urls.length === 0 ? [""] : form.image_urls).map((url, i) => (
-                      <div key={i} className="flex items-center gap-2">
-                        <span className="text-xs text-muted-foreground w-5 shrink-0">{i + 1}.</span>
-                        <Input value={url} onChange={e => { const next = [...form.image_urls]; next[i] = e.target.value; setForm(f => ({ ...f, image_urls: next })); }} placeholder="https://pub-xxxx.r2.dev/hasil1.jpg" className="text-xs" />
-                        {form.image_urls.length > 1 && (<Button type="button" size="icon" variant="outline" className="h-8 w-8 shrink-0" onClick={() => setForm(f => ({ ...f, image_urls: form.image_urls.filter((_, idx) => idx !== i) }))}><X className="h-3 w-3" /></Button>)}
-                      </div>
-                    ))}
-                    <Button type="button" size="sm" variant="outline" onClick={() => setForm(f => ({ ...f, image_urls: [...f.image_urls, ""] }))}><Plus className="h-3.5 w-3.5 mr-1" /> Tambah Gambar</Button>
-                  </div>
-                )}
               </div>
 
               <div>

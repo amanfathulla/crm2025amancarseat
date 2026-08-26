@@ -1225,8 +1225,7 @@ export type Database = {
           headline: string | null
           subheadline: string | null
           video_url: string | null
-          video_urls: string[] | null
-          image_urls: string[] | null
+          video_urls: string[]
           poster_url: string | null
           product_id: string | null
           cta_label: string | null
