@@ -1,5 +1,6 @@
 -- Sale Pages (video salespage) — ACS Legacy CRM
--- Run di Supabase SQL Editor. Idempotent.
+-- Run di Supabase SQL Editor. Idempotent (selamat run berulang kali).
+
 create extension if not exists "pgcrypto";
 
 create table if not exists public.sale_pages (
@@ -51,11 +52,23 @@ to authenticated
 using (true)
 with check (true);
 
--- Increment views (anon boleh update views sahaja — bukan data lain)
-drop policy if exists "sale_pages_anon_bump_views" on public.sale_pages;
-create policy "sale_pages_anon_bump_views"
-on public.sale_pages
-for update
-to anon
-using (is_published = true)
-with check (views = old.views + 1);
+-- Views counter: SECURITY DEFINER function (anon panggil via RPC, tak boleh sentuh data lain)
+create or replace function public.bump_sale_page_views(p_slug text)
+returns integer
+language plpgsql
+security definer
+set search_path = public
+as $$
+declare
+  v_new integer;
+begin
+  update public.sale_pages
+     set views = views + 1
+   where slug = p_slug
+     and is_published = true
+  returning views into v_new;
+  return coalesce(v_new, 0);
+end $$;
+
+revoke all on function public.bump_sale_page_views(text) from public;
+grant execute on function public.bump_sale_page_views(text) to anon, authenticated;

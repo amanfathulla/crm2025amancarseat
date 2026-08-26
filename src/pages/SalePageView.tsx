@@ -56,8 +56,8 @@ export default function SalePageView() {
           return;
         }
         setPage(pg as SalePage);
-        // bump views (fire-and-forget)
-        supabase.from("sale_pages").update({ views: 1 }).eq("id", pg.id).then(() => {});
+        // bump views via SECURITY DEFINER RPC (anon tak boleh UPDATE jadual terus)
+        supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(() => {});
         if (pg.product_id) {
           const { data: prod } = await supabase
             .from("public_products")
