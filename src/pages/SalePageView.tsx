@@ -483,7 +483,7 @@ export default function SalePageView() {
                 <p className="text-white font-semibold text-[13px] leading-tight truncate">{product.name}</p>
                 <div className="flex items-center gap-1.5 mt-0.5">
                   <span style={priceStyle} className={`${!themeHex ? themeStyle.price : ""} font-bold text-sm`}>RM{displayPrice.toFixed(0)}</span>
-                  {selectedVar && selectedVar.price !== product.price && (
+                  {selectedVar && product && selectedVar.price !== product.price && (
                     <span className="text-white/30 text-[10px] line-through">RM{product.price.toFixed(0)}</span>
                   )}
                   {selectedVar && (

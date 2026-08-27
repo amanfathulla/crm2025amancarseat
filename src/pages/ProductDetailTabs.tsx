@@ -36,11 +36,9 @@ function AccordionSection({
         />
       </button>
       <div
-        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+        className={`transition-all duration-300 ease-in-out ${open ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}
       >
-        <div className="overflow-hidden">
-          <div className="pb-3 pt-1">{children}</div>
-        </div>
+        <div className="pb-3 pt-1">{children}</div>
       </div>
     </div>
   );
