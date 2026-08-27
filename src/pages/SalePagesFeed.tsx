@@ -2,9 +2,56 @@ import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
-import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart } from "lucide-react";
+import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart, Check } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
+
+// ── Seat icon (inline SVG, susunan kerusi ikut jumlah tempat duduk) ──
+function SeatIcon({ count }: { count: number }) {
+  // susunan: 2 seater = [2], 5 seater = [2,3], 7 seater = [2,3,2]
+  const layout = count <= 2 ? [2] : count <= 5 ? [2, 3] : [2, 3, 2];
+  const baseY = 2;
+  let y = 0;
+  const rows = layout.map(n => {
+    const row = { n, y: y * 11 };
+    y += 1;
+    return row;
+  });
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="shrink-0 text-current opacity-80">
+      {rows.flatMap(r =>
+        Array.from({ length: r.n }).map((_, i) => (
+          <rect
+            key={`${r.y}-${i}`}
+            x={4 + i * 8}
+            y={baseY + r.y}
+            width="6"
+            height="8"
+            rx="1.5"
+            stroke="currentColor"
+            strokeWidth="1.3"
+            fill="currentColor"
+            fillOpacity="0.15"
+          />
+        ))
+      )}
+    </svg>
+  );
+}
+
+function parseSeatCount(name: string): number {
+  const m = name.match(/(\d+)\s*seater/i);
+  if (m) return parseInt(m[1], 10);
+  const n = name.match(/(\d+)/);
+  return n ? parseInt(n[1], 10) : 5;
+}
+
+function seatSubtext(name: string): string {
+  const n = parseSeatCount(name);
+  if (n <= 2) return "Kereta 2 tempat duduk";
+  if (n <= 5) return "Kereta 5 tempat duduk";
+  return "MPV / SUV 7 tempat duduk";
+}
 
 interface FeedPage {
   id: string;
@@ -562,21 +609,38 @@ export default function SalePagesFeed() {
               {/* Variations — pilih kalau ada */}
               {variations.length > 1 && (
                 <div className="mt-2.5">
-                  <div className="flex flex-wrap gap-1.5">
-                    {variations.map(v => (
-                      <button
-                        key={v.id}
-                        onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                        style={selectedVar?.id === v.id ? ctaStyle : undefined}
-                        className={`px-2.5 py-1.5 rounded-lg text-[11px] font-medium border transition-colors ${
-                          selectedVar?.id === v.id
-                            ? `${!hexColor ? theme.cta : ""} text-black border-transparent`
-                            : "bg-white/5 text-white/80 border-white/15"
-                        }`}
-                      >
-                        {v.name} <span className="opacity-70">RM{v.price.toFixed(0)}</span>
-                      </button>
-                    ))}
+                  <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide">Pilih Saiz Kereta</p>
+                  <p className="text-white/40 text-[10px] mb-2">Pilih mengikut jumlah tempat duduk</p>
+                  <div className="grid grid-cols-2 gap-2">
+                    {variations.map(v => {
+                      const sel = selectedVar?.id === v.id;
+                      return (
+                        <button
+                          key={v.id}
+                          onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
+                          className={`relative text-left rounded-xl border p-2.5 transition-colors ${
+                            sel
+                              ? "border-red-600 bg-red-600/10"
+                              : "border-white/15 bg-white/5 hover:border-white/30"
+                          }`}
+                        >
+                          {sel && (
+                            <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-600 flex items-center justify-center">
+                              <Check className="h-3 w-3 text-white" />
+                            </span>
+                          )}
+                          <div className="flex items-center gap-2 mb-1">
+                            <SeatIcon count={parseSeatCount(v.name)} />
+                            <span className={`text-[12px] font-bold ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
+                          </div>
+                          <p className={`text-[11px] font-bold ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</p>
+                          <p className="text-white/40 text-[9px] mt-0.5">{seatSubtext(v.name)}</p>
+                          {v.name.toLowerCase().includes("5 seater") && (
+                            <span className="absolute top-2 right-2 bg-amber-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full">POPULAR</span>
+                          )}
+                        </button>
+                      );
+                    })}
                   </div>
                 </div>
               )}
