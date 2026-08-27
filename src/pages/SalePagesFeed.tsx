@@ -3,6 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart } from "lucide-react";
+import { ProductDetailTabs } from "./ProductDetailTabs";
 
 interface FeedPage {
   id: string;
@@ -76,6 +77,7 @@ export default function SalePagesFeed() {
   const [addonMap, setAddonMap] = useState<Record<string, FeedProduct[]>>({}); // pageId → addon products
   const [reviewMap, setReviewMap] = useState<Record<string, Review[]>>({}); // productId → 10 reviews terawal
   const [reviewCountMap, setReviewCountMap] = useState<Record<string, number>>({}); // productId → total count mengikut material
+  const [reviewsMap, setReviewsMap] = useState<Record<string, any[]>>({}); // productId → 6 reviews terawal ikut material
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -196,6 +198,10 @@ export default function SalePagesFeed() {
             });
             setReviewMap(rMap);
             setReviewCountMap(rCountMap);
+            // 6 reviews terawal ikut material untuk tab Testimoni
+            const sixMap: Record<string, any[]> = {};
+            Object.entries(rMap).forEach(([k, arr]) => { sixMap[k] = (arr as any[]).slice(0, 6); });
+            setReviewsMap(sixMap);
           }
         }
 
@@ -642,6 +648,12 @@ export default function SalePagesFeed() {
                   Pilih Varian Dahulu
                 </div>
               )}
+
+              {/* Tab Penerangan + Testimoni */}
+              <ProductDetailTabs
+                description={product?.description || (isCategoryMode ? (categoryProducts[0]?.description ?? null) : null)}
+                reviews={isCategoryMode ? (reviewsMap[`cat_${active.id}`] || []) : (product ? (reviewsMap[product.id] || []) : [])}
+              />
             </div>
           )}
         </div>

@@ -4,6 +4,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
+import { ProductDetailTabs } from "./ProductDetailTabs";
 
 interface SalePage {
   id: string;
@@ -579,57 +580,11 @@ export default function SalePageView() {
                   </div>
                 )}
 
-                {/* Testimoni REAL — total count + 10 terawal */}
-                {reviews.length > 0 && (
-                  <div>
-                    <div className="flex items-center justify-between mb-2">
-                      <p className="text-white/60 text-[11px] font-medium uppercase tracking-wide">
-                        Testimoni ({reviewCount} total • {prod_cat})
-                      </p>
-                      <Link
-                        to={`/testimoni/${materialSlug}`}
-                        className="text-[10px] text-amber-400 underline shrink-0"
-                      >
-                        Lihat semua
-                      </Link>
-                    </div>
-                    <div className="space-y-2 max-h-[200px] overflow-y-auto">
-                      {reviews.map(r => (
-                        <div key={r.id} className="bg-white/5 border border-white/10 rounded-lg p-2.5">
-                          <div className="flex items-center gap-2 mb-1">
-                            {r.avatar_url ? (
-                              <img src={r.avatar_url} alt={r.name} className="h-6 w-6 rounded-full object-cover" />
-                            ) : (
-                              <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] font-bold text-white/60">
-                                {r.name.charAt(0).toUpperCase()}
-                              </div>
-                            )}
-                            <span className="text-white text-[11px] font-semibold truncate">{r.name}</span>
-                            <div className="flex items-center gap-0.5 ml-auto shrink-0">
-                              {Array.from({ length: r.rating || 5 }).map((_, i) => (
-                                <Star key={i} style={starStyle} className={`h-2.5 w-2.5 ${!themeHex ? themeStyle.star : ""}`} />
-                              ))}
-                            </div>
-                          </div>
-                          <p className="text-white/70 text-[11px] leading-snug line-clamp-2">{r.review}</p>
-                          {r.car_model && (
-                            <p className="text-white/30 text-[10px] mt-1">{r.car_model}</p>
-                          )}
-                        </div>
-                      ))}
-                    </div>
-                    {/* Link ke page testimoni penuh */}
-                    {reviewCount > 10 && (
-                      <Link
-                        to={`/testimoni/${materialSlug}`}
-                        className="mt-2 flex items-center justify-center gap-1 text-[10px] text-white/50 bg-white/5 rounded-lg py-1.5"
-                      >
-                        <MessageCircle className="h-3 w-3" />
-                        +{reviewCount - 10} testimoni lagi — lihat semua
-                      </Link>
-                    )}
-                  </div>
-                )}
+                {/* Tab Penerangan Produk + Testimoni (ikur material) */}
+                <ProductDetailTabs
+                  description={product?.description || null}
+                  reviews={reviews.slice(0, 6)}
+                />
 
                 {/* Trust badges */}
                 <div className="flex items-center gap-4 text-white/50 text-[11px]">
