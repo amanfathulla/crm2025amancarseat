@@ -593,20 +593,20 @@ export default function SalePagesFeed() {
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-full border px-2 py-1.5 transition-colors ${
+                          className={`relative flex-1 flex items-center justify-center gap-1 rounded-full border px-2.5 py-1.5 transition-colors whitespace-nowrap overflow-hidden ${
                             sel
                               ? "border-red-600 bg-red-600/15 text-red-600"
                               : "border-white/15 bg-white/5 text-white/80 hover:border-white/30"
                           }`}
                         >
                           {sel && (
-                            <Check className="h-3 w-3 shrink-0" />
+                            <Check className="h-3 w-3 shrink-0 text-red-600" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className="text-[10px] font-bold leading-none">{v.name}</span>
-                          <span className={`text-[10px] font-bold leading-none ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</span>
+                          <span className="text-[9px] font-bold leading-none whitespace-nowrap">{v.name}</span>
+                          <span className={`text-[9px] font-bold leading-none whitespace-nowrap ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
-                            <span className="absolute -top-1.5 right-1 bg-amber-500 text-black text-[7px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
+                            <span className="absolute -top-1.5 right-1 bg-amber-500 text-black text-[6px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
                           )}
                         </button>
                       );
