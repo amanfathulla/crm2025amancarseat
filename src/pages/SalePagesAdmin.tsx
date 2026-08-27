@@ -800,12 +800,18 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
         const ids = ((data || []) as any[]).map(r => r.product_id);
         setAddons(products.filter(p => ids.includes(p.id)));
       } catch { setAddons([]); }
-      // Ambil event counts (analytics)
+    })();
+    // Ambil event counts (analytics) — AUTO-REFRESH setiap 5s bila dialog buka
+    let cancelled = false;
+    const fetchCounts = async () => {
       try {
         const { data: ec } = await authClient.rpc("sale_page_event_counts", { p_page_id: page.id });
-        if (ec) setEventCounts(ec as Record<string, number>);
-      } catch { setEventCounts(null); }
-    })();
+        if (!cancelled && ec) setEventCounts(ec as Record<string, number>);
+      } catch { if (!cancelled) setEventCounts(null); }
+    };
+    fetchCounts();
+    const iv = setInterval(fetchCounts, 5000);
+    return () => { cancelled = true; clearInterval(iv); };
   }, [page, products, authClient]);
 
   if (!page) return null;
