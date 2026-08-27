@@ -313,13 +313,13 @@ export default function SalePagesAdmin() {
   };
 
   const copyLink = (p: SalePage) => {
-    const url = `${window.location.origin}/page/${p.slug}`;
+    const url = `${window.location.origin}/feed/${p.slug}`;
     navigator.clipboard.writeText(url).then(() => {
       toast({ title: "Link disalin", description: url });
     });
   };
 
-  const publicUrl = (p: SalePage) => `${window.location.origin}/page/${p.slug}`;
+  const publicUrl = (p: SalePage) => `${window.location.origin}/feed/${p.slug}`;
 
   // ── Stats ringkas untuk dashboard ──
   const totalPages = pages.length;
@@ -333,7 +333,7 @@ export default function SalePagesAdmin() {
       <section className="animate-slide-up flex items-center justify-between flex-wrap gap-3">
         <div>
           <h1 className="text-2xl md:text-3xl font-bold text-foreground">Page</h1>
-          <p className="text-muted-foreground text-sm">Salespage video — /page/[slug]</p>
+          <p className="text-muted-foreground text-sm">Salespage video — /feed/[slug]</p>
         </div>
         <Button onClick={openCreate}>
           <Plus className="h-4 w-4 mr-2" /> Page Baru
@@ -422,7 +422,7 @@ export default function SalePagesAdmin() {
                       >
                         {p.title}
                       </button>
-                      <p className="text-xs text-muted-foreground font-mono truncate">/page/{p.slug}</p>
+                      <p className="text-xs text-muted-foreground font-mono truncate">/feed/{p.slug}</p>
                     </div>
                     <Badge variant={p.is_published ? "default" : "secondary"} className="shrink-0">
                       {p.is_published ? "Live" : "Draf"}
@@ -490,7 +490,7 @@ export default function SalePagesAdmin() {
               <div>
                 <Label htmlFor="sp-slug">Slug URL *</Label>
                 <Input id="sp-slug" value={form.slug} onChange={e => setField("slug", e.target.value)} placeholder="contoh: promo-fullsilk" />
-                <p className="text-[11px] text-muted-foreground mt-1">URL: /page/{form.slug || "..."} — Tajuk & Sub-headline auto dari slug</p>
+                <p className="text-[11px] text-muted-foreground mt-1">URL: /feed/{form.slug || "..."} — Tajuk & Sub-headline auto dari slug</p>
               </div>
               <div>
                 <Label htmlFor="sp-headline">Headline</Label>
@@ -759,7 +759,7 @@ export default function SalePagesAdmin() {
             <DialogTitle>Padam page ini?</DialogTitle>
           </DialogHeader>
           <p className="text-sm text-muted-foreground">
-            "{deleting?.title}" akan dipadam kekal. Link /page/{deleting?.slug} tidak akan berfungsi lagi.
+            "{deleting?.title}" akan dipadam kekal. Link /feed/{deleting?.slug} tidak akan berfungsi lagi.
           </p>
           <div className="flex justify-end gap-2 pt-2">
             <Button variant="outline" onClick={() => setDeleting(null)}>Batal</Button>
@@ -836,8 +836,8 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-x-6 gap-y-2 text-sm">
             <div>
               <p className="text-[11px] text-muted-foreground uppercase tracking-wide">Link</p>
-              <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline break-all">
-                {window.location.origin}/page/{page.slug}
+              <a href={`/feed/${page.slug}`} target="_blank" rel="noreferrer" className="font-mono text-xs underline break-all">
+                {window.location.origin}/feed/{page.slug}
               </a>
             </div>
             <div>
@@ -928,7 +928,7 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
 
           {/* Quick actions */}
           <div className="flex gap-2 pt-3 border-t">
-            <a href={`/page/${page.slug}`} target="_blank" rel="noreferrer" className="flex-1">
+            <a href={`/feed/${page.slug}`} target="_blank" rel="noreferrer" className="flex-1">
               <Button variant="outline" size="sm" className="w-full">
                 <ExternalLink className="h-3.5 w-3.5 mr-1.5" /> Buka Page
               </Button>
@@ -938,7 +938,7 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
               size="sm"
               className="flex-1"
               onClick={() => {
-                navigator.clipboard.writeText(`${window.location.origin}/page/${page.slug}`);
+                navigator.clipboard.writeText(`${window.location.origin}/feed/${page.slug}`);
                 toast({ title: "Link disalin" });
               }}
             >
