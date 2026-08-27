@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, Check } from "lucide-react";
+import { Star, ChevronDown } from "lucide-react";
 
 export interface DetailReview {
   id: string;
@@ -12,83 +12,88 @@ export interface DetailReview {
   created_at?: string;
 }
 
+function AccordionSection({
+  title,
+  count,
+  children,
+}: {
+  title: string;
+  count?: number;
+  children: React.ReactNode;
+}) {
+  const [open, setOpen] = useState(false);
+  return (
+    <div className="border-t border-white/10">
+      <button
+        onClick={() => setOpen(o => !o)}
+        className="w-full flex items-center justify-between py-2.5 px-1 text-left"
+      >
+        <span className="text-white font-semibold text-[12px]">
+          {title}{count != null ? ` (${count})` : ""}
+        </span>
+        <ChevronDown
+          className={`h-4 w-4 text-white/50 transition-transform ${open ? "rotate-180" : ""}`}
+        />
+      </button>
+      <div
+        className={`grid transition-all duration-300 ease-in-out ${open ? "grid-rows-[1fr] opacity-100" : "grid-rows-[0fr] opacity-0"}`}
+      >
+        <div className="overflow-hidden">
+          <div className="pb-3 pt-1">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
+}
+
 export function ProductDetailTabs({
   description,
   reviews,
   image_url,
-  defaultTab = "desc",
 }: {
   description?: string | null;
   reviews: DetailReview[];
   image_url?: string | null;
-  defaultTab?: "desc" | "review";
 }) {
-  const [tab, setTab] = useState<"desc" | "review">(defaultTab);
   return (
     <div className="bg-zinc-950 border-t border-white/10">
-      <div className="flex">
-        <button
-          onClick={() => setTab("desc")}
-          className={`flex-1 py-2 text-[12px] font-semibold ${tab === "desc" ? "text-white border-b-2 border-white" : "text-white/50"}`}
-        >
-          Penerangan Produk
-        </button>
-        <button
-          onClick={() => setTab("review")}
-          className={`flex-1 py-2 text-[12px] font-semibold ${tab === "review" ? "text-white border-b-2 border-white" : "text-white/50"}`}
-        >
-          Testimoni ({reviews.length})
-        </button>
-      </div>
-      <div className="p-3 max-h-[40vh] overflow-y-auto">
-        {tab === "desc" ? (
-          <div>
-            {image_url && (
-              <img src={image_url} alt="Produk" className="w-full max-h-52 rounded-lg object-cover mb-3 border border-white/10" />
-            )}
-            <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
-              {description || "Tiada penerangan untuk produk ini."}
-            </div>
-          </div>
+      <AccordionSection title="Penerangan Produk">
+        {image_url && (
+          <img src={image_url} alt="Produk" className="w-full max-h-52 rounded-lg object-cover mb-3 border border-white/10" />
+        )}
+        <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
+          {description || "Tiada penerangan untuk produk ini."}
+        </div>
+      </AccordionSection>
+
+      <AccordionSection title="Testimoni" count={reviews.length}>
+        {reviews.length === 0 ? (
+          <p className="text-white/40 text-[12px]">Tiada testimoni lagi.</p>
         ) : (
-          <div className="space-y-3">
-            {reviews.length === 0 ? (
-              <p className="text-white/40 text-[12px]">Tiada testimoni lagi.</p>
-            ) : (
-              reviews.map(r => (
-                <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
-                  <div className="flex items-center gap-2 mb-1">
-                    {r.avatar_url ? (
-                      <img src={r.avatar_url} alt={r.name} className="h-6 w-6 rounded-full object-cover" />
-                    ) : (
-                      <div className="h-6 w-6 rounded-full bg-white/10 flex items-center justify-center text-[10px] text-white/60">
-                        {r.name?.[0] || "?"}
-                      </div>
-                    )}
-                    <div className="flex-1 min-w-0">
-                      <p className="text-white text-[12px] font-medium truncate">{r.name}</p>
-                      {r.car_model && <p className="text-white/40 text-[10px] truncate">{r.car_model}</p>}
-                    </div>
-                    <div className="flex items-center gap-0.5">
-                      {[1, 2, 3, 4, 5].map(s => (
-                        <Star key={s} className={`h-3 w-3 ${s <= r.rating ? "text-amber-400 fill-amber-400" : "text-white/20"}`} />
-                      ))}
-                    </div>
-                  </div>
-                  <p className="text-white/70 text-[11px] leading-relaxed">{r.review}</p>
-                  {r.images && r.images.length > 0 && (
-                    <div className="flex gap-1.5 mt-2">
-                      {r.images.slice(0, 3).map((img, i) => (
-                        <img key={i} src={img} alt="" className="h-12 w-12 rounded-md object-cover border border-white/10" />
-                      ))}
+          <div className="space-y-2 max-h-[260px] overflow-y-auto">
+            {reviews.map(r => (
+              <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
+                <div className="flex items-center gap-1.5 mb-1">
+                  {r.avatar_url ? (
+                    <img src={r.avatar_url} alt={r.name} className="h-5 w-5 rounded-full object-cover" />
+                  ) : (
+                    <div className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                      {r.name.charAt(0).toUpperCase()}
                     </div>
                   )}
+                  <span className="text-white text-[11px] font-semibold">{r.name}</span>
+                  <div className="flex gap-0.5 ml-auto">
+                    {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                      <Star key={i} className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />
+                    ))}
+                  </div>
                 </div>
-              ))
-            )}
+                <p className="text-white/60 text-[11px] leading-snug">{r.review}</p>
+              </div>
+            ))}
           </div>
         )}
-      </div>
+      </AccordionSection>
     </div>
   );
 }
