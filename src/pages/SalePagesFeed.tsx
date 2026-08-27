@@ -593,7 +593,7 @@ export default function SalePagesFeed() {
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative flex-1 flex items-center justify-center gap-1 rounded-full border px-2.5 py-1.5 transition-colors whitespace-nowrap overflow-hidden ${
+                          className={`relative flex-1 flex flex-col items-center justify-center gap-1 rounded-full border px-1.5 py-2 transition-colors whitespace-nowrap ${
                             sel
                               ? "border-red-600 bg-red-600/15 text-red-600"
                               : "border-white/15 bg-white/5 text-white/80 hover:border-white/30"
@@ -605,7 +605,7 @@ export default function SalePagesFeed() {
                           <SeatIcon count={parseSeatCount(v.name)} />
                           <span className="text-[9px] font-bold leading-none whitespace-nowrap">{v.name}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
-                            <span className="absolute -top-1.5 right-1 bg-amber-500 text-black text-[6px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
+                            <span className="absolute -top-3 right-0 bg-amber-500 text-black text-[7px] font-bold px-1.5 py-0.5 rounded-full whitespace-normal">POPULAR</span>
                           )}
                         </button>
                       );
