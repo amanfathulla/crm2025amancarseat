@@ -212,6 +212,8 @@ export default function SalePagesAdmin() {
       video_urls: (p as any).video_urls || [],
       poster_url: p.poster_url || "",
       product_id: p.product_id || "",
+      product_mode: (p as any).product_mode || "single",
+      product_category: (p as any).product_category || "",
       extra_product_ids: extras,
       cta_label: p.cta_label || "Buy Now",
       badge_text: p.badge_text || "",
@@ -221,17 +223,19 @@ export default function SalePagesAdmin() {
   };
 
   const handleSave = async () => {
-    if (!form.slug.trim() || !form.title.trim()) {
-      toast({ title: "Slug & Tajuk diperlukan", variant: "destructive" });
+    if (!form.slug.trim()) {
+      toast({ title: "Slug diperlukan", variant: "destructive" });
       return;
     }
+    // Tajuk auto dari slug kalau tak diisi (contoh: promo-fullsilk → Promo Fullsilk)
+    const autoTitle = form.title.trim() || form.slug.trim().split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    const autoSub = form.subheadline.trim() || "";
     setSaving(true);
     try {
       const payload = {
         slug: form.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-        title: form.title.trim(),
-        headline: form.headline.trim() || null,
-        subheadline: form.subheadline.trim() || null,
+        title: autoTitle,
+        subheadline: autoSub,
         video_url: form.video_url.trim() || (form.video_urls.filter(Boolean)[0] || null),
         video_urls: form.video_urls.filter(Boolean),
         poster_url: form.poster_url.trim() || null,
@@ -486,19 +490,11 @@ export default function SalePagesAdmin() {
               <div>
                 <Label htmlFor="sp-slug">Slug URL *</Label>
                 <Input id="sp-slug" value={form.slug} onChange={e => setField("slug", e.target.value)} placeholder="contoh: promo-fullsilk" />
-                <p className="text-[11px] text-muted-foreground mt-1">URL: /page/{form.slug || "..."}</p>
-              </div>
-              <div>
-                <Label htmlFor="sp-title">Tajuk *</Label>
-                <Input id="sp-title" value={form.title} onChange={e => setField("title", e.target.value)} placeholder="Promo Fullsilk" />
+                <p className="text-[11px] text-muted-foreground mt-1">URL: /page/{form.slug || "..."} — Tajuk & Sub-headline auto dari slug</p>
               </div>
               <div>
                 <Label htmlFor="sp-headline">Headline</Label>
                 <Input id="sp-headline" value={form.headline} onChange={e => setField("headline", e.target.value)} placeholder="Sarung kusi kereta #1 di Malaysia" />
-              </div>
-              <div>
-                <Label htmlFor="sp-subheadline">Sub-headline</Label>
-                <Input id="sp-subheadline" value={form.subheadline} onChange={e => setField("subheadline", e.target.value)} placeholder="Diskaun 20% hari ini" />
               </div>
 
               {/* ── Folder media video (banyak URL, boleh tambah/edit/buang) ── */}
