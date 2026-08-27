@@ -604,7 +604,6 @@ export default function SalePagesFeed() {
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
                           <span className="text-[9px] font-bold leading-none whitespace-nowrap">{v.name}</span>
-                          <span className={`text-[9px] font-bold leading-none whitespace-nowrap ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute -top-1.5 right-1 bg-amber-500 text-black text-[6px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
                           )}
