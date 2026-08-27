@@ -3,7 +3,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart } from "lucide-react";
-import { FeedProductDetail } from "./FeedProductDetail";
+import { ProductDetailTabs } from "./ProductDetailTabs";
 
 interface FeedPage {
   id: string;
@@ -85,7 +85,7 @@ export default function SalePagesFeed() {
   const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
-  const [detailOpen, setDetailOpen] = useState<string | null>(null); // productId → papar Product Detail View
+  const [infoOpen, setInfoOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [selectedCatProduct, setSelectedCatProduct] = useState<string | null>(null);
   const videoRef = useRef<HTMLVideoElement | null>(null);
@@ -255,7 +255,7 @@ export default function SalePagesFeed() {
 
   useEffect(() => {
     setStarted(false);
-    setDetailOpen(null);
+    setInfoOpen(false);
     setCatOpen(false);
     setSelectedCatProduct(null);
     const v = videoRef.current;
@@ -524,20 +524,6 @@ export default function SalePagesFeed() {
               )}
             </div>
           ) : product && (
-            detailOpen === product.id ? (
-              <FeedProductDetail
-                product={product}
-                variations={variations}
-                reviews={reviewsMap[product.id] || []}
-                selectedVarId={selectedVarId}
-                onSelectVar={(id) => setSelectedVars(s => ({ ...s, [product.id]: id }))}
-                onClose={() => setDetailOpen(null)}
-                ctaStyle={ctaStyle}
-                hexColor={hexColor}
-                theme={theme}
-                buyUrl={buyUrl}
-              />
-            ) : (
             /* MODE SINGLE: satu produk utama */
             <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
               <div className="flex items-start gap-3">
@@ -556,13 +542,12 @@ export default function SalePagesFeed() {
                     )}
                   </div>
                 </div>
-                {/* Arrow → Product Detail View */}
+                {/* Arrow expand info (testimoni + add-on) */}
                 <button
-                  onClick={() => setDetailOpen(product.id)}
+                  onClick={() => setInfoOpen(o => !o)}
                   className="shrink-0 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70"
-                  aria-label="Lihat detail produk"
                 >
-                  <ChevronDown className="h-4 w-4 rotate-180" />
+                  {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronDown className="h-4 w-4 rotate-180" />}
                 </button>
               </div>
 
@@ -664,10 +649,17 @@ export default function SalePagesFeed() {
                   Pilih Varian Dahulu
                 </div>
               )}
-            </div>
-          ))}
 
-          </div>
+              {/* Tab Penerangan + Testimoni */}
+              <ProductDetailTabs
+                description={product?.description || (isCategoryMode ? (categoryProducts[0]?.description ?? null) : null)}
+                reviews={isCategoryMode ? (reviewsMap[`cat_${active.id}`] || []) : (product ? (reviewsMap[product.id] || []) : [])}
+                image_url={product?.image_url || (isCategoryMode ? (categoryProducts[0]?.image_url ?? null) : null)}
+                defaultTab="review"
+              />
+            </div>
+          )}
+        </div>
 
         {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 z-40 h-1 bg-white/10">
