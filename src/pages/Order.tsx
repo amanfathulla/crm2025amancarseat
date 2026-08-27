@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/pixels";
+import { trackSalePageEvent } from "@/lib/salePageEvents";
 import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -484,6 +485,9 @@ export default function OrderPage() {
       );
       const data = await res.json();
       if (!res.ok || !data.bill_url) throw new Error(data.error || "Gagal cipta bil");
+      // Track "Klik Beli" (order via gateway) ke sale page analytics
+      const spIdGw = new URLSearchParams(window.location.search).get("sp");
+      if (spIdGw) trackSalePageEvent(spIdGw, "buy_click", { variation_id: selectedVariation?.id });
       await new Promise((r) => setTimeout(r, 400)); // beri masa pixel hantar event
       window.location.href = data.bill_url;
     } catch (err: any) {
@@ -626,6 +630,9 @@ export default function OrderPage() {
       });
       // elak double-count bila page thank-you dibuka
       try { sessionStorage.setItem(`acs_purchase_${customerId}`, "1"); } catch {}
+      // Track "Klik Beli" (actual order complete via WhatsApp) ke sale page analytics
+      const spIdWa = new URLSearchParams(window.location.search).get("sp");
+      if (spIdWa) trackSalePageEvent(spIdWa, "buy_click", { variation_id: selectedVariation?.id });
 
       // Buka WhatsApp dalam tab baharu supaya pixel sempat hantar event,
       // kemudian bawa pelanggan ke page thank-you.
