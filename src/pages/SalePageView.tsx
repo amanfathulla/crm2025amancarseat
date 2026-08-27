@@ -498,7 +498,7 @@ export default function SalePageView() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
-                  onClick={() => trackSalePageEvent(page?.id || "", "buy_click", { variation_id: selectedVar?.id })}
+                  onClick={() => trackSalePageEvent(page?.id || "", "cta_click", { variation_id: selectedVar?.id })}
                   className={`shrink-0 h-9 px-4 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-sm flex items-center`}
                 >
                   {page.cta_label || "Buy"}

@@ -646,7 +646,7 @@ export default function SalePagesFeed() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
-                  onClick={() => trackSalePageEvent(active.id, "buy_click", { variation_id: selectedVar?.id })}
+                  onClick={() => trackSalePageEvent(active.id, "cta_click", { variation_id: selectedVar?.id })}
                   style={ctaStyle}
                   className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                 >
