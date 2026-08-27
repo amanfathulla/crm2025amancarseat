@@ -236,6 +236,7 @@ export default function SalePagesAdmin() {
         slug: form.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
         title: autoTitle,
         subheadline: autoSub,
+        headline: form.headline.trim() || null,
         video_url: form.video_url.trim() || (form.video_urls.filter(Boolean)[0] || null),
         video_urls: form.video_urls.filter(Boolean),
         poster_url: form.poster_url.trim() || null,
