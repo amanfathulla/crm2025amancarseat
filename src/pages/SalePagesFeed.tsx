@@ -8,17 +8,13 @@ import { trackSalePageEvent } from "@/lib/salePageEvents";
 
 // ── Seat icon (inline SVG, susunan kerusi ikut jumlah tempat duduk) ──
 function SeatIcon({ count }: { count: number }) {
-  // susunan: 2 seater = [2], 5 seater = [2,3], 7 seater = [2,3,2]
-  const layout = count <= 2 ? [2] : count <= 5 ? [2, 3] : [2, 3, 2];
-  const baseY = 2;
-  let y = 0;
-  const rows = layout.map(n => {
-    const row = { n, y: y * 11 };
-    y += 1;
-    return row;
-  });
+  // Semua kerusi sebaris SATU LINE (2/5/7 sebaris)
+  const layout = [count];
+  const baseY = 7;
+  const rows = layout.map(n => ({ n, y: 0 }));
+  const w = Math.max(22, count * 8 + 4);
   return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" className="shrink-0 text-current opacity-80">
+    <svg width={w} height="22" viewBox={`0 0 ${w} 22`} fill="none" className="shrink-0 text-current opacity-80">
       {rows.flatMap(r =>
         Array.from({ length: r.n }).map((_, i) => (
           <rect
