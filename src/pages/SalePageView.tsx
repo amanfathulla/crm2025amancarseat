@@ -81,7 +81,7 @@ export default function SalePageView() {
       try {
         const { data: pg } = await supabase
           .from("sale_pages")
-          .select("id, slug, title, headline, subheadline, video_url, video_urls, poster_url, product_id, product_mode, product_category, cta_label, badge_text, theme, is_published, views")
+          .select("*")
           .eq("slug", slug).single();
         if (!pg || !pg.is_published) {
           setLoading(false);
