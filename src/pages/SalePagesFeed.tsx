@@ -12,7 +12,7 @@ import seat7 from "@/assets/seat-7.svg";
 // ── Seat icon — guna SVG premium (2/5/7 seater) ──
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-9 w-auto shrink-0" />;
+  return <img src={src} alt={`${count} seater`} className="h-7 w-auto shrink-0" />;
 }
 
 function parseSeatCount(name: string): number {
@@ -556,7 +556,7 @@ export default function SalePagesFeed() {
             </div>
           ) : product && (
             /* MODE SINGLE: satu produk utama */
-            <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2.5">
+            <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2">
               <div className="flex items-start gap-3">
                 {product.image_url ? (
                   <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0" />
@@ -584,9 +584,8 @@ export default function SalePagesFeed() {
 
               {/* Variations — pilih kalau ada */}
               {variations.length > 1 && (
-                <div className="mt-2">
-                  <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide">Pilih Saiz Kereta</p>
-                  <p className="text-white/40 text-[10px] mb-2">Pilih mengikut jumlah tempat duduk</p>
+                <div className="mt-1.5">
+                  <p className="text-white/80 text-[10px] font-bold uppercase tracking-wide mb-1">Pilih Saiz Kereta</p>
                 <div className="grid grid-cols-2 gap-1.5">
                     {variations.map(v => {
                       const sel = selectedVar?.id === v.id;
@@ -606,9 +605,8 @@ export default function SalePagesFeed() {
                             </span>
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className={`text-[11px] font-bold mt-1 leading-tight ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
-                          <p className={`text-[11px] font-bold ${sel ? "text-red-600" : "text-white/80"}`}>RM{v.price.toFixed(0)}</p>
-                          <p className="text-white/40 text-[8px] mt-0.5 leading-tight">{seatSubtext(v.name)}</p>
+                          <span className={`text-[10px] font-bold mt-0.5 leading-tight ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
+                          <p className={`text-[10px] font-bold ${sel ? "text-red-600" : "text-white/80"}`}>RM{v.price.toFixed(0)}</p>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute top-1 right-1 bg-amber-500 text-black text-[7px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
                           )}
