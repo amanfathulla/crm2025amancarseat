@@ -416,7 +416,6 @@ export default function SalePagesFeed() {
 
           {/* Headline */}
           <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
-          {active.subheadline && <p className="text-white/70 text-xs mt-1">{active.subheadline}</p>}
 
           {/* Meta */}
           <div className="flex items-center gap-3 mt-2 text-[11px]">

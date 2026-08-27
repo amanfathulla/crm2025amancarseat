@@ -187,7 +187,10 @@ export default function SalePagesAdmin() {
 
   const openCreate = () => {
     setEditing(null);
-    setForm({ ...EMPTY_FORM });
+    // Auto-generate slug acs1, acs2, ... (ikut bilangan page + 1)
+    const nextNum = (pages.length || 0) + 1;
+    const autoSlug = `acs${nextNum}`;
+    setForm({ ...EMPTY_FORM, slug: autoSlug });
     setDialogOpen(true);
   };
 
@@ -227,14 +230,15 @@ export default function SalePagesAdmin() {
       toast({ title: "Slug diperlukan", variant: "destructive" });
       return;
     }
-    // Tajuk auto dari slug kalau tak diisi (contoh: promo-fullsilk → Promo Fullsilk)
+    // Title = headline kalau ada, kalau tak auto dari slug
     const autoTitle = form.title.trim() || form.slug.trim().split("-").map(w => w.charAt(0).toUpperCase() + w.slice(1)).join(" ");
+    const finalTitle = form.headline.trim() || autoTitle;
     const autoSub = form.subheadline.trim() || "";
     setSaving(true);
     try {
       const payload = {
         slug: form.slug.trim().toLowerCase().replace(/[^a-z0-9-]/g, "-"),
-        title: autoTitle,
+        title: finalTitle,
         subheadline: autoSub,
         headline: form.headline.trim() || null,
         video_url: form.video_url.trim() || (form.video_urls.filter(Boolean)[0] || null),
@@ -489,9 +493,9 @@ export default function SalePagesAdmin() {
             {/* Left: form */}
             <div className="space-y-4">
               <div>
-                <Label htmlFor="sp-slug">Slug URL *</Label>
-                <Input id="sp-slug" value={form.slug} onChange={e => setField("slug", e.target.value)} placeholder="contoh: promo-fullsilk" />
-                <p className="text-[11px] text-muted-foreground mt-1">URL: /feed/{form.slug || "..."} — Tajuk & Sub-headline auto dari slug</p>
+                <Label htmlFor="sp-slug">Slug URL (auto)</Label>
+                <Input id="sp-slug" value={form.slug} readOnly disabled className="bg-muted/50 font-mono" />
+                <p className="text-[11px] text-muted-foreground mt-1">URL: /feed/{form.slug || "..."} — auto generate (acs1, acs2, ...)</p>
               </div>
               <div>
                 <Label htmlFor="sp-headline">Headline</Label>
