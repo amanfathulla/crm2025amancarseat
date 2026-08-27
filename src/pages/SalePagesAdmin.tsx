@@ -1,9 +1,6 @@
 import { useState, useEffect, useCallback } from "react";
 import { useAuth } from "@/hooks/useAuth";
 import { useToast } from "@/hooks/use-toast";
-import { supabase } from "@/integrations/supabase/client";
-import { reviewsSupabase } from "@/lib/reviewsClient";
-import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
@@ -725,12 +722,8 @@ export default function SalePagesAdmin() {
                   <MessageCircle className="h-3.5 w-3.5" /> Testimoni (auto ikut material)
                 </Label>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Akan papar 6 testimoni pelanggan ikut material produk yang dipilih. Tak perlu set manual.
+                  Akan papar 6 testimoni pelanggan ikut material produk yang dipilih. Tak perlu set manual — boleh lihat terus di page sebenar.
                 </p>
-                <AdminTestimoniPreview
-                  productId={form.product_mode === "category" ? "" : form.product_id}
-                  category={form.product_mode === "category" ? form.product_category : ""}
-                />
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
@@ -1025,49 +1018,3 @@ function PreviewPhone({ page, products }: { page: FormState; products: ProductOp
   );
 }
 
-// Preview 6 testimoni ikut material (produk dipilih di admin)
-function AdminTestimoniPreview({ productId, category }: { productId?: string; category?: string }) {
-  const [reviews, setReviews] = useState<{ id: string; name: string; rating: number; review: string; car_model?: string | null }[]>([]);
-  const [loading, setLoading] = useState(false);
-  useEffect(() => {
-    let cancelled = false;
-    (async () => {
-      const cat = category || "";
-      if (!cat && !productId) { setReviews([]); return; }
-      setLoading(true);
-      try {
-        const matMap = await fetchReviewMaterials();
-        let prodCat = cat;
-        if (!prodCat && productId) {
-          const { data: p } = await supabase.from("public_products").select("category").eq("id", productId).single();
-          prodCat = (p?.category as string) || "";
-        }
-        if (!prodCat) { setReviews([]); setLoading(false); return; }
-        const { data: all } = await reviewsSupabase.from("reviews").select("id, name, rating, review, car_model").order("created_at", { ascending: false });
-        const matched = (all || []).filter((r: any) => matMap[r.id] === prodCat).slice(0, 6);
-        if (!cancelled) setReviews(matched as any[]);
-      } catch { /* ignore */ }
-      finally { if (!cancelled) setLoading(false); }
-    })();
-    return () => { cancelled = true; };
-  }, [productId, category]);
-
-  if (!productId && !category) return <p className="text-[11px] text-white/30">Pilih produk/kategori dulu untuk lihat testimoni.</p>;
-  if (loading) return <p className="text-[11px] text-white/30">Memuatkan…</p>;
-  if (reviews.length === 0) return <p className="text-[11px] text-white/30">Tiada testimoni untuk material ini.</p>;
-  return (
-    <div className="space-y-2">
-      {reviews.map(r => (
-        <div key={r.id} className="bg-white/5 border border-white/10 rounded-lg p-2">
-          <div className="flex items-center gap-2 mb-1">
-            <span className="text-white text-[11px] font-semibold truncate">{r.name}</span>
-            <div className="flex ml-auto gap-0.5">
-              {[1,2,3,4,5].map(s => <Star key={s} className={`h-2.5 w-2.5 ${s <= r.rating ? "text-amber-400 fill-amber-400" : "text-white/20"}`} />)}
-            </div>
-          </div>
-          <p className="text-white/60 text-[10px] leading-snug line-clamp-2">{r.review}</p>
-        </div>
-      ))}
-    </div>
-  );
-}
