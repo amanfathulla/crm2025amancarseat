@@ -5,6 +5,7 @@ import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
+import { trackSalePageEvent } from "@/lib/salePageEvents";
 
 interface SalePage {
   id: string;
@@ -94,6 +95,7 @@ export default function SalePageView() {
           const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
           setPage(prev => prev ? { ...prev, views: newViews } : prev);
         }).catch(() => {});
+        trackSalePageEvent(pg.id, "view");
         if ((pg.product_mode || "single") === "category" && pg.product_category) {
           // Mode category: fetch semua produk aktif dalam kategori
           const { data: catProds } = await supabase
@@ -199,6 +201,7 @@ export default function SalePageView() {
 
   // Video ended → next in playlist; at end → loop back to first
   const handleVideoEnded = () => {
+    trackSalePageEvent(page?.id || "", "video_complete");
     if (playlist.length <= 1) {
       videoRef.current?.play().catch(() => {});
       return;
@@ -495,6 +498,7 @@ export default function SalePageView() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
+                  onClick={() => trackSalePageEvent(page?.id || "", "buy_click", { variation_id: selectedVar?.id })}
                   className={`shrink-0 h-9 px-4 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-sm flex items-center`}
                 >
                   {page.cta_label || "Buy"}
@@ -502,7 +506,7 @@ export default function SalePageView() {
               ) : (
                 <button
                   type="button"
-                  onClick={() => setInfoOpen(true)}
+                  onClick={() => { setInfoOpen(true); trackSalePageEvent(page?.id || "", "info_open"); }}
                   className={`shrink-0 h-9 px-4 rounded-lg ${!themeHex ? themeStyle.cta : ""} opacity-80 text-black font-bold text-[12px] flex items-center`}
                 >
                   Pilih Varian

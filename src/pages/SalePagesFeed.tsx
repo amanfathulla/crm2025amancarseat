@@ -4,6 +4,7 @@ import { reviewsSupabase } from "@/lib/reviewsClient";
 import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
+import { trackSalePageEvent } from "@/lib/salePageEvents";
 
 interface FeedPage {
   id: string;
@@ -268,6 +269,7 @@ export default function SalePagesFeed() {
         const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
         setPages(prev => prev.map((p, i) => i === index ? { ...p, views: newViews } : p));
       }).catch(() => {});
+      trackSalePageEvent(pg.id, "view");
     }
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [index, pages.length]);
@@ -358,7 +360,14 @@ export default function SalePagesFeed() {
               loop
               playsInline
               autoPlay
-              className="absolute inset-0 w-full h-full object-cover"
+              onTimeUpdate={(e) => {
+                const v = e.currentTarget;
+                if (!v.duration) return;
+                if (v.currentTime / v.duration >= 0.75 && !(videoRef.current as any)?._completeTracked) {
+                  (videoRef.current as any)._completeTracked = true;
+                  trackSalePageEvent(active.id, "video_complete");
+                }
+              }}
             />
           ) : active.poster_url ? (
             <img src={active.poster_url} alt={active.title} className="absolute inset-0 w-full h-full object-cover" />
@@ -543,7 +552,7 @@ export default function SalePagesFeed() {
                 </div>
                 {/* Arrow expand info (testimoni + add-on) */}
                 <button
-                  onClick={() => setInfoOpen(o => !o)}
+                  onClick={() => { setInfoOpen(o => !o); if (!infoOpen) trackSalePageEvent(active.id, "info_open"); }}
                   className="shrink-0 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70"
                 >
                   {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronDown className="h-4 w-4 rotate-180" />}
@@ -637,6 +646,7 @@ export default function SalePagesFeed() {
               {canBuyDirect ? (
                 <a
                   href={buyUrl}
+                  onClick={() => trackSalePageEvent(active.id, "buy_click", { variation_id: selectedVar?.id })}
                   style={ctaStyle}
                   className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                 >

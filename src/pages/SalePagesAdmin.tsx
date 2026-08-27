@@ -785,10 +785,11 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
   authClient: any;
 }) {
   const [addons, setAddons] = useState<ProductOption[]>([]);
+  const [eventCounts, setEventCounts] = useState<Record<string, number> | null>(null);
   const { toast } = useToast();
 
   useEffect(() => {
-    if (!page) { setAddons([]); return; }
+    if (!page) { setAddons([]); setEventCounts(null); return; }
     (async () => {
       try {
         const { data } = await authClient
@@ -799,6 +800,11 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
         const ids = ((data || []) as any[]).map(r => r.product_id);
         setAddons(products.filter(p => ids.includes(p.id)));
       } catch { setAddons([]); }
+      // Ambil event counts (analytics)
+      try {
+        const { data: ec } = await authClient.rpc("sale_page_event_counts", { p_page_id: page.id });
+        if (ec) setEventCounts(ec as Record<string, number>);
+      } catch { setEventCounts(null); }
     })();
   }, [page, products, authClient]);
 
@@ -835,6 +841,46 @@ function DetailDialog({ page, products, summary, onClose, authClient }: {
               <p className="text-[10px] text-white/80 uppercase tracking-wide">Views</p>
               <p className="text-xl font-bold mt-0.5">{page.views || 0}</p>
             </div>
+          </div>
+
+          {/* Analytics funnel */}
+          <div className="mt-4 border rounded-xl p-3 bg-muted/30">
+            <p className="text-[11px] text-muted-foreground uppercase tracking-wide mb-2">Analytics (fungsi)</p>
+            {eventCounts ? (
+              (() => {
+                const v = eventCounts.view || 0;
+                const info = eventCounts.info_open || 0;
+                const cta = eventCounts.cta_click || 0;
+                const buy = eventCounts.buy_click || 0;
+                const vid = eventCounts.video_complete || 0;
+                const pct = (n: number) => (v > 0 ? Math.round((n / v) * 100) : 0);
+                const FunnelRow = ({ label, val, color }: { label: string; val: number; color: string }) => (
+                  <div className="mb-2">
+                    <div className="flex justify-between text-[11px] mb-0.5">
+                      <span>{label}</span>
+                      <span className="font-semibold">{val} ({pct(val)}%)</span>
+                    </div>
+                    <div className="h-2 rounded-full bg-white/10 overflow-hidden">
+                      <div className={`h-full ${color}`} style={{ width: `${pct(val)}%` }} />
+                    </div>
+                  </div>
+                );
+                return (
+                  <div>
+                    <FunnelRow label="View (unique)" val={v} color="bg-blue-500" />
+                    <FunnelRow label="Video tonton ≥75%" val={vid} color="bg-purple-500" />
+                    <FunnelRow label="Buka info / pilih varian" val={info} color="bg-amber-500" />
+                    <FunnelRow label="Klik CTA (Buy Now)" val={cta} color="bg-emerald-500" />
+                    <FunnelRow label="Klik Beli (&sp order)" val={buy} color="bg-rose-500" />
+                    <p className="text-[10px] text-muted-foreground mt-1">
+                      Conversion: {v > 0 ? (((buy || cta) / v) * 100).toFixed(1) : "0"}% (buy/cta ÷ view)
+                    </p>
+                  </div>
+                );
+              })()
+            ) : (
+              <p className="text-[11px] text-muted-foreground">Tiada data event lagi.</p>
+            )}
           </div>
 
           {/* Info asas — grid 2 kolom, nilai wrap bukan truncate */}
