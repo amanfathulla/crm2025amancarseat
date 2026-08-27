@@ -86,7 +86,7 @@ function App() {
                 <Route path="/order/:material" element={<Order />} />
                 <Route path="/testimoni" element={<Testimoni />} />
                 <Route path="/testimoni/:brand" element={<Testimoni />} />
-                <Route path="/page" element={<SalePagesFeed />} />
+                <Route path="/feed" element={<SalePagesFeed />} />
                 <Route path="/page/:slug" element={<SalePageView />} />
                 <Route path="/order-fullsilk" element={<OrderFullsilk />} />
                 <Route path="/order/thank-you" element={<OrderThankYou />} />
