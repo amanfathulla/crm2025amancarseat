@@ -654,6 +654,7 @@ export default function SalePagesFeed() {
               <ProductDetailTabs
                 description={product?.description || (isCategoryMode ? (categoryProducts[0]?.description ?? null) : null)}
                 reviews={isCategoryMode ? (reviewsMap[`cat_${active.id}`] || []) : (product ? (reviewsMap[product.id] || []) : [])}
+                image_url={product?.image_url || (isCategoryMode ? (categoryProducts[0]?.image_url ?? null) : null)}
               />
             </div>
           )}

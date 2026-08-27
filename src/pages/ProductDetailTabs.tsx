@@ -15,9 +15,11 @@ export interface DetailReview {
 export function ProductDetailTabs({
   description,
   reviews,
+  image_url,
 }: {
   description?: string | null;
   reviews: DetailReview[];
+  image_url?: string | null;
 }) {
   const [tab, setTab] = useState<"desc" | "review">("desc");
   return (
@@ -38,8 +40,13 @@ export function ProductDetailTabs({
       </div>
       <div className="p-3 max-h-[40vh] overflow-y-auto">
         {tab === "desc" ? (
-          <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
-            {description || "Tiada penerangan untuk produk ini."}
+          <div>
+            {image_url && (
+              <img src={image_url} alt="Produk" className="w-full rounded-lg object-cover mb-3 border border-white/10" />
+            )}
+            <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
+              {description || "Tiada penerangan untuk produk ini."}
+            </div>
           </div>
         ) : (
           <div className="space-y-3">

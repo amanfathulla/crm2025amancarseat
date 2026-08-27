@@ -584,6 +584,7 @@ export default function SalePageView() {
                 <ProductDetailTabs
                   description={product?.description || null}
                   reviews={reviews.slice(0, 6)}
+                  image_url={product?.image_url || null}
                 />
 
                 {/* Trust badges */}
