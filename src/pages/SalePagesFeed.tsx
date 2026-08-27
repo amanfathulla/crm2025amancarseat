@@ -556,12 +556,12 @@ export default function SalePagesFeed() {
             </div>
           ) : product && (
             /* MODE SINGLE: satu produk utama */
-            <div className="mt-3 bg-zinc-950/80 backdrop-blur rounded-xl border border-white/10 p-3">
+            <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2.5">
               <div className="flex items-start gap-3">
                 {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="h-14 w-14 rounded-lg object-cover border border-white/10 shrink-0" />
+                  <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0" />
                 ) : (
-                  <div className="h-14 w-14 rounded-lg bg-white/5 border border-white/10 shrink-0" />
+                  <div className="h-12 w-12 rounded-lg bg-white/5 border border-white/10 shrink-0" />
                 )}
                 <div className="flex-1 min-w-0">
                   <p className="text-white font-semibold text-[13px] leading-tight">{product.name}</p>
@@ -584,17 +584,17 @@ export default function SalePagesFeed() {
 
               {/* Variations — pilih kalau ada */}
               {variations.length > 1 && (
-                <div className="mt-2.5">
+                <div className="mt-2">
                   <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide">Pilih Saiz Kereta</p>
                   <p className="text-white/40 text-[10px] mb-2">Pilih mengikut jumlah tempat duduk</p>
-                  <div className="grid grid-cols-2 gap-2">
+                <div className="grid grid-cols-2 gap-1.5">
                     {variations.map(v => {
                       const sel = selectedVar?.id === v.id;
                       return (
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative text-left rounded-xl border p-2.5 transition-colors ${
+                          className={`relative flex flex-col items-center text-center rounded-xl border px-1.5 py-2 transition-colors ${
                             sel
                               ? "border-red-600 bg-red-600/10"
                               : "border-white/15 bg-white/5 hover:border-white/30"
@@ -605,14 +605,12 @@ export default function SalePagesFeed() {
                               <Check className="h-3 w-3 text-white" />
                             </span>
                           )}
-                          <div className="flex items-center gap-2 mb-1">
-                            <SeatIcon count={parseSeatCount(v.name)} />
-                            <span className={`text-[12px] font-bold ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
-                          </div>
-                          <p className={`text-[11px] font-bold ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</p>
-                          <p className="text-white/40 text-[9px] mt-0.5">{seatSubtext(v.name)}</p>
+                          <SeatIcon count={parseSeatCount(v.name)} />
+                          <span className={`text-[11px] font-bold mt-1 leading-tight ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
+                          <p className={`text-[11px] font-bold ${sel ? "text-red-600" : "text-white/80"}`}>RM{v.price.toFixed(0)}</p>
+                          <p className="text-white/40 text-[8px] mt-0.5 leading-tight">{seatSubtext(v.name)}</p>
                           {v.name.toLowerCase().includes("5 seater") && (
-                            <span className="absolute top-2 right-2 bg-amber-500 text-black text-[8px] font-bold px-1.5 py-0.5 rounded-full">POPULAR</span>
+                            <span className="absolute top-1 right-1 bg-amber-500 text-black text-[7px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
                           )}
                         </button>
                       );
