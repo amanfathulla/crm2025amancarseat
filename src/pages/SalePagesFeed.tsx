@@ -5,34 +5,14 @@ import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart, Check } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
+import seat2 from "@/assets/seat-2.svg";
+import seat5 from "@/assets/seat-5.svg";
+import seat7 from "@/assets/seat-7.svg";
 
-// ── Seat icon (inline SVG, susunan kerusi ikut jumlah tempat duduk) ──
+// ── Seat icon — guna SVG premium (2/5/7 seater) ──
 function SeatIcon({ count }: { count: number }) {
-  // Semua kerusi sebaris SATU LINE (2/5/7 sebaris)
-  const layout = [count];
-  const baseY = 7;
-  const rows = layout.map(n => ({ n, y: 0 }));
-  const w = Math.max(22, count * 8 + 4);
-  return (
-    <svg width={w} height="22" viewBox={`0 0 ${w} 22`} fill="none" className="shrink-0 text-current opacity-80">
-      {rows.flatMap(r =>
-        Array.from({ length: r.n }).map((_, i) => (
-          <rect
-            key={`${r.y}-${i}`}
-            x={4 + i * 8}
-            y={baseY + r.y}
-            width="6"
-            height="8"
-            rx="1.5"
-            stroke="currentColor"
-            strokeWidth="1.3"
-            fill="currentColor"
-            fillOpacity="0.15"
-          />
-        ))
-      )}
-    </svg>
-  );
+  const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
+  return <img src={src} alt={`${count} seater`} className="h-9 w-auto shrink-0" />;
 }
 
 function parseSeatCount(name: string): number {

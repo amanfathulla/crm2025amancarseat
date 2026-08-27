@@ -1,0 +1,43 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 230 90" width="230" height="90" fill="none">
+  <defs>
+    <radialGradient id="g7" cx="50%" cy="95%" r="55%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="230" height="90" rx="16" fill="#0a0a0c"/>
+  <ellipse cx="115" cy="82" rx="100" ry="8" fill="url(#g7)"/>
+  <g fill="none" stroke="#fafaf9" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round">
+    <!-- FRONT ROW: 2 seats -->
+    <g transform="translate(30 8)">
+      <path d="M0 8 q0 -8 8 -8 h16 q8 0 8 8 v26 q0 5 -5 5 h-22 q-5 0 -5 -5 z"/>
+      <path d="M-2 39 h28 q4 0 4 4 v22 q0 4 -4 4 h-7 q-4 0 -4 -4 v-12 h-6 v12 q0 4 -4 4 h-7 q-4 0 -4 -4 v-22 q0 -4 4 -4 z"/>
+    </g>
+    <g transform="translate(68 8)">
+      <path d="M0 8 q0 -8 8 -8 h16 q8 0 8 8 v26 q0 5 -5 5 h-22 q-5 0 -5 -5 z"/>
+      <path d="M-2 39 h28 q4 0 4 4 v22 q0 4 -4 4 h-7 q-4 0 -4 -4 v-12 h-6 v12 q0 4 -4 4 h-7 q-4 0 -4 -4 v-22 q0 -4 4 -4 z"/>
+    </g>
+    <!-- MIDDLE ROW: 3 seats -->
+    <g transform="translate(108 8)">
+      <path d="M0 8 q0 -8 6 -8 h13 q6 0 6 8 v26 q0 5 -4 5 h-17 q-4 0 -4 -5 z"/>
+      <path d="M-1 39 h22 q3 0 3 3 v22 q0 3 -3 3 h-5 q-3 0 -3 -3 v-12 h-5 v12 q0 3 -3 3 h-5 q-3 0 -3 -3 v-22 q0 -3 3 -3 z"/>
+    </g>
+    <g transform="translate(131 8)">
+      <path d="M0 8 q0 -8 6 -8 h13 q6 0 6 8 v26 q0 5 -4 5 h-17 q-4 0 -4 -5 z"/>
+      <path d="M-1 39 h22 q3 0 3 3 v22 q0 3 -3 3 h-5 q-3 0 -3 -3 v-12 h-5 v12 q0 3 -3 3 h-5 q-3 0 -3 -3 v-22 q0 -3 3 -3 z"/>
+    </g>
+    <g transform="translate(154 8)">
+      <path d="M0 8 q0 -8 6 -8 h13 q6 0 6 8 v26 q0 5 -4 5 h-17 q-4 0 -4 -5 z"/>
+      <path d="M-1 39 h22 q3 0 3 3 v22 q0 3 -3 3 h-5 q-3 0 -3 -3 v-12 h-5 v12 q0 3 -3 3 h-5 q-3 0 -3 -3 v-22 q0 -3 3 -3 z"/>
+    </g>
+    <!-- REAR ROW: 2 seats -->
+    <g transform="translate(190 8)">
+      <path d="M0 8 q0 -8 6 -8 h13 q6 0 6 8 v26 q0 5 -4 5 h-17 q-4 0 -4 -5 z"/>
+      <path d="M-1 39 h22 q3 0 3 3 v22 q0 3 -3 3 h-5 q-3 0 -3 -3 v-12 h-5 v12 q0 3 -3 3 h-5 q-3 0 -3 -3 v-22 q0 -3 3 -3 z"/>
+    </g>
+    <g transform="translate(212 8)">
+      <path d="M0 8 q0 -8 6 -8 h13 q6 0 6 8 v26 q0 5 -4 5 h-17 q-4 0 -4 -5 z"/>
+      <path d="M-1 39 h22 q3 0 3 3 v22 q0 3 -3 3 h-5 q-3 0 -3 -3 v-12 h-5 v12 q0 3 -3 3 h-5 q-3 0 -3 -3 v-22 q0 -3 3 -3 z"/>
+    </g>
+  </g>
+</svg>
