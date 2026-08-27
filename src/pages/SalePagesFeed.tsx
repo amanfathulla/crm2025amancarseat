@@ -6,13 +6,13 @@ import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Ey
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
 import seat2 from "@/assets/seat-2.svg";
-import seat5 from "@/assets/seat-5.svg";
-import seat7 from "@/assets/seat-7.svg";
+import carSedan from "@/assets/car-sedan.svg";
+import carMpv from "@/assets/car-mpv.svg";
 
-// ── Seat icon — guna SVG premium (2/5/7 seater) ──
+// ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
-  const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-7 w-auto shrink-0" />;
+  const src = count <= 2 ? seat2 : count <= 5 ? carSedan : carMpv;
+  return <img src={src} alt={`${count} seater`} className="h-6 w-auto shrink-0" />;
 }
 
 function parseSeatCount(name: string): number {
@@ -582,33 +582,31 @@ export default function SalePagesFeed() {
                 </button>
               </div>
 
-              {/* Variations — pilih kalau ada */}
+              {/* Variations — segmented control satu baris */}
               {variations.length > 1 && (
                 <div className="mt-1.5">
                   <p className="text-white/80 text-[10px] font-bold uppercase tracking-wide mb-1">Pilih Saiz Kereta</p>
-                <div className="grid grid-cols-2 gap-1.5">
+                  <div className="flex gap-1.5">
                     {variations.map(v => {
                       const sel = selectedVar?.id === v.id;
                       return (
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative flex flex-col items-center text-center rounded-xl border px-1.5 py-2 transition-colors ${
+                          className={`relative flex-1 flex items-center justify-center gap-1.5 rounded-full border px-2 py-1.5 transition-colors ${
                             sel
-                              ? "border-red-600 bg-red-600/10"
-                              : "border-white/15 bg-white/5 hover:border-white/30"
+                              ? "border-red-600 bg-red-600/15 text-red-600"
+                              : "border-white/15 bg-white/5 text-white/80 hover:border-white/30"
                           }`}
                         >
                           {sel && (
-                            <span className="absolute -top-2 -right-2 h-5 w-5 rounded-full bg-red-600 flex items-center justify-center">
-                              <Check className="h-3 w-3 text-white" />
-                            </span>
+                            <Check className="h-3 w-3 shrink-0" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className={`text-[10px] font-bold mt-0.5 leading-tight ${sel ? "text-red-600" : "text-white"}`}>{v.name}</span>
-                          <p className={`text-[10px] font-bold ${sel ? "text-red-600" : "text-white/80"}`}>RM{v.price.toFixed(0)}</p>
+                          <span className="text-[10px] font-bold leading-none">{v.name}</span>
+                          <span className={`text-[10px] font-bold leading-none ${sel ? "text-red-600" : "text-white/70"}`}>RM{v.price.toFixed(0)}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
-                            <span className="absolute top-1 right-1 bg-amber-500 text-black text-[7px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
+                            <span className="absolute -top-1.5 right-1 bg-amber-500 text-black text-[7px] font-bold px-1 py-0.5 rounded-full">POPULAR</span>
                           )}
                         </button>
                       );

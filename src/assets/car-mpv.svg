@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 60" width="100" height="60" fill="none">
+  <defs>
+    <radialGradient id="gm" cx="50%" cy="95%" r="60%">
+      <stop offset="0%" stop-color="#ef4444" stop-opacity="0.5"/>
+      <stop offset="100%" stop-color="#ef4444" stop-opacity="0"/>
+    </radialGradient>
+  </defs>
+  <rect width="100" height="60" rx="12" fill="#0a0a0c"/>
+  <ellipse cx="50" cy="54" rx="44" ry="6" fill="url(#gm)"/>
+  <g fill="none" stroke="#fafaf9" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+    <!-- MPV side profile (taller, longer) -->
+    <path d="M8 42 q0 -2 2 -2 h10 l4 -12 q2 -4 6 -4 h40 q5 0 7 5 l3 11 h4 q2 0 2 2 v6 q0 2 -2 2 h-4"/>
+    <path d="M30 24 l34 1 q3 0 5 4 l3 9"/>
+    <circle cx="26" cy="50" r="5"/>
+    <circle cx="70" cy="50" r="5"/>
+    <circle cx="26" cy="50" r="1.6" fill="#fafaf9" stroke="none"/>
+    <circle cx="70" cy="50" r="1.6" fill="#fafaf9" stroke="none"/>
+  </g>
+</svg>
