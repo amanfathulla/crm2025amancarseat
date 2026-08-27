@@ -16,12 +16,14 @@ export function ProductDetailTabs({
   description,
   reviews,
   image_url,
+  defaultTab = "desc",
 }: {
   description?: string | null;
   reviews: DetailReview[];
   image_url?: string | null;
+  defaultTab?: "desc" | "review";
 }) {
-  const [tab, setTab] = useState<"desc" | "review">("desc");
+  const [tab, setTab] = useState<"desc" | "review">(defaultTab);
   return (
     <div className="bg-zinc-950 border-t border-white/10">
       <div className="flex">
@@ -42,7 +44,7 @@ export function ProductDetailTabs({
         {tab === "desc" ? (
           <div>
             {image_url && (
-              <img src={image_url} alt="Produk" className="w-full rounded-lg object-cover mb-3 border border-white/10" />
+              <img src={image_url} alt="Produk" className="w-full max-h-52 rounded-lg object-cover mb-3 border border-white/10" />
             )}
             <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
               {description || "Tiada penerangan untuk produk ini."}
