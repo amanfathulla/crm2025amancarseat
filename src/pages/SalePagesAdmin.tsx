@@ -1009,7 +1009,7 @@ function PreviewPhone({ page, products }: { page: FormState; products: ProductOp
           </div>
         )}
         <div className="mt-auto">
-          <div className={`w-full h-11 rounded-xl ${THEME_PREVIEW_DOTS[page.theme] || "bg-amber-400"} text-black font-bold flex items-center justify-center text-sm`}>
+          <div className={`w-full h-14 rounded-2xl ${THEME_PREVIEW_DOTS[page.theme] || "bg-amber-400"} text-black font-bold flex items-center justify-center text-base gap-2 active:scale-[0.97] transition-transform`}>
             {page.cta_label || "Buy Now"}
           </div>
         </div>

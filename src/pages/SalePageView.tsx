@@ -382,7 +382,7 @@ export default function SalePageView() {
               style={ctaStyle}
               className={`block w-full h-12 ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-sm flex items-center justify-center gap-2`}
             >
-              <ShoppingCart className="h-4 w-4" />
+              <ShoppingCart className="h-5 w-5" />
               {catOpen ? "Tutup Produk" : `Lihat ${categoryProducts.length} Produk (${page.product_category})`}
             </button>
             {catOpen && (
@@ -455,7 +455,7 @@ export default function SalePageView() {
                               style={ctaStyle}
                               className={`block w-full h-10 rounded-lg ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-1`}
                             >
-                              <ShoppingCart className="h-4 w-4" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
+                              <ShoppingCart className="h-5 w-5" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
                             </a>
                           )}
                         </>
@@ -597,8 +597,9 @@ export default function SalePageView() {
                 {canBuyDirect ? (
                   <a
                     href={buyUrl}
-                    className={`block w-full h-12 rounded-xl ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-base flex items-center justify-center transition-colors`}
+                    className={`block w-full h-14 rounded-2xl ${!themeHex ? themeStyle.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                   >
+                    <ShoppingCart className="h-5 w-5" />
                     {page.cta_label || "Buy Now"}
                   </a>
                 ) : (
@@ -608,7 +609,7 @@ export default function SalePageView() {
                       const el = document.getElementById("salepage-varians");
                       el?.scrollIntoView({ behavior: "smooth", block: "center" });
                     }}
-                    className={`w-full h-12 rounded-xl ${!themeHex ? themeStyle.cta : ""} opacity-70 text-black font-bold text-base flex items-center justify-center`}
+                    className={`w-full h-14 rounded-2xl ${!themeHex ? themeStyle.cta : ""} opacity-70 text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                   >
                     Pilih Varian Dahulu
                   </button>

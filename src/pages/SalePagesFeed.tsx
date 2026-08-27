@@ -439,7 +439,7 @@ export default function SalePagesFeed() {
                 className={`w-full h-10 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-2`}
                 style={ctaStyle}
               >
-                <ShoppingCart className="h-4 w-4" />
+                <ShoppingCart className="h-5 w-5" />
                 {catOpen ? "Tutup Produk" : `Lihat ${categoryProducts.length} Produk (${active.product_category})`}
               </button>
               {catOpen && (
@@ -512,7 +512,7 @@ export default function SalePagesFeed() {
                                 style={ctaStyle}
                                 className={`block w-full h-10 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px] flex items-center justify-center gap-1`}
                               >
-                                <ShoppingCart className="h-4 w-4" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
+                                <ShoppingCart className="h-5 w-5" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
                               </a>
                             )}
                           </>
@@ -639,13 +639,13 @@ export default function SalePagesFeed() {
                 <a
                   href={buyUrl}
                   style={ctaStyle}
-                  className={`mt-2.5 w-full h-11 rounded-xl ${!hexColor ? theme.cta : ""} text-black font-bold text-sm flex items-center justify-center gap-2`}
+                  className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                 >
-                  <ShoppingCart className="h-4 w-4" />
+                  <ShoppingCart className="h-5 w-5" />
                   {active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}
                 </a>
               ) : (
-                <div style={ctaStyle} className={`mt-2.5 w-full h-11 rounded-xl ${!hexColor ? theme.cta : ""} opacity-60 text-black font-bold text-sm flex items-center justify-center gap-2`}>
+                <div style={ctaStyle} className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} opacity-60 text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}>
                   Pilih Varian Dahulu
                 </div>
               )}
