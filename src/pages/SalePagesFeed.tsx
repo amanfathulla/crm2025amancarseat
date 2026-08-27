@@ -30,6 +30,7 @@ interface FeedProduct {
   price: number;
   category: string | null;
   image_url: string | null;
+  description: string | null;
 }
 
 interface FeedVariation {
@@ -120,7 +121,7 @@ export default function SalePagesFeed() {
         if (categories.length > 0) {
           const { data: catProds } = await supabase
             .from("public_products")
-            .select("id, name, price, category, image_url")
+            .select("id, name, price, category, image_url, description")
             .in("category", categories)
             .eq("status", "active");
           categoryProds.push(...((catProds || []) as FeedProduct[]));
@@ -131,7 +132,7 @@ export default function SalePagesFeed() {
           if (mainProductIds.length > 0) {
             const { data: prods } = await supabase
               .from("public_products")
-              .select("id, name, price, category, image_url")
+              .select("id, name, price, category, image_url, description")
               .in("id", mainProductIds);
             const pMap: Record<string, FeedProduct> = {};
             (prods || []).forEach((p: any) => { pMap[p.id] = p; });
