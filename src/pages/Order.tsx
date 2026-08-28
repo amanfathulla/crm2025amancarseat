@@ -5,7 +5,7 @@ import { trackSalePageEvent } from "@/lib/salePageEvents";
 import seat2 from "@/assets/seat-png/2-seater.png";
 import seat5 from "@/assets/seat-png/5-seater.png";
 import seat7 from "@/assets/seat-png/7-seater.png";
-import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
+import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronDown, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
