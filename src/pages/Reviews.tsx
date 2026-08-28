@@ -6,7 +6,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
-import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial, fetchPinnedReviews, setReviewPin } from "@/lib/reviewMaterials";
+import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial, fetchPinnedReviews, setReviewPin, fetchReviewWarna } from "@/lib/reviewMaterials";
 import { useAuth } from "@/hooks/useAuth";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import {
@@ -42,8 +42,10 @@ export default function Reviews() {
   const [deleting, setDeleting] = useState<Review | null>(null);
   const [saving, setSaving] = useState(false);
   const [materials, setMaterials] = useState<Record<string, string>>({});
+  const [warnaMap, setWarnaMap] = useState<Record<string, string>>({});
   const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [editMaterial, setEditMaterial] = useState<string>("");
+  const [editWarna, setEditWarna] = useState<string>("");
   const [pins, setPins] = useState<Record<string, number>>({});
 
   const load = async () => {
@@ -57,6 +59,7 @@ export default function Reviews() {
       if (error) throw error;
       setReviews((data || []) as Review[]);
       setMaterials(await fetchReviewMaterials());
+      setWarnaMap(await fetchReviewWarna());
       setPins(await fetchPinnedReviews());
     } catch (e: any) {
       toast({ title: "Ralat", description: e.message, variant: "destructive" });
@@ -151,7 +154,7 @@ export default function Reviews() {
       if (error) throw error;
 
       if (editMaterial) {
-        await saveReviewMaterial(editing.id, editMaterial, authClient ?? undefined);
+        await saveReviewMaterial(editing.id, editMaterial, authClient ?? undefined, editWarna || null);
       }
 
       toast({ title: "✅ Review dikemas kini" });
@@ -295,7 +298,7 @@ export default function Reviews() {
                       {pins[r.id] !== undefined ? <PinOff className="h-3 w-3" /> : <Pin className="h-3 w-3" />}
                       {pins[r.id] !== undefined ? "Unpin" : "Pin"}
                     </Button>
-                    <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setEditMaterial(materials[r.id] ?? ""); }} className="gap-1">
+                    <Button variant="outline" size="sm" onClick={() => { setEditing({ ...r }); setEditMaterial(materials[r.id] ?? ""); setEditWarna(warnaMap[r.id] ?? ""); }} className="gap-1">
                       <Pencil className="h-3 w-3" /> Edit
                     </Button>
                     <Button variant="outline" size="sm" onClick={() => setDeleting(r)} className="gap-1 text-destructive">
@@ -367,6 +370,15 @@ export default function Reviews() {
                     ))}
                   </SelectContent>
                 </Select>
+              </div>
+              <div>
+                <label className="text-sm font-medium">Warna Design</label>
+                <Input
+                  value={editWarna}
+                  onChange={(e) => setEditWarna(e.target.value)}
+                  placeholder="Contoh: Hitam, Merah, Biru, Kelabu"
+                  className="text-sm"
+                />
               </div>
               <div>
                 <label className="text-sm font-medium">Ulasan</label>

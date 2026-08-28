@@ -55,15 +55,18 @@ export async function fetchReviewWarna(): Promise<Record<string, string>> {
   return map;
 }
 
-/** Simpan / kemas kini material untuk satu review */
+/** Simpan / kemas kini material + warna untuk satu review */
 export async function saveReviewMaterial(
   reviewId: string,
   material: string,
-  client: SupabaseClient<any> = supabase as unknown as SupabaseClient<any>
+  client: SupabaseClient<any> = supabase as unknown as SupabaseClient<any>,
+  warna?: string | null
 ) {
+  const payload: any = { review_id: reviewId, material };
+  if (warna !== undefined) payload.warna = warna || null;
   const { error } = await client
     .from("review_materials")
-    .upsert({ review_id: reviewId, material }, { onConflict: "review_id" });
+    .upsert(payload, { onConflict: "review_id" });
   if (error) throw error;
 }
 
