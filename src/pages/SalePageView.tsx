@@ -69,6 +69,7 @@ export default function SalePageView() {
   const [catOpen, setCatOpen] = useState(false);
   const [addonProducts, setAddonProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
+  const [allReviews, setAllReviews] = useState<any[]>([]);
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
@@ -178,6 +179,8 @@ export default function SalePageView() {
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             ).slice(0, 10) as Review[];
             setReviews(earliest);
+            const enriched = allRev.map((r: any) => ({ ...r, material: matMap[r.id] || "Lain-lain" }));
+            setAllReviews(enriched);
           } catch (e) {
             console.error("reviews fetch error", e);
           }
@@ -589,6 +592,9 @@ export default function SalePageView() {
                   description={product?.description || null}
                   reviews={reviews.slice(0, 6)}
                   image_url={product?.image_url || null}
+                  images={product?.images || null}
+                  allReviews={allReviews}
+                  productMaterial={product?.category || null}
                 />
 
                 {/* Trust badges */}
