@@ -365,14 +365,14 @@ export default function SalePagesFeed() {
   const hasPrev = index > 0;
 
   return (
-    <div className="fixed inset-0 bg-black flex justify-center select-none" style={{ height: "100dvh" }}>
+    <div className="fixed inset-0 bg-black flex justify-center select-none md:items-center md:bg-zinc-950" style={{ height: "100dvh" }}>
       <div
-        className="relative w-full max-w-[420px] h-full overflow-hidden touch-pan-y"
+        className="relative w-full max-w-[420px] h-full overflow-hidden touch-pan-y md:flex md:max-w-[1000px] md:w-full md:h-auto md:items-center md:justify-center md:gap-6 md:overflow-visible"
         onTouchStart={onTouchStart}
         onTouchEnd={onTouchEnd}
       >
         {/* ── Video ── */}
-        <div className="absolute inset-0 bg-black">
+        <div className="absolute inset-0 bg-black md:relative md:inset-auto md:w-[400px] md:h-[82vh] md:max-h-[820px] md:rounded-2xl md:overflow-hidden md:shadow-2xl md:ring-1 md:ring-white/10">
           {src ? (
             <video
               ref={videoRef}
@@ -418,7 +418,7 @@ export default function SalePagesFeed() {
               </div>
             </button>
           )}
-          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none" />
+          <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none md:hidden" />
         </div>
 
         {/* ── Header ── */}
@@ -438,7 +438,7 @@ export default function SalePagesFeed() {
         </div>
 
         {/* ── Bottom: info produk + Buy Now TERUS ── */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5">
+        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 md:relative md:inset-auto md:px-0 md:pb-0 md:w-[380px] md:shrink-0">
           {/* Badge */}
           {active.badge_text && (
             <div style={badgeStyle} className={`inline-flex ${!hexColor ? theme.badge : ""} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
@@ -556,7 +556,7 @@ export default function SalePagesFeed() {
             </div>
           ) : product && (
             /* MODE SINGLE: satu produk utama */
-            <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2">
+            <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2 md:mt-0 md:bg-zinc-900/90 md:backdrop-blur-xl md:p-5 md:rounded-2xl md:border-white/10 md:shadow-2xl">
               <div className="flex items-start gap-3">
                 {product.image_url ? (
                   <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-contain border border-white/10 shrink-0 bg-white/5" />

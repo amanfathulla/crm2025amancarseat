@@ -43,7 +43,7 @@ function parseSeatCount(name: string): number {
 }
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-8 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="h-8 sm:h-14 w-auto shrink-0 object-contain" />;
 }
 
 interface ProductVariation { id: string; name: string; price: number; }
