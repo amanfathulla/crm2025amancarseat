@@ -43,7 +43,6 @@ export const CAR_BRANDS = [
   { key: "volkswagen", label: "Volkswagen", regex: /volkswagen|\bvw\b|polo|golf|jetta|passat|tiguan|touareg|vento|beetle/i },
 ];
 
-
 export const BRANDS = [
   { key: "all", label: "Semua", match: () => true },
   ...CAR_BRANDS.map((b) => ({ key: b.key, label: b.label, match: (m: string) => b.regex.test(m || "") })),
