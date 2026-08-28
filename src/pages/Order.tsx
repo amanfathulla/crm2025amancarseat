@@ -798,12 +798,18 @@ export default function OrderPage() {
                   const isSelected = selectedProduct?.id === product.id;
                   const isExpanded = isSelected;
                   return (
-                    <div key={product.id} className={`rounded-xl border transition-all duration-200 ${isSelected ? "border-blue-500/50 bg-blue-500/5" : "border-white/8 bg-white/4 hover:border-white/15"}`}>
+                    <div key={product.id} id={`product-${product.id}`} className={`rounded-xl border transition-all duration-200 ${isSelected ? "border-blue-500/50 bg-blue-500/5" : "border-white/8 bg-white/4 hover:border-white/15"}`}>
                       {/* Header: klik untuk expand/collapse */}
                       <button
                         onClick={() => {
                           if (isSelected) { setSelectedProduct(null); setSelectedVariation(null); }
-                          else { setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0); }
+                          else {
+                            setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0);
+                            // Auto-scroll ke atas produk bila expand
+                            setTimeout(() => {
+                              document.getElementById(`product-${product.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
+                            }, 100);
+                          }
                         }}
                         className={`w-full flex items-center justify-between p-3.5 text-left transition-colors ${isSelected ? "text-white" : "text-white/65 hover:text-white"}`}
                       >
