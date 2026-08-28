@@ -810,10 +810,11 @@ export default function OrderPage() {
                             setTimeout(() => {
                               const el = document.getElementById(`product-${product.id}`);
                               if (el) {
-                                const y = el.getBoundingClientRect().top + window.scrollY - 60;
-                                window.scrollTo({ top: y, behavior: "smooth" });
+                                el.scrollIntoView({ behavior: "smooth", block: "start" });
+                                // Adjust tambahan supaya nama produk nampak
+                                window.scrollBy({ top: -40, behavior: "smooth" });
                               }
-                            }, 200);
+                            }, 250);
                           }
                         }}
                         className={`w-full flex items-center justify-between p-3.5 text-left transition-colors ${isSelected ? "text-white" : "text-white/65 hover:text-white"}`}
