@@ -163,6 +163,12 @@ export default function SalePagesFeed() {
             (prods || []).forEach((p: any) => { pMap[p.id] = p; });
             // Append produk category (key by id jugak)
             categoryProds.forEach(p => { if (!pMap[p.id]) pMap[p.id] = p; });
+            // Fetch SEMUA produk untuk lookup nama produk (warna design testimonio)
+            const { data: allProds } = await supabase
+              .from("public_products")
+              .select("id, name, category")
+              .eq("status", "active");
+            (allProds || []).forEach((p: any) => { if (!pMap[p.id]) pMap[p.id] = p as any; });
             setProductMap(pMap);
 
             // 3. Fetch variations untuk semua produk (utama + category)

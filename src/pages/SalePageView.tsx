@@ -162,6 +162,13 @@ export default function SalePageView() {
             const matMap = await fetchReviewMaterials();
             const pinMap = await fetchPinnedReviews();
             const warnaMap = await fetchReviewWarna();
+            // Fetch semua produk untuk lookup nama (warna design)
+            const { data: allProds } = await supabase
+              .from("public_products")
+              .select("id, name, category")
+              .eq("status", "active");
+            const prodNameMap: Record<string, string> = {};
+            (allProds || []).forEach((p: any) => { prodNameMap[p.id] = p.name; });
             const allRev: any[] = [];
             let fromR = 0;
             while (true) {
@@ -186,7 +193,7 @@ export default function SalePageView() {
               material: matMap[r.id] || "Lain-lain",
               pinned: !!pinMap[r.id],
               pin_order: pinMap[r.id] ?? 999,
-              warna: warnaMap[r.id] || null,
+              warna: warnaMap[r.id] ? (prodNameMap[warnaMap[r.id]] || warnaMap[r.id]) : null,
             }));
             setAllReviews(enriched);
           } catch (e) {
