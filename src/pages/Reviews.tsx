@@ -5,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
 import { useToast } from "@/hooks/use-toast";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
+import { supabase } from "@/integrations/supabase/client";
 import { ReviewSubmitDialog } from "@/components/sales/ReviewSubmitDialog";
 import { REVIEW_MATERIALS, fetchReviewMaterials, saveReviewMaterial, fetchPinnedReviews, setReviewPin, fetchReviewWarna } from "@/lib/reviewMaterials";
 import { useAuth } from "@/hooks/useAuth";
@@ -46,6 +47,7 @@ export default function Reviews() {
   const [materialFilter, setMaterialFilter] = useState<string>("all");
   const [editMaterial, setEditMaterial] = useState<string>("");
   const [editWarna, setEditWarna] = useState<string>("");
+  const [products, setProducts] = useState<{ id: string; name: string; category: string }[]>([]);
   const [pins, setPins] = useState<Record<string, number>>({});
 
   const load = async () => {
@@ -61,6 +63,13 @@ export default function Reviews() {
       setMaterials(await fetchReviewMaterials());
       setWarnaMap(await fetchReviewWarna());
       setPins(await fetchPinnedReviews());
+      // Fetch produk untuk field Warna Design (pilih produk ikut material)
+      const { data: prods } = await supabase
+        .from("public_products")
+        .select("id, name, category")
+        .eq("status", "active")
+        .order("name");
+      setProducts((prods || []) as any[]);
     } catch (e: any) {
       toast({ title: "Ralat", description: e.message, variant: "destructive" });
     } finally {
@@ -373,12 +382,22 @@ export default function Reviews() {
               </div>
               <div>
                 <label className="text-sm font-medium">Warna Design</label>
-                <Input
+                <Select
                   value={editWarna}
-                  onChange={(e) => setEditWarna(e.target.value)}
-                  placeholder="Contoh: Hitam, Merah, Biru, Kelabu"
-                  className="text-sm"
-                />
+                  onValueChange={setEditWarna}
+                  disabled={!editMaterial}
+                >
+                  <SelectTrigger>
+                    <SelectValue placeholder={editMaterial ? "Pilih produk (warna)" : "Pilih material dulu"} />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {products
+                      .filter(p => p.category === editMaterial)
+                      .map(p => (
+                        <SelectItem key={p.id} value={p.id}>{p.name}</SelectItem>
+                      ))}
+                  </SelectContent>
+                </Select>
               </div>
               <div>
                 <label className="text-sm font-medium">Ulasan</label>

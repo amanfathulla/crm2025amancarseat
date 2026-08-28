@@ -236,7 +236,7 @@ export default function SalePagesFeed() {
               material: matMap[r.id] || "Lain-lain",
               pinned: !!pinMap[r.id],
               pin_order: pinMap[r.id] ?? 999,
-              warna: warnaMap[r.id] || null,
+              warna: warnaMap[r.id] ? (productMap[warnaMap[r.id]]?.name || warnaMap[r.id]) : null,
             }));
             setAllReviews(enriched);
           }
