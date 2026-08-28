@@ -442,7 +442,12 @@ export default function SalePagesFeed() {
         </div>
 
         {/* ── Bottom: info produk + Buy Now TERUS ── */}
-        <div className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 md:relative md:inset-auto md:px-0 md:pb-0 md:w-[380px] md:shrink-0">
+        <div
+          className="absolute bottom-0 left-0 right-0 z-20 px-4 pb-5 md:relative md:inset-auto md:px-0 md:pb-0 md:w-[380px] md:shrink-0 overscroll-contain"
+          style={{ overscrollBehavior: 'contain', touchAction: 'pan-y' }}
+          onWheel={e => e.stopPropagation()}
+          onTouchMove={e => e.stopPropagation()}
+        >
           {/* Badge */}
           {active.badge_text && (
             <div style={badgeStyle} className={`inline-flex ${!hexColor ? theme.badge : ""} text-black text-[11px] font-bold px-2.5 py-1 rounded-full items-center gap-1 mb-2`}>
