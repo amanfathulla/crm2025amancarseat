@@ -12,7 +12,7 @@ import seat7 from "@/assets/seat-png/7-seater.png";
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-11 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="w-full h-14 object-contain" />;
 }
 
 function parseSeatCount(name: string): number {
@@ -593,7 +593,7 @@ export default function SalePagesFeed() {
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative flex-1 flex flex-col items-center justify-center gap-1 rounded-full border px-1.5 py-2 transition-colors whitespace-nowrap ${
+                          className={`relative flex-1 flex flex-col items-center justify-end gap-1 rounded-xl border px-1 py-1.5 transition-colors ${
                             sel
                               ? "border-red-600 bg-red-600/15 text-red-600"
                               : "border-white/15 bg-white/5 text-white/80 hover:border-white/30"
