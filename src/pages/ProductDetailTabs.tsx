@@ -87,6 +87,7 @@ export function ProductDetailTabs({
   images,
   allReviews,
   productMaterial,
+  defaultMaterial,
 }: {
   description?: string | null;
   reviews: DetailReview[];
@@ -94,8 +95,11 @@ export function ProductDetailTabs({
   images?: string[] | null;
   allReviews?: any[];
   productMaterial?: string | null;
+  defaultMaterial?: string | null;
 }) {
-  const [matFilter, setMatFilter] = useState<string>("Semua");
+  const [matFilter, setMatFilter] = useState<string>(
+    defaultMaterial && defaultMaterial !== "Semua" ? defaultMaterial : "Semua"
+  );
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
   const filtered = matFilter === "Semua"
     ? list

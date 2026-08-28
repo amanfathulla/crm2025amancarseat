@@ -65,6 +65,7 @@ interface FormState {
   cta_label: string;
   badge_text: string;
   theme: string;
+  testimonial_material: string; // null/"Semua" | "Kain Mesh" | "Kain Nylon" | "Kain Fullsilk" | "Semi Leather Kalis Air"
 }
 
 const EMPTY_FORM: FormState = {
@@ -82,6 +83,7 @@ const EMPTY_FORM: FormState = {
   cta_label: "Buy Now",
   badge_text: "",
   theme: "amber",
+  testimonial_material: "Semua",
 };
 
 const THEME_OPTIONS = [
@@ -221,6 +223,7 @@ export default function SalePagesAdmin() {
       cta_label: p.cta_label || "Buy Now",
       badge_text: p.badge_text || "",
       theme: (p as any).theme || "amber",
+      testimonial_material: (p as any).testimonial_material || "Semua",
     });
     setDialogOpen(true);
   };
@@ -250,6 +253,7 @@ export default function SalePagesAdmin() {
         cta_label: form.cta_label.trim() || "Buy Now",
         badge_text: form.badge_text.trim() || null,
         theme: form.theme || "amber",
+        testimonial_material: form.testimonial_material || null,
       };
       let pageId = editing?.id;
       if (editing) {
@@ -717,14 +721,31 @@ export default function SalePagesAdmin() {
                   ))}
                 </div>
               </div>
-              {/* ── Testimoni preview (ikut material produk) ── */}
+              {/* ── Testimoni: pilih material (default untuk feed) ── */}
               <div>
-                <Label className="flex items-center gap-1.5">
-                  <MessageCircle className="h-3.5 w-3.5" /> Testimoni (auto ikut material)
+                <Label className="flex items-center gap-1.5 mb-1.5">
+                  <MessageCircle className="h-3.5 w-3.5" /> Testimoni (pilih material)
                 </Label>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Akan papar 6 testimoni pelanggan ikut material produk yang dipilih. Tak perlu set manual — boleh lihat terus di page sebenar.
+                  Pilih bahan untuk tapis testimoni di feed. "Semua" papar kesemua. Boleh tukar terus di page sebenar.
                 </p>
+                <div className="flex flex-wrap gap-1.5">
+                  {["Semua", "Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"].map(m => (
+                    <button
+                      key={m}
+                      type="button"
+                      onClick={() => setField("testimonial_material", m)}
+                      className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                        form.testimonial_material === m
+                          ? "border-red-600 bg-red-600/15 text-red-600"
+                          : "border-white/15 bg-white/5 text-white/70"
+                      }`}
+                    >
+                      {m}
+                    </button>
+                  ))}
+                </div>
+              </div>
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>

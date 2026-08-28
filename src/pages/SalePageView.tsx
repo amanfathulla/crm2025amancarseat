@@ -595,6 +595,7 @@ export default function SalePageView() {
                   images={product?.images || null}
                   allReviews={allReviews}
                   productMaterial={product?.category || null}
+                  defaultMaterial={(page as any)?.testimonial_material || "Semua"}
                 />
 
                 {/* Trust badges */}

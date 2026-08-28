@@ -704,6 +704,7 @@ export default function SalePagesFeed() {
                 images={product?.images || (isCategoryMode ? (categoryProducts[0]?.images ?? null) : null)}
                 allReviews={allReviews}
                 productMaterial={product?.category || (isCategoryMode ? active.product_category : null)}
+                defaultMaterial={(active as any).testimonial_material || "Semua"}
               />
             </div>
           )}
