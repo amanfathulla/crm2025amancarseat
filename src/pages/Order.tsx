@@ -43,7 +43,7 @@ function parseSeatCount(name: string): number {
 }
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-12 sm:h-14 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="h-16 sm:h-12 w-auto shrink-0 object-contain" />;
 }
 
 interface ProductVariation { id: string; name: string; price: number; }
@@ -875,11 +875,9 @@ export default function OrderPage() {
                                   const sel = selectedVariation?.id === v.id;
                                   return (
                                     <button key={v.id} onClick={() => setSelectedVariation(v)}
-                                      className={`flex items-center justify-between p-3 rounded-lg border text-sm font-medium transition-all ${sel ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10"}`}>
-                                      <span className="flex items-center gap-2">
-                                        <SeatIcon count={parseSeatCount(v.name)} />
-                                        <span>{v.name}</span>
-                                      </span>
+                                      className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border text-sm font-medium transition-all sm:flex-row sm:justify-between sm:items-center ${sel ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10"}`}>
+                                      <SeatIcon count={parseSeatCount(v.name)} />
+                                      <span>{v.name}</span>
                                       <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
                                     </button>
                                   );
