@@ -103,6 +103,7 @@ export default function SalePagesFeed() {
   const [reviewMap, setReviewMap] = useState<Record<string, Review[]>>({}); // productId → 10 reviews terawal
   const [reviewCountMap, setReviewCountMap] = useState<Record<string, number>>({}); // productId → total count mengikut material
   const [reviewsMap, setReviewsMap] = useState<Record<string, any[]>>({}); // productId → 6 reviews terawal ikut material
+  const [allReviews, setAllReviews] = useState<any[]>([]); // SEMUA reviews (dengan material) untuk filter testimoni
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
   const [muted, setMuted] = useState(true);
@@ -227,6 +228,9 @@ export default function SalePagesFeed() {
             const sixMap: Record<string, any[]> = {};
             Object.entries(rMap).forEach(([k, arr]) => { sixMap[k] = (arr as any[]).slice(0, 6); });
             setReviewsMap(sixMap);
+            // SEMUA reviews enriched dengan material untuk filter testimoni
+            const enriched = allReviewsAll.map((r: any) => ({ ...r, material: matMap[r.id] || "Lain-lain" }));
+            setAllReviews(enriched);
           }
         }
 
@@ -697,6 +701,8 @@ export default function SalePagesFeed() {
                 description={product?.description || (isCategoryMode ? (categoryProducts[0]?.description ?? null) : null)}
                 reviews={isCategoryMode ? (reviewsMap[`cat_${active.id}`] || []) : (product ? (reviewsMap[product.id] || []) : [])}
                 image_url={product?.image_url || (isCategoryMode ? (categoryProducts[0]?.image_url ?? null) : null)}
+                allReviews={allReviews}
+                productMaterial={product?.category || (isCategoryMode ? active.product_category : null)}
               />
             </div>
           )}

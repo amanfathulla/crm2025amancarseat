@@ -10,7 +10,10 @@ export interface DetailReview {
   images?: string[] | null;
   avatar_url?: string | null;
   created_at?: string;
+  material?: string | null;
 }
+
+const MATERIALS = ["Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"];
 
 function AccordionSection({
   title,
@@ -48,11 +51,21 @@ export function ProductDetailTabs({
   description,
   reviews,
   image_url,
+  allReviews,
+  productMaterial,
 }: {
   description?: string | null;
   reviews: DetailReview[];
   image_url?: string | null;
+  allReviews?: any[];
+  productMaterial?: string | null;
 }) {
+  const [matFilter, setMatFilter] = useState<string>("Semua");
+  const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
+  const filtered = matFilter === "Semua"
+    ? list
+    : list.filter(r => (r.material || "") === matFilter);
+
   return (
     <div className="bg-zinc-950 border-t border-white/10">
       <AccordionSection title="Penerangan Produk">
@@ -64,12 +77,39 @@ export function ProductDetailTabs({
         </div>
       </AccordionSection>
 
-      <AccordionSection title="Testimoni" count={reviews.length}>
-        {reviews.length === 0 ? (
-          <p className="text-white/40 text-[12px]">Tiada testimoni lagi.</p>
+      <AccordionSection title="Testimoni" count={filtered.length}>
+        {/* Selector material */}
+        <div className="flex flex-wrap gap-1.5 mb-2.5">
+          <button
+            onClick={() => setMatFilter("Semua")}
+            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+              matFilter === "Semua"
+                ? "border-red-600 bg-red-600/15 text-red-600"
+                : "border-white/15 bg-white/5 text-white/70"
+            }`}
+          >
+            Semua
+          </button>
+          {MATERIALS.map(m => (
+            <button
+              key={m}
+              onClick={() => setMatFilter(m)}
+              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                matFilter === m
+                  ? "border-red-600 bg-red-600/15 text-red-600"
+                  : "border-white/15 bg-white/5 text-white/70"
+              }`}
+            >
+              {m}
+            </button>
+          ))}
+        </div>
+
+        {filtered.length === 0 ? (
+          <p className="text-white/40 text-[12px]">Tiada testimoni untuk bahan ini.</p>
         ) : (
           <div className="space-y-2 max-h-[260px] overflow-y-auto overscroll-contain">
-            {reviews.map(r => (
+            {filtered.map(r => (
               <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
                 <div className="flex items-center gap-1.5 mb-1">
                   {r.avatar_url ? (
@@ -80,6 +120,9 @@ export function ProductDetailTabs({
                     </div>
                   )}
                   <span className="text-white text-[11px] font-semibold">{r.name}</span>
+                  {r.material && (
+                    <span className="text-[9px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded-full ml-1">{r.material}</span>
+                  )}
                   <div className="flex gap-0.5 ml-auto">
                     {Array.from({ length: r.rating || 5 }).map((_, i) => (
                       <Star key={i} className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />
