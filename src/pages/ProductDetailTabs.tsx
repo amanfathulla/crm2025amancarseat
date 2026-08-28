@@ -1,4 +1,4 @@
-import React, { useState, useRef } from "react";
+import React, { useState } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface DetailReview {
@@ -54,6 +54,7 @@ export function ProductDetailTabs({
   allReviews,
   productMaterial,
   defaultMaterial,
+  defaultProduk,
 }: {
   description?: string | null;
   reviews: DetailReview[];
