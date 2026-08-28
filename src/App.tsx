@@ -66,6 +66,38 @@ function ScrollToTop() {
   return null;
 }
 
+// ── ANTI-COPY / PRIVACY LOCK ──
+function PrivacyLock() {
+  const { pathname } = useLocation();
+  useEffect(() => {
+    // Hanya apply pada public pages (feed, order, testimoni) — BUKAN admin
+    const isPublic = !CRM_PREFIXES.some((p) => pathname.startsWith(p));
+    if (!isPublic) return;
+
+    // Block right-click context menu
+    const blockContext = (e: MouseEvent) => { e.preventDefault(); };
+    // Block dev tools shortcuts (Ctrl+Shift+I/J/C, F12, Ctrl+U)
+    const blockKeys = (e: KeyboardEvent) => {
+      if (e.key === "F12") { e.preventDefault(); return false; }
+      if ((e.ctrlKey || e.metaKey) && e.shiftKey && ["I", "i", "J", "j", "C", "c"].includes(e.key)) { e.preventDefault(); return false; }
+      if ((e.ctrlKey || e.metaKey) && (e.key === "u" || e.key === "U")) { e.preventDefault(); return false; }
+    };
+    // Block drag start pada gambar
+    const blockDrag = (e: DragEvent) => { e.preventDefault(); };
+
+    document.addEventListener("contextmenu", blockContext);
+    document.addEventListener("keydown", blockKeys);
+    document.addEventListener("dragstart", blockDrag);
+
+    return () => {
+      document.removeEventListener("contextmenu", blockContext);
+      document.removeEventListener("keydown", blockKeys);
+      document.removeEventListener("dragstart", blockDrag);
+    };
+  }, [pathname]);
+  return null;
+}
+
 function App() {
   const queryClient = new QueryClient();
 
@@ -75,6 +107,7 @@ function App() {
         <QueryClientProvider client={queryClient}>
           <Router>
             <ScrollToTop />
+            <PrivacyLock />
             <PixelTracker />
             <div className="flex min-h-screen w-full">
               <Routes>
