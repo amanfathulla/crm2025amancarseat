@@ -97,8 +97,10 @@ export function ProductDetailTabs({
   productMaterial?: string | null;
   defaultMaterial?: string | null;
 }) {
+  // Kalau admin set material khusus (bukan "Semua"), feed TERUS filter — tak tunjuk picker "Semua"
+  const isLocked = !!(defaultMaterial && defaultMaterial !== "Semua");
   const [matFilter, setMatFilter] = useState<string>(
-    defaultMaterial && defaultMaterial !== "Semua" ? defaultMaterial : "Semua"
+    isLocked ? (defaultMaterial as string) : "Semua"
   );
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
   const filtered = matFilter === "Semua"
@@ -118,32 +120,42 @@ export function ProductDetailTabs({
       </AccordionSection>
 
       <AccordionSection title="Testimoni" count={filtered.length}>
-        {/* Selector material */}
-        <div className="flex flex-wrap gap-1.5 mb-2.5">
-          <button
-            onClick={() => setMatFilter("Semua")}
-            className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-              matFilter === "Semua"
-                ? "border-red-600 bg-red-600/15 text-red-600"
-                : "border-white/15 bg-white/5 text-white/70"
-            }`}
-          >
-            Semua
-          </button>
-          {MATERIALS.map(m => (
+        {/* Selector material — hanya tunjuk kalau admin set "Semua".
+            Kalau admin set material khusus, feed TERUS filter (locked, tak boleh tukar) */}
+        {!isLocked && (
+          <div className="flex flex-wrap gap-1.5 mb-2.5">
             <button
-              key={m}
-              onClick={() => setMatFilter(m)}
+              onClick={() => setMatFilter("Semua")}
               className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-                matFilter === m
+                matFilter === "Semua"
                   ? "border-red-600 bg-red-600/15 text-red-600"
                   : "border-white/15 bg-white/5 text-white/70"
               }`}
             >
-              {m}
+              Semua
             </button>
-          ))}
-        </div>
+            {MATERIALS.map(m => (
+              <button
+                key={m}
+                onClick={() => setMatFilter(m)}
+                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                  matFilter === m
+                    ? "border-red-600 bg-red-600/15 text-red-600"
+                    : "border-white/15 bg-white/5 text-white/70"
+                }`}
+              >
+                {m}
+              </button>
+            ))}
+          </div>
+        )}
+        {isLocked && (
+          <div className="mb-2.5 text-center">
+            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold border border-red-600/40 bg-red-600/10 text-red-500">
+              {matFilter}
+            </span>
+          </div>
+        )}
 
         {filtered.length === 0 ? (
           <p className="text-white/40 text-[12px]">Tiada testimoni untuk bahan ini.</p>

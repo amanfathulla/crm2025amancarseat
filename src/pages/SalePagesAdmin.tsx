@@ -735,10 +735,10 @@ export default function SalePagesAdmin() {
                       key={m}
                       type="button"
                       onClick={() => setField("testimonial_material", m)}
-                      className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                      className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border-2 transition-all ${
                         form.testimonial_material === m
-                          ? "border-red-600 bg-red-600/15 text-red-600"
-                          : "border-white/15 bg-white/5 text-white/70"
+                          ? "border-red-600 bg-red-600 text-white"
+                          : "border-zinc-300 bg-white text-zinc-700 hover:border-red-400 hover:bg-red-50"
                       }`}
                     >
                       {m}
