@@ -12,7 +12,7 @@ import seat7 from "@/assets/seat-png/7-seater.png";
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-7 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="h-11 w-auto shrink-0 object-contain" />;
 }
 
 function parseSeatCount(name: string): number {
