@@ -808,8 +808,12 @@ export default function OrderPage() {
                             setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0);
                             // Auto-scroll ke atas produk bila expand
                             setTimeout(() => {
-                              document.getElementById(`product-${product.id}`)?.scrollIntoView({ behavior: "smooth", block: "start" });
-                            }, 100);
+                              const el = document.getElementById(`product-${product.id}`);
+                              if (el) {
+                                const y = el.getBoundingClientRect().top + window.scrollY - 60;
+                                window.scrollTo({ top: y, behavior: "smooth" });
+                              }
+                            }, 200);
                           }
                         }}
                         className={`w-full flex items-center justify-between p-3.5 text-left transition-colors ${isSelected ? "text-white" : "text-white/65 hover:text-white"}`}
