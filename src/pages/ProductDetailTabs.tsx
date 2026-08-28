@@ -63,7 +63,7 @@ export function ProductDetailTabs({
   productMaterial?: string | null;
   defaultMaterial?: string | null;
 }) {
-  const [tab, setTab] = useState<"desc" | "gambar" | "testimoni">("desc");
+  const [tab, setTab] = useState<"desc" | "gambar" | "testimoni" | null>(null);
   const isLocked = !!(defaultMaterial && defaultMaterial !== "Semua");
   const [matFilter, setMatFilter] = useState<string>(
     isLocked ? (defaultMaterial as string) : "Semua"
@@ -90,7 +90,7 @@ export function ProductDetailTabs({
         ].map(t => (
           <button
             key={t.key}
-            onClick={() => setTab(t.key)}
+            onClick={() => setTab(prev => prev === t.key ? null : t.key)}
             className={`flex-1 py-2 text-[11px] font-semibold border-b-2 transition-colors whitespace-nowrap ${
               tab === t.key
                 ? "border-red-600 text-white"
@@ -103,9 +103,10 @@ export function ProductDetailTabs({
       </div>
 
       {/* ── Tab content (satu je, max-h, scroll dalam) ── */}
-      <div className="max-h-[40dvh] overflow-y-auto overscroll-contain px-1 py-2"
-        style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
-      >
+      {tab && (
+        <div className="max-h-[40dvh] overflow-y-auto overscroll-contain px-1 py-2"
+          style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
+        >
         {tab === "desc" && (
           <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
             {description || "Tiada penerangan untuk produk ini."}
@@ -198,6 +199,7 @@ export function ProductDetailTabs({
           </>
         )}
       </div>
+      )}
     </div>
   );
 }
