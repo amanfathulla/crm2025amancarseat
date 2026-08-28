@@ -97,6 +97,7 @@ export default function OrderPage() {
   const [referralCode, setReferralCode] = useState<string | null>(null);
   const [showQr, setShowQr] = useState(false);
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
+  const [formStep, setFormStep] = useState<1 | 2 | 3>(1);
   const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
   const [selectedGateway, setSelectedGateway] = useState<string>("billplz");
 
@@ -306,17 +307,17 @@ export default function OrderPage() {
             const matchedVar = vars?.find((v: any) => v.id === variationId);
             if (matchedVar) {
               setSelectedVariation(matchedVar);
-              setStep("form");
+              setStep("form"); setFormStep(1);
             } else if (vars && vars.length === 1) {
               // Only one variation — auto-select it and jump to form
               setSelectedVariation(vars[0]);
-              setStep("form");
+              setStep("form"); setFormStep(1);
             } else if (vars && vars.length > 1) {
               // Multiple variations and none specified — user must pick
               setStep("product");
             } else {
               // No variations — go straight to form
-              setStep("form");
+              setStep("form"); setFormStep(1);
             }
           }
         } catch (e) {
@@ -442,7 +443,7 @@ export default function OrderPage() {
     if (selectedProduct.variations.length > 0 && !selectedVariation) { toast({ title: "Sila pilih saiz / variasi", variant: "destructive" }); return; }
     if (document.activeElement instanceof HTMLElement) document.activeElement.blur();
     resetOrderScroll();
-    setStep("form");
+    setStep("form"); setFormStep(1);
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -504,7 +505,7 @@ export default function OrderPage() {
       window.location.href = data.bill_url;
     } catch (err: any) {
       toast({ title: "Ralat", description: err.message, variant: "destructive" });
-      setStep("form");
+      setStep("form"); setFormStep(1);
     }
   };
 
@@ -659,7 +660,7 @@ export default function OrderPage() {
 
     } catch (err: any) {
       toast({ title: "Ralat", description: err?.message || "Gagal simpan tempahan. Sila cuba lagi.", variant: "destructive" });
-      setStep("form");
+      setStep("form"); setFormStep(1);
     }
   };
 
@@ -964,7 +965,30 @@ export default function OrderPage() {
               </div>
             </div>
 
+            {/* ── Progress Bar ── */}
+            <div className="flex items-center gap-2 mb-6">
+              {[
+                { n: 1, label: "Pembeli & Alamat" },
+                { n: 2, label: "Maklumat Tambahan" },
+                { n: 3, label: "Bayaran" },
+              ].map((s, i) => (
+                <div key={s.n} className="flex items-center gap-2 flex-1">
+                  <div className={`flex items-center gap-2 ${formStep >= s.n ? "text-blue-600" : "text-gray-400"}`}>
+                    <div className={`h-7 w-7 rounded-full flex items-center justify-center text-xs font-bold shrink-0 ${
+                      formStep >= s.n ? "bg-blue-600 text-white" : "bg-gray-200 text-gray-500"
+                    }`}>
+                      {formStep > s.n ? "✓" : s.n}
+                    </div>
+                    <span className="text-[11px] font-semibold hidden sm:block">{s.label}</span>
+                  </div>
+                  {i < 2 && <div className={`flex-1 h-1 rounded-full ${formStep > s.n ? "bg-blue-600" : "bg-gray-200"}`} />}
+                </div>
+              ))}
+            </div>
+
             <form onSubmit={handleSubmit} className="space-y-5">
+              {/* ── STEP 1: Maklumat Pembeli + Alamat ── */}
+              {formStep === 1 && (<>
               {/* Buyer Info */}
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
@@ -1030,10 +1054,26 @@ export default function OrderPage() {
                       {STATES_MY.map(s => <SelectItem key={s} value={s} className="text-gray-900 focus:bg-gray-100">{s}</SelectItem>)}
                     </SelectContent>
                   </Select>
-                </div>
-              </section>
+                  </div>
+                  </section>
 
-              {/* Maklumat Tambahan — Optional Seat Reference Images & Notes */}
+                  {/* Button: Seterusnya */}
+                  <button
+                  type="button"
+                  onClick={() => {
+                    if (!form.name || !form.phone) { toast({ title: "Sila isi nama dan nombor telefon", variant: "destructive" }); return; }
+                    if (!form.state) { toast({ title: "Sila pilih negeri", variant: "destructive" }); return; }
+                    setFormStep(2);
+                  }}
+                  className="w-full h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg"
+                  >
+                  Seterusnya →
+                  </button>
+                  </>)}
+                  {/* ── END STEP 1 ── */}
+
+                  {/* ── STEP 2: Maklumat Tambahan ── */}
+                  {formStep === 2 && (<>
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-4">
                 <div className="flex items-center gap-2 mb-1">
                   <ImagePlus className="h-4 w-4 text-pink-600" />
@@ -1135,7 +1175,28 @@ export default function OrderPage() {
                 </div>
               </section>
 
-              {/* Jenis Bayaran */}
+              {/* Buttons: Kembali + Seterusnya */}
+              <div className="flex gap-3">
+                <button
+                  type="button"
+                  onClick={() => setFormStep(1)}
+                  className="flex-1 h-12 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm rounded-xl transition-all"
+                >
+                  ← Kembali
+                </button>
+                <button
+                  type="button"
+                  onClick={() => setFormStep(3)}
+                  className="flex-[2] h-12 bg-blue-600 hover:bg-blue-700 text-white font-bold text-sm rounded-xl transition-all shadow-lg"
+                >
+                  Seterusnya →
+                </button>
+              </div>
+              </>)}
+              {/* ── END STEP 2 ── */}
+
+              {/* ── STEP 3: Jenis Bayaran + Ringkasan + Kupon + Payment ── */}
+              {formStep === 3 && (<>
               <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg space-y-3">
                 <div className="flex items-center gap-2">
                   <CreditCardIcon className="h-4 w-4 text-emerald-600" />
@@ -1370,6 +1431,17 @@ export default function OrderPage() {
                   <p className="text-white/25 text-xs text-center">Transfer dulu, kemudian hantar bukti bayaran via WhatsApp</p>
                 </div>
               </div>
+
+              {/* Button: Kembali */}
+              <button
+                type="button"
+                onClick={() => setFormStep(2)}
+                className="w-full h-11 bg-gray-200 hover:bg-gray-300 text-gray-700 font-bold text-sm rounded-xl transition-all"
+              >
+                ← Kembali ke Maklumat Tambahan
+              </button>
+              </>)}
+              {/* ── END STEP 3 ── */}
             </form>
           </div>
         )}
