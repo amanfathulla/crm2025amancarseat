@@ -658,6 +658,11 @@ export default function SalePagesFeed() {
                 allReviews={allReviews}
                 productMaterial={product?.category || (isCategoryMode ? active.product_category : null)}
                 defaultMaterial={(active as any).testimonial_material || "Semua"}
+                defaultProduk={
+                  (active as any).testimonial_product && (active as any).testimonial_product !== "all"
+                    ? (productMap[(active as any).testimonial_product]?.name || null)
+                    : null
+                }
               />
             </div>
           )}

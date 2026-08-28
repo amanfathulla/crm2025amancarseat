@@ -62,30 +62,26 @@ export function ProductDetailTabs({
   allReviews?: any[];
   productMaterial?: string | null;
   defaultMaterial?: string | null;
+  defaultProduk?: string | null; // product_id — kalau diset, feed TERUS filter produk ni
 }) {
   const [tab, setTab] = useState<"desc" | "gambar" | "testimoni" | null>(null);
   const isLocked = !!(defaultMaterial && defaultMaterial !== "Semua");
+  const isProdukLocked = !!defaultProduk && defaultProduk !== "all";
   const [matFilter, setMatFilter] = useState<string>(
     isLocked ? (defaultMaterial as string) : "Semua"
   );
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
   // Pinned sahaja untuk tab Testimoni (tak lagging), total count kekal ikut material
   const pinnedList = list.filter(r => r.pinned === true).sort((a, b) => (a.pin_order ?? 999) - (b.pin_order ?? 999));
-  // Dapatkan senarai warna dari pinned reviews ikut material yang dipilih
-  const warnaOptions = matFilter === "Semua"
-    ? [...new Set(pinnedList.map(r => r.warna).filter(Boolean))]
-    : [...new Set(pinnedList.filter(r => (r.material || "") === matFilter).map(r => r.warna).filter(Boolean))];
-  const [warnaFilter, setWarnaFilter] = useState<string>("Semua");
-  // Reset warna filter bila material tukar
-  const prevMat = useRef(matFilter);
-  if (prevMat.current !== matFilter) { prevMat.current = matFilter; setWarnaFilter("Semua"); }
-  // Filter: pinned → material → warna
+  // Filter: pinned → material → produk (kalau locked)
   let filtered = matFilter === "Semua"
     ? pinnedList
     : pinnedList.filter(r => (r.material || "") === matFilter);
-  if (warnaFilter !== "Semua") {
-    filtered = filtered.filter(r => r.warna === warnaFilter);
+  // Kalau produk diset (admin pilih produk), TERUS filter produk tu
+  if (isProdukLocked) {
+    filtered = filtered.filter(r => r.warna === defaultProduk);
   }
+  // Buang warnaOptions + warnaFilter — tak perlu lagi sebab auto-filter
 
   return (
     <div
@@ -160,38 +156,10 @@ export function ProductDetailTabs({
                 ))}
               </div>
             )}
-            {/* Pilihan warna — tunjuk bila ada warna data */}
-            {warnaOptions.length > 0 && (
-              <div className="flex flex-wrap gap-1.5 mb-2">
-                <button
-                  onClick={() => setWarnaFilter("Semua")}
-                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-                    warnaFilter === "Semua"
-                      ? "border-blue-500 bg-blue-500/15 text-blue-400"
-                      : "border-white/15 bg-white/5 text-white/70"
-                  }`}
-                >
-                  Semua Warna
-                </button>
-                {warnaOptions.map(w => (
-                  <button
-                    key={w}
-                    onClick={() => setWarnaFilter(w)}
-                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-                      warnaFilter === w
-                        ? "border-blue-500 bg-blue-500/15 text-blue-400"
-                        : "border-white/15 bg-white/5 text-white/70"
-                    }`}
-                  >
-                    {w}
-                  </button>
-                ))}
-              </div>
-            )}
-            {isLocked && (
+            {(isLocked || isProdukLocked) && (
               <div className="mb-2 text-center">
                 <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold border border-red-600/40 bg-red-600/10 text-red-500">
-                  {matFilter}
+                  {isProdukLocked ? defaultProduk : matFilter}
                 </span>
               </div>
             )}

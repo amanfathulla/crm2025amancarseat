@@ -70,6 +70,7 @@ export default function SalePageView() {
   const [addonProducts, setAddonProducts] = useState<Product[]>([]);
   const [reviews, setReviews] = useState<Review[]>([]);
   const [allReviews, setAllReviews] = useState<any[]>([]);
+  const [prodNameMap, setProdNameMap] = useState<Record<string, string>>({});
   const [reviewCount, setReviewCount] = useState(0);
   const [loading, setLoading] = useState(true);
   const [muted, setMuted] = useState(true);
@@ -169,6 +170,7 @@ export default function SalePageView() {
               .eq("status", "active");
             const prodNameMap: Record<string, string> = {};
             (allProds || []).forEach((p: any) => { prodNameMap[p.id] = p.name; });
+            setProdNameMap(prodNameMap);
             const allRev: any[] = [];
             let fromR = 0;
             while (true) {
@@ -611,6 +613,11 @@ export default function SalePageView() {
                   allReviews={allReviews}
                   productMaterial={product?.category || null}
                   defaultMaterial={(page as any)?.testimonial_material || "Semua"}
+                  defaultProduk={
+                    (page as any)?.testimonial_product && (page as any).testimonial_product !== "all"
+                      ? (prodNameMap[(page as any).testimonial_product] || null)
+                      : null
+                  }
                 />
 
                 {/* Trust badges */}
