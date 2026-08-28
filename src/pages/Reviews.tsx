@@ -97,6 +97,11 @@ export default function Reviews() {
         (r.review || "").toLowerCase().includes(t)
       );
     }).sort((a, b) => {
+      // Belum complete (tak ada material ATAU tak ada produk) → naik ke atas
+      const aComplete = !!(materials[a.id] && warnaMap[a.id]);
+      const bComplete = !!(materials[b.id] && warnaMap[b.id]);
+      if (aComplete !== bComplete) return aComplete ? 1 : -1;
+      // Lepas tu, sort ikut pin
       const pa = pins[a.id];
       const pb = pins[b.id];
       if (pa !== undefined && pb !== undefined) return pa - pb;
@@ -314,6 +319,19 @@ export default function Reviews() {
                     {materials[r.id] && (
                       <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-primary/40 bg-primary/10 text-primary px-2 py-0.5">
                         {materials[r.id]}
+                      </span>
+                    )}
+                    {warnaMap[r.id] && (() => {
+                      const prod = products.find(p => p.id === warnaMap[r.id]);
+                      return prod ? (
+                        <span className="inline-block mt-1 ml-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-blue-500/40 bg-blue-500/10 text-blue-600 px-2 py-0.5">
+                          {prod.name}
+                        </span>
+                      ) : null;
+                    })()}
+                    {!materials[r.id] && !warnaMap[r.id] && (
+                      <span className="inline-block mt-1 text-[10px] font-semibold uppercase tracking-wide rounded-full border border-red-500/40 bg-red-500/10 text-red-600 px-2 py-0.5">
+                        ⚠ Belum lengkap
                       </span>
                     )}
                     {pins[r.id] !== undefined && (
