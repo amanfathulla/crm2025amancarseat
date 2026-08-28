@@ -22,7 +22,7 @@ export function matchMaterialLabel(input?: string | null): string | null {
   return null;
 }
 
-/** Ambil peta review_id -> material */
+/** Ambil peta review_id -> material (serta warna) */
 export async function fetchReviewMaterials(): Promise<Record<string, string>> {
   const { data, error } = await supabase
     .from("review_materials")
@@ -34,6 +34,24 @@ export async function fetchReviewMaterials(): Promise<Record<string, string>> {
   }
   const map: Record<string, string> = {};
   for (const row of data ?? []) map[row.review_id] = row.material;
+  return map;
+}
+
+/** Ambil peta review_id -> warna design */
+export async function fetchReviewWarna(): Promise<Record<string, string>> {
+  const { data, error } = await supabase
+    .from("review_materials")
+    .select("review_id, warna")
+    .not("warna", "is", null)
+    .limit(5000);
+  if (error) {
+    console.error("fetchReviewWarna", error.message);
+    return {};
+  }
+  const map: Record<string, string> = {};
+  for (const row of (data ?? []) as any[]) {
+    if (row.warna) map[row.review_id] = row.warna;
+  }
   return map;
 }
 

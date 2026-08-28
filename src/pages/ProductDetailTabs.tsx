@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useState, useRef } from "react";
 import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface DetailReview {
@@ -71,9 +71,21 @@ export function ProductDetailTabs({
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
   // Pinned sahaja untuk tab Testimoni (tak lagging), total count kekal ikut material
   const pinnedList = list.filter(r => r.pinned === true).sort((a, b) => (a.pin_order ?? 999) - (b.pin_order ?? 999));
-  const filtered = matFilter === "Semua"
+  // Dapatkan senarai warna dari pinned reviews ikut material yang dipilih
+  const warnaOptions = matFilter === "Semua"
+    ? [...new Set(pinnedList.map(r => r.warna).filter(Boolean))]
+    : [...new Set(pinnedList.filter(r => (r.material || "") === matFilter).map(r => r.warna).filter(Boolean))];
+  const [warnaFilter, setWarnaFilter] = useState<string>("Semua");
+  // Reset warna filter bila material tukar
+  const prevMat = useRef(matFilter);
+  if (prevMat.current !== matFilter) { prevMat.current = matFilter; setWarnaFilter("Semua"); }
+  // Filter: pinned → material → warna
+  let filtered = matFilter === "Semua"
     ? pinnedList
     : pinnedList.filter(r => (r.material || "") === matFilter);
+  if (warnaFilter !== "Semua") {
+    filtered = filtered.filter(r => r.warna === warnaFilter);
+  }
 
   return (
     <div
@@ -144,6 +156,34 @@ export function ProductDetailTabs({
                     }`}
                   >
                     {m}
+                  </button>
+                ))}
+              </div>
+            )}
+            {/* Pilihan warna — tunjuk bila ada warna data */}
+            {warnaOptions.length > 0 && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                <button
+                  onClick={() => setWarnaFilter("Semua")}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                    warnaFilter === "Semua"
+                      ? "border-blue-500 bg-blue-500/15 text-blue-400"
+                      : "border-white/15 bg-white/5 text-white/70"
+                  }`}
+                >
+                  Semua Warna
+                </button>
+                {warnaOptions.map(w => (
+                  <button
+                    key={w}
+                    onClick={() => setWarnaFilter(w)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                      warnaFilter === w
+                        ? "border-blue-500 bg-blue-500/15 text-blue-400"
+                        : "border-white/15 bg-white/5 text-white/70"
+                    }`}
+                  >
+                    {w}
                   </button>
                 ))}
               </div>

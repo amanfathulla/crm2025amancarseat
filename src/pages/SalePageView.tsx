@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
-import { fetchReviewMaterials, fetchPinnedReviews } from "@/lib/reviewMaterials";
+import { fetchReviewMaterials, fetchPinnedReviews, fetchReviewWarna } from "@/lib/reviewMaterials";
 import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
@@ -161,6 +161,7 @@ export default function SalePageView() {
           try {
             const matMap = await fetchReviewMaterials();
             const pinMap = await fetchPinnedReviews();
+            const warnaMap = await fetchReviewWarna();
             const allRev: any[] = [];
             let fromR = 0;
             while (true) {
@@ -185,6 +186,7 @@ export default function SalePageView() {
               material: matMap[r.id] || "Lain-lain",
               pinned: !!pinMap[r.id],
               pin_order: pinMap[r.id] ?? 999,
+              warna: warnaMap[r.id] || null,
             }));
             setAllReviews(enriched);
           } catch (e) {
