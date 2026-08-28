@@ -582,14 +582,7 @@ export default function SalePagesFeed() {
                     )}
                   </div>
                 </div>
-                {/* Arrow expand info (testimoni + add-on) */}
-                <button
-                  onClick={() => { setInfoOpen(o => !o); if (!infoOpen) trackSalePageEvent(active.id, "info_open"); }}
-                  className="shrink-0 h-8 w-8 rounded-lg bg-white/5 border border-white/10 flex items-center justify-center text-white/70"
-                >
-                  {infoOpen ? <ChevronDown className="h-4 w-4" /> : <ChevronDown className="h-4 w-4 rotate-180" />}
-                </button>
-              </div>
+                </div>
 
               {/* Variations — segmented control satu baris */}
               {variations.length > 1 && (
@@ -623,66 +616,6 @@ export default function SalePagesFeed() {
                 </div>
               )}
 
-              {/* Expanded: testimoni + add-on produk */}
-              {infoOpen && (
-                <div className="mt-3 pt-3 border-t border-white/5 space-y-3">
-                  {/* Testimoni REAL — 10 terawal */}
-                  {reviews.length > 0 && (
-                    <div>
-                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">
-                        Testimoni ({reviewCountMap[product.id] || 0} total • {product.category}) — 10 terawal
-                      </p>
-                      <div className="space-y-1.5 max-h-[200px] overflow-y-auto">
-                        {reviews.map(r => (
-                          <div key={r.id} className="bg-white/5 rounded-lg p-2">
-                            <div className="flex items-center gap-1.5 mb-0.5">
-                              {r.avatar_url ? (
-                                <img src={r.avatar_url} alt={r.name} className="h-5 w-5 rounded-full object-cover" />
-                              ) : (
-                                <div className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
-                                  {r.name.charAt(0).toUpperCase()}
-                                </div>
-                              )}
-                              <span className="text-white text-[10px] font-semibold">{r.name}</span>
-                              <div className="flex gap-0.5 ml-auto">
-                                {Array.from({ length: r.rating || 5 }).map((_, i) => (
-                                  <Star key={i} className="h-2 w-2 text-amber-400 fill-amber-400" />
-                                ))}
-                              </div>
-                            </div>
-                            <p className="text-white/60 text-[10px] leading-snug line-clamp-2">{r.review}</p>
-                          </div>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                  {/* Add-on produk */}
-                  {addons.length > 0 && (
-                    <div>
-                      <p className="text-white/50 text-[10px] uppercase tracking-wide mb-1.5">Produk Lain</p>
-                      <div className="space-y-1.5">
-                        {addons.map(a => (
-                          <a
-                            key={a.id}
-                            href={`/order?product=${a.id}&sp=${active.id}`}
-                            className="flex items-center gap-2 bg-white/5 rounded-lg p-1.5 active:bg-white/10"
-                          >
-                            {a.image_url ? (
-                              <img src={a.image_url} alt={a.name} className="h-8 w-8 rounded-md object-cover shrink-0" />
-                            ) : (
-                              <div className="h-8 w-8 rounded-md bg-white/10 shrink-0" />
-                            )}
-                            <div className="flex-1 min-w-0">
-                              <p className="text-white text-[10px] font-medium truncate">{a.name}</p>
-                              <p style={priceStyle} className={`${!hexColor ? theme.price : ""} text-[10px] font-bold`}>RM{a.price.toFixed(0)}</p>
-                            </div>
-                          </a>
-                        ))}
-                      </div>
-                    </div>
-                  )}
-                </div>
-              )}
 
               {/* Buy Now — TERUS ke order form */}
               {canBuyDirect ? (
