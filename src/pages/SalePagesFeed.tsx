@@ -5,14 +5,14 @@ import { fetchReviewMaterials } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart, Check } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
-import seat2 from "@/assets/seat-2.svg";
-import carSedan from "@/assets/car-sedan.svg";
-import carMpv from "@/assets/car-mpv.svg";
+import seat2 from "@/assets/seat-png/2-seater.png";
+import seat5 from "@/assets/seat-png/5-seater.png";
+import seat7 from "@/assets/seat-png/7-seater.png";
 
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
-  const src = count <= 2 ? seat2 : count <= 5 ? carSedan : carMpv;
-  return <img src={src} alt={`${count} seater`} className="h-6 w-auto shrink-0" />;
+  const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
+  return <img src={src} alt={`${count} seater`} className="h-7 w-auto shrink-0 object-contain" />;
 }
 
 function parseSeatCount(name: string): number {
