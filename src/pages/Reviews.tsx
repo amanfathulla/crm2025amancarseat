@@ -45,6 +45,7 @@ export default function Reviews() {
   const [materials, setMaterials] = useState<Record<string, string>>({});
   const [warnaMap, setWarnaMap] = useState<Record<string, string>>({});
   const [materialFilter, setMaterialFilter] = useState<string>("all");
+  const [productFilter, setProductFilter] = useState<string>("all");
   const [editMaterial, setEditMaterial] = useState<string>("");
   const [editWarna, setEditWarna] = useState<string>("");
   const [products, setProducts] = useState<{ id: string; name: string; category: string }[]>([]);
@@ -86,6 +87,9 @@ export default function Reviews() {
         const m = materials[r.id];
         if (materialFilter === "none" ? !!m : m !== materialFilter) return false;
       }
+      if (productFilter !== "all") {
+        if (warnaMap[r.id] !== productFilter) return false;
+      }
       if (!t) return true;
       return (
         (r.name || "").toLowerCase().includes(t) ||
@@ -100,7 +104,7 @@ export default function Reviews() {
       if (pb !== undefined) return 1;
       return 0;
     });
-  }, [reviews, search, materials, materialFilter, pins]);
+  }, [reviews, search, materials, materialFilter, productFilter, warnaMap, pins]);
 
   const totalPages = Math.max(1, Math.ceil(filtered.length / PAGE_SIZE));
   const current = Math.min(page, totalPages);
@@ -218,7 +222,7 @@ export default function Reviews() {
           {[{ k: "all", l: "Semua" }, ...REVIEW_MATERIALS.map((m) => ({ k: m, l: m })), { k: "none", l: "Tiada Material" }].map((o) => (
             <button
               key={o.k}
-              onClick={() => { setMaterialFilter(o.k); setPage(1); }}
+              onClick={() => { setMaterialFilter(o.k); setProductFilter("all"); setPage(1); }}
               className={`px-3 py-1.5 rounded-full text-xs font-semibold border transition ${
                 materialFilter === o.k
                   ? "bg-primary text-primary-foreground border-primary"
@@ -236,6 +240,40 @@ export default function Reviews() {
             </button>
           ))}
         </div>
+
+        {/* Sub-tab produk (bila material dipilih, bukan all/none) */}
+        {materialFilter !== "all" && materialFilter !== "none" && products.filter(p => p.category === materialFilter).length > 0 && (
+          <div className="flex flex-wrap gap-2 pt-1 border-t border-border/50 mt-1">
+            <button
+              onClick={() => { setProductFilter("all"); setPage(1); }}
+              className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+                productFilter === "all"
+                  ? "bg-blue-600 text-white border-blue-600"
+                  : "bg-muted text-muted-foreground border-border hover:bg-accent"
+              }`}
+            >
+              Semua Produk
+            </button>
+            {products
+              .filter(p => p.category === materialFilter)
+              .map(p => {
+                const count = reviews.filter(r => warnaMap[r.id] === p.id).length;
+                return (
+                  <button
+                    key={p.id}
+                    onClick={() => { setProductFilter(p.id); setPage(1); }}
+                    className={`px-2.5 py-1 rounded-full text-[11px] font-medium border transition ${
+                      productFilter === p.id
+                        ? "bg-blue-600 text-white border-blue-600"
+                        : "bg-muted text-muted-foreground border-border hover:bg-accent"
+                    }`}
+                  >
+                    {p.name} <span className="opacity-70">({count})</span>
+                  </button>
+                );
+              })}
+          </div>
+        )}
 
         {loading ? (
           <div className="flex items-center justify-center py-16 text-muted-foreground">
