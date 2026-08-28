@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, ChevronDown } from "lucide-react";
+import { Star, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface DetailReview {
   id: string;
@@ -19,12 +19,14 @@ function AccordionSection({
   title,
   count,
   children,
+  defaultOpen,
 }: {
   title: string;
   count?: number;
   children: React.ReactNode;
+  defaultOpen?: boolean;
 }) {
-  const [open, setOpen] = useState(false);
+  const [open, setOpen] = useState(!!defaultOpen);
   return (
     <div className="border-t border-white/10">
       <button
@@ -47,16 +49,49 @@ function AccordionSection({
   );
 }
 
+function ImageGallery({ images, fallback }: { images?: string[] | null; fallback?: string | null }) {
+  const all = [...(images || [])];
+  if (fallback && !all.includes(fallback)) all.unshift(fallback);
+  const [idx, setIdx] = useState(0);
+  if (all.length === 0) return <p className="text-white/40 text-[12px]">Tiada gambar produk.</p>;
+  const go = (d: number) => setIdx(i => (i + d + all.length) % all.length);
+  return (
+    <div>
+      <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/30">
+        <img src={all[idx]} alt={`Gambar ${idx + 1}`} className="w-full h-44 object-contain" />
+        {all.length > 1 && (
+          <>
+            <button onClick={() => go(-1)} className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center text-white/90">
+              <ChevronLeft className="h-4 w-4" />
+            </button>
+            <button onClick={() => go(1)} className="absolute right-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center text-white/90">
+              <ChevronRight className="h-4 w-4" />
+            </button>
+            <div className="absolute bottom-1 left-0 right-0 flex justify-center gap-1">
+              {all.map((_, i) => (
+                <span key={i} className={`h-1.5 w-1.5 rounded-full ${i === idx ? "bg-white" : "bg-white/30"}`} />
+              ))}
+            </div>
+          </>
+        )}
+      </div>
+      <p className="text-center text-white/40 text-[10px] mt-1">{idx + 1} / {all.length}</p>
+    </div>
+  );
+}
+
 export function ProductDetailTabs({
   description,
   reviews,
   image_url,
+  images,
   allReviews,
   productMaterial,
 }: {
   description?: string | null;
   reviews: DetailReview[];
   image_url?: string | null;
+  images?: string[] | null;
   allReviews?: any[];
   productMaterial?: string | null;
 }) {
@@ -69,12 +104,13 @@ export function ProductDetailTabs({
   return (
     <div className="bg-zinc-950 border-t border-white/10">
       <AccordionSection title="Penerangan Produk">
-        {image_url && (
-          <img src={image_url} alt="Produk" className="w-full max-h-52 rounded-lg object-cover mb-3 border border-white/10" />
-        )}
         <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
           {description || "Tiada penerangan untuk produk ini."}
         </div>
+      </AccordionSection>
+
+      <AccordionSection title="Gambar Produk">
+        <ImageGallery images={images} fallback={image_url} />
       </AccordionSection>
 
       <AccordionSection title="Testimoni" count={filtered.length}>
