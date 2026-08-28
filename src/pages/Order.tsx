@@ -2,6 +2,9 @@ import { useState, useEffect, useRef } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { trackEvent } from "@/lib/pixels";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
+import seat2 from "@/assets/seat-png/2-seater.png";
+import seat5 from "@/assets/seat-png/5-seater.png";
+import seat7 from "@/assets/seat-png/7-seater.png";
 import { ChevronRight, ShoppingBag, Loader2, CheckCircle, ArrowLeft, Youtube, Info, MapPin, User, Car, Tag, ChevronLeft, ChevronRight as ChevronRightIcon, CreditCard as CreditCardIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -33,6 +36,15 @@ const STATES_MY = [
   "Perak","Perlis","Pulau Pinang","Sabah","Sarawak","Selangor",
   "Terengganu","W.P. Kuala Lumpur","W.P. Labuan","W.P. Putrajaya"
 ];
+
+function parseSeatCount(name: string): number {
+  const m = name.match(/(\d+)\s*seater/i);
+  return m ? parseInt(m[1], 10) : 5;
+}
+function SeatIcon({ count }: { count: number }) {
+  const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
+  return <img src={src} alt={`${count} seater`} className="h-8 w-auto shrink-0 object-contain" />;
+}
 
 interface ProductVariation { id: string; name: string; price: number; }
 interface Product {
@@ -902,7 +914,10 @@ export default function OrderPage() {
                         className={`flex items-center justify-between p-3.5 rounded-xl border text-sm font-medium transition-all ${
                           sel ? "border-white bg-white text-black shadow-lg" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white"
                         }`}>
-                        <span>{v.name}</span>
+                        <span className="flex items-center gap-2">
+                          <SeatIcon count={parseSeatCount(v.name)} />
+                          <span>{v.name}</span>
+                        </span>
                         <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
                       </button>
                     );
