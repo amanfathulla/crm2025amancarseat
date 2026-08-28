@@ -1,5 +1,5 @@
 import React, { useState } from "react";
-import { Star, ChevronDown, ChevronLeft, ChevronRight } from "lucide-react";
+import { Star, ChevronLeft, ChevronRight } from "lucide-react";
 
 export interface DetailReview {
   id: string;
@@ -15,40 +15,6 @@ export interface DetailReview {
 
 const MATERIALS = ["Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"];
 
-function AccordionSection({
-  title,
-  count,
-  children,
-  defaultOpen,
-}: {
-  title: string;
-  count?: number;
-  children: React.ReactNode;
-  defaultOpen?: boolean;
-}) {
-  const [open, setOpen] = useState(!!defaultOpen);
-  return (
-    <div className="border-t border-white/10">
-      <button
-        onClick={() => setOpen(o => !o)}
-        className="w-full flex items-center justify-between py-2.5 px-1 text-left"
-      >
-        <span className="text-white font-semibold text-[12px]">
-          {title}{count != null ? ` (${count})` : ""}
-        </span>
-        <ChevronDown
-          className={`h-4 w-4 text-white/50 transition-transform ${open ? "rotate-180" : ""}`}
-        />
-      </button>
-      <div
-        className={`transition-all duration-300 ease-in-out ${open ? "max-h-[55dvh] opacity-100 overflow-y-auto overscroll-contain" : "max-h-0 opacity-0 overflow-hidden"}`}
-      >
-        <div className="pb-3 pt-1">{children}</div>
-      </div>
-    </div>
-  );
-}
-
 function ImageGallery({ images, fallback }: { images?: string[] | null; fallback?: string | null }) {
   const all = [...(images || [])];
   if (fallback && !all.includes(fallback)) all.unshift(fallback);
@@ -58,7 +24,7 @@ function ImageGallery({ images, fallback }: { images?: string[] | null; fallback
   return (
     <div>
       <div className="relative rounded-lg overflow-hidden border border-white/10 bg-black/30">
-        <img src={all[idx]} alt={`Gambar ${idx + 1}`} className="w-full h-44 object-contain" />
+        <img src={all[idx]} alt={`Gambar ${idx + 1}`} className="w-full h-40 object-contain" />
         {all.length > 1 && (
           <>
             <button onClick={() => go(-1)} className="absolute left-1 top-1/2 -translate-y-1/2 h-7 w-7 rounded-full bg-black/60 flex items-center justify-center text-white/90">
@@ -97,7 +63,7 @@ export function ProductDetailTabs({
   productMaterial?: string | null;
   defaultMaterial?: string | null;
 }) {
-  // Kalau admin set material khusus (bukan "Semua"), feed TERUS filter — tak tunjuk picker "Semua"
+  const [tab, setTab] = useState<"desc" | "gambar" | "testimoni">("desc");
   const isLocked = !!(defaultMaterial && defaultMaterial !== "Semua");
   const [matFilter, setMatFilter] = useState<string>(
     isLocked ? (defaultMaterial as string) : "Semua"
@@ -108,99 +74,130 @@ export function ProductDetailTabs({
     : list.filter(r => (r.material || "") === matFilter);
 
   return (
-    <div className="bg-zinc-950 border-t border-white/10">
-      <AccordionSection title="Penerangan Produk">
-        <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
-          {description || "Tiada penerangan untuk produk ini."}
-        </div>
-      </AccordionSection>
+    <div
+      className="bg-zinc-950/95 backdrop-blur-sm"
+      onWheel={e => e.stopPropagation()}
+      onTouchStart={e => e.stopPropagation()}
+      onTouchMove={e => e.stopPropagation()}
+      onTouchEnd={e => e.stopPropagation()}
+    >
+      {/* ── Tab bar (satu baris) ── */}
+      <div className="flex border-b border-white/10">
+        {[
+          { key: "desc" as const, label: "Penerangan" },
+          { key: "gambar" as const, label: "Gambar" },
+          { key: "testimoni" as const, label: `Testimoni (${filtered.length})` },
+        ].map(t => (
+          <button
+            key={t.key}
+            onClick={() => setTab(t.key)}
+            className={`flex-1 py-2 text-[11px] font-semibold border-b-2 transition-colors whitespace-nowrap ${
+              tab === t.key
+                ? "border-red-600 text-white"
+                : "border-transparent text-white/50 hover:text-white/80"
+            }`}
+          >
+            {t.label}
+          </button>
+        ))}
+      </div>
 
-      <AccordionSection title="Gambar Produk">
-        <ImageGallery images={images} fallback={image_url} />
-      </AccordionSection>
-
-      <AccordionSection title="Testimoni" count={filtered.length}>
-        {/* Selector material — hanya tunjuk kalau admin set "Semua".
-            Kalau admin set material khusus, feed TERUS filter (locked, tak boleh tukar) */}
-        {!isLocked && (
-          <div className="flex flex-wrap gap-1.5 mb-2.5">
-            <button
-              onClick={() => setMatFilter("Semua")}
-              className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-                matFilter === "Semua"
-                  ? "border-red-600 bg-red-600/15 text-red-600"
-                  : "border-white/15 bg-white/5 text-white/70"
-              }`}
-            >
-              Semua
-            </button>
-            {MATERIALS.map(m => (
-              <button
-                key={m}
-                onClick={() => setMatFilter(m)}
-                className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
-                  matFilter === m
-                    ? "border-red-600 bg-red-600/15 text-red-600"
-                    : "border-white/15 bg-white/5 text-white/70"
-                }`}
-              >
-                {m}
-              </button>
-            ))}
-          </div>
-        )}
-        {isLocked && (
-          <div className="mb-2.5 text-center">
-            <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold border border-red-600/40 bg-red-600/10 text-red-500">
-              {matFilter}
-            </span>
+      {/* ── Tab content (satu je, max-h, scroll dalam) ── */}
+      <div className="max-h-[40dvh] overflow-y-auto overscroll-contain px-1 py-2"
+        style={{ touchAction: "pan-y", overscrollBehavior: "contain" }}
+      >
+        {tab === "desc" && (
+          <div className="text-white/70 text-[12px] leading-relaxed whitespace-pre-wrap">
+            {description || "Tiada penerangan untuk produk ini."}
           </div>
         )}
 
-        {filtered.length === 0 ? (
-          <p className="text-white/40 text-[12px]">Tiada testimoni untuk bahan ini.</p>
-        ) : (
-          <div className="space-y-2 max-h-[260px] overflow-y-auto overscroll-contain">
-            {filtered.map(r => (
-              <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
-                <div className="flex items-center gap-1.5 mb-1">
-                  {r.avatar_url ? (
-                    <img src={r.avatar_url} alt={r.name} className="h-5 w-5 rounded-full object-cover" />
-                  ) : (
-                    <div className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
-                      {r.name.charAt(0).toUpperCase()}
-                    </div>
-                  )}
-                  <span className="text-white text-[11px] font-semibold">{r.name}</span>
-                  {r.material && (
-                    <span className="text-[9px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded-full ml-1">{r.material}</span>
-                  )}
-                  <div className="flex gap-0.5 ml-auto">
-                    {Array.from({ length: r.rating || 5 }).map((_, i) => (
-                      <Star key={i} className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />
-                    ))}
-                  </div>
-                </div>
-                <p className="text-white/60 text-[11px] leading-snug">{r.review}</p>
-                {/* Gambar "dah siap pasang" */}
-                {r.images && r.images.length > 0 && (
-                  <div className="flex gap-1.5 mt-2 overflow-x-auto overscroll-contain">
-                    {r.images.map((img: string, i: number) => (
-                      <img
-                        key={i}
-                        src={img}
-                        alt={`${r.name} - gambar ${i + 1}`}
-                        className="h-16 w-16 rounded-md object-cover border border-white/10 shrink-0"
-                        loading="lazy"
-                      />
-                    ))}
-                  </div>
-                )}
+        {tab === "gambar" && (
+          <ImageGallery images={images} fallback={image_url} />
+        )}
+
+        {tab === "testimoni" && (
+          <>
+            {!isLocked && (
+              <div className="flex flex-wrap gap-1.5 mb-2">
+                <button
+                  onClick={() => setMatFilter("Semua")}
+                  className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                    matFilter === "Semua"
+                      ? "border-red-600 bg-red-600/15 text-red-600"
+                      : "border-white/15 bg-white/5 text-white/70"
+                  }`}
+                >
+                  Semua
+                </button>
+                {MATERIALS.map(m => (
+                  <button
+                    key={m}
+                    onClick={() => setMatFilter(m)}
+                    className={`px-2.5 py-1 rounded-full text-[10px] font-semibold border transition-colors ${
+                      matFilter === m
+                        ? "border-red-600 bg-red-600/15 text-red-600"
+                        : "border-white/15 bg-white/5 text-white/70"
+                    }`}
+                  >
+                    {m}
+                  </button>
+                ))}
               </div>
-            ))}
-          </div>
+            )}
+            {isLocked && (
+              <div className="mb-2 text-center">
+                <span className="inline-block px-3 py-1 rounded-full text-[10px] font-semibold border border-red-600/40 bg-red-600/10 text-red-500">
+                  {matFilter}
+                </span>
+              </div>
+            )}
+
+            {filtered.length === 0 ? (
+              <p className="text-white/40 text-[12px]">Tiada testimoni untuk bahan ini.</p>
+            ) : (
+              <div className="space-y-2">
+                {filtered.map(r => (
+                  <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
+                    <div className="flex items-center gap-1.5 mb-1">
+                      {r.avatar_url ? (
+                        <img src={r.avatar_url} alt={r.name} className="h-5 w-5 rounded-full object-cover" />
+                      ) : (
+                        <div className="h-5 w-5 rounded-full bg-white/10 flex items-center justify-center text-[9px] font-bold text-white/60">
+                          {r.name.charAt(0).toUpperCase()}
+                        </div>
+                      )}
+                      <span className="text-white text-[11px] font-semibold">{r.name}</span>
+                      {r.material && (
+                        <span className="text-[9px] text-white/40 bg-white/5 px-1.5 py-0.5 rounded-full ml-1">{r.material}</span>
+                      )}
+                      <div className="flex gap-0.5 ml-auto">
+                        {Array.from({ length: r.rating || 5 }).map((_, i) => (
+                          <Star key={i} className="h-2.5 w-2.5 text-amber-400 fill-amber-400" />
+                        ))}
+                      </div>
+                    </div>
+                    <p className="text-white/60 text-[11px] leading-snug">{r.review}</p>
+                    {r.images && r.images.length > 0 && (
+                      <div className="flex gap-1.5 mt-2 overflow-x-auto overscroll-contain">
+                        {r.images.map((img: string, i: number) => (
+                          <img
+                            key={i}
+                            src={img}
+                            alt={`${r.name} - gambar ${i + 1}`}
+                            className="h-16 w-16 rounded-md object-cover border border-white/10 shrink-0"
+                            loading="lazy"
+                          />
+                        ))}
+                      </div>
+                    )}
+                  </div>
+                ))}
+              </div>
+            )}
+          </>
         )}
-      </AccordionSection>
+      </div>
     </div>
   );
 }
