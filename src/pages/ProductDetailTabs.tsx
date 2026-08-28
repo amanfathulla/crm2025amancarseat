@@ -182,6 +182,20 @@ export function ProductDetailTabs({
                   </div>
                 </div>
                 <p className="text-white/60 text-[11px] leading-snug">{r.review}</p>
+                {/* Gambar "dah siap pasang" */}
+                {r.images && r.images.length > 0 && (
+                  <div className="flex gap-1.5 mt-2 overflow-x-auto overscroll-contain">
+                    {r.images.map((img: string, i: number) => (
+                      <img
+                        key={i}
+                        src={img}
+                        alt={`${r.name} - gambar ${i + 1}`}
+                        className="h-16 w-16 rounded-md object-cover border border-white/10 shrink-0"
+                        loading="lazy"
+                      />
+                    ))}
+                  </div>
+                )}
               </div>
             ))}
           </div>
