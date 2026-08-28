@@ -412,14 +412,12 @@ export default function SalePagesFeed() {
               }}
               className="absolute inset-0 flex items-center justify-center bg-black/30"
             >
-              <div className="flex flex-col items-center gap-3">
-                <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
-                  <Play className="h-8 w-8 text-white fill-white" />
-                </div>
-                <span className="text-white/90 text-xs font-medium bg-black/40 px-3 py-1 rounded-full">
-                  Tekan untuk main dengan suara
-                </span>
+              <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
+                <Play className="h-8 w-8 text-white fill-white" />
               </div>
+              <span className="absolute top-14 left-1/2 -translate-x-1/2 text-white text-[13px] font-semibold bg-black/70 backdrop-blur px-4 py-2 rounded-full whitespace-nowrap">
+                🔊 Tekan untuk main dengan suara
+              </span>
             </button>
           )}
           <div className="absolute bottom-0 left-0 right-0 h-1/2 bg-gradient-to-t from-black/95 via-black/60 to-transparent pointer-events-none md:hidden" />
