@@ -98,6 +98,7 @@ export default function OrderPage() {
   const [showQr, setShowQr] = useState(false);
   const [paymentType, setPaymentType] = useState<"full" | "deposit">("full");
   const [formStep, setFormStep] = useState<1 | 2 | 3>(1);
+  const [showSummary, setShowSummary] = useState(false);
   const [gateways, setGateways] = useState<{ provider: string; display_name: string }[]>([]);
   const [selectedGateway, setSelectedGateway] = useState<string>("billplz");
 
@@ -1203,64 +1204,112 @@ export default function OrderPage() {
                 </div>
               </section>
 
-              {/* Order Summary */}
-              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-5 border border-gray-200 shadow-lg">
-                <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium mb-4">Ringkasan Tempahan</h3>
-                <div className="space-y-2 text-sm">
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Produk</span>
-                    <span className="text-gray-900 font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
+              {/* Order Summary — Accordion */}
+              <section className="backdrop-blur-xl bg-white/80 rounded-2xl p-4 border border-gray-200 shadow-lg">
+                {/* Header: selalu nampak (klik untuk expand) */}
+                <button
+                  type="button"
+                  onClick={() => setShowSummary(!showSummary)}
+                  className="w-full flex items-center justify-between"
+                >
+                  <div className="flex-1 min-w-0 text-left">
+                    <h3 className="text-gray-500 text-xs uppercase tracking-widest font-medium">Ringkasan Tempahan</h3>
+                    <div className="flex items-center justify-between mt-1">
+                      <span className="text-gray-900 font-bold text-base">
+                        RM{amountToPay.toFixed(2)}
+                      </span>
+                      <span className="text-gray-400 text-xs ml-2">{paymentType === "deposit" ? "Deposit 50%" : "Bayar Penuh"}</span>
+                    </div>
                   </div>
-                  {selectedVariation && (
+                  <ChevronDown className={`h-4 w-4 text-gray-400 shrink-0 transition-transform ${showSummary ? "rotate-180" : ""}`} />
+                </button>
+
+                {/* Expanded: detail */}
+                {showSummary && (
+                  <div className="space-y-2 text-sm mt-3 pt-3 border-t border-gray-200">
+                    {/* Maklumat Pembeli */}
+                    {form.name && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Nama</span>
+                        <span className="text-gray-900 font-medium text-right max-w-[60%]">{form.name}</span>
+                      </div>
+                    )}
+                    {form.phone && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">No HP</span>
+                        <span className="text-gray-900 font-medium">{form.phone}</span>
+                      </div>
+                    )}
+                    {form.email && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Email</span>
+                        <span className="text-gray-900 font-medium text-right max-w-[60%] truncate">{form.email}</span>
+                      </div>
+                    )}
+                    {form.car_model && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Model Kereta</span>
+                        <span className="text-gray-900 font-medium">{form.car_model}</span>
+                      </div>
+                    )}
+                    {(form.name || form.phone) && <div className="border-t border-gray-100 my-2" />}
+
+                    {/* Produk info */}
                     <div className="flex justify-between">
-                      <span className="text-gray-500">Saiz/Variasi</span>
-                      <span className="text-gray-900">{selectedVariation.name}</span>
+                      <span className="text-gray-500">Produk</span>
+                      <span className="text-gray-900 font-medium text-right max-w-[60%] truncate">{selectedProduct?.name}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Harga Produk</span>
-                    <span className="text-gray-900">RM{productPrice.toFixed(2)}</span>
-                  </div>
-                  <div className="flex justify-between">
-                    <span className="text-gray-500">Kos Postage {form.state ? `(${form.state})` : ""}</span>
-                    <span className={`font-medium ${form.state ? "text-gray-900" : "text-gray-400"}`}>
-                      {form.state ? `RM${postageCost.toFixed(2)}` : "Pilih negeri"}
-                    </span>
-                  </div>
-                  {!form.state && (
-                    <p className="text-amber-600 text-xs flex items-center gap-1">
-                      <Info className="h-3 w-3" /> Semenanjung RM{shippingCosts.semenanjung.toFixed(0)} · Sabah/Sarawak/Labuan RM{shippingCosts.sabahSarawak.toFixed(0)}
-                    </p>
-                  )}
-                  {appliedCoupon && (
-                    <div className="flex justify-between text-green-600">
-                      <span>Diskaun ({appliedCoupon.code})</span>
-                      <span>-RM{couponDiscount.toFixed(2)}</span>
+                    {selectedVariation && (
+                      <div className="flex justify-between">
+                        <span className="text-gray-500">Saiz/Variasi</span>
+                        <span className="text-gray-900">{selectedVariation.name}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Harga Produk</span>
+                      <span className="text-gray-900">RM{productPrice.toFixed(2)}</span>
                     </div>
-                  )}
-                  <div className="flex justify-between pt-3 border-t border-gray-200 text-sm">
-                    <span className="text-gray-600">Jumlah Penuh</span>
-                    <span className="text-gray-900 font-semibold">RM{finalPrice.toFixed(2)}</span>
-                  </div>
-                  {paymentType === "deposit" ? (
-                    <>
+                    <div className="flex justify-between">
+                      <span className="text-gray-500">Kos Postage {form.state ? `(${form.state})` : ""}</span>
+                      <span className={`font-medium ${form.state ? "text-gray-900" : "text-gray-400"}`}>
+                        {form.state ? `RM${postageCost.toFixed(2)}` : "Pilih negeri"}
+                      </span>
+                    </div>
+                    {!form.state && (
+                      <p className="text-amber-600 text-xs flex items-center gap-1">
+                        <Info className="h-3 w-3" /> Semenanjung RM{shippingCosts.semenanjung.toFixed(0)} · Sabah/Sarawak/Labuan RM{shippingCosts.sabahSarawak.toFixed(0)}
+                      </p>
+                    )}
+                    {appliedCoupon && (
+                      <div className="flex justify-between text-green-600">
+                        <span>Diskaun ({appliedCoupon.code})</span>
+                        <span>-RM{couponDiscount.toFixed(2)}</span>
+                      </div>
+                    )}
+                    <div className="flex justify-between pt-3 border-t border-gray-200 text-sm">
+                      <span className="text-gray-600">Jumlah Penuh</span>
+                      <span className="text-gray-900 font-semibold">RM{finalPrice.toFixed(2)}</span>
+                    </div>
+                    {paymentType === "deposit" ? (
+                      <>
+                        <div className="flex justify-between font-bold text-base">
+                          <span className="text-gray-900">Bayar Sekarang (Deposit 50%)</span>
+                          <span className="text-blue-600">RM{amountToPay.toFixed(2)}</span>
+                        </div>
+                        <div className="flex justify-between rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
+                          <span className="text-amber-800 font-semibold text-xs">⏳ Baki Perlu Dibayar</span>
+                          <span className="text-amber-700 font-bold">RM{balanceAmount.toFixed(2)}</span>
+                        </div>
+                        <p className="text-[11px] text-gray-500 mt-1">Baki akan diuruskan oleh team HQ selepas tempahan disahkan.</p>
+                      </>
+                    ) : (
                       <div className="flex justify-between font-bold text-base">
-                        <span className="text-gray-900">Bayar Sekarang (Deposit 50%)</span>
-                        <span className="text-blue-600">RM{amountToPay.toFixed(2)}</span>
+                        <span className="text-gray-900">Jumlah Bayar</span>
+                        <span className="text-green-600">RM{amountToPay.toFixed(2)}</span>
                       </div>
-                      <div className="flex justify-between rounded-lg bg-amber-50 border border-amber-200 px-3 py-2 mt-2">
-                        <span className="text-amber-800 font-semibold text-xs">⏳ Baki Perlu Dibayar</span>
-                        <span className="text-amber-700 font-bold">RM{balanceAmount.toFixed(2)}</span>
-                      </div>
-                      <p className="text-[11px] text-gray-500 mt-1">Baki akan diuruskan oleh team HQ selepas tempahan disahkan.</p>
-                    </>
-                  ) : (
-                    <div className="flex justify-between font-bold text-base">
-                      <span className="text-gray-900">Jumlah Bayar</span>
-                      <span className="text-green-600">RM{amountToPay.toFixed(2)}</span>
-                    </div>
-                  )}
-                </div>
+                    )}
+                  </div>
+                )}
               </section>
 
               {/* Coupon Section */}
