@@ -115,8 +115,6 @@ export default function Reviews() {
   const current = Math.min(page, totalPages);
   const pageItems = filtered.slice((current - 1) * PAGE_SIZE, current * PAGE_SIZE);
 
-  const MAX_PINS = 6;
-
   const togglePin = async (reviewId: string) => {
     const material = materials[reviewId];
     if (!material) {
@@ -129,14 +127,6 @@ export default function Reviews() {
     }
     const isPinned = pins[reviewId] !== undefined;
     const pinnedSameMaterial = Object.keys(pins).filter((id) => materials[id] === material);
-    if (!isPinned && pinnedSameMaterial.length >= MAX_PINS) {
-      toast({
-        title: `Maksimum ${MAX_PINS} pin`,
-        description: `${material} sudah ada ${MAX_PINS} testimoni dipin. Unpin salah satu dahulu.`,
-        variant: "destructive",
-      });
-      return;
-    }
     try {
       const nextOrder = pinnedSameMaterial.length
         ? Math.max(...pinnedSameMaterial.map((id) => pins[id])) + 1
