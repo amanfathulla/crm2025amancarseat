@@ -54,6 +54,7 @@ interface FeedProduct {
   price: number;
   category: string | null;
   image_url: string | null;
+  image_urls: string[] | null;
   description: string | null;
 }
 
@@ -146,7 +147,7 @@ export default function SalePagesFeed() {
         if (categories.length > 0) {
           const { data: catProds } = await supabase
             .from("public_products")
-            .select("id, name, price, category, image_url, description")
+            .select("id, name, price, category, image_url, image_urls, description")
             .in("category", categories)
             .eq("status", "active");
           categoryProds.push(...((catProds || []) as FeedProduct[]));
@@ -157,7 +158,7 @@ export default function SalePagesFeed() {
           if (mainProductIds.length > 0) {
             const { data: prods } = await supabase
               .from("public_products")
-              .select("id, name, price, category, image_url, description")
+              .select("id, name, price, category, image_url, image_urls, description")
               .in("id", mainProductIds);
             const pMap: Record<string, FeedProduct> = {};
             (prods || []).forEach((p: any) => { pMap[p.id] = p; });
@@ -260,7 +261,7 @@ export default function SalePagesFeed() {
             if (ids.length === 0) return { pageId: p.id, addons: [] as FeedProduct[] };
             const { data: prods } = await supabase
               .from("public_products")
-              .select("id, name, price, category, image_url, description")
+              .select("id, name, price, category, image_url, image_urls, description")
               .in("id", ids);
             // Filter keluar produk utama di frontend (bukan di query)
             const addons = (prods || []).filter((pr: any) => pr.id !== p.product_id) as FeedProduct[];
@@ -654,7 +655,7 @@ export default function SalePagesFeed() {
                 description={product?.description || (isCategoryMode ? (categoryProducts[0]?.description ?? null) : null)}
                 reviews={isCategoryMode ? (reviewsMap[`cat_${active.id}`] || []) : (product ? (reviewsMap[product.id] || []) : [])}
                 image_url={product?.image_url || (isCategoryMode ? (categoryProducts[0]?.image_url ?? null) : null)}
-                images={product?.images || (isCategoryMode ? (categoryProducts[0]?.images ?? null) : null)}
+                images={product?.image_urls || (isCategoryMode ? (categoryProducts[0]?.image_urls ?? null) : null)}
                 allReviews={allReviews}
                 productMaterial={product?.category || (isCategoryMode ? active.product_category : null)}
                 defaultMaterial={(active as any).testimonial_material || "Semua"}

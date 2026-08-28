@@ -609,7 +609,7 @@ export default function SalePageView() {
                   description={product?.description || null}
                   reviews={reviews.slice(0, 6)}
                   image_url={product?.image_url || null}
-                  images={product?.images || null}
+                  images={product?.image_urls || null}
                   allReviews={allReviews}
                   productMaterial={product?.category || null}
                   defaultMaterial={(page as any)?.testimonial_material || "Semua"}
