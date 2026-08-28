@@ -36,7 +36,7 @@ function AccordionSection({
         />
       </button>
       <div
-        className={`transition-all duration-300 ease-in-out ${open ? "max-h-[600px] opacity-100" : "max-h-0 opacity-0 overflow-hidden"}`}
+        className={`transition-all duration-300 ease-in-out ${open ? "max-h-[55dvh] opacity-100 overflow-y-auto overscroll-contain" : "max-h-0 opacity-0 overflow-hidden"}`}
       >
         <div className="pb-3 pt-1">{children}</div>
       </div>
@@ -68,7 +68,7 @@ export function ProductDetailTabs({
         {reviews.length === 0 ? (
           <p className="text-white/40 text-[12px]">Tiada testimoni lagi.</p>
         ) : (
-          <div className="space-y-2 max-h-[260px] overflow-y-auto">
+          <div className="space-y-2 max-h-[260px] overflow-y-auto overscroll-contain">
             {reviews.map(r => (
               <div key={r.id} className="bg-white/5 rounded-lg p-2.5">
                 <div className="flex items-center gap-1.5 mb-1">
