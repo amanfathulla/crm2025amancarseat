@@ -43,7 +43,7 @@ function parseSeatCount(name: string): number {
 }
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-8 sm:h-14 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="h-12 sm:h-14 w-auto shrink-0 object-contain" />;
 }
 
 interface ProductVariation { id: string; name: string; price: number; }
@@ -796,137 +796,106 @@ export default function OrderPage() {
                 <p className="text-white/50 text-xs uppercase tracking-widest font-medium mb-3">Pilih Produk</p>
                 {products.map((product) => {
                   const isSelected = selectedProduct?.id === product.id;
+                  const isExpanded = isSelected;
                   return (
-                    <button key={product.id} onClick={() => { setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0); }}
-                      className={`w-full flex items-center justify-between p-4 rounded-xl border text-left transition-all duration-150 ${
-                        isSelected
-                          ? "border-blue-500/60 bg-blue-500/10 text-white ring-1 ring-blue-500/30"
-                          : "border-white/8 bg-white/4 text-white/65 hover:bg-white/8 hover:text-white hover:border-white/15"
-                      }`}>
-                      <div className="flex-1 min-w-0">
-                        <span className="font-semibold block truncate">{product.name}</span>
-                        <span className={`text-sm font-bold mt-0.5 block ${isSelected ? "text-blue-300" : "text-white/45"}`}>
-                          {product.variations.length > 0
-                            ? `Dari RM${Math.min(...product.variations.map(v => v.price)).toFixed(0)}`
-                            : `RM${product.price.toFixed(0)}`}
-                        </span>
-                      </div>
-                      {isSelected && (
-                        <div className="ml-3 w-5 h-5 rounded-full bg-blue-500 flex items-center justify-center shrink-0">
-                          <CheckCircle className="h-3.5 w-3.5 text-white" />
+                    <div key={product.id} className={`rounded-xl border transition-all duration-200 ${isSelected ? "border-blue-500/50 bg-blue-500/5" : "border-white/8 bg-white/4 hover:border-white/15"}`}>
+                      {/* Header: klik untuk expand/collapse */}
+                      <button
+                        onClick={() => {
+                          if (isSelected) { setSelectedProduct(null); setSelectedVariation(null); }
+                          else { setSelectedProduct(product); setSelectedVariation(null); setImageIndex(0); }
+                        }}
+                        className={`w-full flex items-center justify-between p-3.5 text-left transition-colors ${isSelected ? "text-white" : "text-white/65 hover:text-white"}`}
+                      >
+                        <div className="flex-1 min-w-0 flex items-center gap-3">
+                          {product.image_url && (
+                            <img src={product.image_url} alt={product.name} className="h-10 w-10 rounded-lg object-cover shrink-0" />
+                          )}
+                          <div className="flex-1 min-w-0">
+                            <span className="font-semibold block truncate text-sm">{product.name}</span>
+                            <span className={`text-xs font-bold mt-0.5 block ${isSelected ? "text-blue-300" : "text-white/45"}`}>
+                              {product.variations.length > 0
+                                ? `Dari RM${Math.min(...product.variations.map(v => v.price)).toFixed(0)}`
+                                : `RM${product.price.toFixed(0)}`}
+                            </span>
+                          </div>
+                        </div>
+                        <ChevronDown className={`h-4 w-4 shrink-0 transition-transform ${isExpanded ? "rotate-180" : ""}`} />
+                      </button>
+
+                      {/* Expanded content: gambar + description + video + seater */}
+                      {isExpanded && (
+                        <div className="px-3.5 pb-3.5 space-y-3 border-t border-white/8 pt-3">
+                          {/* Gambar carousel */}
+                          {(() => {
+                            const imgs = (product.image_urls && product.image_urls.length > 0)
+                              ? product.image_urls
+                              : product.image_url ? [product.image_url] : [];
+                            if (imgs.length === 0) return null;
+                            return (
+                              <div className="relative w-full overflow-hidden rounded-lg bg-black/40 flex items-center justify-center">
+                                <img src={imgs[imageIndex] || imgs[0]} alt={product.name} className="w-full h-auto max-h-[50vh] object-contain" />
+                                {imgs.length > 1 && (
+                                  <>
+                                    <button onClick={() => setImageIndex(i => (i - 1 + imgs.length) % imgs.length)} className="absolute left-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white">
+                                      <ChevronLeft className="h-3.5 w-3.5" />
+                                    </button>
+                                    <button onClick={() => setImageIndex(i => (i + 1) % imgs.length)} className="absolute right-1.5 top-1/2 -translate-y-1/2 w-7 h-7 rounded-full bg-black/60 flex items-center justify-center text-white">
+                                      <ChevronRightIcon className="h-3.5 w-3.5" />
+                                    </button>
+                                    <div className="absolute bottom-1.5 left-1/2 -translate-x-1/2 flex gap-1">
+                                      {imgs.map((_, i) => (
+                                        <button key={i} onClick={() => setImageIndex(i)} className={`w-1.5 h-1.5 rounded-full ${i === imageIndex ? "bg-white w-3" : "bg-white/40"}`} />
+                                      ))}
+                                    </div>
+                                  </>
+                                )}
+                              </div>
+                            );
+                          })()}
+                          {/* Description */}
+                          {product.description && (
+                            <div className="flex gap-2 text-white/65 text-xs">
+                              <Info className="h-3.5 w-3.5 text-white/35 shrink-0 mt-0.5" />
+                              <FormattedDescription text={product.description} className="flex-1" />
+                            </div>
+                          )}
+                          {/* Video */}
+                          {getYoutubeId(product.youtube_url) && (
+                            <div className="aspect-video rounded-lg overflow-hidden bg-black/40">
+                              <iframe src={`https://www.youtube.com/embed/${getYoutubeId(product.youtube_url)}`} className="w-full h-full" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture" allowFullScreen title="Video produk" />
+                            </div>
+                          )}
+                          {/* Pilih Saiz / Variasi */}
+                          {product.variations.length > 0 && (
+                            <div>
+                              <p className="text-white/50 text-[10px] uppercase tracking-widest font-medium mb-2">Pilih Saiz / Variasi</p>
+                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                {product.variations.map((v) => {
+                                  const sel = selectedVariation?.id === v.id;
+                                  return (
+                                    <button key={v.id} onClick={() => setSelectedVariation(v)}
+                                      className={`flex items-center justify-between p-3 rounded-lg border text-sm font-medium transition-all ${sel ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10"}`}>
+                                      <span className="flex items-center gap-2">
+                                        <SeatIcon count={parseSeatCount(v.name)} />
+                                        <span>{v.name}</span>
+                                      </span>
+                                      <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
+                                    </button>
+                                  );
+                                })}
+                              </div>
+                            </div>
+                          )}
                         </div>
                       )}
-                    </button>
+                    </div>
                   );
                 })}
               </div>
             )}
 
-            {/* Product detail card */}
-            {selectedProduct && (() => {
-              const imgs = (selectedProduct.image_urls && selectedProduct.image_urls.length > 0)
-                ? selectedProduct.image_urls
-                : selectedProduct.image_url ? [selectedProduct.image_url] : [];
-              return (
-                <div className="mb-6 rounded-2xl overflow-hidden border border-white/10 bg-white/4">
-              {/* Multi-image carousel - keep original aspect ratio */}
-                  {imgs.length > 0 && (
-                    <div className="relative w-full max-h-[70vh] overflow-hidden bg-black/40 flex items-center justify-center">
-                      <img
-                        src={imgs[imageIndex] || imgs[0]}
-                        alt={selectedProduct.name}
-                        className="w-full h-auto max-h-[70vh] object-contain transition-opacity duration-200"
-                      />
-                      {imgs.length > 1 && (
-                        <>
-                          <button
-                            onClick={() => setImageIndex(i => (i - 1 + imgs.length) % imgs.length)}
-                            className="absolute left-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
-                          >
-                            <ChevronLeft className="h-4 w-4" />
-                          </button>
-                          <button
-                            onClick={() => setImageIndex(i => (i + 1) % imgs.length)}
-                            className="absolute right-2 top-1/2 -translate-y-1/2 w-8 h-8 rounded-full bg-black/50 hover:bg-black/70 flex items-center justify-center text-white transition-colors"
-                          >
-                            <ChevronRightIcon className="h-4 w-4" />
-                          </button>
-                          {/* Dots indicator */}
-                          <div className="absolute bottom-2 left-1/2 -translate-x-1/2 flex gap-1.5">
-                            {imgs.map((_, i) => (
-                              <button key={i} onClick={() => setImageIndex(i)}
-                                className={`w-1.5 h-1.5 rounded-full transition-all ${i === imageIndex ? "bg-white w-4" : "bg-white/40"}`}
-                              />
-                            ))}
-                          </div>
-                        </>
-                      )}
-                    </div>
-                  )}
-                  {/* Thumbnail strip */}
-                  {imgs.length > 1 && (
-                    <div className="flex gap-2 p-3 overflow-x-auto">
-                      {imgs.map((url, i) => (
-                        <button key={i} onClick={() => setImageIndex(i)}
-                          className={`shrink-0 w-14 h-14 rounded-lg overflow-hidden border-2 transition-all ${i === imageIndex ? "border-white/60" : "border-transparent opacity-50 hover:opacity-75"}`}>
-                          <img src={url} alt={`Gambar ${i+1}`} className="w-full h-full object-cover" />
-                        </button>
-                      ))}
-                    </div>
-                  )}
-                  {selectedProduct.description && (
-                    <div className="p-4 flex gap-3 border-t border-white/8">
-                      <Info className="h-4 w-4 text-white/35 shrink-0 mt-0.5" />
-                      <FormattedDescription
-                        text={selectedProduct.description}
-                        className="text-white/70 text-sm flex-1"
-                      />
-                    </div>
-                  )}
-                  {getYoutubeId(selectedProduct.youtube_url) && (
-                    <div className="p-4 pt-0">
-                      <div className="flex items-center gap-2 mb-2">
-                        <Youtube className="h-4 w-4 text-red-400" />
-                        <span className="text-white/50 text-xs font-medium">Video Produk</span>
-                      </div>
-                      <div className="aspect-video rounded-xl overflow-hidden bg-black/40">
-                        <iframe
-                          src={`https://www.youtube.com/embed/${getYoutubeId(selectedProduct.youtube_url)}`}
-                          className="w-full h-full"
-                          allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture"
-                          allowFullScreen title="Video produk"
-                        />
-                      </div>
-                    </div>
-                  )}
-                </div>
-              );
-            })()}
-
-            {/* Variations */}
-            {selectedProduct?.variations && selectedProduct.variations.length > 0 && (
-              <div className="mb-6">
-                <p className="text-white/50 text-xs uppercase tracking-widest font-medium mb-3">Pilih Saiz / Variasi</p>
-                <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                  {selectedProduct.variations.map((v) => {
-                    const sel = selectedVariation?.id === v.id;
-                    return (
-                      <button key={v.id} onClick={() => setSelectedVariation(v)}
-                        className={`flex items-center justify-between p-3.5 rounded-xl border text-sm font-medium transition-all ${
-                          sel ? "border-white bg-white text-black shadow-lg" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10 hover:text-white"
-                        }`}>
-                        <span className="flex items-center gap-2">
-                          <SeatIcon count={parseSeatCount(v.name)} />
-                          <span>{v.name}</span>
-                        </span>
-                        <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
-                      </button>
-                    );
-                  })}
-                </div>
-              </div>
-            )}
-
+            {/* Harga produk tanpa variasi */}
             {selectedProduct?.variations.length === 0 && selectedProduct && (
               <div className="mb-6 p-4 rounded-xl bg-green-500/8 border border-green-500/20 text-center">
                 <p className="text-white/50 text-xs mb-1">Harga</p>
