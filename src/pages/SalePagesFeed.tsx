@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef, useCallback } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase } from "@/lib/reviewsClient";
-import { fetchReviewMaterials } from "@/lib/reviewMaterials";
+import { fetchReviewMaterials, fetchPinnedReviews } from "@/lib/reviewMaterials";
 import { Play, Volume2, VolumeX, Zap, ChevronRight, ChevronLeft, ChevronDown, Eye, Star, ShoppingCart, Check } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
@@ -181,6 +181,7 @@ export default function SalePagesFeed() {
 
             // 4. Fetch SEMUA reviews (untuk kiraan total mengikut bahan)
             const matMap = await fetchReviewMaterials();
+            const pinMap = await fetchPinnedReviews();
             const allReviewsAll: any[] = [];
             let fromR = 0;
             while (true) {
@@ -228,8 +229,13 @@ export default function SalePagesFeed() {
             const sixMap: Record<string, any[]> = {};
             Object.entries(rMap).forEach(([k, arr]) => { sixMap[k] = (arr as any[]).slice(0, 6); });
             setReviewsMap(sixMap);
-            // SEMUA reviews enriched dengan material untuk filter testimoni
-            const enriched = allReviewsAll.map((r: any) => ({ ...r, material: matMap[r.id] || "Lain-lain" }));
+            // SEMUA reviews enriched dengan material + pinned status untuk filter testimoni
+            const enriched = allReviewsAll.map((r: any) => ({
+              ...r,
+              material: matMap[r.id] || "Lain-lain",
+              pinned: !!pinMap[r.id],
+              pin_order: pinMap[r.id] ?? 999,
+            }));
             setAllReviews(enriched);
           }
         }

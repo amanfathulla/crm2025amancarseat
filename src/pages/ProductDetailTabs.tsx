@@ -69,9 +69,11 @@ export function ProductDetailTabs({
     isLocked ? (defaultMaterial as string) : "Semua"
   );
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
+  // Pinned sahaja untuk tab Testimoni (tak lagging), total count kekal ikut material
+  const pinnedList = list.filter(r => r.pinned === true).sort((a, b) => (a.pin_order ?? 999) - (b.pin_order ?? 999));
   const filtered = matFilter === "Semua"
-    ? list
-    : list.filter(r => (r.material || "") === matFilter);
+    ? pinnedList
+    : pinnedList.filter(r => (r.material || "") === matFilter);
 
   return (
     <div

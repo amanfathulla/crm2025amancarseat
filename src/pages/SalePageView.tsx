@@ -2,7 +2,7 @@ import { useState, useEffect, useRef } from "react";
 import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
-import { fetchReviewMaterials } from "@/lib/reviewMaterials";
+import { fetchReviewMaterials, fetchPinnedReviews } from "@/lib/reviewMaterials";
 import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
@@ -160,6 +160,7 @@ export default function SalePageView() {
         if (prod?.category) {
           try {
             const matMap = await fetchReviewMaterials();
+            const pinMap = await fetchPinnedReviews();
             const allRev: any[] = [];
             let fromR = 0;
             while (true) {
@@ -179,7 +180,12 @@ export default function SalePageView() {
               new Date(a.created_at).getTime() - new Date(b.created_at).getTime()
             ).slice(0, 10) as Review[];
             setReviews(earliest);
-            const enriched = allRev.map((r: any) => ({ ...r, material: matMap[r.id] || "Lain-lain" }));
+            const enriched = allRev.map((r: any) => ({
+              ...r,
+              material: matMap[r.id] || "Lain-lain",
+              pinned: !!pinMap[r.id],
+              pin_order: pinMap[r.id] ?? 999,
+            }));
             setAllReviews(enriched);
           } catch (e) {
             console.error("reviews fetch error", e);
