@@ -66,6 +66,7 @@ interface FormState {
   badge_text: string;
   theme: string;
   testimonial_material: string; // null/"Semua" | "Kain Mesh" | "Kain Nylon" | "Kain Fullsilk" | "Semi Leather Kalis Air"
+  testimonial_product: string; // product_id atau "all"
 }
 
 const EMPTY_FORM: FormState = {
@@ -84,6 +85,7 @@ const EMPTY_FORM: FormState = {
   badge_text: "",
   theme: "amber",
   testimonial_material: "Semua",
+  testimonial_product: "all",
 };
 
 const THEME_OPTIONS = [
@@ -224,6 +226,7 @@ export default function SalePagesAdmin() {
       badge_text: p.badge_text || "",
       theme: (p as any).theme || "amber",
       testimonial_material: (p as any).testimonial_material || "Semua",
+      testimonial_product: (p as any).testimonial_product || "all",
     });
     setDialogOpen(true);
   };
@@ -254,6 +257,7 @@ export default function SalePagesAdmin() {
         badge_text: form.badge_text.trim() || null,
         theme: form.theme || "amber",
         testimonial_material: form.testimonial_material || null,
+        testimonial_product: form.testimonial_product && form.testimonial_product !== "all" ? form.testimonial_product : null,
       };
       let pageId = editing?.id;
       if (editing) {
@@ -721,20 +725,21 @@ export default function SalePagesAdmin() {
                   ))}
                 </div>
               </div>
-              {/* ── Testimoni: pilih material (default untuk feed) ── */}
+              {/* ── Testimoni: pilih material + produk (default untuk feed) ── */}
               <div>
                 <Label className="flex items-center gap-1.5 mb-1.5">
-                  <MessageCircle className="h-3.5 w-3.5" /> Testimoni (pilih material)
+                  <MessageCircle className="h-3.5 w-3.5" /> Testimoni (pilih material + produk)
                 </Label>
                 <p className="text-[11px] text-muted-foreground mb-2">
-                  Pilih bahan untuk tapis testimoni di feed. "Semua" papar kesemua. Boleh tukar terus di page sebenar.
+                  Pilih bahan, lepas tu pilih produk. Feed tunjuk testimoni produk tu sahaja.
                 </p>
-                <div className="flex flex-wrap gap-1.5">
+                {/* Picker material */}
+                <div className="flex flex-wrap gap-1.5 mb-2">
                   {["Semua", "Kain Mesh", "Kain Nylon", "Kain Fullsilk", "Semi Leather Kalis Air"].map(m => (
                     <button
                       key={m}
                       type="button"
-                      onClick={() => setField("testimonial_material", m)}
+                      onClick={() => { setField("testimonial_material", m); setField("testimonial_product", "all"); }}
                       className={`px-3 py-1.5 rounded-lg text-[11px] font-semibold border-2 transition-all ${
                         form.testimonial_material === m
                           ? "border-red-600 bg-red-600 text-white"
@@ -745,6 +750,24 @@ export default function SalePagesAdmin() {
                     </button>
                   ))}
                 </div>
+                {/* Picker produk (dropdown ikut material) */}
+                {form.testimonial_material !== "Semua" && (
+                  <div>
+                    <Label className="text-[11px] text-muted-foreground mb-1">Pilih Produk (Testimoni)</Label>
+                    <select
+                      value={form.testimonial_product}
+                      onChange={e => setField("testimonial_product", e.target.value)}
+                      className="w-full h-9 rounded-md border border-zinc-300 bg-white px-2 text-sm"
+                    >
+                      <option value="all">Semua Produk ({products.filter(p => p.category === form.testimonial_material).length})</option>
+                      {products
+                        .filter(p => p.category === form.testimonial_material)
+                        .map(p => (
+                          <option key={p.id} value={p.id}>{p.name}</option>
+                        ))}
+                    </select>
+                  </div>
+                )}
               </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
