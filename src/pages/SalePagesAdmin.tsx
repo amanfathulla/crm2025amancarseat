@@ -746,7 +746,6 @@ export default function SalePagesAdmin() {
                   ))}
                 </div>
               </div>
-              </div>
               <div className="flex justify-end gap-2 pt-2">
                 <Button variant="outline" onClick={() => setDialogOpen(false)}>Batal</Button>
                 <Button onClick={handleSave} disabled={saving}>{saving ? "Menyimpan..." : "Simpan"}</Button>
