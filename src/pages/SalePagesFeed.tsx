@@ -146,7 +146,7 @@ export default function SalePagesFeed() {
         if (categories.length > 0) {
           const { data: catProds } = await supabase
             .from("public_products")
-            .select("id, name, price, category, image_url, description, images")
+            .select("id, name, price, category, image_url, description")
             .in("category", categories)
             .eq("status", "active");
           categoryProds.push(...((catProds || []) as FeedProduct[]));
@@ -157,7 +157,7 @@ export default function SalePagesFeed() {
           if (mainProductIds.length > 0) {
             const { data: prods } = await supabase
               .from("public_products")
-              .select("id, name, price, category, image_url, description, images")
+              .select("id, name, price, category, image_url, description")
               .in("id", mainProductIds);
             const pMap: Record<string, FeedProduct> = {};
             (prods || []).forEach((p: any) => { pMap[p.id] = p; });
@@ -246,7 +246,7 @@ export default function SalePagesFeed() {
             if (ids.length === 0) return { pageId: p.id, addons: [] as FeedProduct[] };
             const { data: prods } = await supabase
               .from("public_products")
-              .select("id, name, price, category, image_url, description, images")
+              .select("id, name, price, category, image_url, description")
               .in("id", ids);
             // Filter keluar produk utama di frontend (bukan di query)
             const addons = (prods || []).filter((pr: any) => pr.id !== p.product_id) as FeedProduct[];
