@@ -486,7 +486,7 @@ export default function SalePagesFeed() {
                           className="w-full flex items-center gap-2 bg-white/5 hover:bg-white/10 rounded-lg p-2 text-left transition-colors"
                         >
                           {cp.image_url ? (
-                            <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                            <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-contain border border-white/10 shrink-0 bg-white/5" />
                           ) : (
                             <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
                           )}
@@ -514,7 +514,7 @@ export default function SalePagesFeed() {
                           <>
                             <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
                               {cp.image_url ? (
-                                <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-cover border border-white/10 shrink-0" />
+                                <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-contain border border-white/10 shrink-0 bg-white/5" />
                               ) : (
                                 <div className="h-10 w-10 rounded-md bg-white/10 shrink-0" />
                               )}
@@ -559,7 +559,7 @@ export default function SalePagesFeed() {
             <div className="mt-2 bg-black/40 backdrop-blur-md rounded-xl border border-white/10 px-3 py-2">
               <div className="flex items-start gap-3">
                 {product.image_url ? (
-                  <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-cover border border-white/10 shrink-0" />
+                  <img src={product.image_url} alt={product.name} className="h-12 w-12 rounded-lg object-contain border border-white/10 shrink-0 bg-white/5" />
                 ) : (
                   <div className="h-12 w-12 rounded-lg bg-white/5 border border-white/10 shrink-0" />
                 )}
