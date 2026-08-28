@@ -189,7 +189,7 @@ export default function SalePagesFeed() {
                 .select("id, name, car_model, rating, review, images, created_at, avatar_url")
                 .order("created_at", { ascending: false })
                 .range(fromR, fromR + 999);
-              if (rErr || !data || data.length === 0) break;
+              if (rErr || !batch || batch.length === 0) break;
               allReviewsAll.push(...batch);
               if (batch.length < 1000) break;
               fromR += 1000;
