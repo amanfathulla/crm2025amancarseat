@@ -111,6 +111,7 @@ export default function SalePagesFeed() {
   const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
+  const [showSizePicker, setShowSizePicker] = useState(false);
   const [infoOpen, setInfoOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [selectedCatProduct, setSelectedCatProduct] = useState<string | null>(null);
@@ -282,9 +283,11 @@ export default function SalePagesFeed() {
 
   const goNext = useCallback(() => {
     setIndex(i => (i + 1) % pages.length);
+    setShowSizePicker(false);
   }, [pages.length]);
   const goPrev = useCallback(() => {
     setIndex(i => (i - 1 + pages.length) % pages.length);
+    setShowSizePicker(false);
   }, [pages.length]);
 
   useEffect(() => {
@@ -603,16 +606,16 @@ export default function SalePagesFeed() {
                 </div>
 
               {/* Variations — segmented control satu baris */}
-              {variations.length > 1 && (
+              {variations.length > 1 && showSizePicker && (
                 <div className="mt-1.5">
-                  <p className="text-white/80 text-[10px] font-bold uppercase tracking-wide mb-1">Pilih Saiz Kereta</p>
+                  <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide mb-1.5">Pilih Saiz Kereta</p>
                   <div className="flex gap-1.5">
                     {variations.map(v => {
                       const sel = selectedVar?.id === v.id;
                       return (
                         <button
                           key={v.id}
-                          onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
+                          onClick={() => { setSelectedVars(s => ({ ...s, [product.id]: v.id })); setShowSizePicker(false); }}
                           className={`relative flex-1 rounded-xl border overflow-visible transition-colors ${
                             sel
                               ? "border-red-600 bg-red-600/15"
@@ -623,7 +626,7 @@ export default function SalePagesFeed() {
                             <Check className="absolute top-0.5 left-0.5 z-10 h-3 w-3 text-red-600 drop-shadow" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className="block text-center text-[9px] font-bold leading-none py-0.5 text-white/80">{v.name}</span>
+                          <span className="block text-center text-[11px] font-bold leading-tight py-1 text-white/90">{v.name}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute -top-3 right-0 bg-amber-500 text-black text-[7px] font-bold px-1.5 py-0.5 rounded-full whitespace-normal">POPULAR</span>
                           )}
@@ -636,7 +639,16 @@ export default function SalePagesFeed() {
 
 
               {/* Buy Now — TERUS ke order form */}
-              {canBuyDirect ? (
+              {variations.length > 1 && !selectedVar ? (
+                <button
+                  type="button"
+                  onClick={() => { setShowSizePicker(true); }}
+                  style={ctaStyle}
+                  className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
+                >
+                  <ShoppingCart className="h-5 w-5" /> Pilih Saiz Kereta
+                </button>
+              ) : canBuyDirect ? (
                 <a
                   href={buyUrl}
                   onClick={() => trackSalePageEvent(active.id, "cta_click", { variation_id: selectedVar?.id })}
@@ -644,7 +656,14 @@ export default function SalePagesFeed() {
                   className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
                 >
                   <ShoppingCart className="h-5 w-5" />
-                  {active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}
+                  {selectedVar ? (
+                    <span className="flex flex-col items-center leading-tight">
+                      <span className="text-[10px] font-medium opacity-80">{active.cta_label || "Buy Now"}</span>
+                      <span className="text-sm">{selectedVar.name} • RM{displayPrice.toFixed(0)}</span>
+                    </span>
+                  ) : (
+                    <>{active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}</>
+                  )}
                 </a>
               ) : (
                 <div style={ctaStyle} className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} opacity-60 text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}>
