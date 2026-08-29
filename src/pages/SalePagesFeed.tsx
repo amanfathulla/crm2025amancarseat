@@ -446,10 +446,13 @@ export default function SalePagesFeed() {
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain rounded-full" />
-            <span className="text-white text-sm font-bold">ACS LEGACY</span>
+            <span className="text-white text-sm font-bold">AMANCARSEAT ACS LEGACY</span>
             <img src={verifiedBadge} alt="Verified" className="h-4 w-4 object-contain" />
           </div>
           <div className="flex items-center gap-2">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/90 bg-black/50 backdrop-blur px-2 py-1 rounded-full">
+              <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()}
+            </span>
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
               {index + 1}/{pages.length}
             </span>
@@ -478,11 +481,8 @@ export default function SalePagesFeed() {
           {/* Headline */}
           <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
 
-          {/* Meta — view + testimoni count (bawah headline) */}
+          {/* Meta — testimoni count (bawah headline) */}
           <div className="flex items-center gap-2 mt-2">
-            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
-              <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()} view
-            </span>
             {product && reviewCountMap[product.id] > 0 && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
                 <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCountMap[product.id]} testimoni
