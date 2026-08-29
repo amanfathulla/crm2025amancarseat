@@ -453,6 +453,12 @@ export default function SalePagesFeed() {
             <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/90 bg-black/50 backdrop-blur px-2 py-1 rounded-full">
               <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()}
             </span>
+            <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
+              {index + 1}/{pages.length}
+            </span>
+            <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
+              {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
+            </button>
           </div>
         </div>
 
@@ -475,19 +481,13 @@ export default function SalePagesFeed() {
           {/* Headline */}
           <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
 
-          {/* Meta — testimoni count + page counter + mute (bawah headline) */}
+          {/* Meta — testimoni count (bawah headline) */}
           <div className="flex items-center gap-2 mt-2">
             {product && reviewCountMap[product.id] > 0 && (
               <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
                 <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCountMap[product.id]} testimoni
               </span>
             )}
-            <span className="text-white/70 text-[10px] font-bold font-mono bg-black/40 backdrop-blur px-2 py-0.5 rounded-full">
-              {index + 1}/{pages.length}
-            </span>
-            <button onClick={toggleMute} className="h-6 w-6 rounded-full bg-black/40 backdrop-blur flex items-center justify-center">
-              {muted ? <VolumeX className="h-3 w-3 text-white/80" /> : <Volume2 className="h-3 w-3 text-white/80" />}
-            </button>
           </div>
 
           {/* Produk card — TERUS di sini, bukan pergi page lain */}
