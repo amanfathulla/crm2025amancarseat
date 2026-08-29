@@ -12,7 +12,7 @@ import seat7 from "@/assets/seat-png/7-seater.png";
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="w-full h-14 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="block w-full h-auto object-contain" />;
 }
 
 function parseSeatCount(name: string): number {
@@ -610,17 +610,17 @@ export default function SalePagesFeed() {
                         <button
                           key={v.id}
                           onClick={() => setSelectedVars(s => ({ ...s, [product.id]: v.id }))}
-                          className={`relative flex-1 flex flex-col items-center justify-end gap-1 rounded-xl border px-1 py-1.5 transition-colors ${
+                          className={`relative flex-1 rounded-xl border overflow-visible transition-colors ${
                             sel
-                              ? "border-red-600 bg-red-600/15 text-red-600"
-                              : "border-white/15 bg-white/5 text-white/80 hover:border-white/30"
+                              ? "border-red-600 bg-red-600/15"
+                              : "border-white/15 bg-white/5 hover:border-white/30"
                           }`}
                         >
                           {sel && (
-                            <Check className="h-3 w-3 shrink-0 text-red-600" />
+                            <Check className="absolute top-0.5 left-0.5 z-10 h-3 w-3 text-red-600 drop-shadow" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className="text-[9px] font-bold leading-none whitespace-nowrap">{v.name}</span>
+                          <span className="block text-center text-[9px] font-bold leading-none py-0.5 text-white/80">{v.name}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute -top-3 right-0 bg-amber-500 text-black text-[7px] font-bold px-1.5 py-0.5 rounded-full whitespace-normal">POPULAR</span>
                           )}
