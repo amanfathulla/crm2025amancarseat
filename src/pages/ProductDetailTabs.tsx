@@ -72,12 +72,10 @@ export function ProductDetailTabs({
     isLocked ? (defaultMaterial as string) : "Semua"
   );
   const list = (allReviews && allReviews.length ? allReviews : reviews) as any[];
-  // Pinned sahaja untuk tab Testimoni (tak lagging), total count kekal ikut material
-  const pinnedList = list.filter(r => r.pinned === true).sort((a, b) => (a.pin_order ?? 999) - (b.pin_order ?? 999));
-  // Filter: pinned → material → produk (kalau locked)
+  // SEMUA testimoni (bukan pinned sahaja) — unlimited ikut produk
   let filtered = matFilter === "Semua"
-    ? pinnedList
-    : pinnedList.filter(r => (r.material || "") === matFilter);
+    ? list
+    : list.filter(r => (r.material || "") === matFilter);
   // Kalau produk diset (admin pilih produk), TERUS filter produk tu
   if (isProdukLocked) {
     filtered = filtered.filter(r => r.warna === defaultProduk);
