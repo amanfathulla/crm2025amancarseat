@@ -95,7 +95,7 @@ export function ProductDetailTabs({
       {/* ── Tab bar (satu baris) ── */}
       <div className="flex border-b border-white/10">
         {[
-          { key: "desc" as const, label: "Penerangan" },
+          { key: "desc" as const, label: "Detail" },
           { key: "gambar" as const, label: "Gambar" },
           { key: "testimoni" as const, label: `Testimoni (${filtered.length})` },
         ].map(t => (

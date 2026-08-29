@@ -8,6 +8,7 @@ import { trackSalePageEvent } from "@/lib/salePageEvents";
 import seat2 from "@/assets/seat-png/2-seater.png";
 import seat5 from "@/assets/seat-png/5-seater.png";
 import seat7 from "@/assets/seat-png/7-seater.png";
+import verifiedBadge from "@/assets/verified-badge.png";
 
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
@@ -444,11 +445,9 @@ export default function SalePagesFeed() {
         {/* ── Header ── */}
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
           <div className="flex items-center gap-2">
-            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
-            <span className="text-white text-sm font-bold">AmanCarSeat</span>
-            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-400 bg-amber-400/15 border border-amber-400/40 px-1.5 py-0.5 rounded-full">
-              <Check className="h-2.5 w-2.5" /> Verified
-            </span>
+            <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain rounded-full" />
+            <span className="text-white text-sm font-bold">ACS LEGACY</span>
+            <img src={verifiedBadge} alt="Verified" className="h-4 w-4 object-contain" />
           </div>
           <div className="flex items-center gap-2">
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
