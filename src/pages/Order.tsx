@@ -43,7 +43,7 @@ function parseSeatCount(name: string): number {
 }
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="h-16 sm:h-12 w-auto shrink-0 object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="block w-full h-auto object-contain" />;
 }
 
 interface ProductVariation { id: string; name: string; price: number; }
@@ -882,15 +882,22 @@ export default function OrderPage() {
                           {product.variations.length > 0 && (
                             <div>
                               <p className="text-white/50 text-[10px] uppercase tracking-widest font-medium mb-2">Pilih Saiz / Variasi</p>
-                              <div className="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                              <div className="grid grid-cols-3 gap-2">
                                 {product.variations.map((v) => {
                                   const sel = selectedVariation?.id === v.id;
                                   return (
                                     <button key={v.id} onClick={() => setSelectedVariation(v)}
-                                      className={`flex flex-col items-center justify-center gap-1 p-3 rounded-lg border text-sm font-medium transition-all sm:flex-row sm:justify-between sm:items-center ${sel ? "border-white bg-white text-black" : "border-white/10 bg-white/5 text-white/65 hover:bg-white/10"}`}>
+                                      className={`relative rounded-xl border transition-colors ${
+                                        sel
+                                          ? "border-white bg-white text-black"
+                                          : "border-white/15 bg-white/5 hover:border-white/30"
+                                      }`}
+                                    >
                                       <SeatIcon count={parseSeatCount(v.name)} />
-                                      <span>{v.name}</span>
-                                      <span className={`font-bold ${sel ? "text-black" : "text-green-400"}`}>RM{v.price.toFixed(0)}</span>
+                                      <div className={`flex items-center justify-between gap-1 px-1.5 py-1 text-[11px] font-bold leading-none ${sel ? "text-black" : "text-white/85"}`}>
+                                        <span className="truncate">{v.name}</span>
+                                        <span className={sel ? "text-black" : "text-green-400"}>RM{v.price.toFixed(0)}</span>
+                                      </div>
                                     </button>
                                   );
                                 })}
