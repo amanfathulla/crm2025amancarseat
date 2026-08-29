@@ -446,7 +446,7 @@ export default function SalePagesFeed() {
         <div className="absolute top-0 left-0 right-0 z-30 flex items-center justify-between px-4 pt-3 pb-4 bg-gradient-to-b from-black/80 to-transparent pointer-events-none">
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain rounded-full" />
-            <span className="text-white text-sm font-bold">AMANCARSEAT ACS LEGACY</span>
+            <span className="text-white text-sm font-bold">AMANCARSEAT</span>
             <img src={verifiedBadge} alt="Verified" className="h-4 w-4 object-contain" />
           </div>
           <div className="flex items-center gap-2">
