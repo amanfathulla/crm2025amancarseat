@@ -648,22 +648,35 @@ export default function SalePagesFeed() {
                   <ShoppingCart className="h-5 w-5" /> Pilih Saiz Kereta
                 </button>
               ) : canBuyDirect ? (
-                <a
-                  href={buyUrl}
-                  onClick={() => trackSalePageEvent(active.id, "cta_click", { variation_id: selectedVar?.id })}
-                  style={ctaStyle}
-                  className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
-                >
-                  <ShoppingCart className="h-5 w-5" />
-                  {selectedVar ? (
-                    <span className="flex flex-col items-center leading-tight">
-                      <span className="text-[10px] font-medium opacity-80">{active.cta_label || "Buy Now"}</span>
-                      <span className="text-sm">{selectedVar.name} • RM{displayPrice.toFixed(0)}</span>
-                    </span>
-                  ) : (
-                    <>{active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}</>
+                <div className="mt-2.5 flex gap-2">
+                  <a
+                    href={buyUrl}
+                    onClick={() => trackSalePageEvent(active.id, "cta_click", { variation_id: selectedVar?.id })}
+                    style={ctaStyle}
+                    className={`flex-1 h-14 rounded-2xl ${!hexColor ? theme.cta : ""} text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}
+                  >
+                    <ShoppingCart className="h-5 w-5" />
+                    {selectedVar ? (
+                      <span className="flex flex-col items-center leading-tight">
+                        <span className="text-[10px] font-medium opacity-80">{active.cta_label || "Buy Now"}</span>
+                        <span className="text-sm">{selectedVar.name} • RM{displayPrice.toFixed(0)}</span>
+                      </span>
+                    ) : (
+                      <>{active.cta_label || "Buy Now"} • RM{displayPrice.toFixed(0)}</>
+                    )}
+                  </a>
+                  {variations.length > 1 && selectedVar && (
+                    <button
+                      type="button"
+                      onClick={() => { setShowSizePicker(true); }}
+                      className="h-14 px-3 rounded-2xl bg-white/10 border border-white/15 text-white/70 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 active:scale-[0.97] transition-transform shrink-0"
+                      title="Tukar saiz"
+                    >
+                      <ChevronDown className="h-4 w-4" />
+                      Tukar
+                    </button>
                   )}
-                </a>
+                </div>
               ) : (
                 <div style={ctaStyle} className={`mt-2.5 w-full h-14 rounded-2xl ${!hexColor ? theme.cta : ""} opacity-60 text-black font-bold text-base flex items-center justify-center gap-2 active:scale-[0.97] transition-transform`}>
                   Pilih Varian Dahulu
