@@ -443,6 +443,9 @@ export default function SalePagesFeed() {
           <div className="flex items-center gap-2">
             <img src="/lovable-uploads/2a080884-e251-46d5-a2c1-c5d1018f76f5.png" alt="ACS" className="h-7 w-7 object-contain" />
             <span className="text-white text-sm font-bold">AmanCarSeat</span>
+            <span className="inline-flex items-center gap-0.5 text-[10px] font-bold text-amber-400 bg-amber-400/15 border border-amber-400/40 px-1.5 py-0.5 rounded-full">
+              <Check className="h-2.5 w-2.5" /> Verified
+            </span>
           </div>
           <div className="flex items-center gap-2">
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
@@ -473,14 +476,14 @@ export default function SalePagesFeed() {
           {/* Headline */}
           <h2 className="text-white font-bold text-lg leading-tight">{active.headline || active.title}</h2>
 
-          {/* Meta */}
-          <div className="flex items-center gap-3 mt-2 text-[11px]">
-            <span className="flex items-center gap-1 text-white/60">
-              <Eye className="h-3.5 w-3.5" /> {active.views || 0} view
+          {/* Meta — view + testimoni count (bawah headline) */}
+          <div className="flex items-center gap-2 mt-2">
+            <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
+              <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()} view
             </span>
             {product && reviewCountMap[product.id] > 0 && (
-              <span className="flex items-center gap-1 text-white/60">
-                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCountMap[product.id]} testimoni {product.category ? `(${product.category})` : ""}
+              <span className="inline-flex items-center gap-1 text-[10px] font-semibold text-white/70 bg-white/10 border border-white/10 px-2 py-0.5 rounded-full">
+                <Star className="h-3 w-3 text-amber-400 fill-amber-400" /> {reviewCountMap[product.id]} testimoni
               </span>
             )}
           </div>
