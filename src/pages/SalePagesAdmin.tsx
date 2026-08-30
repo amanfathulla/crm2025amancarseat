@@ -162,8 +162,9 @@ export default function SalePagesAdmin() {
   useEffect(() => {
     fetchPages();
     authClient
-      .from("products")
+      .from("public_products")
       .select("id, name, category, price")
+      .eq("status", "active")
       .order("name")
       .then(({ data }: any) => setProducts(((data || []) as ProductOption[])))
       .catch(() => {});

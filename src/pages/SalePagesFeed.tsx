@@ -445,8 +445,8 @@ export default function SalePagesFeed() {
               <div className="h-16 w-16 rounded-full bg-white/20 backdrop-blur flex items-center justify-center">
                 <Play className="h-8 w-8 text-white fill-white" />
               </div>
-              <span className="absolute top-14 left-1/2 -translate-x-1/2 text-white text-[13px] font-semibold bg-black/70 backdrop-blur px-4 py-2 rounded-full whitespace-nowrap">
-                🔊 Tekan untuk main dengan suara
+              <span className="absolute top-20 left-1/2 -translate-x-1/2 text-white text-[12px] font-semibold bg-black/70 backdrop-blur px-3 py-1.5 rounded-full whitespace-nowrap">
+                Klik untuk dengar suara
               </span>
             </button>
           )}
