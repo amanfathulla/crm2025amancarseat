@@ -113,6 +113,7 @@ export default function SalePagesFeed() {
   const [isDesktop, setIsDesktop] = useState(false);
   const [selectedVars, setSelectedVars] = useState<Record<string, string>>({}); // productId → variationId
   const [showSizePicker, setShowSizePicker] = useState(false);
+  const [materialTab, setMaterialTab] = useState<string>("all"); // all | Kain Mesh | Kain Nylon | Kain Fullsilk | Semi Leather Kalis Air
   const [infoOpen, setInfoOpen] = useState(false);
   const [catOpen, setCatOpen] = useState(false);
   const [selectedCatProduct, setSelectedCatProduct] = useState<string | null>(null);
@@ -360,7 +361,17 @@ export default function SalePagesFeed() {
     );
   }
 
-  const active = pages[index];
+  // Filter pages ikut material tab (kalau bukan "all")
+  const filteredPages = materialTab === "all"
+    ? pages
+    : pages.filter(p => {
+        // Dapatkan material page: dari testimonial_material atau product category
+        const mat = (p as any).testimonial_material
+          || (p.product_id && productMap[p.product_id]?.category)
+          || (p.product_mode === "category" ? p.product_category : null);
+        return mat === materialTab;
+      });
+  const active = filteredPages[index] || pages[index];
   const isCategoryMode = (active.product_mode || "single") === "category";
   const categoryProducts = isCategoryMode
     ? (Object.values(productMap).filter(p => p.category === active.product_category))
@@ -454,12 +465,35 @@ export default function SalePagesFeed() {
               <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()}
             </span>
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
-              {index + 1}/{pages.length}
+              {index + 1}/{filteredPages.length}
             </span>
             <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
             </button>
           </div>
+        </div>
+
+        {/* ── Material Tabs (macam TikTok: For You / Following) ── */}
+        <div className="absolute top-14 left-0 right-0 z-25 flex items-center justify-center gap-4 px-4">
+          {[
+            { k: "all", l: "Semua" },
+            { k: "Kain Mesh", l: "Mesh" },
+            { k: "Kain Nylon", l: "Nylon" },
+            { k: "Kain Fullsilk", l: "Silk" },
+            { k: "Semi Leather Kalis Air", l: "Semi Leather" },
+          ].map(t => (
+            <button
+              key={t.k}
+              onClick={() => { setMaterialTab(t.k); setIndex(0); setShowSizePicker(false); }}
+              className={`text-[12px] font-bold pb-1 border-b-2 transition-colors whitespace-nowrap ${
+                materialTab === t.k
+                  ? "text-white border-white"
+                  : "text-white/40 border-transparent hover:text-white/70"
+              }`}
+            >
+              {t.l}
+            </button>
+          ))}
         </div>
 
         {/* ── Bottom: info produk + Buy Now TERUS ── */}
