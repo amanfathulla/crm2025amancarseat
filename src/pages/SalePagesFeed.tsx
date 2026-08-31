@@ -284,13 +284,13 @@ export default function SalePagesFeed() {
   }, []);
 
   const goNext = useCallback(() => {
-    setIndex(i => (i + 1) % pages.length);
+    setIndex(i => i + 1);
     setShowSizePicker(false);
-  }, [pages.length]);
+  }, []);
   const goPrev = useCallback(() => {
-    setIndex(i => (i - 1 + pages.length) % pages.length);
+    setIndex(i => i - 1);
     setShowSizePicker(false);
-  }, [pages.length]);
+  }, []);
 
   useEffect(() => {
     const onKey = (e: KeyboardEvent) => {
@@ -362,16 +362,19 @@ export default function SalePagesFeed() {
   }
 
   // Filter pages ikut material tab (kalau bukan "all")
+  // Ambil category dari produk utama (public_products), bukan testimonial_material
   const filteredPages = materialTab === "all"
     ? pages
     : pages.filter(p => {
-        // Dapatkan material page: dari testimonial_material atau product category
-        const mat = (p as any).testimonial_material
-          || (p.product_id && productMap[p.product_id]?.category)
-          || (p.product_mode === "category" ? p.product_category : null);
+        let mat: string | null = null;
+        if (p.product_id && productMap[p.product_id]) {
+          mat = productMap[p.product_id].category || null;
+        } else if ((p.product_mode || "single") === "category" && p.product_category) {
+          mat = p.product_category as string;
+        }
         return mat === materialTab;
       });
-  const active = filteredPages[index] || pages[index];
+  const active = filteredPages[index] || filteredPages[0] || pages[0];
   const isCategoryMode = (active.product_mode || "single") === "category";
   const categoryProducts = isCategoryMode
     ? (Object.values(productMap).filter(p => p.category === active.product_category))
