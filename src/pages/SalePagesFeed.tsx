@@ -590,19 +590,50 @@ export default function SalePagesFeed() {
                               </div>
                             </div>
                             {cpVars.length > 1 ? (
-                              <div className="flex flex-wrap gap-1.5">
-                                {cpVars.map(v => (
-                                  <a
-                                    key={v.id}
-                                    href={`/order?product=${cp.id}&variation=${v.id}&sp=${active.id}`}
-                                    style={ctaStyle}
-                                    className={`flex-1 px-2 py-2 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[11px] text-center`}
-                                  >
-                                    {v.name}
-                                    <span className="block text-[10px] opacity-70">RM{v.price.toFixed(0)}</span>
-                                  </a>
-                                ))}
+                              <div className="grid grid-cols-3 gap-2">
+                                {cpVars.map(v => {
+                                  const sel = selectedVars[cp.id] === v.id;
+                                  return (
+                                    <button
+                                      key={v.id}
+                                      onClick={() => setSelectedVars(s => ({ ...s, [cp.id]: v.id }))}
+                                      className={`relative rounded-xl border transition-colors ${
+                                        sel
+                                          ? "border-white bg-white text-black"
+                                          : "border-white/15 bg-white/5 hover:border-white/30"
+                                      }`}
+                                    >
+                                      <SeatIcon count={parseSeatCount(v.name)} />
+                                      <div className={`flex items-center justify-between gap-1 px-1.5 py-1 text-[11px] font-bold leading-none ${sel ? "text-black" : "text-white/85"}`}>
+                                        <span className="truncate">{v.name}</span>
+                                        <span className={sel ? "text-black" : "text-green-400"}>RM{v.price.toFixed(0)}</span>
+                                      </div>
+                                    </button>
+                                  );
+                                })}
                               </div>
+                              {/* Buy Now untuk mode kategori — sama macam mode single */}
+                              {(() => {
+                                const selV = cpVars.find(v => v.id === selectedVars[cp.id]);
+                                return selV ? (
+                                  <a
+                                    href={`/order?product=${cp.id}&variation=${selV.id}&sp=${active.id}`}
+                                    onClick={() => trackSalePageEvent(active.id, "buy_click")}
+                                    style={ctaStyle}
+                                    className={`flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px]`}
+                                  >
+                                    <span className="flex items-center gap-1.5"><ShoppingCart className="h-4 w-4" /> Buy Now</span>
+                                    <span className="text-[11px]">{selV.name} • RM{selV.price.toFixed(0)}</span>
+                                  </a>
+                                ) : (
+                                  <button
+                                    type="button"
+                                    className="flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white font-bold text-[13px]"
+                                  >
+                                    <ShoppingCart className="h-4 w-4" /> Pilih Saiz Kereta
+                                  </button>
+                                );
+                              })()}
                             ) : (
                               <a
                                 href={`/order?product=${cp.id}${cpVars[0] ? `&variation=${cpVars[0].id}` : ""}&sp=${active.id}`}
