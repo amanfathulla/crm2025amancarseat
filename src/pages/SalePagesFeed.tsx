@@ -13,7 +13,7 @@ import verifiedBadge from "@/assets/verified-badge.png";
 // ── Icon ikut seat count: 2=seat, 5=sedan, 7=mpv ──
 function SeatIcon({ count }: { count: number }) {
   const src = count <= 2 ? seat2 : count <= 5 ? seat5 : seat7;
-  return <img src={src} alt={`${count} seater`} className="block w-full h-auto object-contain" />;
+  return <img src={src} alt={`${count} seater`} className="block w-full max-h-14 object-contain" />;
 }
 
 function parseSeatCount(name: string): number {
@@ -665,8 +665,8 @@ export default function SalePagesFeed() {
 
               {/* Variations — segmented control satu baris */}
               {variations.length > 1 && showSizePicker && (
-                <div className="mt-1.5">
-                  <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide mb-1.5">Pilih Saiz Kereta</p>
+                <div className="mt-1">
+                  <p className="text-white/90 text-[11px] font-bold uppercase tracking-wide mb-1">Pilih Saiz Kereta</p>
                   <div className="flex gap-1.5">
                     {variations.map(v => {
                       const sel = selectedVar?.id === v.id;
@@ -684,7 +684,7 @@ export default function SalePagesFeed() {
                             <Check className="absolute top-0.5 left-0.5 z-10 h-3 w-3 text-red-600 drop-shadow" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className="block text-center text-[11px] font-bold leading-tight py-1 text-white/90">{v.name}</span>
+                          <span className="block text-center text-[11px] font-bold leading-tight py-0.5 text-white/90">{v.name}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute -top-3 right-0 bg-amber-500 text-black text-[7px] font-bold px-1.5 py-0.5 rounded-full whitespace-normal">POPULAR</span>
                           )}
