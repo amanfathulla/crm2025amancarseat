@@ -676,15 +676,15 @@ export default function SalePagesFeed() {
                           onClick={() => { setSelectedVars(s => ({ ...s, [product.id]: v.id })); setShowSizePicker(false); }}
                           className={`relative flex-1 rounded-xl border overflow-visible transition-colors ${
                             sel
-                              ? "border-red-600 bg-red-600/15"
+                              ? "border-white bg-white"
                               : "border-white/15 bg-white/5 hover:border-white/30"
                           }`}
                         >
                           {sel && (
-                            <Check className="absolute top-0.5 left-0.5 z-10 h-3 w-3 text-red-600 drop-shadow" />
+                            <Check className="absolute top-0.5 left-0.5 z-10 h-3 w-3 text-black drop-shadow" />
                           )}
                           <SeatIcon count={parseSeatCount(v.name)} />
-                          <span className="block text-center text-[11px] font-bold leading-tight py-0.5 text-white/90">{v.name}</span>
+                          <span className={`block text-center text-[11px] font-bold leading-tight py-0.5 ${sel ? "text-black" : "text-white/90"}`}>{v.name}</span>
                           {v.name.toLowerCase().includes("5 seater") && (
                             <span className="absolute -top-3 right-0 bg-amber-500 text-black text-[7px] font-bold px-1.5 py-0.5 rounded-full whitespace-normal">POPULAR</span>
                           )}
@@ -728,7 +728,7 @@ export default function SalePagesFeed() {
                     <button
                       type="button"
                       onClick={() => { setShowSizePicker(true); }}
-                      className="h-14 px-3 rounded-2xl bg-white/10 border border-white/15 text-white/70 text-[10px] font-semibold flex flex-col items-center justify-center gap-0.5 active:scale-[0.97] transition-transform shrink-0"
+                      className="h-14 px-4 rounded-2xl bg-white/15 border border-white/25 text-white text-[11px] font-bold flex flex-col items-center justify-center gap-0.5 active:scale-[0.97] transition-transform shrink-0"
                       title="Tukar saiz"
                     >
                       <ChevronDown className="h-4 w-4" />
