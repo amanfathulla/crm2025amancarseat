@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from "react";
+import { useState, useEffect, useRef, useCallback, Fragment } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase } from "@/lib/reviewsClient";
 import { fetchReviewMaterials, fetchPinnedReviews, fetchReviewWarna } from "@/lib/reviewMaterials";
@@ -576,8 +576,9 @@ export default function SalePagesFeed() {
                       {(() => {
                         const cp = categoryProducts.find(p => p.id === selectedCatProduct)!;
                         const cpVars = variationMap[cp.id] || [];
+                        const selVar = cpVars.find(v => v.id === selectedVars[cp.id]);
                         return (
-                          <>
+                          <Fragment>
                             <div className="flex items-center gap-2 bg-white/5 rounded-lg p-2">
                               {cp.image_url ? (
                                 <img src={cp.image_url} alt={cp.name} className="h-10 w-10 rounded-md object-contain border border-white/10 shrink-0 bg-white/5" />
@@ -612,29 +613,7 @@ export default function SalePagesFeed() {
                                   );
                                 })}
                               </div>
-                              {/* Buy Now untuk mode kategori — sama macam mode single */}
-                              {(() => {
-                                const selV = cpVars.find(v => v.id === selectedVars[cp.id]);
-                                return selV ? (
-                                  <a
-                                    href={`/order?product=${cp.id}&variation=${selV.id}&sp=${active.id}`}
-                                    onClick={() => trackSalePageEvent(active.id, "buy_click")}
-                                    style={ctaStyle}
-                                    className={`flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px]`}
-                                  >
-                                    <span className="flex items-center gap-1.5"><ShoppingCart className="h-4 w-4" /> Buy Now</span>
-                                    <span className="text-[11px]">{selV.name} • RM{selV.price.toFixed(0)}</span>
-                                  </a>
-                                ) : (
-                                  <button
-                                    type="button"
-                                    className="flex items-center justify-center gap-1.5 w-full px-3 py-2 rounded-lg bg-white/10 border border-white/20 text-white font-bold text-[13px]"
-                                  >
-                                    <ShoppingCart className="h-4 w-4" /> Pilih Saiz Kereta
-                                  </button>
-                                );
-                              })()}
-                            ) : (
+                            ) : cpVars.length === 1 ? (
                               <a
                                 href={`/order?product=${cp.id}${cpVars[0] ? `&variation=${cpVars[0].id}` : ""}&sp=${active.id}`}
                                 style={ctaStyle}
@@ -642,8 +621,20 @@ export default function SalePagesFeed() {
                               >
                                 <ShoppingCart className="h-5 w-5" /> Tempah Sekarang • RM{(cpVars[0]?.price ?? cp.price).toFixed(0)}
                               </a>
+                            ) : null}
+                            {/* Buy Now untuk mode kategori — jika dah pilih saiz */}
+                            {selVar && (
+                              <a
+                                href={`/order?product=${cp.id}&variation=${selVar.id}&sp=${active.id}`}
+                                onClick={() => trackSalePageEvent(active.id, "buy_click")}
+                                style={ctaStyle}
+                                className={`flex items-center justify-between gap-2 w-full px-3 py-2 rounded-lg ${!hexColor ? theme.cta : ""} text-black font-bold text-[13px]`}
+                              >
+                                <span className="flex items-center gap-1.5"><ShoppingCart className="h-4 w-4" /> Buy Now</span>
+                                <span className="text-[11px]">{selVar.name} • RM{selVar.price.toFixed(0)}</span>
+                              </a>
                             )}
-                          </>
+                          </Fragment>
                         );
                       })()}
                     </div>
