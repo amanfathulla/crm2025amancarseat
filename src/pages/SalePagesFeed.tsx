@@ -283,12 +283,18 @@ export default function SalePagesFeed() {
     })();
   }, []);
 
+  // Bilangan page semasa (ikut tab material) — untuk wrap-around index
+  const countRef = useRef(1);
+  const activeRef = useRef<any>(null);
+
   const goNext = useCallback(() => {
-    setIndex(i => i + 1);
+    const n = Math.max(countRef.current, 1);
+    setIndex(i => (i + 1) % n);
     setShowSizePicker(false);
   }, []);
   const goPrev = useCallback(() => {
-    setIndex(i => i - 1);
+    const n = Math.max(countRef.current, 1);
+    setIndex(i => (i - 1 + n) % n);
     setShowSizePicker(false);
   }, []);
 
