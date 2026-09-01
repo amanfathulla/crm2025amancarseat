@@ -3,7 +3,7 @@ import { useParams, Link } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { reviewsSupabase, type Review } from "@/lib/reviewsClient";
 import { fetchReviewMaterials, fetchPinnedReviews, fetchReviewWarna } from "@/lib/reviewMaterials";
-import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, MessageCircle, Eye } from "lucide-react";
+import { Shield, Volume2, VolumeX, Play, Star, Zap, ChevronUp, ChevronDown, ChevronLeft, ChevronRight, MessageCircle, Eye, ShoppingCart } from "lucide-react";
 import { ProductDetailTabs } from "./ProductDetailTabs";
 import { trackSalePageEvent } from "@/lib/salePageEvents";
 
@@ -21,6 +21,9 @@ interface SalePage {
   badge_text: string | null;
   theme: string | null;
   is_published: boolean;
+  views?: number;
+  product_mode?: string | null;
+  product_category?: string | null;
 }
 
 interface Product {
@@ -29,6 +32,7 @@ interface Product {
   price: number;
   category: string | null;
   image_url: string | null;
+  image_urls?: string[] | null;
   description: string | null;
 }
 
@@ -93,7 +97,7 @@ export default function SalePageView() {
         }
         setPage(pg as SalePage);
         // bump views via SECURITY DEFINER RPC + update local state supaya UI tunjuk nombor baru
-        supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(({ data }: any) => {
+        void Promise.resolve(supabase.rpc("bump_sale_page_views", { p_slug: pg.slug })).then(({ data }: any) => {
           const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
           setPage(prev => prev ? { ...prev, views: newViews } : prev);
         }).catch(() => {});
@@ -122,11 +126,14 @@ export default function SalePageView() {
             });
             setCategoryVariations(vMap);
           }
-        } else if (pg.product_id) {
-          const { data: prod } = await supabase
+        }
+        let prod: Product | null = null;
+        if ((pg.product_mode || "single") !== "category" && pg.product_id) {
+          const { data: prodData } = await supabase
             .from("public_products")
             .select("id, name, price, category, image_url, description, status")
             .eq("id", pg.product_id).single();
+          prod = prodData as Product | null;
           if (prod) {
             setProduct(prod as Product);
             const { data: vars } = await supabase

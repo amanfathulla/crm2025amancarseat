@@ -311,7 +311,7 @@ export default function SalePagesFeed() {
     // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
     const pg = pages[index];
     if (pg) {
-      supabase.rpc("bump_sale_page_views", { p_slug: pg.slug }).then(({ data }: any) => {
+      void Promise.resolve(supabase.rpc("bump_sale_page_views", { p_slug: pg.slug })).then(({ data }: any) => {
         // Guna nilai return RPC (views baru dari DB) supaya konsisten dengan page sebenar
         const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
         setPages(prev => prev.map((p, i) => i === index ? { ...p, views: newViews } : p));

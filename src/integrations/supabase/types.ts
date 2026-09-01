@@ -10,7 +10,7 @@ export type Database = {
   // Allows to automatically instantiate createClient with right options
   // instead of createClient<Database, { PostgrestVersion: 'XX' }>(URL, KEY)
   __InternalSupabase: {
-    PostgrestVersion: "13.0.4"
+    PostgrestVersion: "14.5"
   }
   public: {
     Tables: {
@@ -455,6 +455,7 @@ export type Database = {
           phone: string | null
           product: string | null
           product_variation: string | null
+          sale_page_id: string | null
           sales_amount: number | null
           seat_image_back: string | null
           seat_image_front: string | null
@@ -490,6 +491,7 @@ export type Database = {
           phone?: string | null
           product?: string | null
           product_variation?: string | null
+          sale_page_id?: string | null
           sales_amount?: number | null
           seat_image_back?: string | null
           seat_image_front?: string | null
@@ -525,6 +527,7 @@ export type Database = {
           phone?: string | null
           product?: string | null
           product_variation?: string | null
+          sale_page_id?: string | null
           sales_amount?: number | null
           seat_image_back?: string | null
           seat_image_front?: string | null
@@ -535,7 +538,15 @@ export type Database = {
           updated_at?: string | null
           zip_code?: string | null
         }
-        Relationships: []
+        Relationships: [
+          {
+            foreignKeyName: "customers_sale_page_id_fkey"
+            columns: ["sale_page_id"]
+            isOneToOne: false
+            referencedRelation: "sale_pages"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       leads: {
         Row: {
@@ -1078,6 +1089,7 @@ export type Database = {
           pinned: boolean
           review_id: string
           updated_at: string
+          warna: string | null
         }
         Insert: {
           created_at?: string
@@ -1086,6 +1098,7 @@ export type Database = {
           pinned?: boolean
           review_id: string
           updated_at?: string
+          warna?: string | null
         }
         Update: {
           created_at?: string
@@ -1094,8 +1107,194 @@ export type Database = {
           pinned?: boolean
           review_id?: string
           updated_at?: string
+          warna?: string | null
         }
         Relationships: []
+      }
+      sale_page_events: {
+        Row: {
+          created_at: string
+          event_type: string
+          id: string
+          page_id: string
+          variation_id: string | null
+          visitor_key: string | null
+        }
+        Insert: {
+          created_at?: string
+          event_type: string
+          id?: string
+          page_id: string
+          variation_id?: string | null
+          visitor_key?: string | null
+        }
+        Update: {
+          created_at?: string
+          event_type?: string
+          id?: string
+          page_id?: string
+          variation_id?: string | null
+          visitor_key?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_page_events_page_id_fkey"
+            columns: ["page_id"]
+            isOneToOne: false
+            referencedRelation: "sale_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_page_products: {
+        Row: {
+          created_at: string
+          id: string
+          product_id: string
+          sale_page_id: string
+          sort_order: number
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          product_id: string
+          sale_page_id: string
+          sort_order?: number
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          product_id?: string
+          sale_page_id?: string
+          sort_order?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_page_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_page_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_page_products_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "public_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_page_products_sale_page_id_fkey"
+            columns: ["sale_page_id"]
+            isOneToOne: false
+            referencedRelation: "sale_pages"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      sale_pages: {
+        Row: {
+          badge_text: string | null
+          created_at: string
+          cta_label: string | null
+          headline: string | null
+          id: string
+          is_published: boolean
+          material_variants: Json
+          poster_url: string | null
+          product_category: string | null
+          product_id: string | null
+          product_mode: string
+          slug: string
+          subheadline: string | null
+          template: number
+          testimonial_material: string | null
+          testimonial_product: string | null
+          theme: string
+          title: string
+          updated_at: string
+          video_url: string | null
+          video_urls: string[]
+          views: number
+        }
+        Insert: {
+          badge_text?: string | null
+          created_at?: string
+          cta_label?: string | null
+          headline?: string | null
+          id?: string
+          is_published?: boolean
+          material_variants?: Json
+          poster_url?: string | null
+          product_category?: string | null
+          product_id?: string | null
+          product_mode?: string
+          slug: string
+          subheadline?: string | null
+          template?: number
+          testimonial_material?: string | null
+          testimonial_product?: string | null
+          theme?: string
+          title: string
+          updated_at?: string
+          video_url?: string | null
+          video_urls?: string[]
+          views?: number
+        }
+        Update: {
+          badge_text?: string | null
+          created_at?: string
+          cta_label?: string | null
+          headline?: string | null
+          id?: string
+          is_published?: boolean
+          material_variants?: Json
+          poster_url?: string | null
+          product_category?: string | null
+          product_id?: string | null
+          product_mode?: string
+          slug?: string
+          subheadline?: string | null
+          template?: number
+          testimonial_material?: string | null
+          testimonial_product?: string | null
+          theme?: string
+          title?: string
+          updated_at?: string
+          video_url?: string | null
+          video_urls?: string[]
+          views?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sale_pages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "admin_products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_pages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "products"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "sale_pages_product_id_fkey"
+            columns: ["product_id"]
+            isOneToOne: false
+            referencedRelation: "public_products"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       sales_records: {
         Row: {
@@ -1214,89 +1413,6 @@ export type Database = {
           total_profit?: number
           total_revenue?: number
           year?: number
-        }
-        Relationships: []
-      }
-      sale_pages: {
-        Row: {
-          id: string
-          slug: string
-          title: string
-          headline: string | null
-          subheadline: string | null
-          video_url: string | null
-          video_urls: string[]
-          poster_url: string | null
-          product_id: string | null
-          cta_label: string | null
-          badge_text: string | null
-          theme: string
-          product_mode: string
-          product_category: string | null
-          is_published: boolean
-          views: number
-          created_at: string
-          updated_at: string
-        }
-        Insert: {
-          id?: string
-          slug: string
-          title: string
-          headline?: string | null
-          subheadline?: string | null
-          video_url?: string | null
-          video_urls?: string[]
-          poster_url?: string | null
-          product_id?: string | null
-          cta_label?: string | null
-          badge_text?: string | null
-          theme?: string
-          is_published?: boolean
-          views?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Update: {
-          id?: string
-          slug?: string
-          title?: string
-          headline?: string | null
-          subheadline?: string | null
-          video_url?: string | null
-          video_urls?: string[]
-          poster_url?: string | null
-          product_id?: string | null
-          cta_label?: string | null
-          badge_text?: string | null
-          theme?: string
-          is_published?: boolean
-          views?: number
-          created_at?: string
-          updated_at?: string
-        }
-        Relationships: []
-      }
-      sale_page_products: {
-        Row: {
-          id: string
-          sale_page_id: string
-          product_id: string
-          sort_order: number
-          created_at: string
-        }
-        Insert: {
-          id?: string
-          sale_page_id: string
-          product_id: string
-          sort_order?: number
-          created_at?: string
-        }
-        Update: {
-          id?: string
-          sale_page_id?: string
-          product_id?: string
-          sort_order?: number
-          created_at?: string
         }
         Relationships: []
       }
@@ -1516,6 +1632,7 @@ export type Database = {
         Returns: Json
       }
       affiliate_session_valid: { Args: never; Returns: boolean }
+      bump_sale_page_views: { Args: { p_slug: string }; Returns: number }
       check_admin_password:
         | { Args: { email: string; password: string }; Returns: string }
         | {
@@ -1566,6 +1683,17 @@ export type Database = {
       resolve_product_cost: {
         Args: { p_product: string; p_variation: string }
         Returns: number
+      }
+      sale_page_event_counts: { Args: { p_page_id: string }; Returns: Json }
+      sale_pages_sales_summary: {
+        Args: never
+        Returns: {
+          orders_count: number
+          sale_page_id: string
+          slug: string
+          title: string
+          total_sales: number
+        }[]
       }
       set_affiliate_status: {
         Args: { p_affiliate_id: string; p_status: string }

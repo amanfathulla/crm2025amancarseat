@@ -1,5 +1,5 @@
 
-import React, { useEffect } from 'react';
+import React, { Suspense, lazy, useEffect } from 'react';
 import {
   BrowserRouter as Router,
   Routes,
@@ -14,33 +14,42 @@ import { Toaster } from "@/components/ui/toaster"
 
 import { AuthProvider } from "@/hooks/useAuth";
 import { LanguageProvider } from "@/contexts/LanguageContext";
-import Index from "@/pages/Index";
-import Login from "@/pages/Login";
-import Dashboard from "@/pages/Dashboard";
-import LiveDashboard from "@/pages/LiveDashboard";
-import Customers from "@/pages/Customers";
-import Sales from "@/pages/Sales";
-import Products from "@/pages/Products";
-import PaymentGateways from "@/pages/PaymentGateways";
-import Leads from "@/pages/Leads";
-import Marketing from "@/pages/Marketing";
-import Reviews from "@/pages/Reviews";
-import LinkTempahan from "@/pages/LinkTempahan";
-import Coupons from "@/pages/Coupons";
-import NotFound from "@/pages/NotFound";
-import SalePageView from "@/pages/SalePageView";
-import SalePagesFeed from "@/pages/SalePagesFeed";
-import SalePagesAdmin from "@/pages/SalePagesAdmin";
-import { MainLayout } from "@/components/layout/MainLayout";
-import { Sidebar } from "@/components/layout/Sidebar";
 
-import { CustomerReceipt } from "@/components/customers/CustomerReceipt";
-import { CustomerInvoice } from "@/components/customers/CustomerInvoice";
-import Order from "@/pages/Order";
-import Testimoni from "@/pages/Testimoni";
-import OrderFullsilk from "@/pages/OrderFullsilk";
-import OrderThankYou from "@/pages/OrderThankYou";
-import RaceDashboard from "@/pages/RaceDashboard";
+const Index = lazy(() => import("@/pages/Index"));
+const Login = lazy(() => import("@/pages/Login"));
+const Dashboard = lazy(() => import("@/pages/Dashboard"));
+const LiveDashboard = lazy(() => import("@/pages/LiveDashboard"));
+const Customers = lazy(() => import("@/pages/Customers"));
+const Sales = lazy(() => import("@/pages/Sales"));
+const Products = lazy(() => import("@/pages/Products"));
+const PaymentGateways = lazy(() => import("@/pages/PaymentGateways"));
+const Leads = lazy(() => import("@/pages/Leads"));
+const Marketing = lazy(() => import("@/pages/Marketing"));
+const Reviews = lazy(() => import("@/pages/Reviews"));
+const LinkTempahan = lazy(() => import("@/pages/LinkTempahan"));
+const Coupons = lazy(() => import("@/pages/Coupons"));
+const NotFound = lazy(() => import("@/pages/NotFound"));
+const SalePageView = lazy(() => import("@/pages/SalePageView"));
+const SalePagesFeed = lazy(() => import("@/pages/SalePagesFeed"));
+const SalePagesAdmin = lazy(() => import("@/pages/SalePagesAdmin"));
+const CustomerReceipt = lazy(() =>
+  import("@/components/customers/CustomerReceipt").then((m) => ({ default: m.CustomerReceipt }))
+);
+const CustomerInvoice = lazy(() =>
+  import("@/components/customers/CustomerInvoice").then((m) => ({ default: m.CustomerInvoice }))
+);
+const MainLayout = lazy(() =>
+  import("@/components/layout/MainLayout").then((m) => ({ default: m.MainLayout }))
+);
+const Sidebar = lazy(() =>
+  import("@/components/layout/Sidebar").then((m) => ({ default: m.Sidebar }))
+);
+
+const Order = lazy(() => import("@/pages/Order"));
+const Testimoni = lazy(() => import("@/pages/Testimoni"));
+const OrderFullsilk = lazy(() => import("@/pages/OrderFullsilk"));
+const OrderThankYou = lazy(() => import("@/pages/OrderThankYou"));
+const RaceDashboard = lazy(() => import("@/pages/RaceDashboard"));
 import { initPixels, trackPageView } from "@/lib/pixels";
 
 const CRM_PREFIXES = ["/dashboard","/live-dashboard","/leads","/marketing","/customers","/sales","/products","/payment-gateways","/reviews","/coupons","/link-tempahan","/admin","/login"];
@@ -110,6 +119,11 @@ function App() {
             <PrivacyLock />
             <PixelTracker />
             <div className="flex min-h-screen w-full">
+              <Suspense fallback={
+                <div className="flex min-h-screen w-full items-center justify-center bg-background">
+                  <div className="h-10 w-10 animate-spin rounded-full border-4 border-primary border-t-transparent" />
+                </div>
+              }>
               <Routes>
                 {/* Routes without sidebar */}
                 <Route path="/" element={<Index />} />
@@ -150,6 +164,7 @@ function App() {
 
                 <Route path="*" element={<NotFound />} />
               </Routes>
+              </Suspense>
             </div>
             <Toaster />
           </Router>
