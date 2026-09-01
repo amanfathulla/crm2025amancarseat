@@ -61,6 +61,8 @@ interface FormState {
   video_urls: string[];
   poster_url: string;
   product_id: string;         // produk utama (backward compat)
+  product_mode: string;       // "single" | "category"
+  product_category: string;   // kategori produk jika mode category
   extra_product_ids: string[]; // produk add-on tambahan
   cta_label: string;
   badge_text: string;
@@ -161,12 +163,13 @@ export default function SalePagesAdmin() {
 
   useEffect(() => {
     fetchPages();
-    authClient
-      .from("public_products")
-      .select("id, name, category, price")
-      .eq("status", "active")
-      .order("name")
-      .then(({ data }: any) => setProducts(((data || []) as ProductOption[])))
+    void Promise.resolve(
+      authClient
+        .from("public_products")
+        .select("id, name, category, price")
+        .eq("status", "active")
+        .order("name")
+    ).then(({ data }: any) => setProducts(((data || []) as ProductOption[])))
       .catch(() => {});
   }, [fetchPages]);
 
