@@ -427,13 +427,16 @@ export default function SalePagesFeed() {
           {src ? (
             <video
               ref={videoRef}
-              key={active.id}
+              key={`${active.id}-${clipIdx}`}
               src={src}
               poster={active.poster_url || undefined}
               muted
-              loop
+              loop={playlist.length <= 1}
               playsInline
               autoPlay
+              onEnded={() => {
+                if (playlist.length > 1) setClipIdx(c => (c + 1) % playlist.length);
+              }}
               onTimeUpdate={(e) => {
                 const v = e.currentTarget;
                 if (!v.duration) return;
