@@ -383,12 +383,9 @@ export default function SalePagesFeed() {
   // Sync refs untuk wrap-around ikut jumlah sebenar (tab material)
   countRef.current = Math.max(filteredPages.length, 1);
 
-  // Reset index kalau melebihi jumlah selepas tukar tab (contoh 3/2 tak akan berlaku)
-  useEffect(() => {
-    if (index >= filteredPages.length) setIndex(0);
-  }, [index, filteredPages.length]);
-
-  const active = filteredPages[index] || filteredPages[0] || pages[0];
+  // Clamp index — tukar tab boleh buat index melebihi jumlah (elak 3/2)
+  const safeIndex = filteredPages.length > 0 ? index % filteredPages.length : 0;
+  const active = filteredPages[safeIndex] || pages[0];
   activeRef.current = active;
   const isCategoryMode = (active.product_mode || "single") === "category";
   const categoryProducts = isCategoryMode
