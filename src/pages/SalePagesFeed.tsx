@@ -314,13 +314,14 @@ export default function SalePagesFeed() {
     setSelectedCatProduct(null);
     const v = videoRef.current;
     if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
+    setClipIdx(0);
     // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
-    const pg = pages[index];
+    const pg = activeRef.current;
     if (pg) {
       void Promise.resolve(supabase.rpc("bump_sale_page_views", { p_slug: pg.slug })).then(({ data }: any) => {
         // Guna nilai return RPC (views baru dari DB) supaya konsisten dengan page sebenar
         const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
-        setPages(prev => prev.map((p, i) => i === index ? { ...p, views: newViews } : p));
+        setPages(prev => prev.map(p => p.id === pg.id ? { ...p, views: newViews } : p));
       }).catch(() => {});
       trackSalePageEvent(pg.id, "view");
     }
