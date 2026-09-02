@@ -485,7 +485,7 @@ export default function SalePagesFeed() {
               <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()}
             </span>
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
-              {index + 1}/{filteredPages.length}
+              {safeIndex + 1}/{filteredPages.length}
             </span>
             <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
@@ -781,7 +781,7 @@ export default function SalePagesFeed() {
 
         {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 z-40 h-1 bg-white/10">
-          <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${((index + 1) / pages.length) * 100}%` }} />
+          <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${((safeIndex + 1) / Math.max(filteredPages.length, 1)) * 100}%` }} />
         </div>
 
         {/* ── Navigation ── */}
@@ -805,10 +805,10 @@ export default function SalePagesFeed() {
             <ChevronDown className="h-4 w-4 rotate-180" />
           </button>
         )}
-        {pages.length > 1 && pages.length <= 10 && (
+        {filteredPages.length > 1 && filteredPages.length <= 10 && (
           <div className="absolute top-1/2 right-2 -translate-y-1/2 z-30 flex flex-col gap-2">
-            {pages.map((_, i) => (
-              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === index ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
+            {filteredPages.map((_, i) => (
+              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === safeIndex ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
             ))}
           </div>
         )}
