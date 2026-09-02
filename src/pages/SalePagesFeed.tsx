@@ -108,6 +108,7 @@ export default function SalePagesFeed() {
   const [allReviews, setAllReviews] = useState<any[]>([]); // SEMUA reviews (dengan material) untuk filter testimoni
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
+  const [clipIdx, setClipIdx] = useState(0); // video semasa dalam playlist (ikut turutan, loop)
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
