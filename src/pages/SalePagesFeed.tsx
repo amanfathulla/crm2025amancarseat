@@ -411,9 +411,9 @@ export default function SalePagesFeed() {
   const playlist = active.video_urls?.filter(Boolean)?.length
     ? active.video_urls.filter(Boolean)
     : active.video_url ? [active.video_url] : [];
-  const src = playlist[0] || null;
-  const hasNext = index < pages.length - 1;
-  const hasPrev = index > 0;
+  const src = playlist[clipIdx % Math.max(playlist.length, 1)] || null;
+  const hasNext = filteredPages.length > 1;
+  const hasPrev = filteredPages.length > 1;
 
   return (
     <div className="fixed inset-0 bg-black flex justify-center select-none md:items-center md:bg-zinc-950" style={{ height: "100dvh" }}>
