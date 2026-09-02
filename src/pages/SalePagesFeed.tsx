@@ -795,21 +795,31 @@ export default function SalePagesFeed() {
             <ChevronLeft className="h-6 w-6" />
           </button>
         )}
-        {!isDesktop && hasNext && (
-          <button onClick={goNext} className="absolute top-20 left-1/2 -translate-x-1/2 z-40 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70 animate-bounce">
-            <ChevronDown className="h-4 w-4" />
-          </button>
-        )}
-        {!isDesktop && hasPrev && (
-          <button onClick={goPrev} className="absolute top-16 left-1/2 -translate-x-1/2 z-40 h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center text-white/70">
-            <ChevronDown className="h-4 w-4 rotate-180" />
-          </button>
-        )}
-        {filteredPages.length > 1 && filteredPages.length <= 10 && (
-          <div className="absolute top-1/2 right-2 -translate-y-1/2 z-30 flex flex-col gap-2">
-            {filteredPages.map((_, i) => (
-              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === safeIndex ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
-            ))}
+
+        {/* Mobile: single right-side vertical control pill (arrows + dots) so it never blocks the audio hint */}
+        {!isDesktop && filteredPages.length > 1 && (
+          <div className="absolute top-1/2 right-2 -translate-y-1/2 z-40 flex flex-col items-center gap-2">
+            {hasPrev && (
+              <button onClick={goPrev} className="h-8 w-8 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80">
+                <ChevronDown className="h-4 w-4 rotate-180" />
+              </button>
+            )}
+            {filteredPages.length <= 10 && (
+              <div className="flex flex-col items-center gap-1.5 py-1">
+                {filteredPages.map((_, i) => (
+                  <button
+                    key={i}
+                    onClick={() => setIndex(i)}
+                    className={`rounded-full transition-all ${i === safeIndex ? "bg-white h-5 w-2" : "bg-white/40 h-2 w-2 hover:bg-white/70"}`}
+                  />
+                ))}
+              </div>
+            )}
+            {hasNext && (
+              <button onClick={goNext} className="h-8 w-8 rounded-full bg-black/60 backdrop-blur flex items-center justify-center text-white/90 hover:bg-black/80 animate-bounce">
+                <ChevronDown className="h-4 w-4" />
+              </button>
+            )}
           </div>
         )}
       </div>
