@@ -108,6 +108,7 @@ export default function SalePagesFeed() {
   const [allReviews, setAllReviews] = useState<any[]>([]); // SEMUA reviews (dengan material) untuk filter testimoni
   const [loading, setLoading] = useState(true);
   const [index, setIndex] = useState(0);
+  const [clipIdx, setClipIdx] = useState(0); // video semasa dalam playlist (ikut turutan, loop)
   const [muted, setMuted] = useState(true);
   const [started, setStarted] = useState(false);
   const [isDesktop, setIsDesktop] = useState(false);
@@ -314,13 +315,14 @@ export default function SalePagesFeed() {
     setSelectedCatProduct(null);
     const v = videoRef.current;
     if (v) { v.currentTime = 0; v.muted = true; v.play().catch(() => {}); }
+    setClipIdx(0);
     // Bump views untuk page yang jadi aktif (scroll = view, macam buka page sebenar)
-    const pg = pages[index];
+    const pg = activeRef.current;
     if (pg) {
       void Promise.resolve(supabase.rpc("bump_sale_page_views", { p_slug: pg.slug })).then(({ data }: any) => {
         // Guna nilai return RPC (views baru dari DB) supaya konsisten dengan page sebenar
         const newViews = typeof data === "number" ? data : (pg.views || 0) + 1;
-        setPages(prev => prev.map((p, i) => i === index ? { ...p, views: newViews } : p));
+        setPages(prev => prev.map(p => p.id === pg.id ? { ...p, views: newViews } : p));
       }).catch(() => {});
       trackSalePageEvent(pg.id, "view");
     }
@@ -380,7 +382,13 @@ export default function SalePagesFeed() {
         }
         return mat === materialTab;
       });
-  const active = filteredPages[index] || filteredPages[0] || pages[0];
+  // Sync refs untuk wrap-around ikut jumlah sebenar (tab material)
+  countRef.current = Math.max(filteredPages.length, 1);
+
+  // Clamp index — tukar tab boleh buat index melebihi jumlah (elak 3/2)
+  const safeIndex = filteredPages.length > 0 ? index % filteredPages.length : 0;
+  const active = filteredPages[safeIndex] || pages[0];
+  activeRef.current = active;
   const isCategoryMode = (active.product_mode || "single") === "category";
   const categoryProducts = isCategoryMode
     ? (Object.values(productMap).filter(p => p.category === active.product_category))
@@ -403,9 +411,9 @@ export default function SalePagesFeed() {
   const playlist = active.video_urls?.filter(Boolean)?.length
     ? active.video_urls.filter(Boolean)
     : active.video_url ? [active.video_url] : [];
-  const src = playlist[0] || null;
-  const hasNext = index < pages.length - 1;
-  const hasPrev = index > 0;
+  const src = playlist[clipIdx % Math.max(playlist.length, 1)] || null;
+  const hasNext = filteredPages.length > 1;
+  const hasPrev = filteredPages.length > 1;
 
   return (
     <div className="fixed inset-0 bg-black flex justify-center select-none md:items-center md:bg-zinc-950" style={{ height: "100dvh" }}>
@@ -419,13 +427,16 @@ export default function SalePagesFeed() {
           {src ? (
             <video
               ref={videoRef}
-              key={active.id}
+              key={`${active.id}-${clipIdx}`}
               src={src}
               poster={active.poster_url || undefined}
               muted
-              loop
+              loop={playlist.length <= 1}
               playsInline
               autoPlay
+              onEnded={() => {
+                if (playlist.length > 1) setClipIdx(c => (c + 1) % playlist.length);
+              }}
               onTimeUpdate={(e) => {
                 const v = e.currentTarget;
                 if (!v.duration) return;
@@ -474,7 +485,7 @@ export default function SalePagesFeed() {
               <Eye className="h-3 w-3" /> {(active.views || 0).toLocaleString()}
             </span>
             <span className="text-white/90 text-sm font-bold font-mono bg-black/50 backdrop-blur px-2.5 py-1 rounded-full">
-              {index + 1}/{filteredPages.length}
+              {safeIndex + 1}/{filteredPages.length}
             </span>
             <button onClick={toggleMute} className="pointer-events-auto h-9 w-9 rounded-full bg-black/50 backdrop-blur flex items-center justify-center">
               {muted ? <VolumeX className="h-4 w-4 text-white" /> : <Volume2 className="h-4 w-4 text-white" />}
@@ -770,7 +781,7 @@ export default function SalePagesFeed() {
 
         {/* Progress bar */}
         <div className="absolute bottom-0 left-0 right-0 z-40 h-1 bg-white/10">
-          <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${((index + 1) / pages.length) * 100}%` }} />
+          <div className="h-full bg-amber-400 transition-all duration-300" style={{ width: `${((safeIndex + 1) / Math.max(filteredPages.length, 1)) * 100}%` }} />
         </div>
 
         {/* ── Navigation ── */}
@@ -794,10 +805,10 @@ export default function SalePagesFeed() {
             <ChevronDown className="h-4 w-4 rotate-180" />
           </button>
         )}
-        {pages.length > 1 && pages.length <= 10 && (
+        {filteredPages.length > 1 && filteredPages.length <= 10 && (
           <div className="absolute top-1/2 right-2 -translate-y-1/2 z-30 flex flex-col gap-2">
-            {pages.map((_, i) => (
-              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === index ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
+            {filteredPages.map((_, i) => (
+              <button key={i} onClick={() => setIndex(i)} className={`h-2 rounded-full transition-all ${i === safeIndex ? "bg-white w-5" : "bg-white/30 w-2 hover:bg-white/60"}`} />
             ))}
           </div>
         )}
